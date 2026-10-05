@@ -502,7 +502,8 @@ V.users=async()=>{
     <div class="muted" style="font-size:12px">بعد الإنشاء حدّد فروعه وأقسامه من القائمة تحت. المستخدم الجديد لا يرى أي شيء حتى تعطيه صلاحية.</div><div class="err" id="nue"></div></div>`;
   h+=P.data.map(u=>{const m=canManage(u),adminLike=u.role!=='user';
     return `<div class="card ucard"><div class="uhead"><div><b>${esc(u.full_name||u.username)}</b> <span class="role ${u.role}">${ROLE_NAME[u.role]}</span> ${u.active?'':'<span class="tag" style="color:var(--down)">موقوف</span>'}<div class="muted" style="font-size:12px" dir="ltr">${esc(u.username)}</div></div>
-      <div class="row" style="flex:none;gap:6px">${isOwner()&&u.role!=='owner'?`<button class="btn ghost sm" data-role="${u.id}" data-to="${u.role==='admin'?'user':'admin'}">${u.role==='admin'?'تحويل لمستخدم':'ترقية لآدمن'}</button>`:''}${m?`<button class="btn ghost sm" data-act="${u.id}" data-to="${u.active?0:1}">${u.active?'إيقاف':'تفعيل'}</button>`:''}</div></div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">${isOwner()&&u.role!=='owner'?`<button class="btn ghost sm" data-role="${u.id}" data-to="${u.role==='admin'?'user':'admin'}">${u.role==='admin'?'تحويل لمستخدم':'ترقية لآدمن'}</button>`:''}${m?`<button class="btn ghost sm" data-pwt="${u.id}">تغيير كلمة المرور</button><button class="btn ghost sm" data-act="${u.id}" data-to="${u.active?0:1}">${u.active?'إيقاف':'تفعيل'}</button>`:''}</div></div>
+      ${m?`<form class="row pwf" data-uid="${u.id}" hidden autocomplete="off"><div class="field"><label for="pw_${u.id}">كلمة المرور الجديدة لـ ${esc(u.full_name||u.username)}</label><input class="inp" id="pw_${u.id}" dir="ltr" minlength="8" required autocomplete="new-password"></div><div class="field" style="justify-content:flex-end;flex:none"><button class="btn sm" type="submit">حفظ</button></div></form>`:''}
       ${adminLike?`<div class="muted" style="font-size:13px">${u.role==='owner'?'المالك يرى كل شيء، ولا يمكن تعديل حسابه.':'الآدمن يرى كل الفروع والأقسام، ويدير المستخدمين.'}</div>`:
       `<div><div class="muted" style="font-size:12px;margin-bottom:4px">الفروع</div><div class="tgrid">${st.branches.map(b=>{const on=ub.some(x=>x.user_id===u.id&&x.branch_id===b.id);return `<button class="tg" data-tb="${u.id}" data-k="b:${b.id}" aria-pressed="${on}" ${m?'':'disabled'}><i class="dot" style="background:${b.color}"></i>${esc(b.name)}</button>`;}).join('')}</div></div>
       <div><div class="muted" style="font-size:12px;margin-bottom:4px">الأقسام</div><div class="tgrid">${PERM_SECTIONS.map(s=>{const on=us.some(x=>x.user_id===u.id&&x.section===s);return `<button class="tg" data-tb="${u.id}" data-k="s:${s}" aria-pressed="${on}" ${m?'':'disabled'}>${SEC_NAME[s]}</button>`;}).join('')}</div></div>
@@ -519,6 +520,7 @@ document.addEventListener('click',async e=>{
     const r=on?await sb.from(tbl).delete().eq('user_id',uid).eq(col,id):await sb.from(tbl).insert({user_id:uid,[col]:id});
     t.disabled=false; if(r.error){toast('تعذّر الحفظ: '+r.error.message);return;}
     t.setAttribute('aria-pressed',String(!on)); toast('تم الحفظ'); return;}
+  const pt=e.target.closest('[data-pwt]'); if(pt){const f=document.querySelector(`.pwf[data-uid="${pt.dataset.pwt}"]`); if(f){f.hidden=!f.hidden; if(!f.hidden) f.querySelector('input').focus();} return;}
   const a=e.target.closest('[data-act]'); if(a){const {error}=await sb.from('profiles').update({active:a.dataset.to==='1'}).eq('id',a.dataset.act);if(error){toast('تعذّر: '+error.message);return;}render();return;}
   const r=e.target.closest('[data-role]'); if(r){const {error}=await sb.from('profiles').update({role:r.dataset.to}).eq('id',r.dataset.role);if(error){toast('تعذّر: '+error.message);return;}render();}
 });
@@ -534,6 +536,11 @@ document.addEventListener('submit',async e=>{
     if(error){$('#nue').textContent=/registered|exists/i.test(error.message)?'اسم المستخدم مستخدم من قبل':'تعذّر الإنشاء: '+error.message;return;}
     if(data.user&&data.user.identities&&data.user.identities.length===0){$('#nue').textContent='اسم المستخدم مستخدم من قبل';return;}
     toast('تم إنشاء الحساب — حدّد صلاحياته'); render(); }
+  if(e.target.classList.contains('pwf')){ e.preventDefault(); const uid=e.target.dataset.uid, inp=$('#pw_'+uid), pw=inp.value;
+    if(pw.length<8){toast('كلمة المرور 8 أحرف على الأقل');return;}
+    const {error}=await sb.rpc('admin_set_password',{target:uid,new_password:pw});
+    if(error){toast(/function|schema cache/i.test(error.message)?'الميزة تحتاج تفعيل في قاعدة البيانات':'تعذّر التغيير: '+error.message);return;}
+    inp.value=''; e.target.hidden=true; toast('تم تغيير كلمة المرور — أرسلها لصاحب الحساب'); return; }
   if(e.target.id==='cpf'){ e.preventDefault(); const {error}=await sb.auth.updateUser({password:$('#cpn').value}); toast(error?'تعذّر التغيير: '+error.message:'تم تغيير كلمة المرور'); if(!error) $('#cpn').value=''; }
 });
 
