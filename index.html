@@ -119,7 +119,7 @@ tr.sub td{font-weight:600;background:var(--bg)}
 .role{font-size:12px;font-weight:700;padding:2px 10px;border-radius:99px}
 .role.owner{background:var(--gold-soft);color:var(--gold-ink)}
 .role.admin{background:rgba(91,143,208,.15);color:#3C6FB0}
-.role.user{background:var(--chip);color:var(--muted)}
+.role.user,.role.sync{background:var(--chip);color:var(--muted)}
 .toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));inset-inline:16px;margin:0 auto;max-width:360px;background:var(--fg);color:var(--bg);text-align:center;border-radius:12px;padding:10px 14px;z-index:30;transition:opacity .25s}
 .toast.hide{opacity:0;pointer-events:none}
 .loading{display:flex;justify-content:center;padding:40px;color:var(--muted)}
@@ -183,7 +183,7 @@ const SECTIONS=[
 ];
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','carcass'];
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name]));
-const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم'};
+const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 const CH={ajl:'آجل عملاء',shaden:'تطبيق الشادن',meals:'وجبات',family:'قسم العائلات',keeta:'تطبيق كيتا',hs:'تطبيق هانقرستيشن',dlv:'توصيل',tkl:'سفري / محلي',ninja:'تطبيق نينجا',bonat:'تطبيق بونات',awail:'عوائل',sfr:'سفري',mhl:'محلي'};
 const PAL=['#2F5D9E','#D4AF37','#1FA16B','#C2557A','#8A6BD1','#E07B39','#3A9BB5','#7A8B3C','#B5563C','#5C6B80'];
@@ -502,9 +502,9 @@ V.users=async()=>{
     <div class="muted" style="font-size:12px">بعد الإنشاء حدّد فروعه وأقسامه من القائمة تحت. المستخدم الجديد لا يرى أي شيء حتى تعطيه صلاحية.</div><div class="err" id="nue"></div></div>`;
   h+=P.data.map(u=>{const m=canManage(u),adminLike=u.role!=='user';
     return `<div class="card ucard"><div class="uhead"><div><b>${esc(u.full_name||u.username)}</b> <span class="role ${u.role}">${ROLE_NAME[u.role]}</span> ${u.active?'':'<span class="tag" style="color:var(--down)">موقوف</span>'}<div class="muted" style="font-size:12px" dir="ltr">${esc(u.username)}</div></div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px">${isOwner()&&u.role!=='owner'?`<button class="btn ghost sm" data-role="${u.id}" data-to="${u.role==='admin'?'user':'admin'}">${u.role==='admin'?'تحويل لمستخدم':'ترقية لآدمن'}</button>`:''}${m?`<button class="btn ghost sm" data-pwt="${u.id}">تغيير كلمة المرور</button><button class="btn ghost sm" data-act="${u.id}" data-to="${u.active?0:1}">${u.active?'إيقاف':'تفعيل'}</button>`:''}</div></div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">${isOwner()&&['admin','user'].includes(u.role)?`<button class="btn ghost sm" data-role="${u.id}" data-to="${u.role==='admin'?'user':'admin'}">${u.role==='admin'?'تحويل لمستخدم':'ترقية لآدمن'}</button>`:''}${m?`<button class="btn ghost sm" data-pwt="${u.id}">تغيير كلمة المرور</button><button class="btn ghost sm" data-act="${u.id}" data-to="${u.active?0:1}">${u.active?'إيقاف':'تفعيل'}</button>`:''}</div></div>
       ${m?`<form class="row pwf" data-uid="${u.id}" hidden autocomplete="off"><div class="field"><label for="pw_${u.id}">كلمة المرور الجديدة لـ ${esc(u.full_name||u.username)}</label><input class="inp" id="pw_${u.id}" dir="ltr" minlength="8" required autocomplete="new-password"></div><div class="field" style="justify-content:flex-end;flex:none"><button class="btn sm" type="submit">حفظ</button></div></form>`:''}
-      ${adminLike?`<div class="muted" style="font-size:13px">${u.role==='owner'?'المالك يرى كل شيء، ولا يمكن تعديل حسابه.':'الآدمن يرى كل الفروع والأقسام، ويدير المستخدمين.'}</div>`:
+      ${adminLike?`<div class="muted" style="font-size:13px">${u.role==='owner'?'المالك يرى كل شيء، ولا يمكن تعديل حسابه.':u.role==='sync'?'حساب المهام التلقائية: يكتب أرقام التقارير فقط، ولا يدير المستخدمين.':'الآدمن يرى كل الفروع والأقسام، ويدير المستخدمين.'}</div>`:
       `<div><div class="muted" style="font-size:12px;margin-bottom:4px">الفروع</div><div class="tgrid">${st.branches.map(b=>{const on=ub.some(x=>x.user_id===u.id&&x.branch_id===b.id);return `<button class="tg" data-tb="${u.id}" data-k="b:${b.id}" aria-pressed="${on}" ${m?'':'disabled'}><i class="dot" style="background:${b.color}"></i>${esc(b.name)}</button>`;}).join('')}</div></div>
       <div><div class="muted" style="font-size:12px;margin-bottom:4px">الأقسام</div><div class="tgrid">${PERM_SECTIONS.map(s=>{const on=us.some(x=>x.user_id===u.id&&x.section===s);return `<button class="tg" data-tb="${u.id}" data-k="s:${s}" aria-pressed="${on}" ${m?'':'disabled'}>${SEC_NAME[s]}</button>`;}).join('')}</div></div>
       ${us.some(x=>x.user_id===u.id&&x.section==='income')?'':us.some(x=>x.user_id===u.id&&x.section==='wh')?'<div class="muted" style="font-size:12px">يرى نسبة تكلفة المستودعات فقط، بدون الإيرادات أو المصروفات.</div>':''}`}
