@@ -543,7 +543,7 @@ V.data=async()=>{
     <div class="row">${st.branches.map(b=>`<div class="field"><label for="dsa_${b.id}"><i class="dot" style="background:${b.color}"></i> ${esc(b.name)}</label><input class="inp" id="dsa_${b.id}" inputmode="decimal" dir="ltr" placeholder="0.00"></div>`).join('')}</div>
     <div><button class="btn" type="submit">حفظ</button> <span class="muted" style="font-size:12px">اترك خانة الفرع فارغة إذا لم تتوفر مبيعاته بعد</span></div></form></div>
   <div class="card"><h3>استيراد ملف بيانات</h3><p class="muted" style="margin-top:0;font-size:13px">ملف JSON يجهزه Claude من تطبيقاتك (مبيعات يومية، منافذ، قوائم دخل). البيانات الموجودة لنفس الفرع والتاريخ تُستبدل بالجديدة.</p>
-    <input type="file" id="impf" accept=".json,application/json" class="inp"><div id="impr" style="margin-top:10px"></div></div>`;
+    <input type="file" id="impf" class="inp"><div id="impr" style="margin-top:10px"></div></div>`;
 };
 document.addEventListener('submit',async e=>{
   if(e.target.id!=='dsf') return; e.preventDefault(); const day=$('#dsd').value;
