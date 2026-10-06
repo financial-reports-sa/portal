@@ -221,6 +221,7 @@ const appList=(app,coll)=>q(app+'/'+coll,()=>sb.rpc('app_list',{p_app:app,p_coll
 const loadSales=async()=>{const r=[];(await appList('sales','sales')).forEach(d=>{const v=d.data||{};if(!v.date)return;for(const k in v){if(k!=='date'&&typeof v[k]==='number')r.push({branch_id:k,day:v.date,amount:v[k]});}});return r.sort((a,b)=>a.day<b.day?-1:1);};
 const loadIncome=async()=>(await appList('income','stmts')).map(d=>({branch_id:d.data.br,month:d.data.month,is_estimate:!!d.data.est,groups:d.data.groups||[]}));
 const loadRatio=()=>q('ratio',()=>sb.rpc('get_cogs_ratio'));
+const loadDaily=()=>q('daily-cogs',async()=>{const r=await sb.rpc('get_cogs_daily');return r.error&&/function|schema cache/i.test(r.error.message)?{data:[],error:null}:r;});
 
 // ================= auth =================
 $('#loginForm').onsubmit=async e=>{
@@ -375,10 +376,35 @@ V.home=async()=>{
   return h;
 };
 
+async function whDaily(bs){
+  const D=(await loadDaily()).filter(r=>bs.includes(r.branch_id)&&r.ratio!=null);
+  if(!D.length) return `<div class="card"><h3>نسبة المستودعات اليومية</h3><div class="empty">تبدأ الأرقام اليومية من أول تحديث ليلي لقوائم الدخل</div></div>`;
+  const months=[...new Set(D.map(r=>r.day.slice(0,7)))].sort(); MONTHS_FOR.whd=months;
+  const nav=monthNav('whd',months); const m=st.month.whd; const rows=D.filter(r=>r.day.startsWith(m));
+  const money=rows.some(r=>r.rev!=null);
+  const brs=bs.filter(b=>rows.some(r=>r.branch_id===b)); const days=[...new Set(rows.map(r=>r.day))].sort();
+  const cell=(b,d)=>rows.find(r=>r.branch_id===b&&r.day===d);
+  const agg=list=>{list=list.filter(Boolean); if(!list.length) return null; if(money){const rv=sum(list.map(x=>x.rev)),cg=sum(list.map(x=>x.cogs)); return {rev:rv,cogs:cg,ratio:rv?cg/rv:null};} return {ratio:sum(list.map(x=>+x.ratio))/list.length};};
+  const mAvg={}; brs.forEach(b=>mAvg[b]=agg(days.map(d=>cell(b,d))));
+  const tot=agg(rows); const dayTot=d=>agg(brs.map(b=>cell(b,d)));
+  const dev=(v,a)=>v==null||a==null?'':v>=a+0.01?'down':v<=a-0.01?'up':'';
+  const flag=(v,a)=>{const c=dev(v,a);return c?`<span class="${c}" style="font-size:11px"> ${c==='down'?'▲':'▼'}${Math.abs((v-a)*100).toFixed(1)}</span>`:'';};
+  const over=[]; days.forEach(d=>brs.forEach(b=>{const c=cell(b,d);if(c&&dev(+c.ratio,mAvg[b]&&mAvg[b].ratio)==='down') over.push({d,b,v:+c.ratio});}));
+  let h=`<div class="card"><h3>نسبة المستودعات اليومية <small>${monLbl(m)}</small></h3><div class="bar-row" style="margin-bottom:10px"><span class="muted" style="font-size:12px">الأحمر: أعلى من متوسط الشهر بنقطة أو أكثر · الأخضر: أقل</span>${nav}</div>`;
+  h+=`<div class="kpis" style="margin-bottom:12px">${kpi('نسبة الشهر حتى الآن',pct(tot&&tot.ratio),money?'<span class="muted">تكلفة '+fmt(tot.cogs)+' من إيراد '+fmt(tot.rev)+'</span>':'<span class="muted">'+days.length+' يوم</span>')}${kpi('أيام فوق المتوسط',String(over.length),over.length?'<span class="down">'+over.slice(-3).map(o=>+o.d.slice(8)+(brs.length>1?' '+esc(brById(o.b).name):'')).join('، ')+'</span>':'<span class="up">لا يوجد انحراف</span>')}</div>`;
+  h+=lineChart(days.map(d=>String(+d.slice(8))),brs.map(b=>({name:brById(b).name,color:brById(b).color,vals:days.map(d=>{const c=cell(b,d);return c?+c.ratio*100:null;})})),{dec:1,suf:'%',h:200})+(brs.length>1?legend(brs.map(brById)):'');
+  const one=brs.length===1;
+  h+=`<div class="scroller" style="margin-top:12px"><table><thead><tr><th>اليوم</th>${one?(money?'<th class="n">الإيراد</th><th class="n">تكلفة المستودع</th>':'')+'<th class="n">النسبة</th>':brs.map(b=>`<th class="n">${esc(brById(b).name)}</th>`).join('')+(money?'<th class="n">الإيراد</th><th class="n">التكلفة</th>':'')+'<th class="n">الإجمالي</th>'}</tr></thead><tbody>`;
+  days.slice().reverse().forEach(d=>{ const dd=new Date(d+'T12:00:00'); const lbl=`${+d.slice(8)} ${monShort(d)} <span class="muted" style="font-size:11px">${['أحد','إثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'][dd.getDay()]}</span>`;
+    if(one){const b=brs[0],c=cell(b,d),a=mAvg[b]&&mAvg[b].ratio; h+=`<tr><td>${lbl}</td>${money?`<td class="n">${fmt(c&&c.rev)}</td><td class="n">${fmt(c&&c.cogs)}</td>`:''}<td class="n ${dev(c&&+c.ratio,a)}"><b>${pct(c&&+c.ratio)}</b>${flag(c&&+c.ratio,a)}</td></tr>`;}
+    else{const t=dayTot(d); h+=`<tr><td>${lbl}</td>${brs.map(b=>{const c=cell(b,d),a=mAvg[b]&&mAvg[b].ratio;return `<td class="n ${dev(c&&+c.ratio,a)}">${pct(c&&+c.ratio)}</td>`;}).join('')}${money?`<td class="n">${fmt(t&&t.rev)}</td><td class="n">${fmt(t&&t.cogs)}</td>`:''}<td class="n ${dev(t&&t.ratio,tot&&tot.ratio)}"><b>${pct(t&&t.ratio)}</b></td></tr>`;} });
+  h+=`<tr class="total"><td>الشهر</td>${one?(money?`<td class="n">${fmt(tot.rev)}</td><td class="n">${fmt(tot.cogs)}</td>`:'')+`<td class="n">${pct(tot&&tot.ratio)}</td>`:brs.map(b=>`<td class="n">${pct(mAvg[b]&&mAvg[b].ratio)}</td>`).join('')+(money?`<td class="n">${fmt(tot.rev)}</td><td class="n">${fmt(tot.cogs)}</td>`:'')+`<td class="n">${pct(tot&&tot.ratio)}</td>`}</tr></tbody></table></div></div>`;
+  return h;
+}
 V.wh=async()=>{
   const bs=selBranches(); const R=(await loadRatio()).filter(r=>bs.includes(r.branch_id)&&r.ratio!=null);
-  let h=`<div class="bar-row">${branchChips()}</div>`;
-  if(!R.length) return h+'<div class="card empty">لا توجد بيانات</div>';
+  let h=`<div class="bar-row">${branchChips()}</div>`+await whDaily(bs);
+  if(!R.length) return h+'<div class="card empty">لا توجد بيانات شهرية</div>';
   const months=[...new Set(R.map(r=>r.month))].sort();
   const get=(b,m)=>{const r=R.find(x=>x.branch_id===b&&x.month===m);return r?+r.ratio:null;};
   const isEst=m=>R.some(x=>x.month===m&&x.is_estimate);
