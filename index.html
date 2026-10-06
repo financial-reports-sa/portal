@@ -563,7 +563,7 @@ async function render(){
   try{ v.innerHTML=await V[st.tab](); v.querySelectorAll('.sc-end').forEach(s=>s.scrollLeft=s.scrollWidth); if(sec.app) fitApp(); if(sec.page) mountPage(sec); }
   catch(err){ console.error(err); v.innerHTML=`<div class="card"><div class="err">تعذّر تحميل البيانات: ${esc(err.message||err)}</div><button class="btn ghost sm" onclick="location.reload()">إعادة المحاولة</button></div>`; }
 }
-document.addEventListener('visibilitychange',()=>{ if(document.visibilityState!=='visible'||!st.profile) return; const sec=SECTIONS.find(s=>s.id===st.tab)||{}; st.cache={}; if(!sec.app) render(); });
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState!=='visible'||!st.profile) return; const sec=SECTIONS.find(s=>s.id===st.tab)||{}; st.cache={}; if(!sec.app&&st.tab!=='data') render(); });
 sb.auth.onAuthStateChange((ev)=>{ if(ev==='SIGNED_OUT'){ $('#app').hidden=true; $('#login').hidden=false; } });
 boot();
 })();
