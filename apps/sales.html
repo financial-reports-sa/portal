@@ -1,0 +1,1015 @@
+<!doctype html><html><head>
+<script>window.PORTAL_APP='sales';</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="../config.js?v=4"></script>
+<script src="../portal-db.js?v=4"></script>
+<style>html[data-ro] #tbEntry{display:none!important}html[data-ro] .tabs .in{grid-template-columns:1fr 1fr!important}</style>
+<meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>مبيعات الفروع</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  color-scheme: light;
+  --bg:#F4F6FA; --panel:#FFFFFF; --panel2:#F1F4F9; --line:#E1E7EF; --line2:#D3DBE6;
+  --gold:#D4AF37; --gold2:#9A7B12; --goldInk:#1A1406;
+  --txt:#16233A; --mute:#6B7A90; --dim:#8A97AA;
+  --up:#1FA16B; --down:#D0453A; --warn:#C98A0C; --fc:#B4BFCE;
+  --r:16px;
+  --f:"IBM Plex Sans Arabic", "Segoe UI", Tahoma, system-ui, sans-serif;
+  --fd:"Readex Pro", "IBM Plex Sans Arabic", "Segoe UI", system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--txt);font-family:var(--f);font-size:15px;line-height:1.5;direction:rtl;-webkit-tap-highlight-color:transparent;padding-inline:16px;padding-block:0 96px}
+.num{font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;display:inline-block}
+.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.wrap>*{min-width:0;max-width:100%}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:linear-gradient(var(--bg) 72%,transparent);padding-block:14px 10px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:10px}
+.mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(145deg,#F0D98A,var(--gold));display:grid;place-items:center;color:var(--goldInk);font-family:var(--fd);font-weight:700;font-size:17px}
+.brand h1{font-family:var(--fd);font-size:18px;margin:0;font-weight:600}
+.brand small{display:block;color:var(--mute);font-size:11.5px;margin-top:1px}
+.sync{font-size:11.5px;color:var(--mute);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--dim)} .dot.on{background:var(--up);box-shadow:0 0 0 3px rgba(63,185,138,.18)} .dot.err{background:var(--down)}
+input,select,button,textarea{font:inherit;color:inherit}
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;border:1px solid var(--line2);background:var(--panel);border-radius:99px;padding:8px 14px;font-weight:600;font-size:13px;color:var(--mute);cursor:pointer;display:flex;align-items:center;gap:7px}
+.chip i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.chip[aria-pressed=true]{background:var(--panel2);border-color:var(--gold);color:var(--gold2)}
+.chip:focus-visible,.btn:focus-visible,.tab:focus-visible,.icb:focus-visible{outline:2px solid var(--gold2);outline-offset:2px}
+.month{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.month b{font-family:var(--fd);font-weight:600;font-size:15px}
+.icb{width:40px;height:40px;border-radius:12px;background:var(--panel2);border:1px solid var(--line2);cursor:pointer;display:grid;place-items:center;color:var(--txt);font-size:16px}
+.hero{background:radial-gradient(120% 140% at 100% 0%,#FBF3DC 0%,var(--panel) 55%);border:1px solid var(--line);border-radius:20px;padding:18px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:auto -40px -60px auto;width:180px;height:180px;border-radius:50%;border:1px solid rgba(212,175,55,.18)}
+.eyebrow{font-size:12px;color:var(--mute);display:flex;justify-content:space-between;gap:8px}
+.big{font-family:var(--fd);font-size:clamp(30px,9vw,40px);font-weight:600;color:var(--gold2);margin:6px 0 2px;line-height:1.15}
+.big .cur{font-size:14px;color:var(--mute);font-family:var(--f);font-weight:500;margin-inline-start:6px}
+.sub{font-size:12.5px;color:var(--mute)}
+.prog{height:9px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:12px;display:flex}
+.prog i{display:block;height:100%}
+.split{display:flex;justify-content:space-between;gap:10px;margin-top:10px;font-size:12.5px;color:var(--mute)}
+.split b{color:var(--txt);font-weight:600}
+.status{display:flex;align-items:center;justify-content:space-between;gap:10px;border-radius:14px;padding:12px 14px;border:1px solid var(--line);background:var(--panel)}
+.status b{font-family:var(--fd);font-size:15px}
+.status.up{border-color:rgba(63,185,138,.5);background:rgba(63,185,138,.08)} .status.up b{color:var(--up)}
+.status.down{border-color:rgba(224,101,74,.5);background:rgba(224,101,74,.08)} .status.down b{color:var(--down)}
+.status.flat{border-color:rgba(224,167,46,.5);background:rgba(224,167,46,.08)} .status.flat b{color:var(--warn)}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;min-width:0}
+.kpi .l{font-size:11.5px;color:var(--mute)} .kpi .v{font-family:var(--fd);font-size:19px;font-weight:600;margin-top:2px} .kpi .s{font-size:11px;color:var(--dim);margin-top:1px}
+.up{color:var(--up)} .down{color:var(--down)} .flat{color:var(--warn)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px;min-width:0;overflow:hidden}
+.card h3{font-family:var(--fd);font-size:14.5px;margin:0 0 10px;font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.card h3 small{font-family:var(--f);font-size:11.5px;color:var(--mute);font-weight:400}
+.cscroll{max-width:100%;overflow-x:auto;direction:ltr;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.cscroll svg{display:block}
+.hint{font-size:12px;color:var(--mute)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--mute);margin-top:6px}
+.sw{display:inline-block;width:9px;height:9px;border-radius:2px;margin-inline-end:6px;vertical-align:middle}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.cal .h{font-size:10.5px;color:var(--gold);text-align:center;padding-bottom:2px}
+.cal .c{border-radius:8px;min-height:46px;padding:4px 3px;min-width:0;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;background:var(--panel2)}
+.cal .c .d{font-size:10px;color:var(--mute)} .cal .c .v{font-family:var(--fd);font-size:10.5px;letter-spacing:-.2px;font-weight:600;text-align:left;direction:ltr}
+.cal .c.fc{background:transparent;border:1px dashed var(--line2)} .cal .c.fc .v{font-style:italic;color:#6B7A90;font-weight:500}
+.cal .c.x{background:transparent}
+table.tb{width:100%;border-collapse:collapse;font-size:13px}
+.tb th{color:var(--gold);font-weight:600;text-align:right;padding:6px 4px;border-bottom:1px solid var(--gold);font-size:12px}
+.tb td{padding:9px 4px;border-bottom:1px solid var(--line)}
+.tb td.n{text-align:left;direction:ltr;font-variant-numeric:tabular-nums}
+.tb tfoot td{color:var(--gold2);font-weight:700;border-bottom:0}
+.btn{border:0;border-radius:12px;padding:12px 16px;font-weight:600;cursor:pointer;min-height:46px}
+.btn.gold{background:linear-gradient(145deg,#F0D98A,var(--gold));color:var(--goldInk)}
+.btn.ghost{background:var(--panel2);border:1px solid var(--line2);color:var(--txt)}
+.btn.danger{background:rgba(224,101,74,.14);border:1px solid rgba(224,101,74,.45);color:#C8503F}
+.btn:disabled{opacity:.45}
+.row{display:flex;gap:10px} .row>*{flex:1}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:12.5px;color:var(--mute);display:flex;align-items:center;gap:6px}
+input[type=date],select,.txt{background:var(--panel2);border:1px solid var(--line2);border-radius:12px;padding:10px 12px;min-height:44px;width:100%;color:var(--txt)}
+textarea.txt{min-height:66px;resize:vertical}
+.amount{background:var(--panel2);border:1px solid var(--line2);border-radius:12px;padding:10px 14px;font-family:var(--fd);font-size:21px;font-weight:600;color:var(--gold2);direction:ltr;text-align:left;width:100%;min-height:50px}
+.amount:focus,input[type=date]:focus,.txt:focus,select:focus{outline:2px solid var(--gold);outline-offset:1px;border-color:transparent}
+.dsum{display:flex;justify-content:space-between;align-items:center;border-top:1px dashed var(--line2);padding-top:10px;font-size:13px;color:var(--mute)}
+.dsum b{font-family:var(--fd);font-size:18px;color:var(--gold2)}
+.log{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.lg{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);cursor:pointer;background:none;border-inline:0;border-top:0;width:100%;text-align:right}
+.lg:last-child{border-bottom:0} .lg:active{background:var(--panel2)}
+.lg .dd{font-family:var(--fd);font-weight:600;font-size:17px;width:34px;text-align:center}
+.lg .w{font-size:11.5px;color:var(--mute)}
+.lg .vals{display:flex;gap:10px;font-size:11.5px;color:var(--mute);flex-wrap:wrap}
+.lg .vals span{display:flex;align-items:center;gap:4px}
+.lg .t{font-family:var(--fd);font-weight:600;font-size:15px;text-align:left}
+.miss{color:#B0701C;font-size:11px}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;margin-top:4px}
+.sec-h h2{font-family:var(--fd);font-size:16px;font-weight:600;margin:0}
+.sec-h span{font-size:12px;color:var(--mute)}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg.seg3{grid-template-columns:repeat(6,minmax(0,1fr))} .seg.seg3 button{grid-column:span 2;padding:10px 4px} 
+.seg button{background:var(--panel2);border:1px solid var(--line2);border-radius:12px;padding:10px;cursor:pointer;font-weight:600;color:var(--mute)}
+.seg button[aria-pressed=true]{border-color:var(--gold);color:var(--gold2)}
+.rep{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
+.rep .hd{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.rep .tt{font-family:var(--fd);font-weight:600;font-size:15px} .rep .mt{font-size:12px;color:var(--mute)}
+.rep .tv{font-family:var(--fd);font-weight:600;color:var(--gold2);font-size:17px;text-align:left}
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:1px 9px;border-radius:99px;margin-bottom:4px;margin-inline-end:6px}
+.badge.bd{background:rgba(63,185,138,.15);color:#1FA16B}.badge.bm{background:rgba(212,175,55,.15);color:#9A7B12}.badge.bs{background:rgba(91,143,208,.15);color:#2F6DB5}
+.acts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.acts button{background:var(--panel2);border:1px solid var(--line2);border-radius:10px;padding:9px 4px;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--txt);min-height:42px}
+.acts button.pr{border-color:var(--gold);color:var(--gold2)}
+.linkbtn{background:none;border:0;color:var(--gold2);font-size:12.5px;padding:4px 0;cursor:pointer;text-decoration:underline;text-underline-offset:3px;align-self:flex-start}
+.confirm{background:rgba(224,101,74,.08);border:1px solid rgba(224,101,74,.35);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;font-size:13.5px}
+.prev img{width:100%;border-radius:12px;border:1px solid var(--line)}
+nav.tabs{position:fixed;inset-inline:0;bottom:0;z-index:10;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center}
+.tabs .in{max-width:560px;width:100%;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.tab{background:none;border:0;border-radius:12px;padding:9px;color:var(--mute);font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12.5px}
+.tab svg{width:22px;height:22px} .tab[aria-selected=true]{color:var(--gold2);background:var(--panel)}
+.sheet-bg{position:fixed;inset:0;background:rgba(15,25,40,.35);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--panel);border:1px solid var(--line2);border-bottom:0;border-radius:22px 22px 0 0;width:100%;max-width:560px;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px;max-height:92%;overflow:auto}
+.sheet h4{font-family:var(--fd);margin:0;font-size:17px;font-weight:600}
+.grab{width:40px;height:4px;border-radius:9px;background:var(--line2);margin:-6px auto 4px}
+.toast{position:fixed;bottom:calc(84px + env(safe-area-inset-bottom,0px));inset-inline:16px;margin:0 auto;max-width:360px;background:var(--gold);color:var(--goldInk);font-weight:600;text-align:center;border-radius:12px;padding:10px 14px;z-index:30;transition:opacity .25s,transform .25s}
+.toast.hide{opacity:0;transform:translateY(8px);pointer-events:none}
+.empty{padding:20px 16px;text-align:center;color:var(--mute);font-size:13.5px}
+.note{font-size:12px;color:var(--mute);text-align:center}
+.ins{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.ins li{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.65}
+.ins li i{flex:none;width:9px;height:9px;border-radius:50%;margin-top:7px;background:var(--gold)}
+.ins li.up i{background:var(--up)} .ins li.down i{background:var(--down)} .ins li.flat i{background:var(--warn)}
+.tgt{display:grid;grid-template-columns:118px 1fr;gap:14px;align-items:center}
+.tgt .rw{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;padding:5px 0;border-bottom:1px dashed var(--line);color:var(--mute)} .tgt .rw b{font-family:var(--fd);color:var(--txt);font-weight:600}
+.pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700}
+.pill.up{background:rgba(31,161,107,.12);color:var(--up)} .pill.down{background:rgba(208,69,58,.12);color:var(--down)} .pill.flat{background:rgba(201,138,12,.14);color:var(--warn)}
+.hm{display:grid;grid-template-columns:64px repeat(7,minmax(0,1fr));gap:3px;font-size:10.5px}
+.hm .h{color:var(--mute);text-align:center;font-size:10px} .hm .r{font-weight:600;display:flex;align-items:center;gap:4px;font-size:11px;white-space:nowrap;overflow:hidden}
+.hm .c{border-radius:6px;padding:7px 1px;text-align:center;font-family:var(--fd);font-weight:600;font-size:10.5px;direction:ltr}
+.tb2{display:grid;grid-template-columns:1fr 1fr;gap:14px} .tb2 h4{margin:0 0 6px;font-size:12.5px;font-family:var(--fd)} .tb2 h4.up{color:var(--up)} .tb2 h4.down{color:var(--down)}
+.tb2 .it{display:flex;justify-content:space-between;align-items:baseline;gap:6px;font-size:12px;padding:6px 0;border-bottom:1px solid var(--line)} .tb2 .it span{color:var(--mute)} .tb2 .it b{font-family:var(--fd);font-weight:600}
+.cal .c.s .d,.cal .c.s .v{color:#fff}
+.banner{background:rgba(224,167,46,.1);border:1px solid rgba(224,167,46,.4);color:#9A7B12;border-radius:12px;padding:10px 12px;font-size:13px}
+@media (min-width:900px){
+  .wrap{max-width:1120px}
+  .tabs .in{max-width:520px}
+  #tab-dash:not([hidden]){display:grid;grid-template-columns:1fr 1fr;align-items:start}
+  #tab-dash > .chips,#tab-dash > .month{grid-column:1 / -1}
+  #tab-dash > .wide{grid-column:1 / -1}
+  #tab-entry:not([hidden]),#tab-rep:not([hidden]){display:grid;grid-template-columns:400px 1fr;align-items:start}
+  #tab-entry > .card,#tab-rep > .card{grid-column:1}
+  #tab-entry > .side,#tab-rep > .side{grid-column:2;grid-row:1 / span 4}
+  .sheet{max-width:640px;border-radius:22px;margin-bottom:24px;border-bottom:1px solid var(--line2)} .sheet-bg{align-items:center}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><div class="mark">م</div><div><h1>مبيعات الفروع</h1><small>المبيعات اليومية ومؤشر التنبؤ</small></div></div>
+    <div class="sync"><span class="dot" id="dot"></span><span id="syncTxt">جارِ الاتصال…</span></div>
+  </header>
+  <div id="banner" class="banner" hidden></div>
+
+  <!-- ================= DASHBOARD ================= -->
+  <section id="tab-dash" class="wrap" style="gap:14px">
+    <div class="chips" id="brChips" role="group" aria-label="اختيار الفرع"></div>
+    <div class="month"><button class="icb" id="mNext" aria-label="الشهر التالي">›</button><b id="mLabel">—</b><button class="icb" id="mPrev" aria-label="الشهر السابق">‹</button></div>
+
+    <div class="hero">
+      <div class="eyebrow"><span>المبيعات الفعلية حتى الآن</span><span id="hDays"></span></div>
+      <div class="big"><span class="num" id="hActual">—</span><span class="cur">ر.س</span></div>
+      <div class="sub" id="hSub"></div>
+      <div class="prog" id="hProg"></div>
+      <div class="split"><span>المتوقع لنهاية الشهر <b class="num" id="hFc">—</b></span><span>الإنجاز <b class="num" id="hAch">—</b></span></div>
+      <div class="sub" style="margin-top:4px" id="hRange"></div>
+    </div>
+
+    <div class="status" id="stBox"><span class="sub">مؤشر التنبؤ</span><b id="stTxt">—</b></div>
+
+    <div class="card" id="tgtCard"></div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="l">اتجاه الأداء الأسبوعي</div><div class="v num" id="kTrend">—</div><div class="s" id="kTrendS"></div></div>
+      <div class="kpi"><div class="l">المطلوب يومياً حتى نهاية الشهر</div><div class="v num" id="kReq">—</div><div class="s" id="kReqS"></div></div>
+      <div class="kpi"><div class="l">المتوسط اليومي</div><div class="v num" id="kAvg">—</div><div class="s" id="kAvgS"></div></div>
+      <div class="kpi"><div class="l">يوم الذروة</div><div class="v num up" id="kPeak">—</div><div class="s" id="kPeakS"></div></div>
+    </div>
+
+    <div class="card wide" id="insCard"><h3>الملخص الذكي <small>يُكتب تلقائياً من بياناتك</small></h3><ul class="ins" id="insList"></ul></div>
+
+    <div class="card wide"><h3>المبيعات اليومية — الفعلي والمتوقع <small id="dailyNote"></small></h3><div id="chDaily"></div>
+      <div class="legend"><span><span class="sw" id="lgAct"></span>فعلي</span><span><span class="sw" style="background:var(--fc)"></span>متوقع</span><span><span class="sw" style="background:#16233A;opacity:.55;height:2px;width:14px"></span>متوسط 7 أيام</span><span><span class="sw" style="background:var(--up);height:2px;width:14px"></span>المتوسط اليومي</span></div>
+      <div class="hint" style="margin-top:4px">↔ اسحب المخطط لرؤية كل أيام الشهر</div></div>
+
+    <div class="card"><h3>المسار التراكمي حتى نهاية الشهر</h3><div id="chCum"></div>
+      <div class="legend"><span><span class="sw" style="background:var(--gold)"></span>فعلي</span><span><span class="sw" style="background:#6B7A90"></span>متوقع</span><span><span class="sw" style="background:var(--down);height:2px;width:14px"></span>المتوقع لنهاية الشهر</span></div></div>
+
+    <div class="card"><h3>المبيعات حسب أسابيع الشهر <small>التغير بالمتوسط اليومي</small></h3><div id="chWk"></div></div>
+
+    <div class="card"><h3>متوسط المبيعات حسب يوم الأسبوع <small>أساس التوقع</small></h3><div id="chWd"></div></div>
+
+    <div class="card" id="cmpCard"><h3 id="cmpTitle">مقارنة الفروع</h3><div id="cmpBody"></div></div>
+
+    <div class="card" id="wdhCard"><h3>قوة أيام الأسبوع لكل فرع <small>مقابل متوسط الفرع</small></h3><div id="wdh"></div></div>
+
+    <div class="card"><h3>أفضل وأضعف 5 أيام <small id="tbNote"></small></h3><div id="tbBody"></div></div>
+
+    <div class="card"><h3>التقويم الحراري <small>أخضر فوق المتوسط • أحمر تحته • المتقطع متوقع</small></h3><div id="cal" class="cal"></div></div>
+  </section>
+
+  <!-- ================= ENTRY ================= -->
+  <section id="tab-entry" class="wrap" style="gap:14px" hidden>
+    <div class="card" style="display:flex;flex-direction:column;gap:10px">
+      <h3>إدخال مبيعات اليوم <small id="eState"></small></h3>
+      <div class="field"><label for="eDate">التاريخ</label><input type="date" id="eDate"></div>
+      <div id="eFields" style="display:flex;flex-direction:column;gap:10px"></div>
+      <div class="dsum"><span>إجمالي اليوم</span><b class="num" id="eSum">—</b></div>
+      <button class="btn gold" id="eSave">حفظ</button>
+      <button class="linkbtn" id="eDel" hidden style="color:#C8503F">حذف بيانات هذا اليوم</button>
+      <div id="eConfirm"></div>
+      <div class="hint">اترك خانة الفرع فارغة إذا لم تتوفر مبيعاته بعد؛ يتوقعها التطبيق حتى تدخلها.</div>
+    </div>
+    <div class="card" id="tgtEdit" style="display:flex;flex-direction:column;gap:10px">
+      <h3>الأهداف الشهرية <small>تُستخدم في اللوحة والتقارير</small></h3>
+      <div class="field"><label for="tgM">الشهر</label><input type="month" id="tgM"></div>
+      <div id="tgFields" style="display:flex;flex-direction:column;gap:10px"></div>
+      <div class="dsum"><span>هدف جميع الفروع</span><b class="num" id="tgSum">—</b></div>
+      <button class="btn gold" id="tgSave">حفظ الأهداف</button>
+      <div class="hint">حدّد هدف مبيعات كل فرع للشهر؛ يحسب التطبيق نسبة التحقيق والمطلوب يومياً وهل المتوقع يغطي الهدف.</div>
+    </div>
+    <div class="side" style="display:flex;flex-direction:column;gap:12px;min-width:0">
+      <div class="sec-h"><h2 id="logTitle">سجل الشهر</h2><span>اضغط على أي يوم لتعديله</span></div>
+      <div class="log" id="dayLog"></div>
+    </div>
+  </section>
+
+  <!-- ================= REPORTS ================= -->
+  <section id="tab-rep" class="wrap" style="gap:14px" hidden>
+    <div class="card" style="display:flex;flex-direction:column;gap:10px">
+      <h3>إنشاء تقرير <small>يومي • أسبوعي • شهري • تحليلي • مقارنة • اتجاه — لكل فرع أو لجميع الفروع</small></h3>
+      <div class="field"><label>نوع التقرير</label><div class="seg seg3"><button type="button" id="rtD" aria-pressed="true">يومي</button><button type="button" id="rtW" aria-pressed="false">أسبوعي</button><button type="button" id="rtM" aria-pressed="false">شهري</button><button type="button" id="rtA" aria-pressed="false">تحليلي</button><button type="button" id="rtC" aria-pressed="false">مقارنة شهرية</button><button type="button" id="rtT" aria-pressed="false">اتجاه المبيعات</button></div></div>
+      <div class="field"><label for="rScope">الفرع</label><select id="rScope"></select></div>
+      <div class="field" id="fDay"><label for="rDay">يوم التقرير</label><input type="date" id="rDay"></div>
+      <div class="field" id="fPer" hidden><label for="rPer">فترة تحليل المسار</label><select id="rPer"><option value="mtd">من بداية الشهر — والتوقع لنهاية الشهر</option><option value="30">آخر 30 يوماً — والتوقع لـ 7 أيام</option><option value="60">آخر 60 يوماً — والتوقع لـ 7 أيام</option><option value="90">آخر 90 يوماً — والتوقع لـ 7 أيام</option></select></div>
+      <div class="field" id="fWeek" hidden><label for="rWeek">آخر يوم في الأسبوع</label><input type="date" id="rWeek"></div>
+      <div class="field" id="fMonth" hidden><label for="rMonth">شهر التقرير</label><select id="rMonth"></select></div>
+      <div class="field"><label for="rNote">ملاحظة (اختياري)</label><textarea id="rNote" class="txt" placeholder="مثال: عرض خاص يوم الخميس"></textarea></div>
+      <button class="btn gold" id="mkRep">إنشاء التقرير وحفظه</button>
+      <div class="hint" id="repHint"></div>
+    </div>
+    <div class="side" style="display:flex;flex-direction:column;gap:12px;min-width:0">
+      <div class="sec-h"><h2>التقارير المحفوظة</h2><span id="repCount"></span></div>
+      <div id="reps" style="display:flex;flex-direction:column;gap:12px"><div class="empty">لا توجد تقارير محفوظة بعد</div></div>
+    </div>
+  </section>
+  <p class="note">سري — للاستخدام الداخلي • تُحفظ التعديلات فوراً وتظهر على كل أجهزتك</p>
+</div>
+
+<nav class="tabs"><div class="in">
+  <button class="tab" id="tbDash" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>اللوحة</button>
+  <button class="tab" id="tbEntry" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/><rect x="3" y="3" width="18" height="18" rx="4"/></svg>الإدخال</button>
+  <button class="tab" id="tbRep" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></svg>التقارير</button>
+</div></nav>
+<div id="sheetRoot"></div>
+<div class="toast hide" id="toast"></div>
+
+<script type="text/x-app">
+(function(){
+  const $=s=>document.querySelector(s);
+  const BR=[{k:'az',name:'فرع العزيزية',short:'العزيزية',col:'#D4AF37'},{k:'sh',name:'فرع شوران',short:'شوران',col:'#5B8FD0'},{k:'pc',name:'فرع الباتشينو',short:'الباتشينو',col:'#A07BE6'}];window.__pf&&window.__pf(BR);
+  const DAYS=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  const AUTHOR='Ameer Alarifi';
+  const st={db:null,dl:null,sales:{},reports:[],targets:{},scope:'all',month:null,ready:false};
+
+  // ---------- helpers ----------
+  const fmt=(n,d=0)=>(n==null||isNaN(n))?'—':Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+  const lblK=v=>{const a=Math.abs(v);return a>=1e6?(v/1e6).toFixed(2)+'M':(v/1e3).toFixed(1)+'K';};
+  const pct=(v,d=1)=>v==null||isNaN(v)?'—':(v*100).toFixed(d)+'%';
+  const spct=(v,d=1)=>v==null||isNaN(v)?'—':(v>0?'▲ +':v<0?'▼ ':'● ')+(v*100).toFixed(d)+'%';
+  const cls=v=>v==null?'':v>0.03?'up':v<-0.03?'down':'flat';
+  function parseNum(s){ if(s==null) return NaN; s=String(s).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/٫/g,'.').replace(/[,،\s]/g,'').replace(/−/g,'-'); return s===''?NaN:Number(s); }
+  const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  const fromIso=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);};
+  const dmy=s=>{const [y,m,d]=s.split('-');return d+'/'+m+'/'+y;};
+  const todayIso=()=>iso(new Date());
+  const addDays=(k,n)=>{const d=fromIso(k);d.setDate(d.getDate()+n);return iso(d);};
+  let toastT; function toast(m){const t=$('#toast');t.textContent=m;t.classList.remove('hide');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.add('hide'),1900);}
+  function setSync(s,t){$('#dot').className='dot'+(s==='on'?' on':s==='err'?' err':'');$('#syncTxt').textContent=t;}
+  function banner(m){const b=$('#banner');if(!m){b.hidden=true;return;}b.textContent=m;b.hidden=false;}
+  function el(tag,attrs={},kids=[]){const e=document.createElement(tag);for(const k in attrs){if(k==='text')e.textContent=attrs[k];else if(k==='html')e.innerHTML=attrs[k];else if(k.startsWith('on'))e.addEventListener(k.slice(2),attrs[k]);else e.setAttribute(k,attrs[k]);}(Array.isArray(kids)?kids:[kids]).forEach(c=>c!=null&&e.append(c));return e;}
+  const brOf=k=>BR.find(b=>b.k===k);
+  const scopeName=s=>s==='all'?'جميع الفروع':brOf(s).name;
+
+  const heatF=t=>.15+.85*Math.min(1,Math.abs(t)/.3);
+  const heatRGB=t=>{ const c=t>=0?[30,160,95]:[214,64,58], b=[236,240,245], f=heatF(t); return `rgb(${b.map((x,i)=>Math.round(x+(c[i]-x)*f)).join(',')})`; };
+  const sgn=v=>(v>0?'+':'')+(v*100).toFixed(0)+'%';
+  function tgtOf(month,scope,targets){ const T=(targets||st.targets)[month]; if(!T) return null; const g=k=>T[k]!=null&&T[k]!==''&&!isNaN(Number(T[k]))?Number(T[k]):null;
+    if(scope==='all'){ const v=BR.map(b=>g(b.k)); return v.every(x=>x!=null)?v.reduce((s,x)=>s+x,0):null; } return g(scope); }
+  function weekBuckets(a){ const out=[]; for(let s=1;s<=a.n;s+=7){ const e=Math.min(a.n,s+6); const rs=a.rows.slice(s-1,e); const act=rs.reduce((t,r)=>t+(r.act||0),0), fc=rs.reduce((t,r)=>t+(r.fc||0),0);
+      const parts=(a.parts||[]).map(p=>({k:p.k,act:p.rows.slice(s-1,e).reduce((t,r)=>t+(r.act||0),0)})); out.push({i:out.length+1,from:s,to:e,days:e-s+1,act,fc,parts}); }
+    out.forEach((w,i)=>{ const pv=out[i-1]; w.chg=(pv&&(pv.act+pv.fc)>0&&(w.act+w.fc)>0)?((w.act+w.fc)/w.days)/((pv.act+pv.fc)/pv.days)-1:null; }); return out; }
+  function fullRows(a){ return a.rows.filter(r=>r.act!=null&&!r.partial); }
+  function stabLabel(cv){ return cv==null?'—':cv<.15?'ثابت جداً':cv<.25?'ثابت':cv<.35?'متذبذب':'متذبذب جداً'; }
+  function insightsFor(a,targets){ const out=[]; if(!a.rec) return out; const [y,m]=a.month.split('-').map(Number); const MN=MONTHS[m-1];
+    out.push({tone:'info',t:`المبيعات حتى ${a.last} ${MN}: ${fmt(a.actual)} ر.س بمتوسط ${fmt(a.avg)} يومياً، والمتوقع لنهاية الشهر ${fmt(a.forecast)} ر.س${a.remaining?` (بين ${fmt(a.low)} و${fmt(a.high)})`:''}.`});
+    if(a.trend!=null) out.push({tone:a.trend>0.03?'up':a.trend<-0.03?'down':'flat',t:`آخر 7 أيام ${a.trend>=0?'أعلى':'أقل'} من الأسبوع الذي قبلها بـ ${Math.abs(a.trend*100).toFixed(1)}% — ${a.trend>0.03?'أداء صاعد':a.trend<-0.03?'أداء هابط يحتاج متابعة':'أداء مستقر'}.`});
+    const T=tgtOf(a.month,a.scope,targets); if(T){ const cov=a.forecast!=null?a.forecast/T:null; if(a.remaining>0){ const req=Math.max(0,(T-a.actual)/a.remaining);
+        out.push({tone:cov>=1?'up':cov>=.95?'flat':'down',t:`الهدف ${fmt(T)} ر.س: تحقق منه ${pct(a.actual/T)} حتى الآن، والمطلوب ${fmt(req)} يومياً للأيام الـ${a.remaining} المتبقية مقابل متوسطك الحالي ${fmt(a.avg)} — ${cov>=1?'المتوقع يتجاوز الهدف ✓':'المتوقع يغطي '+pct(cov)+' من الهدف'}.`}); }
+      else out.push({tone:a.actual>=T?'up':'down',t:`انتهى الشهر بتحقيق ${pct(a.actual/T)} من الهدف (${fmt(T)} ر.س).`}); }
+    if(a.scope==='all'&&a.parts&&a.parts.length>=3){ const ps=[...a.parts].sort((p,q)=>q.actual-p.actual); const tot=a.actual||1;
+      out.push({tone:'info',t:`${brOf(ps[0].k).short} يقود بحصة ${pct(ps[0].actual/tot)} من المبيعات، يليه ${brOf(ps[1].k).short} (${pct(ps[1].actual/tot)}) ثم ${brOf(ps[2].k).short} (${pct(ps[2].actual/tot)}).`});
+      const tr=a.parts.filter(p=>p.trend!=null).sort((p,q)=>q.trend-p.trend); if(tr.length>1){ const b=tr[0], w=tr[tr.length-1]; out.push({tone:b.trend>0.03?'up':'flat',t:`الأسرع نمواً هذا الأسبوع: ${brOf(b.k).short} (${spct(b.trend)})${w.trend<-0.03?`، والأضعف: ${brOf(w.k).short} (${spct(w.trend)})`:`، وأبطؤها: ${brOf(w.k).short} (${spct(w.trend)})`}.`}); } }
+    const w=a.wdAvg.map((v,i)=>({v,i})).filter(o=>o.v!=null); if(w.length>=5&&a.avg){ const hi=w.reduce((x,o)=>o.v>x.v?o:x), lo=w.reduce((x,o)=>o.v<x.v?o:x);
+      out.push({tone:'info',t:`${DAYS[hi.i]} أقوى أيام الأسبوع بمتوسط ${fmt(hi.v)} (${sgn(hi.v/a.avg-1)} عن المتوسط)، و${DAYS[lo.i]} الأضعف بمتوسط ${fmt(lo.v)} (${sgn(lo.v/a.avg-1)}).`}); }
+    const fr=fullRows(a); const tf=fr.reduce((t,r)=>t+r.act,0); if(fr.length>=7&&tf){ const wk=fr.filter(r=>r.wd===4||r.wd===5).reduce((t,r)=>t+r.act,0); out.push({tone:'info',t:`يوما الخميس والجمعة يحققان ${pct(wk/tf)} من المبيعات (المعدل الطبيعي ليومين ≈ 28.6%).`}); }
+    if(fr.length>=3&&a.avg){ const rev=[...fr].reverse(); const below=rev[0].act<a.avg; let k=0; for(const r of rev){ if((r.act<a.avg)===below) k++; else break; }
+      if(k>=3) out.push({tone:below?'down':'up',t:`آخر ${k} أيام مسجلة كانت ${below?'تحت':'فوق'} المتوسط اليومي على التوالي.`}); }
+    if(a.missing&&a.missing.length) out.push({tone:'flat',t:`بيانات ${a.missing.join(' و')} غير مكتملة حتى يوم ${a.last} — التطبيق يتوقعها مؤقتاً حتى تُدخل.`});
+    return out; }
+
+  // ---------- forecast engine ----------
+  // analyzeBranch: values for month, optional cutoff day (data after cutoff ignored)
+  function analyzeBranch(sales,month,k,cutoff){
+    const [y,m]=month.split('-').map(Number); const n=new Date(y,m,0).getDate(); const cut=cutoff||n;
+    const v=[]; for(let d=1;d<=n;d++){ const key=month+'-'+String(d).padStart(2,'0'); const e=sales[key]; const x=(d<=cut&&e&&e[k]!=null&&e[k]!=='')?Number(e[k]):null; v.push({day:d,key,wd:fromIso(key).getDay(),act:x}); }
+    const has=v.filter(r=>r.act!=null); const rec=has.length; const actual=has.reduce((t,r)=>t+r.act,0); const avg=rec?actual/rec:null;
+    const wdAvg=[0,1,2,3,4,5,6].map(w=>{const a=has.filter(r=>r.wd===w);return a.length?a.reduce((t,r)=>t+r.act,0)/a.length:null;});
+    const wdCnt=[0,1,2,3,4,5,6].map(w=>has.filter(r=>r.wd===w).length);
+    v.forEach(r=>{ r.fc=(r.act==null&&rec)?(wdAvg[r.wd]??avg):null; });
+    const fcSum=v.reduce((t,r)=>t+(r.fc||0),0); const forecast=rec?actual+fcSum:null; const remaining=v.filter(r=>r.act==null).length;
+    const last=rec?Math.max(...has.map(r=>r.day)):0;
+    const win=(a,b)=>{const x=has.filter(r=>r.day>a&&r.day<=b);return {sum:x.reduce((t,r)=>t+r.act,0),n:x.length};};
+    const l7=win(last-7,last), p7=win(last-14,last-7);
+    const trend=(l7.n&&p7.n)?(l7.sum/l7.n)/(p7.sum/p7.n)-1:null;
+    let sd=null; if(rec>1){const mu=avg;sd=Math.sqrt(has.reduce((t,r)=>t+(r.act-mu)**2,0)/(rec-1));}
+    const spread=(sd!=null&&forecast!=null)?1.645*sd*Math.sqrt(remaining):0;
+    const peak=rec?has.reduce((a,b)=>b.act>a.act?b:a):null, low=rec?has.reduce((a,b)=>b.act<a.act?b:a):null;
+    return {n,rows:v,rec,actual,avg,wdAvg,wdCnt,forecast,low:forecast!=null?Math.max(actual,forecast-spread):null,high:forecast!=null?forecast+spread:null,
+      simple:avg!=null?avg*n:null,remaining,last,l7,p7,trend,sd,peak,lowDay:low,conf:!rec?'—':remaining===0?'نهائي':rec>=15?'عالية':rec>=7?'متوسطة':'منخفضة'};
+  }
+  function analyze(sales,month,scope,cutoff){
+    const keys=scope==='all'?BR.map(b=>b.k):[scope];
+    const parts=keys.map(k=>({k,...analyzeBranch(sales,month,k,cutoff)}));
+    const n=parts[0].n;
+    const rows=parts[0].rows.map((r,i)=>{ let act=0,fc=0,ha=false,hf=false; parts.forEach(p=>{const q=p.rows[i]; if(q.act!=null){act+=q.act;ha=true;} if(q.fc!=null){fc+=q.fc;hf=true;}}); return {day:r.day,key:r.key,wd:r.wd,act:ha?act:null,fc:hf?fc:null,partial:ha&&hf}; });
+    const sum=f=>parts.every(p=>p[f]==null)?null:parts.reduce((t,p)=>t+(p[f]||0),0);
+    const actual=parts.reduce((t,p)=>t+p.actual,0); const forecast=sum('forecast');
+    const rec=Math.max(...parts.map(p=>p.rec)); const last=Math.max(...parts.map(p=>p.last));
+    const l7s=parts.reduce((t,p)=>t+(p.l7.n?p.l7.sum/p.l7.n:0),0), p7s=parts.reduce((t,p)=>t+(p.p7.n?p.p7.sum/p.p7.n:0),0);
+    const trend=scope==='all'?(parts.every(p=>p.trend!=null)&&p7s?l7s/p7s-1:null):parts[0].trend;
+    const full=rows.filter(r=>r.act!=null&&!r.partial);
+    const peak=full.length?full.reduce((a,b)=>b.act>a.act?b:a):null, lowD=full.length?full.reduce((a,b)=>b.act<a.act?b:a):null;
+    const avg=scope==='all'?parts.reduce((t,p)=>t+(p.avg||0),0)||null:parts[0].avg;
+    const wdAvg=[0,1,2,3,4,5,6].map(w=>parts.every(p=>p.wdAvg[w]==null)?null:parts.reduce((t,p)=>t+(p.wdAvg[w]??p.avg??0),0));
+    const confOrder=['منخفضة','متوسطة','عالية','نهائي'];
+    const conf=parts.some(p=>p.conf==='—')?'—':parts.map(p=>p.conf).sort((a,b)=>confOrder.indexOf(a)-confOrder.indexOf(b))[0];
+    const remaining=n-last; const ach=forecast?actual/forecast:null;
+    const status=!rec?'لا توجد بيانات':trend==null?'● مستقر':trend>0.03?'▲ أداء صاعد':trend<-0.03?'▼ أداء هابط':'● أداء مستقر';
+    return {scope,month,n,rows,parts,actual,forecast,low:sum('low'),high:sum('high'),simple:sum('simple'),rec,last,remaining,trend,l7:l7s,p7:p7s,avg,peak,lowDay:lowD,wdAvg,conf,ach,status,
+      req:(forecast!=null&&remaining>0)?(forecast-actual)/remaining:null,
+      missing:parts.filter(p=>p.last<last).map(p=>brOf(p.k).short)};
+  }
+
+  // ---------- tabs ----------
+  function showTab(w){ ['dash','entry','rep'].forEach(t=>$('#tab-'+t).hidden=t!==w); $('#tbDash').setAttribute('aria-selected',w==='dash'); $('#tbEntry').setAttribute('aria-selected',w==='entry'); $('#tbRep').setAttribute('aria-selected',w==='rep');
+    try{localStorage.setItem('stab',w);}catch(e){} if(w==='rep') fillRepForm(); if(w==='dash') renderDash(); window.scrollTo({top:0}); }
+  $('#tbDash').onclick=()=>showTab('dash'); $('#tbEntry').onclick=()=>showTab('entry'); $('#tbRep').onclick=()=>showTab('rep');
+
+  // ---------- dashboard ----------
+  function buildChips(){ const c=$('#brChips'); c.innerHTML=''; [{k:'all',short:'الكل',col:'#9A7B12'},...BR].forEach(b=>{ c.append(el('button',{class:'chip',type:'button','aria-pressed':st.scope===b.k,onclick:()=>{st.scope=b.k;try{localStorage.setItem('scope',b.k);}catch(e){} buildChips(); renderDash();}},[el('i',{style:'background:'+b.col}),document.createTextNode(b.short)])); }); }
+  function monthsAvail(){ const s=new Set(Object.keys(st.sales).map(k=>k.slice(0,7))); s.add(todayIso().slice(0,7)); return [...s].sort(); }
+  $('#mPrev').onclick=()=>shiftMonth(-1); $('#mNext').onclick=()=>shiftMonth(1);
+  function shiftMonth(k){ const [y,m]=st.month.split('-').map(Number); st.month=iso(new Date(y,m-1+k,1)).slice(0,7); renderDash(); renderLog(); }
+  function actColor(){ return st.scope==='all'?'#D4AF37':brOf(st.scope).col; }
+
+  function renderDash(){
+    if(!st.month){ const ks=Object.keys(st.sales).sort(); st.month=(ks.length?ks[ks.length-1]:todayIso()).slice(0,7); }
+    const [y,m]=st.month.split('-').map(Number); $('#mLabel').textContent=MONTHS[m-1]+' '+y;
+    const a=analyze(st.sales,st.month,st.scope);
+    $('#hActual').textContent=fmt(a.actual); $('#hDays').textContent=a.rec?('حتى '+a.last+' '+MONTHS[m-1]):'';
+    $('#hSub').textContent= a.rec? ('خلال '+a.rec+' يوم • متوسط '+fmt(a.avg)+' / يوم'+(a.missing.length?' • ينقص: '+a.missing.join('، '):'')) : 'لا توجد مبيعات مسجلة لهذا الشهر';
+    $('#hFc').textContent=fmt(a.forecast); $('#hAch').textContent=pct(a.ach);
+    $('#hProg').innerHTML=`<i style="width:${Math.min(100,(a.ach||0)*100)}%;background:${actColor()}"></i>`;
+    $('#hRange').textContent= a.forecast!=null? ('النطاق المتوقع (ثقة 90%): '+fmt(a.low)+' – '+fmt(a.high)) : '';
+    $('#stTxt').textContent=a.status+(a.conf!=='—'?'  •  الثقة: '+a.conf:''); $('#stBox').className='status '+(a.status[0]==='▲'?'up':a.status[0]==='▼'?'down':'flat');
+    const kt=$('#kTrend'); kt.textContent=spct(a.trend); kt.className='v num '+cls(a.trend); $('#kTrendS').textContent=a.trend!=null?'آخر 7 أيام مقابل السابقة':'يحتاج أسبوعين من البيانات';
+    $('#kReq').textContent=fmt(a.req); $('#kReqS').textContent=a.remaining>0?('متبقي '+a.remaining+' يوم'):'اكتمل الشهر';
+    $('#kAvg').textContent=fmt(a.avg); $('#kAvgS').textContent=a.simple!=null?('بالمعدل البسيط: '+fmt(a.simple)):'';
+    $('#kPeak').textContent=a.peak?fmt(a.peak.act):'—'; $('#kPeakS').textContent=a.peak?(DAYS[a.peak.wd]+' '+a.peak.day+' '+MONTHS[m-1]):'';
+    $('#lgAct').style.background=actColor();
+    $('#dailyNote').textContent=scopeName(st.scope);
+    drawDaily($('#chDaily'),a,actColor()); drawCum($('#chCum'),a); drawWd($('#chWd'),a,actColor()); drawCompare(a); drawCal(a);
+    drawTarget(a); drawInsights(a); drawWeeks($('#chWk'),a); drawWdHeat(a); drawTopBottom(a);
+  }
+  function chartFrame(box,W,H,body,aria,scroll){ box.innerHTML= scroll? `<div class="cscroll"><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${aria}">${body}</svg></div>` : `<svg width="100%" viewBox="0 0 ${W} ${H}" role="img" aria-label="${aria}" style="display:block">${body}</svg>`; return box.querySelector('.cscroll'); }
+  function drawDaily(box,a,col){
+    if(!a.rec){ box.innerHTML='<div class="empty">سجّل أول يوم ليظهر المخطط</div>'; return; }
+    const n=a.n,U=50,pl=24,pr=24,pt=40,pb=30; const W=Math.max(Math.min(box.clientWidth||340,1000),pl+pr+n*U),H=250,ih=H-pt-pb;
+    const X=d=>pl+(n-d)*U+U/2; const mx=Math.max(...a.rows.map(r=>(r.act||0)+(r.fc||0)))*1.12||1; const Y=v=>pt+ih-(v/mx)*ih; const bw=U*.6;
+    let g=''; for(let i=1;i<=4;i++){const yy=pt+ih*i/4; g+=`<line x1="${pl}" x2="${W-pr}" y1="${yy}" y2="${yy}" stroke="#EDF1F6" stroke-dasharray="3 5"/>`;}
+    const bars=a.rows.map(r=>{ let s=''; const x=X(r.day)-bw/2; let base=Y(0);
+      if(r.act!=null){ const h=base-Y(r.act); s+=`<rect x="${x}" y="${base-h}" width="${bw}" height="${h}" rx="2" fill="${col}"/>`; base-=h; }
+      if(r.fc!=null){ const h=Y(0)-Y(r.fc); s+=`<rect x="${x}" y="${base-h}" width="${bw}" height="${h}" rx="2" fill="#B4BFCE" opacity=".85"/>`; base-=h; }
+      const tot=(r.act||0)+(r.fc||0); if(tot) s+=`<text x="${X(r.day)}" y="${base-6}" text-anchor="middle" font-size="10" font-weight="700" fill="${r.act!=null&&!r.partial?'#16233A':'#4A5A72'}" ${r.act==null?'font-style="italic"':''}>${lblK(tot)}</text>`;
+      return s; }).join('');
+    const fr=a.rows.map(r=>r.act!=null&&!r.partial?r.act:null); const ma=[]; a.rows.forEach((r,i)=>{ const w=fr.slice(Math.max(0,i-6),i+1).filter(v=>v!=null); if(fr[i]!=null&&w.length>=3) ma.push(X(r.day)+','+Y(w.reduce((t,v)=>t+v,0)/w.length)); });
+    const maL=ma.length>1?`<polyline points="${ma.join(' ')}" fill="none" stroke="#16233A" stroke-opacity=".55" stroke-width="2" stroke-linejoin="round"/>`:'';
+    const avgY=Y(a.avg); const avgL=`<line x1="${pl}" x2="${W-pr}" y1="${avgY}" y2="${avgY}" stroke="#1FA16B" stroke-width="1.6" stroke-dasharray="6 5"/>`;
+    let xt=''; a.rows.forEach(r=>{ xt+=`<text x="${X(r.day)}" y="${H-10}" fill="${r.act!=null?'#6B7A90':'#8A97AA'}" font-size="10.5" text-anchor="middle">${r.day}</text>`; });
+    const sc=chartFrame(box,W,H,g+bars+avgL+maL+xt,'المبيعات اليومية',true); requestAnimationFrame(()=>{ sc.scrollLeft=Math.max(0,X(a.last)-sc.clientWidth/2); });
+  }
+  function drawCum(box,a){
+    if(!a.rec){ box.innerHTML='<div class="empty">—</div>'; return; }
+    const n=a.n,W=340,H=210,pl=10,pr=48,pt=24,pb=26,iw=W-pl-pr,ih=H-pt-pb; let c=0; const pts=a.rows.map(r=>{c+=(r.act||0)+(r.fc||0);return {d:r.day,c,act:r.day<=a.last};});
+    const mx=Math.max(a.high||0,c)*1.05; const X=d=>pl+(n-d)/(n-1)*iw, Y=v=>pt+ih-(v/mx)*ih;
+    let g=''; for(let i=0;i<=4;i++){const v=mx*i/4; g+=`<line x1="${pl}" x2="${pl+iw}" y1="${Y(v)}" y2="${Y(v)}" stroke="#EDF1F6" stroke-dasharray="3 5"/><text x="${W-2}" y="${Y(v)+3.5}" fill="#6B7A90" font-size="9.5" text-anchor="end">${lblK(v)}</text>`;}
+    const actP=pts.filter(p=>p.act), fcP=pts.filter(p=>p.d>=a.last);
+    const area=`<polygon points="${X(1)},${Y(0)} ${actP.map(p=>X(p.d)+','+Y(p.c)).join(' ')} ${X(a.last)},${Y(0)}" fill="${actColor()}" fill-opacity=".18"/>`;
+    const l1=`<polyline points="${actP.map(p=>X(p.d)+','+Y(p.c)).join(' ')}" fill="none" stroke="${actColor()}" stroke-width="2.6"/>`;
+    const l2=`<polyline points="${fcP.map(p=>X(p.d)+','+Y(p.c)).join(' ')}" fill="none" stroke="#6B7A90" stroke-width="2" stroke-dasharray="5 4"/>`;
+    const fy=Y(a.forecast); const fl=`<line x1="${pl}" x2="${pl+iw}" y1="${fy}" y2="${fy}" stroke="#D0453A" stroke-width="1.4" stroke-dasharray="6 4"/><text x="${pl+4}" y="${fy-6}" font-size="10.5" font-weight="700" fill="#C8503F">${fmt(a.forecast)}</text>`;
+    const lp=actP[actP.length-1]; const lab=`<circle cx="${X(lp.d)}" cy="${Y(lp.c)}" r="4.5" fill="#9A7B12"/><text x="${X(lp.d)}" y="${Y(lp.c)+16}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#9A7B12">${lblK(lp.c)}</text>`;
+    let xt=''; [1,5,10,15,20,25,n].filter((v,i,ar)=>ar.indexOf(v)===i).forEach(d=>xt+=`<text x="${X(d)}" y="${H-6}" fill="#8A97AA" font-size="9.5" text-anchor="middle">${d}</text>`);
+    chartFrame(box,W,H,g+area+l1+l2+fl+lab+xt,'المسار التراكمي',false);
+  }
+  function drawWd(box,a,col){
+    if(!a.rec){ box.innerHTML='<div class="empty">—</div>'; return; }
+    const W=340,H=190,pl=8,pr=8,pt=22,pb=26,iw=W-pl-pr,ih=H-pt-pb; const vals=a.wdAvg.map(v=>v||0); const mx=Math.max(...vals)*1.15||1; const U=iw/7, bw=U*.62;
+    const X=i=>pl+iw-(i+.5)*U, Y=v=>pt+ih-(v/mx)*ih; const top=Math.max(...vals);
+    const bars=vals.map((v,i)=>`<rect x="${X(i)-bw/2}" y="${Y(v)}" width="${bw}" height="${pt+ih-Y(v)}" rx="3" fill="${v===top?col:'#AFC3DE'}"/><text x="${X(i)}" y="${Y(v)-6}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#16233A">${v?lblK(v):''}</text><text x="${X(i)}" y="${H-8}" text-anchor="middle" font-size="10" fill="#6B7A90">${DAYS[i]}</text>`).join('');
+    const ay=Y(a.avg||0); chartFrame(box,W,H,bars+`<line x1="${pl}" x2="${W-pr}" y1="${ay}" y2="${ay}" stroke="#1FA16B" stroke-width="1.4" stroke-dasharray="6 5"/>`,'حسب يوم الأسبوع',false);
+  }
+  function drawCompare(a){
+    const box=$('#cmpBody');
+    if(st.scope==='all'){ $('#cmpTitle').textContent='مقارنة الفروع';
+      const tot=a.forecast||0; const R=58,r=36,cx=75,cy=75; let ang=-Math.PI/2, paths='';
+      const segs=a.parts.map(p=>({p,v:Math.max(0,p.forecast||0)})); const T=segs.reduce((t,s)=>t+s.v,0)||1;
+      segs.forEach(s=>{ const f=s.v/T; if(f<=0) return; const a2=ang+f*Math.PI*2, L=f>.5?1:0; const P=(t,rr)=>[cx+rr*Math.cos(t),cy+rr*Math.sin(t)];
+        const [x1,y1]=P(ang,R),[x2,y2]=P(a2,R),[x3,y3]=P(a2,r),[x4,y4]=P(ang,r); paths+=f>.9999?`<circle cx="${cx}" cy="${cy}" r="${(R+r)/2}" fill="none" stroke="${brOf(s.p.k).col}" stroke-width="${R-r}"/>`:`<path d="M${x1} ${y1}A${R} ${R} 0 ${L} 1 ${x2} ${y2}L${x3} ${y3}A${r} ${r} 0 ${L} 0 ${x4} ${y4}Z" fill="${brOf(s.p.k).col}" stroke="#FFFFFF" stroke-width="2"/>`; ang=a2; });
+      const rows=a.parts.map(p=>{ const b=brOf(p.k); return `<tr><td><span class="sw" style="background:${b.col}"></span>${b.short}</td><td class="n">${fmt(p.actual)}</td><td class="n">${fmt(p.forecast)}</td><td class="n">${pct(p.forecast?p.actual/p.forecast:null)}</td><td class="n ${cls(p.trend)}">${spct(p.trend)}</td></tr>`; }).join('');
+      box.innerHTML=`<div style="display:grid;grid-template-columns:130px 1fr;gap:12px;align-items:center"><svg viewBox="0 0 150 150" width="100%" role="img" aria-label="حصة الفروع">${paths}<text x="75" y="72" text-anchor="middle" font-size="9.5" fill="#6B7A90">المتوقع</text><text x="75" y="89" text-anchor="middle" font-size="13" font-weight="700" fill="#9A7B12">${lblK(tot)}</text></svg>
+        <div>${a.parts.map(p=>`<div style="display:flex;justify-content:space-between;font-size:12.5px;padding:3px 0"><span><span class="sw" style="background:${brOf(p.k).col}"></span>${brOf(p.k).short}</span><b class="num">${pct(T?Math.max(0,p.forecast||0)/T:null)}</b></div>`).join('')}</div></div>
+        <div style="overflow-x:auto;margin-top:10px"><table class="tb"><thead><tr><th>الفرع</th><th>الفعلي</th><th>المتوقع</th><th>الإنجاز</th><th>الاتجاه</th></tr></thead><tbody>${rows}</tbody>
+        <tfoot><tr><td>الإجمالي</td><td class="n">${fmt(a.actual)}</td><td class="n">${fmt(a.forecast)}</td><td class="n">${pct(a.ach)}</td><td class="n">${spct(a.trend)}</td></tr></tfoot></table></div>`;
+    } else { $('#cmpTitle').textContent='سيناريوهات إجمالي الشهر';
+      const it=[['المبيعات الفعلية حتى الآن',a.actual,brOf(st.scope).col],['الحد الأدنى المتوقع',a.low,'#AFC3DE'],['التوقع الأساسي',a.forecast,'#9A7B12'],['الحد الأعلى المتوقع',a.high,'#AFC3DE'],['توقع بالمعدل البسيط',a.simple,'#B4BFCE']];
+      const mx=Math.max(...it.map(x=>x[1]||0))||1;
+      box.innerHTML=it.map(x=>`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12.5px;color:#6B7A90"><span>${x[0]}</span><b class="num" style="color:#16233A">${fmt(x[1])}</b></div><div style="height:9px;border-radius:9px;background:#E1E7EF;margin-top:4px;overflow:hidden"><i style="display:block;height:100%;width:${(x[1]||0)/mx*100}%;background:${x[2]}"></i></div></div>`).join('');
+    }
+  }
+  function drawCal(a){
+    const c=$('#cal'); c.innerHTML=''; DAYS.forEach(d=>c.append(el('div',{class:'h',text:d.replace('ال','')})));
+    const off=fromIso(a.month+'-01').getDay(); for(let i=0;i<off;i++) c.append(el('div',{class:'c x'}));
+    a.rows.forEach(r=>{ const v=(r.act||0)+(r.fc||0); const isF=r.act==null; const t=a.avg?v/a.avg-1:0; const strong=!isF&&heatF(t)>.5;
+      c.append(el('div',{class:'c'+(isF?' fc':'')+(strong?' s':''),style:(!isF&&v)?`background:${heatRGB(t)}`:'',title:DAYS[r.wd]+' '+r.day+(a.avg&&v?' • '+sgn(t)+' عن المتوسط':'')},[el('div',{class:'d',text:String(r.day)+(isF&&v?' ◦':'')}),el('div',{class:'v',text:v?lblK(v):''})])); });
+  }
+
+  function drawTarget(a){ const box=$('#tgtCard'); const T=tgtOf(a.month,st.scope); const [y,m]=a.month.split('-').map(Number);
+    if(!T){ box.innerHTML=`<h3>الهدف الشهري <small>${MONTHS[m-1]} ${y}</small></h3><div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><span class="sub" style="color:var(--mute);font-size:13px">${st.scope==='all'?'حدّد هدف كل فرع لتظهر نسبة التحقيق والمطلوب يومياً.':'لم يُحدَّد هدف لهذا الفرع في هذا الشهر.'}</span><button class="btn ghost" type="button" id="goTgt" style="flex:none;width:auto;padding:9px 14px">تحديد الهدف</button></div>`;
+      $('#goTgt').onclick=()=>{ showTab('entry'); $('#tgM').value=a.month; loadTargets(); setTimeout(()=>$('#tgtEdit').scrollIntoView({behavior:'smooth',block:'start'}),60); }; return; }
+    const f=Math.max(0,Math.min(1,a.actual/T)); const cov=a.forecast!=null?a.forecast/T:null; const col=actColor(); const R=46, C=2*Math.PI*R;
+    const req=a.remaining>0?Math.max(0,(T-a.actual)/a.remaining):null; const tone=cov==null?'flat':cov>=1?'up':cov>=.95?'flat':'down';
+    box.innerHTML=`<h3>الهدف الشهري <small>${MONTHS[m-1]} ${y}</small></h3><div class="tgt"><svg viewBox="0 0 120 120" width="100%" role="img" aria-label="تحقيق الهدف"><circle cx="60" cy="60" r="${R}" fill="none" stroke="#EDF1F6" stroke-width="13"/><circle cx="60" cy="60" r="${R}" fill="none" stroke="${col}" stroke-width="13" stroke-linecap="round" stroke-dasharray="${C*f} ${C}" transform="rotate(-90 60 60)"/><text x="60" y="63" text-anchor="middle" font-size="19" font-weight="700" fill="#16233A" font-family="Readex Pro">${pct(a.actual/T,0)}</text><text x="60" y="80" text-anchor="middle" font-size="9.5" fill="#6B7A90">من الهدف</text></svg>
+      <div><div class="rw"><span>الهدف</span><b class="num">${fmt(T)}</b></div><div class="rw"><span>المتبقي للهدف</span><b class="num">${fmt(Math.max(0,T-a.actual))}</b></div><div class="rw"><span>المطلوب يومياً</span><b class="num ${req!=null&&a.avg>=req?'up':'down'}">${req!=null?fmt(req):'—'}</b></div><div class="rw" style="border:0"><span>المتوقع يغطي</span><span class="pill ${tone}">${cov!=null?pct(cov):'—'}${cov>=1?' ✓':''}</span></div></div></div>`; }
+  function drawInsights(a){ const L=$('#insList'); const it=insightsFor(a); L.innerHTML=it.length?it.map(x=>`<li class="${x.tone}"><i></i><span>${x.t}</span></li>`).join(''):'<li><i></i><span>سجّل أيام المبيعات لتظهر الملاحظات.</span></li>'; }
+  function drawWeeks(box,a){ if(!a.rec){ box.innerHTML='<div class="empty">—</div>'; return; } const wk=weekBuckets(a); const W=340,H=236,pl=6,pr=6,pt=26,pb=52,iw=W-pl-pr,ih=H-pt-pb; const U=iw/wk.length, bw=U*.56;
+    const mx=Math.max(...wk.map(w=>w.act+w.fc))*1.14||1; const X=i=>pl+iw-(i+.5)*U, Y=v=>pt+ih-(v/mx)*ih; let s='';
+    wk.forEach((w,i)=>{ let base=Y(0); const segs=st.scope==='all'?w.parts.map(p=>({v:p.act,c:brOf(p.k).col})):[{v:w.act,c:actColor()}]; segs.push({v:w.fc,c:'#B4BFCE'});
+      segs.forEach(z=>{ if(!z.v) return; const h=Y(0)-Y(z.v); s+=`<rect x="${X(i)-bw/2}" y="${base-h}" width="${bw}" height="${h}" rx="2" fill="${z.c}"/>`; base-=h; });
+      const tot=w.act+w.fc; if(tot) s+=`<text x="${X(i)}" y="${base-6}" text-anchor="middle" font-size="10.5" font-weight="700" fill="${w.fc&&!w.act?'#4A5A72':'#16233A'}">${lblK(tot)}</text>`;
+      s+=`<text x="${X(i)}" y="${H-34}" text-anchor="middle" font-size="10" fill="#16233A" font-weight="600">أسبوع ${w.i}</text><text x="${X(i)}" y="${H-21}" text-anchor="middle" font-size="9" fill="#8A97AA">${w.from}–${w.to}</text>`;
+      if(w.chg!=null) s+=`<text x="${X(i)}" y="${H-7}" text-anchor="middle" font-size="9.5" font-weight="700" fill="${w.chg>0.03?'#1FA16B':w.chg<-0.03?'#D0453A':'#C98A0C'}" direction="ltr">${w.chg>0?'▲':w.chg<0?'▼':'●'} ${sgn(w.chg)}</text>`; });
+    chartFrame(box,W,H,s,'المبيعات حسب الأسابيع',false); }
+  function drawWdHeat(a){ const card=$('#wdhCard'), box=$('#wdh'); const parts=st.scope==='all'?a.parts:a.parts; if(!a.rec){ box.innerHTML='<div class="empty">—</div>'; return; }
+    let h='<div class="hm"><div></div>'+DAYS.map(d=>`<div class="h">${d.replace('ال','')}</div>`).join('');
+    parts.forEach(p=>{ const b=brOf(p.k); h+=`<div class="r"><span class="sw" style="background:${b.col}"></span>${b.short}</div>`; p.wdAvg.forEach(v=>{ if(v==null||!p.avg){ h+='<div class="c" style="background:#F7F9FC;color:#8A97AA">—</div>'; return; } const t=v/p.avg-1; h+=`<div class="c" style="background:${heatRGB(t)};color:${heatF(t)>.5?'#fff':'#16233A'}" title="${lblK(v)}">${sgn(t)}</div>`; }); });
+    box.innerHTML=h+'</div><div class="hint" style="margin-top:8px">النسبة = متوسط اليوم مقابل المتوسط العام للفرع</div>'; }
+  function drawTopBottom(a){ const box=$('#tbBody'); const fr=fullRows(a); if(fr.length<3){ box.innerHTML='<div class="empty">يحتاج 3 أيام مسجلة على الأقل</div>'; $('#tbNote').textContent=''; return; } const [y,m]=a.month.split('-').map(Number);
+    const top=[...fr].sort((p,q)=>q.act-p.act).slice(0,5), bot=[...fr].sort((p,q)=>p.act-q.act).slice(0,5); $('#tbNote').textContent=scopeName(st.scope);
+    const it=r=>`<div class="it"><span>${DAYS[r.wd]} ${r.day}</span><b class="num">${fmt(r.act)}</b></div>`;
+    box.innerHTML=`<div class="tb2"><div><h4 class="up">▲ الأعلى</h4>${top.map(it).join('')}</div><div><h4 class="down">▼ الأقل</h4>${bot.map(it).join('')}</div></div>`; }
+
+  // ---------- targets ----------
+  function buildTargets(){ const f=$('#tgFields'); f.innerHTML=''; BR.forEach(b=>f.append(el('div',{class:'field'},[el('label',{for:'tg_'+b.k},[el('span',{class:'sw',style:'background:'+b.col}),document.createTextNode('هدف '+b.name)]),
+    el('input',{class:'amount',id:'tg_'+b.k,inputmode:'decimal',autocomplete:'off',placeholder:'—',oninput:updTgSum,onblur:e=>{const v=parseNum(e.target.value); if(!isNaN(v)) e.target.value=fmt(v);}})]))); }
+  function updTgSum(){ let t=0,all=true; BR.forEach(b=>{const v=parseNum($('#tg_'+b.k).value); if(isNaN(v)) all=false; else t+=v;}); $('#tgSum').textContent=all?fmt(t):'—'; }
+  function loadTargets(){ const mo=$('#tgM').value; const T=st.targets[mo]||{}; BR.forEach(b=>{ $('#tg_'+b.k).value=T[b.k]!=null?fmt(T[b.k]):''; }); $('#tgSave').textContent=st.targets[mo]?'تحديث الأهداف':'حفظ الأهداف'; updTgSum(); }
+  $('#tgM').addEventListener('change',loadTargets);
+  $('#tgSave').onclick=async()=>{ const mo=$('#tgM').value; if(!/^\d{4}-\d{2}$/.test(mo)){toast('اختر الشهر');return;} const doc={month:mo}; let any=false;
+    for(const b of BR){ const raw=$('#tg_'+b.k).value.trim(); if(raw===''){doc[b.k]=null;continue;} const v=parseNum(raw); if(isNaN(v)||v<0){toast('قيمة غير صحيحة في هدف '+b.name);return;} doc[b.k]=Math.round(v); any=true; }
+    if(!any){toast('أدخل هدف فرع واحد على الأقل');return;} $('#tgSave').disabled=true; const ok=await write(()=>st.db.doc('targets/'+mo).set(doc)); $('#tgSave').disabled=false; if(ok) toast('حُفظت أهداف '+mo); };
+
+  // ---------- entry ----------
+  function buildEntry(){ const f=$('#eFields'); f.innerHTML=''; BR.forEach(b=>{ f.append(el('div',{class:'field'},[el('label',{for:'e_'+b.k},[el('span',{class:'sw',style:'background:'+b.col}),document.createTextNode(b.name)]),
+    el('input',{class:'amount',id:'e_'+b.k,inputmode:'decimal',autocomplete:'off',placeholder:'—',oninput:updSum,onblur:e=>{const v=parseNum(e.target.value); if(!isNaN(v)) e.target.value=fmt(v,2);}})])); }); }
+  function updSum(){ let t=0,any=false; BR.forEach(b=>{const v=parseNum($('#e_'+b.k).value); if(!isNaN(v)){t+=v;any=true;}}); $('#eSum').textContent=any?fmt(t,2):'—'; }
+  function loadEntry(){ const d=$('#eDate').value; const e=st.sales[d]; BR.forEach(b=>{ const v=e&&e[b.k]!=null?e[b.k]:null; $('#e_'+b.k).value=v!=null?fmt(v,2):''; });
+    $('#eState').textContent= e? DAYS[fromIso(d).getDay()]+' — مسجل، الحفظ يحدّثه' : (d?DAYS[fromIso(d).getDay()]+' — يوم جديد':''); $('#eSave').textContent=e?'تحديث':'حفظ'; $('#eDel').hidden=!e; $('#eConfirm').innerHTML=''; updSum(); }
+  $('#eDate').addEventListener('change',loadEntry);
+  $('#eSave').onclick=async()=>{ const d=$('#eDate').value; if(!d){toast('اختر التاريخ');return;}
+    const doc={date:d}; let any=false; for(const b of BR){ const raw=$('#e_'+b.k).value.trim(); if(raw===''){doc[b.k]=null;continue;} const v=parseNum(raw); if(isNaN(v)){toast('قيمة غير صحيحة في '+b.name);$('#e_'+b.k).focus();return;} doc[b.k]=Math.round(v*100)/100; any=true; }
+    if(!any){toast('أدخل مبيعات فرع واحد على الأقل');return;}
+    $('#eSave').disabled=true; const ok=await write(()=>st.db.doc('sales/'+d).set(doc)); $('#eSave').disabled=false;
+    if(ok){ toast('حُفظت مبيعات '+dmy(d)); st.month=d.slice(0,7); const nx=addDays(d,1); if(!st.sales[nx]&&nx<=todayIso()){ $('#eDate').value=nx; } loadEntry(); } };
+  $('#eDel').onclick=()=>{ const d=$('#eDate').value; const cb=$('#eConfirm'); cb.innerHTML=''; const yes=el('button',{class:'btn danger',text:'نعم، احذف'}), no=el('button',{class:'btn ghost',text:'تراجع'});
+    yes.onclick=async()=>{ yes.disabled=true; if(await write(()=>st.db.doc('sales/'+d).delete())){ toast('حُذفت بيانات اليوم'); loadEntry(); } }; no.onclick=()=>cb.innerHTML='';
+    cb.append(el('div',{class:'confirm'},[el('span',{text:'ستُحذف مبيعات الفروع ليوم '+dmy(d)+'.'}),el('div',{class:'row'},[no,yes])])); };
+  function renderLog(){
+    const L=$('#dayLog'); L.innerHTML=''; const month=st.month||todayIso().slice(0,7); const [y,m]=month.split('-').map(Number); $('#logTitle').textContent='سجل '+MONTHS[m-1]+' '+y;
+    const ks=Object.keys(st.sales).filter(k=>k.startsWith(month)).sort().reverse();
+    if(!ks.length){ L.append(el('div',{class:'empty',text:'لا توجد أيام مسجلة في هذا الشهر'})); return; }
+    ks.forEach(k=>{ const e=st.sales[k]; let t=0; const miss=[]; const vals=BR.map(b=>{ const v=e[b.k]; if(v==null){miss.push(b.short);return el('span',{},[el('span',{class:'sw',style:'background:'+b.col}),el('span',{class:'miss',text:'—'})]);} t+=Number(v); return el('span',{},[el('span',{class:'sw',style:'background:'+b.col}),el('span',{class:'num',text:lblK(Number(v))})]); });
+      L.append(el('button',{class:'lg',type:'button',onclick:()=>{ $('#eDate').value=k; loadEntry(); window.scrollTo({top:0,behavior:'smooth'}); }},[
+        el('div',{class:'dd',text:String(Number(k.slice(8)))}),
+        el('div',{},[el('div',{class:'w',text:DAYS[fromIso(k).getDay()]+(miss.length?' • ينقص: '+miss.join('، '):'')}),el('div',{class:'vals'},vals)]),
+        el('div',{class:'t num',text:fmt(t)}) ])); });
+  }
+
+  // ---------- reports ----------
+  let repType='daily';
+  const TYPE_LABEL={daily:'تقرير يومي',weekly:'تقرير أسبوعي',monthly:'تقرير شهري',analysis:'تقرير تحليلي',compare:'تقرير مقارنة',trend:'تقرير الاتجاه'};
+  const RT={D:'daily',W:'weekly',M:'monthly',A:'analysis',C:'compare',T:'trend'};
+  function fillRepForm(){ const sc=$('#rScope'); if(!sc.options.length){ [{k:'all',name:'جميع الفروع (كل فرع في قسم مستقل)'},...BR].forEach(b=>sc.append(el('option',{value:b.k,text:b.name}))); }
+    const sel=$('#rMonth'); const cur=sel.value||st.month; sel.innerHTML=''; monthsAvail().reverse().forEach(mm=>{const [y,m]=mm.split('-').map(Number); sel.append(el('option',{value:mm,text:MONTHS[m-1]+' '+y}));}); if(cur) sel.value=cur;
+    const ks=Object.keys(st.sales).sort(); const lastK=ks.length?ks[ks.length-1]:todayIso(); if(!$('#rDay').value) $('#rDay').value=lastK; if(!$('#rWeek').value) $('#rWeek').value=lastK; }
+  function setRepType(t){ repType=t; Object.keys(RT).forEach(c=>$('#rt'+c).setAttribute('aria-pressed',RT[c]===t));
+    $('#fDay').hidden=!(t==='daily'||t==='trend'); $('#fPer').hidden=t!=='trend'; $('#fDay').querySelector('label').textContent=t==='trend'?'آخر يوم في التحليل':'يوم التقرير'; $('#fWeek').hidden=t!=='weekly'; $('#fMonth').hidden=!['monthly','analysis','compare'].includes(t);
+    $('#repHint').textContent={daily:'يشمل: مبيعات اليوم، ومقارنتها بمتوسط الشهر وبنفس اليوم الأسبوع الماضي، وسجل أيام الشهر حتى يوم التقرير، ولوحة مؤشر التنبؤ كاملة، ونمط أيام الأسبوع.',
+      weekly:'يشمل: مبيعات 7 أيام تنتهي باليوم المختار مقارنةً بالأسبوع السابق يوماً بيوم، ولوحة مؤشر التنبؤ لنهاية الشهر، ونمط أيام الأسبوع.',
+      monthly:'يشمل: مبيعات كل أيام الشهر والتوقع للأيام المتبقية، والمسار التراكمي، ولوحة مؤشر التنبؤ كاملة، وجدول الأيام، ونمط أيام الأسبوع.',
+      analysis:'يشمل: ملخصاً تنفيذياً مكتوباً تلقائياً، والأهداف ونسبة تحقيقها، والمبيعات حسب أسابيع الشهر، وقوة أيام الأسبوع لكل فرع، وثبات المبيعات، وأعلى وأقل الأيام، وحصة الخميس والجمعة.',
+      trend:'يشمل: خط اتجاه المبيعات اليومية، والنطاق الطبيعي (±1σ) والواسع (±2σ)، ومتوسط 7 أيام، والتوقع بنطاق ثقة 90%، وموقع آخر يوم داخل النطاق، ومستويات الدعم والمقاومة، ونمط أيام الأسبوع، وقراءة مكتوبة للمسار. عند اختيار "جميع الفروع": مسار الإجمالي ثم صفحة بمسار كل فرع.',
+      compare:'يقارن الشهر المختار بالشهر الذي قبله لنفس عدد الأيام: النمو، والمسار التراكمي للشهرين، والمبيعات اليومية جنباً إلى جنب، ومقارنة أيام الأسبوع، ومقارنة كل فرع.'}[t]
+      + (['daily','weekly','monthly'].includes(t)?' عند اختيار "جميع الفروع": صفحة ملخص ومقارنة، ثم قسم مستقل لكل فرع.':''); }
+  Object.keys(RT).forEach(c=>$('#rt'+c).onclick=()=>setRepType(RT[c]));
+
+  $('#mkRep').onclick=async()=>{
+    const scope=$('#rScope').value; let month,day=null,from,to;
+    if(repType==='daily'){ day=$('#rDay').value; if(!day){toast('اختر يوم التقرير');return;} month=day.slice(0,7); from=addDays(month+'-01',-7); to=day; }
+    else if(repType==='trend'){ day=$('#rDay').value; if(!day){toast('اختر آخر يوم في التحليل');return;} month=day.slice(0,7); const per=$('#rPer').value; from=per==='mtd'?month+'-01':addDays(day,-(Number(per)-1)); to=day; }
+    else if(repType==='weekly'){ day=$('#rWeek').value; if(!day){toast('اختر آخر يوم في الأسبوع');return;} month=day.slice(0,7); from=[addDays(day,-13),month+'-01'].sort()[0]; to=day; }
+    else { month=$('#rMonth').value; const [y,m]=month.split('-').map(Number); from=month+'-01'; to=iso(new Date(y,m,0));
+      if(repType==='compare'){ const pm=iso(new Date(y,m-2,1)).slice(0,7); if(!Object.keys(st.sales).some(k=>k.startsWith(pm))){ const [py,pmm]=pm.split('-').map(Number); toast('لا توجد بيانات لشهر '+MONTHS[pmm-1]+' للمقارنة'); return; } from=pm+'-01'; } }
+    const sales=Object.values(st.sales).filter(e=>e.date>=from&&e.date<=to).map(e=>({date:e.date,az:e.az??null,sh:e.sh??null,pc:e.pc??null})).sort((a,b)=>a.date<b.date?-1:1);
+    if(!sales.some(e=>e.date.startsWith(month)||repType==='weekly')){toast('لا توجد مبيعات لهذه الفترة');return;}
+    const now=new Date(); const [y,m]=month.split('-').map(Number);
+    if(repType==='trend'){ const keys=scope==='all'?BR.map(b=>b.k):[scope]; const ok_=sales.filter(e=>e.date>=from&&keys.every(k=>e[k]!=null)).length; if(ok_<5){ toast('يحتاج التقرير 5 أيام مكتملة على الأقل في الفترة'); return; } }
+    const title= repType==='trend'? 'تقرير نطاق مسار المبيعات — حتى '+dmy(day) : repType==='daily'? 'تقرير المبيعات اليومي — '+DAYS[fromIso(day).getDay()]+' '+dmy(day)
+      : repType==='weekly'? 'تقرير المبيعات الأسبوعي — '+dmy(addDays(day,-6))+' إلى '+dmy(day) : repType==='analysis'? 'التقرير التحليلي للمبيعات — '+MONTHS[m-1]+' '+y
+      : repType==='compare'? 'مقارنة المبيعات — '+MONTHS[m-1]+' مقابل '+MONTHS[(m+10)%12]+' '+y : 'تقرير المبيعات الشهري — '+MONTHS[m-1]+' '+y;
+    const rep={type:repType,scope,month,day,sales,targets:st.targets[month]||null,...(repType==='trend'?{from,period:$('#rPer').value}:{}),note:$('#rNote').value.trim(),createdAt:now.toISOString(),createdLabel:dmy(iso(now))+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0'),title};
+    $('#mkRep').disabled=true; const ok=await write(()=>st.db.collection('reports').add(rep)); $('#mkRep').disabled=false; if(ok){ $('#rNote').value=''; toast('حُفظ التقرير'); } };
+
+  // ---- report model ----
+  const repSales=r=>{ const o={}; r.sales.forEach(e=>o[e.date]=e); return o; };
+  function repModel(r){
+    const map=repSales(r); const cutoff=(r.type==='daily'||r.type==='weekly')?Number(r.day.slice(8)):null;
+    const keys=r.scope==='all'?BR.map(b=>b.k):[r.scope];
+    const val=(d,k)=>{const e=map[d]; return e&&e[k]!=null?Number(e[k]):null;};
+    const branches=keys.map(k=>{ const p=analyzeBranch(map,r.month,k,cutoff); const b=brOf(k);
+      const week= (r.type==='daily'||r.type==='weekly')? Array.from({length:7},(_,i)=>{ const d=addDays(r.day,i-6), pd=addDays(d,-7); return {d,wd:fromIso(d).getDay(),cur:val(d,k),prev:val(pd,k)}; }) : null;
+      return {k,b,p,week}; });
+    const all=r.scope==='all'?analyze(map,r.month,'all',cutoff):null; const agg=all||analyze(map,r.month,r.scope,cutoff);
+    let prev=null,prevMonth=null; if(r.type==='compare'){ const [y,m]=r.month.split('-').map(Number); prevMonth=iso(new Date(y,m-2,1)).slice(0,7); prev=analyze(map,prevMonth,r.scope,null); }
+    return {map,cutoff,branches,all,agg,prev,prevMonth};
+  }
+  function weekSum(w,f){ const x=w.filter(q=>q[f]!=null); return x.length?x.reduce((t,q)=>t+q[f],0):null; }
+
+  function renderReports(){
+    const box=$('#reps'); box.innerHTML=''; const list=[...st.reports].sort((a,b)=>a.createdAt<b.createdAt?1:-1); $('#repCount').textContent=list.length?list.length+' تقرير':'';
+    if(!list.length){ box.append(el('div',{class:'empty',text:'لا توجد تقارير محفوظة بعد — أنشئ أول تقرير'})); return; }
+    list.forEach(r=>{ const M=repModel(r); const cb=el('div'); const t=r.type||'monthly';
+      let mainV,mainL; if(t==='daily'){ mainV=M.branches.reduce((s,x)=>s+(x.p.rows[M.cutoff-1].act||0),0); mainL='مبيعات اليوم'; }
+        else if(t==='weekly'){ mainV=M.branches.reduce((s,x)=>s+(weekSum(x.week,'cur')||0),0); mainL='مبيعات الأسبوع'; } else { mainV=M.branches.reduce((s,x)=>s+x.p.actual,0); mainL='الفعلي للشهر'; }
+      box.append(el('div',{class:'rep'},[ el('div',{class:'hd'},[ el('div',{},[el('span',{class:'badge '+(t==='daily'?'bd':t==='weekly'?'bs':'bm'),text:TYPE_LABEL[t].replace('تقرير ','')}),el('span',{class:'badge bs',text:scopeName(r.scope)}),el('div',{class:'tt',text:r.title}),el('div',{class:'mt',text:'أُنشئ '+r.createdLabel+(r.note?' • '+r.note:'')})]),
+          el('div',{},[el('div',{class:'tv num',text:fmt(mainV)}),el('div',{class:'mt',style:'text-align:left',text:mainL})]) ]),
+        el('div',{class:'acts'},[ el('button',{class:'pr',type:'button',text:'عرض',onclick:()=>previewRep(r)}), el('button',{type:'button',text:'صورة',onclick:()=>savePng(r)}), el('button',{type:'button',text:'PDF',onclick:()=>savePdf(r)}), el('button',{type:'button',text:'صفحة ويب',onclick:()=>saveHtml(r)}) ]),
+        el('button',{class:'linkbtn',type:'button',style:'color:#C8503F',text:'حذف التقرير',onclick:()=>{ cb.innerHTML=''; const yes=el('button',{class:'btn danger',text:'نعم، احذف'}), no=el('button',{class:'btn ghost',text:'تراجع'});
+          yes.onclick=async()=>{ yes.disabled=true; if(await write(()=>st.db.doc('reports/'+r.id).delete())) toast('حُذف التقرير'); }; no.onclick=()=>cb.innerHTML='';
+          cb.append(el('div',{class:'confirm'},[el('span',{text:'سيُحذف "'+r.title+'" نهائياً.'}),el('div',{class:'row'},[no,yes])])); }}), cb ])); });
+  }
+
+  // ---- canvas page builder ----
+  const W=1080, P=48, FA='"IBM Plex Sans Arabic", Tahoma, sans-serif', FD='"Readex Pro", "IBM Plex Sans Arabic", Tahoma, sans-serif';
+  function paint(x){
+    const T=(t,px,py,{size=20,w=400,col='#16233A',al='right',f=FA,dir='rtl'}={})=>{x.font=`${w} ${size}px ${f}`;x.fillStyle=col;x.textAlign=al;x.direction=dir;x.fillText(String(t),px,py);};
+    const N=(t,px,py,o={})=>T(t,px,py,{f:FD,dir:'ltr',...o});
+    const NR=(t,px,py,o={})=>{x.save();x.translate(px,py);x.rotate(-Math.PI/2);x.font=`${o.w||600} ${o.size||13}px ${FD}`;x.textAlign='left';x.direction='ltr';x.fillStyle=o.col||'#16233A';x.fillText(t,0,4);x.restore();};
+    const rr=(px,py,w,h,rad,fill,stroke)=>{x.beginPath();x.roundRect(px,py,w,h,rad);if(fill){x.fillStyle=fill;x.fill();}if(stroke){x.strokeStyle=stroke;x.lineWidth=1;x.stroke();}};
+    const line=(x1,y1,x2,y2,col,w=1,dash)=>{x.save();x.strokeStyle=col;x.lineWidth=w;if(dash)x.setLineDash(dash);x.beginPath();x.moveTo(x1,y1);x.lineTo(x2,y2);x.stroke();x.restore();};
+    return {T,N,NR,rr,line};
+  }
+  const trendCol=v=>v==null?'#16233A':v>0.03?'#1FA16B':v<-0.03?'#D0453A':'#C98A0C';
+  const stCol=s=>s[0]==='▲'?'#1FA16B':s[0]==='▼'?'#D0453A':'#C98A0C';
+  const GOLD='#D4AF37'; let AC=GOLD;
+  const rgbOf=c=>{const n=parseInt(c.slice(1),16);return [n>>16,(n>>8)&255,n&255];};
+  const hexA=(c,a)=>{const [r,g,b]=rgbOf(c);return `rgba(${r},${g},${b},${a})`;};
+  const lite=(c,f=.35)=>{const k=Math.min(.6,f+.15);const d=[22,32,52];const [r,g,b]=rgbOf(c);const m=(v,i)=>Math.round(v+(d[i]-v)*k);return `rgb(${m(r,0)},${m(g,1)},${m(b,2)})`;};
+  const tint=(c,f=.35)=>{const m=v=>Math.round(v+(255-v)*f);const [r,g,b]=rgbOf(c);return `rgb(${m(r)},${m(g)},${m(b)})`;};
+  const AL=c=>c==='#9A7B12'?lite(AC,.3):c;
+  const heatCol=t=>{ const c=t>=0?[30,160,95]:[214,64,58]; const base=[236,240,245]; const f=heatF(t); const m=(k)=>Math.round(base[k]+(c[k]-base[k])*f); return `rgb(${m(0)},${m(1)},${m(2)})`; };
+  function heatLegend(x,g,ly){ const {T,rr}=g; const steps=[-.3,-.2,-.1,0,.1,.2,.3], bw=46; const lx=W/2-steps.length*bw/2; steps.forEach((t,i)=>rr(lx+i*bw,ly,bw-4,18,4,heatCol(t)));
+    T('أقل من المتوسط ▼',lx-14,ly+14,{size:13,w:600,col:'#C8423A'}); T('▲ أعلى من المتوسط',lx+steps.length*bw+10,ly+14,{size:13,w:600,col:'#1E9E5E',al:'left'});
+    ['−30%','0','+30%'].forEach((l,k)=>g.N(l,lx+[0,3,6][k]*bw+(bw-4)/2,ly+38,{size:11.5,col:'#6B7A90',al:'center'}));
+    x.save(); x.setLineDash([4,4]); x.strokeStyle='#C5CFDC'; x.strokeRect(P+24,ly,26,18); x.restore(); T('متوقع / بدون بيانات',P+58,ly+14,{size:12.5,col:'#6B7A90',al:'left'}); }
+  const MXC=document.createElement('canvas').getContext('2d');
+  function wrapT(t,size,w,maxW,f=FA){ MXC.font=`${w} ${size}px ${f}`; MXC.direction='rtl'; const words=String(t).split(' '); const lines=[]; let cur=''; words.forEach(wd=>{ const tr=cur?cur+' '+wd:wd; if(MXC.measureText(tr).width>maxW&&cur){ lines.push(cur); cur=wd; } else cur=tr; }); if(cur) lines.push(cur); return lines; }
+  const repTargets=r=>r.targets?{[r.month]:r.targets}:st.targets;
+  const sgp=v=>v==null||isNaN(v)?'—':(v>0?'+':'')+(v*100).toFixed(1)+'%';
+  function smoothPath(ctx,P){ const n=P.length; if(!n) return; ctx.moveTo(P[0][0],P[0][1]); if(n===2){ ctx.lineTo(P[1][0],P[1][1]); return; } if(n<2) return;
+    const dx=[],m=[]; for(let i=0;i<n-1;i++){ dx.push(P[i+1][0]-P[i][0]); m.push(dx[i]?(P[i+1][1]-P[i][1])/dx[i]:0); }
+    const t=[m[0]]; for(let i=1;i<n-1;i++){ t.push(m[i-1]*m[i]<=0?0:(3*(dx[i-1]+dx[i]))/((2*dx[i]+dx[i-1])/m[i-1]+(dx[i]+2*dx[i-1])/m[i])); } t.push(m[n-2]);
+    for(let i=0;i<n-1;i++){ const h=dx[i]/3; ctx.bezierCurveTo(P[i][0]+h,P[i][1]+t[i]*h,P[i+1][0]-h,P[i+1][1]-t[i+1]*h,P[i+1][0],P[i+1][1]); } }
+  const B={
+    theme:(c)=>({h:0,draw:()=>{AC=c;}}),
+    header:(r,sub)=>({h:200,draw:(x,y,g)=>{ const {T,rr}=g; const gr=x.createLinearGradient(W,0,0,190); gr.addColorStop(0,'#FBF3DC'); gr.addColorStop(1,'#FFFFFF'); x.fillStyle=gr; x.fillRect(0,y,W,176); x.fillStyle='#D4AF37'; x.fillRect(0,y+176,W,4);
+      rr(W-P-56,y+50,56,56,14,'#D4AF37'); T('م',W-P-28,y+89,{size:30,w:700,col:'#1A1406',al:'center',f:FD});
+      T(r.title,W-P-76,y+76,{size:r.title.length>40?24:28,w:600,f:FD}); T(sub,W-P-76,y+116,{size:16,col:'#9A7B12'}); T('أُعد في '+r.createdLabel,W-P-76,y+146,{size:14,col:'#6B7A90'});
+      const t=r.type||'monthly'; rr(P,y+32,130,32,16,t==='daily'?'rgba(63,185,138,.16)':t==='weekly'?'rgba(91,143,208,.18)':'rgba(212,175,55,.16)'); T(TYPE_LABEL[t],P+65,y+54,{size:15,w:600,col:t==='daily'?'#1FA16B':t==='weekly'?'#2F6DB5':'#9A7B12',al:'center'});
+      x.fillStyle='#D4AF37'; x.fillRect(P,y+82,190,2); T('أُعد بواسطة',P+190,y+108,{size:14,col:'#6B7A90'}); x.save(); x.font='600 25px '+FD; x.fillStyle='#9A7B12'; x.textAlign='left'; x.direction='ltr'; x.fillText(AUTHOR,P,y+141); x.restore(); }}),
+    band:(title,col,sub,chips,badge)=>({h:124,draw:(x,y,g)=>{ const {T,rr}=g; const gr=x.createLinearGradient(W-P,0,P,0); gr.addColorStop(0,hexA(col,.30)); gr.addColorStop(.55,hexA(col,.07)); gr.addColorStop(1,'#FFFFFF');
+      rr(P,y+16,W-2*P,92,18,gr,hexA(col,.75)); x.fillStyle=col; x.beginPath(); x.roundRect(W-P-9,y+16,9,92,[0,18,18,0]); x.fill();
+      let tx=W-P-30; if(badge){ x.beginPath(); x.arc(W-P-60,y+62,28,0,7); x.fillStyle=col; x.fill(); x.lineWidth=4; x.strokeStyle=hexA(col,.3); x.beginPath(); x.arc(W-P-60,y+62,34,0,7); x.stroke(); T(badge,W-P-60,y+72,{size:25,w:700,col:'#FFFFFF',al:'center',f:FD}); tx=W-P-108; }
+      T(title,tx,y+(sub&&!chips?72:60),{size:28,w:700,f:FD,col:lite(col,.2)}); if(chips){ T(sub||'',tx,y+92,{size:14,col:'#4A5A72'}); let cx=P+22; chips.forEach(c=>{ x.font='600 13.5px '+FA; const w=x.measureText(c).width+26; rr(cx,y+48,w,28,14,hexA(col,.2),hexA(col,.5)); T(c,cx+w/2,y+67,{size:13.5,w:600,col:lite(col,.35),al:'center'}); cx+=w+10; }); }
+      else if(sub) T(sub,P+24,y+68,{size:15,col:'#4A5A72',al:'left'}); }}),
+    kpis:(items)=>({h:176,draw:(x,y,g)=>{ const {T,N,rr}=g; const kw=(W-2*P-3*14)/4; items.forEach((k,i)=>{ const px=W-P-(i+1)*kw-i*14; const ac=k[4]||AC; const gr=x.createLinearGradient(0,y+8,0,y+160); gr.addColorStop(0,hexA(ac,.13)); gr.addColorStop(.6,'#FFFFFF'); rr(px,y+8,kw,152,14,gr,'#E1E7EF'); x.fillStyle=ac; x.beginPath(); x.roundRect(px+14,y+8,kw-28,4,[0,0,3,3]); x.fill();
+      T(k[0],px+kw-18,y+46,{size:15,col:'#6B7A90'}); N(k[1],px+kw-18,y+96,{size:k[1].length>12?21:26,w:600,col:AL(k[2]||'#16233A'),al:'right'}); T(k[3]||'',px+kw-18,y+132,{size:13.5,col:'#8A97AA'}); }); }}),
+    strip:(items)=>({h:112,draw:(x,y,g)=>{ const {T,rr,line}=g; rr(P,y+6,W-2*P,94,14,'#FFFFFF',hexA(AC,.35)); const iw=(W-2*P)/items.length; items.forEach((q,i)=>{ const cx=W-P-iw*i-iw/2; if(i) line(W-P-iw*i,y+26,W-P-iw*i,y+80,'#E1E7EF'); T(q[0],cx,y+40,{size:13.5,col:'#6B7A90',al:'center'}); T(q[1],cx,y+76,{size:String(q[1]).length>16?15:19,w:600,col:AL(q[2]||'#16233A'),al:'center',f:FD,dir:q[3]||'rtl'}); }); }}),
+    title:(t,sub)=>({h:58,draw:(x,y,g)=>{ const {T,rr}=g; rr(W-P-6,y+18,6,28,3,AC); T(t,W-P-18,y+40,{size:21,w:600,f:FD}); if(sub) T(sub,P,y+40,{size:14,col:'#6B7A90',al:'left'}); }}),
+    rings:(items)=>({h:214,draw:(x,y,g)=>{ const {T,N,rr}=g; const n=items.length, gap=14, kw=(W-2*P-(n-1)*gap)/n; items.forEach((it,i)=>{ const px=W-P-(i+1)*kw-i*gap; const c=it[4]||AC; rr(px,y+8,kw,190,16,'#FFFFFF','#E1E7EF');
+      const cx=px+kw-80, cy=y+103, R=54; x.save(); x.lineWidth=14; x.lineCap='round'; x.strokeStyle='#EDF1F6'; x.beginPath(); x.arc(cx,cy,R,0,Math.PI*2); x.stroke(); const f=Math.max(0,Math.min(1,it[1]||0));
+      if(f>0){ x.shadowColor=hexA(c,.55); x.shadowBlur=14; x.strokeStyle=c; x.beginPath(); x.arc(cx,cy,R,-Math.PI/2,-Math.PI/2+Math.PI*2*f); x.stroke(); } x.restore();
+      N(it[2],cx,cy+8,{size:it[2].length>6?19:23,w:700,col:'#16233A',al:'center'}); T(it[0],px+kw-156,y+84,{size:16,w:600,col:lite(c,.3)}); T(it[3]||'',px+kw-156,y+116,{size:13.5,col:'#6B7A90'}); if(it[5]) T(it[5],px+kw-156,y+142,{size:13.5,col:'#6B7A90'}); }); }}),
+    brCards:(cards)=>({h:284,draw:(x,y,g)=>{ const {T,N,rr,line}=g; const n=cards.length,gap=14,kw=(W-2*P-(n-1)*gap)/n; cards.forEach((c,i)=>{ const px=W-P-(i+1)*kw-i*gap; const col=c.col;
+      const gr=x.createLinearGradient(0,y+8,0,y+270); gr.addColorStop(0,hexA(col,.24)); gr.addColorStop(.55,'#FFFFFF'); rr(px,y+8,kw,264,16,gr,hexA(col,.6)); x.fillStyle=col; x.beginPath(); x.roundRect(px,y+8,kw,7,[16,16,0,0]); x.fill();
+      x.beginPath(); x.arc(px+34,y+50,18,0,7); x.fillStyle=col; x.fill(); N('#'+c.rank,px+34,y+56,{size:15,w:700,col:'#FFFFFF',al:'center'});
+      T(c.name,px+kw-20,y+56,{size:21,w:700,f:FD,col:lite(col,.2)});
+      const hw=(kw-40)/2; line(px+20+hw,y+84,px+20+hw,y+140,hexA(col,.35));
+      T('المبيعات الفعلية',px+kw-20,y+96,{size:13,col:'#6B7A90'}); N(c.act,px+kw-20,y+132,{size:c.act.length>9?21:24,w:700,col:'#16233A',al:'right'});
+      T('المتوقعة للشهر',px+20+hw-12,y+96,{size:13,col:'#6B7A90'}); N(c.fc,px+20+hw-12,y+132,{size:c.fc.length>9?21:24,w:700,col:lite(col,.3),al:'right'});
+      T('الإنجاز من المتوقع',px+kw-20,y+170,{size:13,col:'#6B7A90'}); N(c.v2,px+20,y+170,{size:14,w:700,col:lite(col,.3),al:'left'}); const bw=kw-40, f=Math.max(0,Math.min(1,c.f||0)); rr(px+20,y+180,bw,10,5,'#EDF1F6'); if(f>0) rr(px+20+bw*(1-f),y+180,Math.max(10,bw*f),10,5,col);
+      x.fillStyle='#E1E7EF'; x.fillRect(px+20,y+206,bw,1);
+      T(c.l3,px+kw-20,y+230,{size:12.5,col:'#6B7A90'}); N(c.v3,px+kw-20,y+256,{size:16,w:700,col:c.c3||'#16233A',al:'right'});
+      T(c.l4,px+20,y+230,{size:12.5,col:'#6B7A90',al:'left'}); N(c.v4,px+20,y+256,{size:16,w:700,col:c.c4||'#16233A',al:'left'}); }); }}),
+    heat:(p,sub)=>{ const first=p.rows[0].wd; const weeks=Math.ceil((first+p.n)/7); const ch=84, gp=8; const h=104+weeks*(ch+gp)+74; return {h,draw:(x,y,g)=>{ const {T,N,rr}=g; rr(P,y,W-2*P,h-12,14,'#FFFFFF','#E1E7EF'); rr(W-P-6,y+22,6,26,3,AC); T('الخريطة الحرارية — أداء أيام الشهر',W-P-22,y+42,{size:19,w:600,f:FD}); if(sub) T(sub,P+22,y+42,{size:13.5,col:'#6B7A90',al:'left'});
+      const gw=W-2*P-40, cw=(gw-6*gp)/7; const X=wd=>W-P-20-(wd+1)*cw-wd*gp;
+      for(let wd=0;wd<7;wd++) T(DAYS[wd],X(wd)+cw/2,y+84,{size:13.5,w:600,col:'#6B7A90',al:'center'});
+      p.rows.forEach((q,i)=>{ const wk=Math.floor((first+i)/7); const cx=X(q.wd), cy=y+100+wk*(ch+gp);
+        if(q.act!=null){ const t=p.avg?q.act/p.avg-1:0; rr(cx,cy,cw,ch,10,heatCol(t)); const tc=heatF(t)>.5?'#FFFFFF':'#16233A', tc2=heatF(t)>.5?'rgba(255,255,255,.88)':'#4A5A72'; T(String(q.day),cx+cw-10,cy+22,{size:13,w:700,col:tc2}); N(fmt(q.act),cx+cw/2,cy+52,{size:cw<125?15.5:17,w:700,col:tc,al:'center'}); N((t>0?'+':'')+(t*100).toFixed(0)+'%',cx+cw/2,cy+74,{size:12.5,w:600,col:tc2,al:'center'}); }
+        else { rr(cx,cy,cw,ch,10,'#F7F9FC'); x.save(); x.setLineDash([5,5]); x.strokeStyle='#C5CFDC'; x.lineWidth=1.2; x.beginPath(); x.roundRect(cx+.5,cy+.5,cw-1,ch-1,10); x.stroke(); x.restore(); T(String(q.day),cx+cw-10,cy+22,{size:13,col:'#8A97AA'});
+          if(q.fc!=null){ N(fmt(q.fc),cx+cw/2,cy+52,{size:15,w:600,col:'#8A97AA',al:'center'}); T('متوقع',cx+cw/2,cy+74,{size:12,col:'#8A97AA',al:'center'}); } } });
+      heatLegend(x,g,y+h-50); }}; },
+    heatAll:(M,sub)=>{ const rows=[...M.branches.map(z=>({name:z.b.short,col:z.b.col,p:z.p})),{name:'الإجمالي',col:GOLD,p:M.all}]; const rh=48, gp=6; const h=110+rows.length*(rh+gp)+74; return {h,draw:(x,y,g)=>{ const {T,N,rr}=g; rr(P,y,W-2*P,h-12,14,'#FFFFFF','#E1E7EF'); rr(W-P-6,y+22,6,26,3,AC);
+      T('الخريطة الحرارية — أداء الفروع يوماً بيوم',W-P-22,y+42,{size:19,w:600,f:FD}); if(sub) T(sub,P+22,y+42,{size:13.5,col:'#6B7A90',al:'left'});
+      const n=M.all.n, lab=118, x1=W-P-20-lab, x0=P+20, cw=(x1-x0)/n; const cx=d=>x1-d*cw;
+      for(let d=1;d<=n;d++) N(String(d),cx(d)+cw/2,y+88,{size:11.5,w:600,col:'#6B7A90',al:'center'});
+      rows.forEach((rw,ri)=>{ const ry=y+100+ri*(rh+gp); if(ri===rows.length-1){ x.fillStyle='#E1E7EF'; x.fillRect(x0,ry-gp/2,W-P-20-x0,1); } rr(W-P-30,ry+rh/2-6,12,12,3,rw.col); T(rw.name,W-P-50,ry+rh/2+6,{size:15,w:700,col:lite(rw.col,.25)});
+        rw.p.rows.forEach(q=>{ const px=cx(q.day)+1, w=cw-2; if(q.act!=null){ const t=rw.p.avg?q.act/rw.p.avg-1:0; rr(px,ry,w,rh,5,heatCol(t)); } else { rr(px,ry,w,rh,5,'#F7F9FC','#E1E7EF'); } }); });
+      heatLegend(x,g,y+h-50); }}; },
+    donut:(items,centerL)=>({h:320,draw:(x,y,g)=>{ const {T,N,rr}=g; rr(P,y,W-2*P,300,14,'#FFFFFF','#E1E7EF'); const tot=items.reduce((s,q)=>s+(q.v||0),0)||1; const cx=P+175, cy=y+150, R=118, r0=76; let a0=-Math.PI/2;
+      items.forEach(q=>{ const a1=a0+Math.PI*2*(q.v||0)/tot; x.beginPath(); x.arc(cx,cy,R,a0,a1); x.arc(cx,cy,r0,a1,a0,true); x.closePath(); x.fillStyle=q.col; x.fill(); x.strokeStyle='#FFFFFF'; x.lineWidth=4; x.stroke(); a0=a1; });
+      N(fmt(tot),cx,cy+6,{size:21,w:700,col:'#16233A',al:'center'}); T(centerL,cx,cy+32,{size:13,col:'#6B7A90',al:'center'});
+      const x1=W-P-30, x0=P+380, lw=x1-x0; items.forEach((q,i)=>{ const ry=y+36+i*84; const s=(q.v||0)/tot; rr(x1-16,ry,16,16,4,q.col); T(q.name,x1-28,ry+15,{size:18,w:700,col:lite(q.col,.2)}); N(pct(s),x0,ry+15,{size:20,w:700,col:'#16233A',al:'left'});
+        N(fmt(q.v),x1-28,ry+44,{size:15,col:'#4A5A72',al:'right'}); rr(x0,ry+56,lw,8,4,'#EDF1F6'); rr(x0+lw*(1-s),ry+56,Math.max(8,lw*s),8,4,q.col); }); }}),
+    multiCum:(M,upto,title)=>({h:430,draw:(x,y,g)=>{ const {T,N,rr,line}=g; rr(P,y,W-2*P,410,14,'#FFFFFF','#E1E7EF'); T(title,W-P-22,y+40,{size:19,w:600,f:FD});
+      let lx=P+22; M.branches.forEach(b=>{ rr(lx,y+27,14,14,3,b.b.col); T(b.b.short,lx+20,y+40,{size:13.5,col:'#6B7A90',al:'left'}); x.font='400 13.5px '+FA; lx+=34+x.measureText(b.b.short).width; });
+      const n=M.branches[0].p.n, cx0=P+30, cx1=W-P-30, cy0=y+84, cy1=y+360; const X=d=>cx1-(d-1)/(n-1)*(cx1-cx0-100);
+      const series=M.branches.map(b=>{ let s=0; return {b,pts:b.p.rows.map(q=>{ s+=(q.act!=null?q.act:(q.fc||0)); return {d:q.day,c:s}; })}; });
+      const mx=Math.max(...series.map(s=>s.pts[upto-1].c))*1.08||1; const Y=v=>cy1-(v/mx)*(cy1-cy0);
+      for(let i=0;i<=4;i++) line(cx0,cy0+(cy1-cy0)*i/4,cx1,cy0+(cy1-cy0)*i/4,'#EDF1F6',1,[4,6]);
+      series.forEach(s=>{ const col=s.b.b.col; const L=Math.min(s.b.p.last||0,upto); const path=(a)=>{ x.beginPath(); a.forEach((q,i)=>i?x.lineTo(X(q.d),Y(q.c)):x.moveTo(X(q.d),Y(q.c))); };
+        x.save(); x.lineWidth=3.5; x.lineJoin='round'; x.strokeStyle=col; path(s.pts.slice(0,Math.max(L,1))); x.stroke(); if(upto>L&&L>0){ x.setLineDash([8,6]); x.lineWidth=2.2; x.globalAlpha=.75; path(s.pts.slice(L-1,upto)); x.stroke(); } x.restore();
+        const e=s.pts[upto-1]; x.beginPath(); x.arc(X(e.d),Y(e.c),6,0,7); x.fillStyle=col; x.fill(); N(lblK(e.c),X(e.d)-12,Y(e.c)+5,{size:14,w:700,col:lite(col,.3),al:'right'}); });
+      [1,5,10,15,20,25,n].filter((v,i,a)=>v<=n&&a.indexOf(v)===i).forEach(d=>N(String(d),X(d),cy1+26,{size:12,col:'#8A97AA',al:'center'})); }}),
+    table:(cols,rows,foot)=>{ const rh=40; const h=16+44+rows.length*rh+(foot?46:0)+14; return {h,draw:(x,y,g)=>{ const {T,N,rr,line}=g; rr(P,y,W-2*P,h-10,14,'#FFFFFF','#E1E7EF');
+      const iw=W-2*P-32; let cx=W-P-16; const pos=cols.map(c=>{ const w=c.w*iw; const r0=cx; cx-=w; return {...c,x0:r0,x1:cx,w}; });
+      rr(P+1,y+1,W-2*P-2,52,[14,14,0,0],hexA(AC,.10)); pos.forEach(c=>T(c.t,c.al==='right'?c.x0-6:(c.x0+c.x1)/2,y+40,{size:14,w:600,col:lite(AC,.2),al:c.al==='right'?'right':'center'})); line(P+16,y+54,W-P-16,y+54,AC,1.5);
+      rows.forEach((rw,i)=>{ const ry=y+54+i*rh; if(rw._hl) rr(P+16,ry+2,iw,rh-4,6,rw._hl); if(rw._dot) rr(W-P-20,ry+10,4,rh-20,2,rw._dot); rw.forEach((v,j)=>{ const c=pos[j]; if(v==null) return; const o=typeof v==='object'?v:{v}; const px=c.al==='right'?c.x0-6:(c.x0+c.x1)/2;
+          if(o.bar!=null){ const bw=(c.w-24)*Math.max(0,Math.min(1,o.bar)); rr(c.x0-12-bw,ry+13,Math.max(2,bw),14,4,o.col||'#3E6FA8'); return; }
+          (c.num?N:T)(o.v,px,ry+26,{size:14.5,w:o.b?700:500,col:o.col||'#16233A',al:c.al==='right'?'right':'center',...(o.it?{w:400}:{})}); }); line(P+16,ry+rh,W-P-16,ry+rh,'#EDF1F6'); });
+      if(foot){ const fy=y+54+rows.length*rh; rr(P+16,fy+4,iw,38,8,hexA(AC,.16)); foot.forEach((v,j)=>{ const c=pos[j]; if(v==null) return; const px=c.al==='right'?c.x0-6:(c.x0+c.x1)/2; (c.num?N:T)(v,px,fy+29,{size:15,w:700,col:lite(AC,.3),al:c.al==='right'?'right':'center'}); }); } }}; },
+    bars:(o)=>({h:470,draw:(x,y,g)=>{ const {T,N,NR,rr,line}=g; rr(P,y,W-2*P,450,14,'#FFFFFF','#E1E7EF'); rr(W-P-6,y+22,6,26,3,AC); T(o.title,W-P-22,y+40,{size:19,w:600,f:FD});
+      let lx=P+22; (o.legend||[]).forEach(([c,t])=>{ rr(lx,y+27,14,14,3,c); T(t,lx+20,y+40,{size:13.5,col:'#6B7A90',al:'left'}); x.font='400 13.5px '+FA; lx+=34+x.measureText(t).width; });
+      const cx0=P+26,cx1=W-P-26, by0=y+120, by1=y+400; const n=o.rows.length, step=(cx1-cx0)/n; const X=i=>cx1-step*(i+.5);
+      const tot=q=>(q.segs||[]).reduce((t,s)=>t+(s.v||0),0); const mx=Math.max(...o.rows.map(q=>Math.max(tot(q),q.cmp||0)))*1.06||1; const Y=v=>by1-(v/mx)*(by1-by0); const grp=o.rows.some(q=>q.cmp!=null);
+      for(let i=1;i<=4;i++) line(cx0,by0+(by1-by0)*i/4,cx1,by0+(by1-by0)*i/4,'#EDF1F6',1,[4,6]);
+      o.rows.forEach((q,i)=>{ const bw=Math.max(8,step*(grp?.36:.6)); const xc=grp?X(i)+bw*.55:X(i); let base=by1; (q.segs||[]).forEach(s=>{ if(!s.v) return; const h=by1-Y(s.v); let f=s.c; if(s.c[0]==='#'&&s.c!=='#B4BFCE'){ f=x.createLinearGradient(0,base-h,0,base); f.addColorStop(0,tint(s.c,.3)); f.addColorStop(1,s.c); } rr(xc-bw/2,base-h,bw,h,3,f); base-=h; });
+        if(grp&&q.cmp!=null){ const h=by1-Y(q.cmp); rr(X(i)-bw*.55-bw/2,by1-h,bw,h,3,'#BAC5D4'); if(n<=8) N(fmt(q.cmp),X(i)-bw*.55,by1-h-8,{size:12.5,w:600,col:'#6B7A90',al:'center'}); }
+        const tv=tot(q); if(tv){ if(n>12) NR(lblK(tv),xc,base-8,{size:12.5,col:q.fcOnly?'#4A5A72':'#16233A'}); else N(n<=8?fmt(tv):lblK(tv),xc,base-9,{size:13.5,w:700,col:q.fcOnly?'#4A5A72':'#16233A',al:'center'}); }
+        if(n<=16||i===0||(i+1)%5===0||i===n-1) T(q.lab,X(i),by1+26,{size:n<=8?13.5:12,col:'#6B7A90',al:'center',f:n<=8?FA:FD,dir:n<=8?'rtl':'ltr'}); });
+      if(o.avg){ const ay=Y(o.avg); line(cx0,ay,cx1,ay,'#1FA16B',2,[8,6]); T('المتوسط '+fmt(o.avg),P+22,y+68,{size:13.5,col:'#1FA16B',al:'left'}); } }}),
+    cum:(p,title)=>({h:420,draw:(x,y,g)=>{ const {T,N,rr,line}=g; rr(P,y,W-2*P,400,14,'#FFFFFF','#E1E7EF'); T(title,W-P-22,y+40,{size:19,w:600,f:FD});
+      const n=p.n, cx0=P+30, cx1=W-P-30, cy0=y+84, cy1=y+350; const X=d=>cx1-(d-1)/(n-1)*(cx1-cx0-70); let s=0; const pts=p.rows.map(q=>{s+=(q.act||0)+(q.fc||0);return {d:q.day,c:s};}); const mx=Math.max(p.high||0,s)*1.05||1; const Y=v=>cy1-(v/mx)*(cy1-cy0);
+      for(let i=0;i<=4;i++) line(cx0,cy0+(cy1-cy0)*i/4,cx1,cy0+(cy1-cy0)*i/4,'#EDF1F6',1,[4,6]);
+      if(!p.rec) return; const L=p.last; x.save(); x.beginPath(); pts.filter(q=>q.d<=L).forEach((q,i)=>i?x.lineTo(X(q.d),Y(q.c)):x.moveTo(X(q.d),Y(q.c))); x.lineTo(X(L),cy1); x.lineTo(X(1),cy1); x.closePath(); { const gr=x.createLinearGradient(0,cy0,0,cy1); gr.addColorStop(0,hexA(AC,.22)); gr.addColorStop(1,hexA(AC,0)); x.fillStyle=gr; x.fill(); } x.restore(); x.save(); x.beginPath(); pts.filter(q=>q.d<=L).forEach((q,i)=>i?x.lineTo(X(q.d),Y(q.c)):x.moveTo(X(q.d),Y(q.c))); x.strokeStyle=AC; x.lineWidth=4; x.lineJoin='round'; x.stroke();
+      x.setLineDash([9,7]); x.beginPath(); pts.filter(q=>q.d>=L).forEach((q,i)=>i?x.lineTo(X(q.d),Y(q.c)):x.moveTo(X(q.d),Y(q.c))); x.strokeStyle='#6B7A90'; x.lineWidth=2.5; x.stroke(); x.restore();
+      if(p.forecast){ const fy=Y(p.forecast); line(cx0,fy,cx1,fy,'#D0453A',1.6,[10,6]); N('المتوقع '+fmt(p.forecast),cx0+4,fy-10,{size:14.5,w:700,col:'#C8503F',al:'left'}); }
+      const lp=pts[L-1]; if(lp){ x.beginPath(); x.arc(X(lp.d),Y(lp.c),7,0,7); x.fillStyle=lite(AC,.3); x.fill(); N(fmt(lp.c),X(lp.d),Y(lp.c)+30,{size:14.5,w:700,col:lite(AC,.3),al:'center'}); }
+      [1,5,10,15,20,25,n].filter((v,i,a)=>a.indexOf(v)===i).forEach(d=>N(String(d),X(d),cy1+26,{size:12,col:'#8A97AA',al:'center'})); }}),
+    panel:(items)=>{ const rows=Math.ceil(items.length/2), rh=44; const h=16+rows*rh+20; return {h,draw:(x,y,g)=>{ const {T,N,rr,line}=g; rr(P,y,W-2*P,h-10,14,'#FFFFFF',hexA(AC,.35)); const half=(W-2*P)/2;
+      items.forEach((it,i)=>{ const col=i%2, row=Math.floor(i/2); const x0=W-P-col*half, ry=y+16+row*rh; if(it[3]) rr(x0-half+10,ry+2,half-20,rh-6,8,hexA(AC,.14));
+        T(it[0],x0-20,ry+27,{size:14.5,col:it[3]?lite(AC,.3):'#4A5A72',w:it[3]?600:400}); (it[4]?T:N)(it[1],x0-half+24,ry+27,{size:15.5,w:700,col:AL(it[2]||'#16233A'),al:'left'});
+        if(row<rows-1) line(x0-half+14,ry+rh-2,x0-14,ry+rh-2,'#EDF1F6'); }); line(W/2,y+16,W/2,y+h-26,'#E1E7EF'); }}; },
+    note:(t)=>({h:90,draw:(x,y,g)=>{ const {T,rr}=g; rr(P,y+10,W-2*P,64,14,hexA(GOLD,.10),GOLD); T('ملاحظة: '+t,W-P-22,y+49,{size:17,col:'#9A7B12'}); }}),
+    insights:(items)=>{ const maxW=W-2*P-90; const L=items.map(it=>wrapT(it.t,16.5,400,maxW)); const h=26+L.reduce((t,l)=>t+l.length*30+18,0)+10; return {h,draw:(x,y,g)=>{ const {T,rr}=g; rr(P,y,W-2*P,h-10,14,'#FFFFFF','#E1E7EF'); let yy=y+22;
+      items.forEach((it,i)=>{ const c=it.tone==='up'?'#1FA16B':it.tone==='down'?'#D0453A':it.tone==='flat'?'#C98A0C':AC; x.beginPath(); x.arc(W-P-32,yy+14,6.5,0,7); x.fillStyle=c; x.fill();
+        L[i].forEach((ln,j)=>T(ln,W-P-50,yy+21+j*30,{size:16.5,col:it.tone==='up'?'#137A4C':it.tone==='down'?'#A8352C':it.tone==='flat'?'#8A5F05':'#16233A'})); yy+=L[i].length*30+18; }); }}; },
+    wdHeat:(rows,title)=>{ const rh=64,gp=6; const h=100+rows.length*(rh+gp)+72; return {h,draw:(x,y,g)=>{ const {T,N,rr}=g; rr(P,y,W-2*P,h-12,14,'#FFFFFF','#E1E7EF'); rr(W-P-6,y+22,6,26,3,AC); T(title||'قوة أيام الأسبوع — متوسط كل يوم مقابل متوسط الفرع',W-P-22,y+42,{size:19,w:600,f:FD});
+      const lab=140, x1=W-P-20-lab, x0=P+20, cw=(x1-x0)/7; for(let d=0;d<7;d++) T(DAYS[d],x1-(d+.5)*cw,y+82,{size:13.5,w:600,col:'#6B7A90',al:'center'});
+      rows.forEach((r,ri)=>{ const ry=y+96+ri*(rh+gp); if(r.total){ x.fillStyle='#E1E7EF'; x.fillRect(x0,ry-gp/2,W-P-20-x0,1); } rr(W-P-34,ry+rh/2-7,14,14,3,r.col); T(r.name,W-P-56,ry+rh/2+6,{size:16,w:700,col:lite(r.col,.25)});
+        r.wdAvg.forEach((v,d)=>{ const cx=x1-(d+1)*cw+3, w=cw-6; if(v==null||!r.avg){ rr(cx,ry,w,rh,8,'#F7F9FC','#E1E7EF'); return; } const t=v/r.avg-1; const sg=heatF(t)>.5; rr(cx,ry,w,rh,8,heatCol(t));
+          N(lblK(v),cx+w/2,ry+28,{size:15,w:700,col:sg?'#FFFFFF':'#16233A',al:'center'}); N(sgn(t),cx+w/2,ry+50,{size:12.5,w:600,col:sg?'rgba(255,255,255,.9)':'#4A5A72',al:'center'}); }); });
+      heatLegend(x,g,y+h-50); }}; },
+    overlay:(cur,prev,o)=>({h:450,draw:(x,y,g)=>{ const {T,N,rr,line}=g; rr(P,y,W-2*P,430,14,'#FFFFFF','#E1E7EF'); rr(W-P-6,y+22,6,26,3,o.col); T(o.title,W-P-22,y+42,{size:19,w:600,f:FD});
+      let lx=P+22; [[o.col,o.curL],['#9AA6B8',o.prevL]].forEach(([c,t])=>{ rr(lx,y+29,14,14,3,c); T(t,lx+20,y+42,{size:13.5,col:'#6B7A90',al:'left'}); MXC.font='400 13.5px '+FA; lx+=34+MXC.measureText(t).width; });
+      const n=Math.max(cur.n,prev.n), cx0=P+30, cx1=W-P-30, cy0=y+90, cy1=y+380; const X=d=>cx1-(d-1)/(n-1)*(cx1-cx0-110);
+      const cum=(a,useFc)=>{ let s_=0; return a.rows.map(q=>{ s_+=useFc?(q.act||0)+(q.fc||0):(q.act||0); return {d:q.day,c:s_}; }); };
+      const pc=cum(prev,false), cc=cum(cur,true); const L=Math.max(1,cur.last||1); const mx=Math.max(pc[pc.length-1].c,cc[cc.length-1].c)*1.08||1; const Y=v=>cy1-(v/mx)*(cy1-cy0);
+      for(let i=0;i<=4;i++) line(cx0,cy0+(cy1-cy0)*i/4,cx1,cy0+(cy1-cy0)*i/4,'#EDF1F6',1,[4,6]);
+      const path=a=>{ x.beginPath(); a.forEach((q,i)=>i?x.lineTo(X(q.d),Y(q.c)):x.moveTo(X(q.d),Y(q.c))); };
+      x.save(); x.lineJoin='round'; x.lineWidth=3; x.strokeStyle='#9AA6B8'; path(pc); x.stroke(); x.lineWidth=4; x.strokeStyle=o.col; path(cc.slice(0,L)); x.stroke(); if(L<cc.length){ x.setLineDash([9,7]); x.lineWidth=2.5; path(cc.slice(L-1)); x.stroke(); } x.restore();
+      const pL=pc[Math.min(L,pc.length)-1], cL=cc[L-1]; line(X(L),cy0-10,X(L),cy1,'#C5CFDC',1,[3,5]); T('يوم '+L,X(L),cy0-16,{size:12.5,col:'#8A97AA',al:'center'});
+      x.beginPath(); x.arc(X(L),Y(cL.c),7,0,7); x.fillStyle=o.col; x.fill(); x.beginPath(); x.arc(X(L),Y(pL.c),6,0,7); x.fillStyle='#9AA6B8'; x.fill();
+      const up=cL.c>=pL.c; N(fmt(cL.c),X(L)+12,Y(cL.c)+(up?-10:22),{size:14,w:700,col:lite(o.col,.3),al:'left'}); N(fmt(pL.c),X(L)+12,Y(pL.c)+(up?22:-10),{size:13.5,w:600,col:'#6B7A90',al:'left'});
+      const pe=pc[pc.length-1], ce=cc[cc.length-1]; const close=Math.abs(Y(pe.c)-Y(ce.c))<22; N(lblK(ce.c)+(L<cc.length?' (متوقع)':''),X(ce.d)-12,Y(ce.c)+5-(close&&ce.c>=pe.c?10:0),{size:14,w:700,col:lite(o.col,.3),al:'right'}); N(lblK(pe.c),X(pe.d)-12,Y(pe.c)+5+(close&&ce.c>=pe.c?12:0),{size:13.5,w:600,col:'#6B7A90',al:'right'});
+      [1,5,10,15,20,25,n].filter((v,i,a)=>a.indexOf(v)===i).forEach(d=>N(String(d),X(d),cy1+26,{size:12,col:'#8A97AA',al:'center'})); }}),
+    channel:(S,o)=>{ const H=o.compact?560:700; return {h:H+20,draw:(x,y,g)=>{ const {T,N,rr,line}=g; const col=o.col; rr(P,y,W-2*P,H,14,'#FFFFFF','#E1E7EF'); rr(W-P-6,y+22,6,26,3,col); T(o.title,W-P-22,y+44,{size:20,w:600,f:FD});
+      const NS=(t,px,py,oo={})=>{ x.save(); x.lineWidth=5; x.strokeStyle='#FFFFFF'; x.lineJoin='round'; x.font=`${oo.w||600} ${oo.size||13}px ${FD}`; x.textAlign=oo.al||'center'; x.direction='ltr'; x.strokeText(t,px,py); x.fillStyle=oo.col||'#16233A'; x.fillText(t,px,py); x.restore(); };
+      const NRl=(t,px,py,oo={})=>{ x.save(); x.translate(px,py); x.rotate(-Math.PI/2); x.lineWidth=5; x.strokeStyle='#FFFFFF'; x.lineJoin='round'; x.font=`${oo.w||600} ${oo.size||12.5}px ${FD}`; x.textAlign='left'; x.direction='ltr'; x.strokeText(t,0,4); x.fillStyle=oo.col||'#16233A'; x.fillText(t,0,4); x.restore(); };
+      const lg=[['#16233A','المبيعات الفعلية','l'],['#0E9FB0','متوسط 7 أيام','l'],[col,'خط الاتجاه','d'],[hexA(col,.35),'النطاق الطبيعي ±1σ','b'],[hexA(col,.12),'النطاق الواسع ±2σ','b'],['rgba(107,122,144,.35)','نطاق التوقع 90%','b']];
+      let lx=W-P-24, ly=y+80; lg.forEach(([cl,t,k])=>{ MXC.font='400 13.5px '+FA; const tw=MXC.measureText(t).width; if(lx-tw-30<P+20){ lx=W-P-24; ly+=24; }
+        if(k==='b') rr(lx-16,ly-12,16,14,3,cl); else if(k==='d') line(lx-18,ly-5,lx,ly-5,cl,3,[5,3]); else line(lx-18,ly-5,lx,ly-5,cl,3.2); T(t,lx-24,ly,{size:13.5,col:'#4A5A72'}); lx-=tw+50; });
+      const L=S.last, tl=S.tr(L.x); const cx0=P+80, cx1=W-P-30, cy0=ly+38, cy1=y+H-60; const X=v=>cx1-(v/S.xEnd)*(cx1-cx0);
+      const cand=[...S.pts.map(p=>p.y),S.tr(0)+2*S.s,S.tr(0)-2*S.s,tl+2*S.s,tl-2*S.s,S.projLo,S.projHi]; let lo=Math.max(0,Math.min(...cand)), hi=Math.max(...cand); const pd=(hi-lo)*.06; lo=Math.max(0,lo-pd); hi+=pd; const Y=v=>cy0+(hi-v)/(hi-lo)*(cy1-cy0);
+      for(let i=0;i<=5;i++){ const vv=lo+(hi-lo)*i/5, yy=Y(vv); line(cx0,yy,cx1,yy,'#EDF1F6',1,[4,6]); N(lblK(vv),cx0-10,yy+5,{size:12,col:'#8A97AA',al:'right'}); }
+      if(S.xEnd>L.x){ x.fillStyle='rgba(107,122,144,.07)'; x.fillRect(X(S.xEnd),cy0-6,X(L.x)-X(S.xEnd),cy1-cy0+6); T('التوقع',(X(S.xEnd)+X(L.x))/2,cy0+12,{size:13,w:600,col:'#6B7A90',al:'center'}); }
+      const poly=(fu,fl,x0,x1,fill,stroke)=>{ const k=Math.max(2,Math.ceil((x1-x0)*2)); x.beginPath(); for(let i=0;i<=k;i++){ const v=x0+(x1-x0)*i/k; i?x.lineTo(X(v),Y(fu(v))):x.moveTo(X(v),Y(fu(v))); } for(let i=k;i>=0;i--){ const v=x0+(x1-x0)*i/k; x.lineTo(X(v),Y(fl(v))); } x.closePath(); x.fillStyle=fill; x.fill(); if(stroke){ x.save(); x.setLineDash([6,5]); x.strokeStyle=stroke; x.lineWidth=1.2; x.stroke(); x.restore(); } };
+      const cl0=v=>Math.max(lo,v);
+      poly(v=>S.tr(v)+2*S.s,v=>cl0(S.tr(v)-2*S.s),0,L.x,hexA(col,.08)); poly(v=>S.tr(v)+S.s,v=>cl0(S.tr(v)-S.s),0,L.x,hexA(col,.2));
+      [1,-1].forEach(k=>line(X(0),Y(cl0(S.tr(0)+k*S.s)),X(L.x),Y(cl0(tl+k*S.s)),hexA(col,.7),1.2,[6,5])); [2,-2].forEach(k=>line(X(0),Y(cl0(S.tr(0)+k*S.s)),X(L.x),Y(cl0(tl+k*S.s)),hexA(col,.35),1,[3,6]));
+      if(S.xEnd>L.x) poly(v=>S.tr(v)+S.PI(v),v=>cl0(S.tr(v)-S.PI(v)),L.x,S.xEnd,'rgba(107,122,144,.16)','rgba(107,122,144,.6)');
+      line(X(0),Y(S.tr(0)),X(S.xEnd),Y(S.tr(S.xEnd)),lite(col,.15),2.6,[10,6]);
+      const maP=S.pts.filter(p=>p.ma!=null); if(maP.length>1){ x.save(); x.beginPath(); smoothPath(x,maP.map(p=>[X(p.x),Y(p.ma)])); x.strokeStyle='#0E9FB0'; x.lineWidth=2.6; x.lineJoin='round'; x.stroke(); x.restore(); }
+      x.save(); x.beginPath(); smoothPath(x,S.pts.map(p=>[X(p.x),Y(p.y)])); x.strokeStyle='#16233A'; x.lineWidth=2.6; x.lineJoin='round'; x.stroke(); x.restore();
+      const rot=S.n>14;
+      S.pts.forEach(p=>{ const isL=p===L; x.beginPath(); x.arc(X(p.x),Y(p.y),isL?7.5:5,0,7); x.fillStyle=p.z>1?'#1FA16B':p.z<-1?'#D0453A':'#FFFFFF'; x.fill(); x.strokeStyle=Math.abs(p.z)>1?'#FFFFFF':'#16233A'; x.lineWidth=2; x.stroke();
+        if(isL) return; const t=lblK(p.y); if(rot) NRl(t,X(p.x),Y(p.y)-12,{col:zCol(p.z)}); else NS(t,X(p.x),Y(p.y)-14,{size:13.5,col:zCol(p.z)}); });
+      { const bx=X(L.x), by=Y(L.y); const t=fmt(L.y); MXC.font='700 15px '+FD; const tw=MXC.measureText(t).width+20; const ry=by-cy0>60?by-46:by+16; rr(bx-tw/2,ry,tw,28,8,col); N(t,bx,ry+19.5,{size:15,w:700,col:'#FFFFFF',al:'center'}); }
+      if(S.xEnd>L.x){ const ex=X(S.xEnd), ey=Y(S.proj); x.beginPath(); x.arc(ex,ey,6.5,0,7); x.fillStyle='#6B7A90'; x.fill(); NS(lblK(S.proj),ex+10,ey-12,{size:14,col:'#4A5A72',al:'left'}); NS(lblK(S.projLo)+' – '+lblK(S.projHi),ex+10,ey+22,{size:12,col:'#6B7A90',al:'left',w:500}); }
+      const days=S.xEnd+1, every=days<=35?(days<=20?1:2):Math.ceil(days/18);
+      for(let v=0;v<=S.xEnd;v++){ if(v%every&&v!==S.xEnd&&v!==L.x) continue; const k=addDays(S.pts[0].key,v-S.pts[0].x); const has=S.pts.some(p=>p.x===v); N(String(Number(k.slice(8))),X(v),cy1+24,{size:12,col:has?'#6B7A90':'#C5CFDC',al:'center'}); } }}; },
+    gauge:(S)=>({h:320,draw:(x,y,g)=>{ const {T,N,rr,line}=g; rr(P,y,W-2*P,300,14,'#FFFFFF','#E1E7EF'); const L=S.last, tl=S.seas?S.exLast:S.tr(L.x), sg=S.seas?S.sa:S.s, zz0=S.seas?S.za:S.z;
+      const gx0=P+50, gx1=W-P-50, gy=y+86, gh=26; const GX=zz=>gx0+(Math.max(-3,Math.min(3,zz))+3)/6*(gx1-gx0);
+      [[-3,-2,'rgba(208,69,58,.85)'],[-2,-1,'rgba(208,69,58,.35)'],[-1,1,hexA(AC,.4)],[1,2,'rgba(31,161,107,.35)'],[2,3,'rgba(31,161,107,.85)']].forEach(([a_,b_,cl],i)=>{ x.beginPath(); x.roundRect(GX(a_)+1,gy,GX(b_)-GX(a_)-2,gh,i===0?[13,0,0,13]:i===4?[0,13,13,0]:0); x.fillStyle=cl; x.fill(); });
+      const names={'-2':'الحد الأدنى الواسع','-1':'الحد الأدنى الطبيعي','0':S.seas?'المعتاد لهذا اليوم':'خط الاتجاه','1':'الحد الأعلى الطبيعي','2':'الحد الأعلى الواسع'};
+      [-2,-1,0,1,2].forEach(k=>{ const gx=GX(k); line(gx,gy-8,gx,gy+gh+8,'#16233A',1.4); T(names[k],gx,gy-18,{size:13.5,col:'#4A5A72',al:'center'}); N(fmt(Math.max(0,tl+k*sg)),gx,gy+gh+30,{size:15,w:600,col:k===0?lite(AC,.3):'#16233A',al:'center'}); });
+      T('أدنى',gx0,gy+gh+30,{size:12.5,col:'#8A97AA',al:'left'}); T('أعلى',gx1,gy+gh+30,{size:12.5,col:'#8A97AA',al:'right'});
+      { const m=GX(zz0); x.fillStyle='#16233A'; x.beginPath(); x.moveTo(m,gy+gh+4); x.lineTo(m-11,gy+gh+20); x.lineTo(m+11,gy+gh+20); x.closePath(); x.fill(); x.beginPath(); x.moveTo(m,gy-4); x.lineTo(m-11,gy-20); x.lineTo(m+11,gy-20); x.closePath(); x.fill(); line(m,gy-4,m,gy+gh+4,'#16233A',3);
+        const t='آخر يوم '+fmt(L.y); MXC.font='600 14px '+FA; const tw=MXC.measureText(t).width+22; const bx=Math.max(P+10,Math.min(W-P-10-tw,m-tw/2)); rr(bx,gy+gh+44,tw,28,8,Math.abs(zz0)>1?zCol(zz0):'#16233A'); T(t,bx+tw/2,gy+gh+63,{size:14,w:600,col:'#FFFFFF',al:'center'}); }
+      line(P+24,y+196,W-P-24,y+196,'#E1E7EF');
+      const lv=[['مستوى الدعم (أدنى 10%)',fmt(S.p10),'#D0453A'],['مستوى المقاومة (أعلى 10%)',fmt(S.p90),'#1FA16B'],['أقل يوم',fmt(S.mn.y)+'  ('+Number(S.mn.key.slice(8))+')','#16233A'],['أعلى يوم',fmt(S.mx.y)+'  ('+Number(S.mx.key.slice(8))+')','#16233A']];
+      const lw=(W-2*P)/4; lv.forEach((q,i)=>{ const cx=W-P-lw*i-lw/2; T(q[0],cx,y+232,{size:13.5,col:'#6B7A90',al:'center'}); N(q[1],cx,y+264,{size:18,w:600,col:q[2],al:'center'}); }); }}),
+    wdRes:(S)=>({h:360,draw:(x,y,g)=>{ const {T,N,rr,line}=g; rr(P,y,W-2*P,340,14,'#FFFFFF','#E1E7EF'); rr(W-P-6,y+22,6,26,3,AC); T('نمط أيام الأسبوع مقابل خط الاتجاه',W-P-22,y+44,{size:19,w:600,f:FD}); T('متوسط مبيعات اليوم وفرقه عن خط الاتجاه',P+22,y+44,{size:13.5,col:'#6B7A90',al:'left'});
+      const vals=S.wd.map(o=>o.res||0); const lim=Math.max(.05,...vals.map(Math.abs))*1.3; const by0=y+80, by1=y+250; const Yc=v=>by0+(lim-v)/(2*lim)*(by1-by0); const u=(W-2*P-60)/7, bw=u*.5;
+      line(P+30,Yc(0),W-P-30,Yc(0),'#C5CFDC',1.2);
+      S.wd.forEach((o,i)=>{ const cx=W-P-30-u*(i+.5); T(DAYS[i],cx,y+282,{size:14.5,w:600,col:'#16233A',al:'center'}); N(o.avg!=null?fmt(o.avg):'—',cx,y+306,{size:13,col:'#6B7A90',al:'center'}); T(o.n?o.n+' أيام':'',cx,y+326,{size:11.5,col:'#8A97AA',al:'center'});
+        if(o.res==null) return; const cl=o.res>=0?'#1FA16B':'#D0453A'; const a_=Yc(0), b_=Yc(o.res); rr(cx-bw/2,Math.min(a_,b_),bw,Math.max(2,Math.abs(b_-a_)),4,cl); N((o.res>0?'+':'')+(o.res*100).toFixed(0)+'%',cx,o.res>=0?b_-10:b_+22,{size:14,w:700,col:cl,al:'center'}); }); }}),
+    gap:(h)=>({h,draw:()=>{}}),
+  };
+  function indicatorItems(p){ const l7=p.l7.n?p.l7.sum/p.l7.n:null, p7=p.p7.n?p.p7.sum/p.p7.n:null; const status=!p.rec?'لا توجد بيانات':p.trend==null?'● مستقر':p.trend>0.03?'▲ أداء صاعد':p.trend<-0.03?'▼ أداء هابط':'● أداء مستقر';
+    return [['عدد أيام الشهر',String(p.n)],['الأيام المسجلة',String(p.rec)],['الأيام المتبقية',String(p.remaining)],['آخر يوم مسجل',String(p.last||'—')],['المتوسط اليومي',fmt(p.avg,2)],['الانحراف المعياري اليومي',fmt(p.sd,2)],
+      ['متوسط آخر 7 أيام',fmt(l7,2)],['متوسط الـ 7 أيام السابقة',fmt(p7,2)],['اتجاه الأداء (أسبوعي)',spct(p.trend),trendCol(p.trend)],['المبيعات الفعلية حتى الآن',fmt(p.actual)],
+      ['الحد الأدنى المتوقع (90%)',fmt(p.low)],['الحد الأعلى المتوقع (90%)',fmt(p.high)],['التوقع الأساسي لنهاية الشهر',fmt(p.forecast),'#9A7B12',true],['توقع بالمعدل البسيط',fmt(p.simple)],
+      ['نسبة الإنجاز من المتوقع',pct(p.forecast?p.actual/p.forecast:null)],['المطلوب يومياً حتى نهاية الشهر',fmt(p.remaining>0&&p.forecast!=null?(p.forecast-p.actual)/p.remaining:null)],
+      ['درجة الثقة في التوقع',p.conf,null,false,true],['حالة مؤشر التنبؤ',status,stCol(status),true,true]]; }
+  function dayTable(p,upto,col){ let cum=0; const rows=[]; for(let i=0;i<upto;i++){ const q=p.rows[i]; const v=q.act!=null?q.act:q.fc; cum+=v||0; const dev=(q.act!=null&&p.avg)?q.act/p.avg-1:null;
+      const rw=[String(q.day),dmy(q.key),DAYS[q.wd],q.act!=null?{v:fmt(q.act,2),b:true}:{v:'—',col:'#8A97AA'},q.fc!=null?{v:fmt(q.fc,2),col:'#4A5A72',it:true}:'',dev!=null?{v:(dev>0?'▲ +':dev<0?'▼ ':'')+(dev*100).toFixed(1)+'%',col:dev>=0.05?'#1FA16B':dev<=-0.05?'#D0453A':'#16233A'}:'',
+        v!=null?{v:fmt(cum),col:q.act!=null?'#16233A':'#4A5A72'}:'',q.act!=null?{v:'فعلي',col:'#1FA16B',b:true}:q.fc!=null?{v:'متوقع',col:'#C98A0C',b:true}:'']; if(q.act==null&&q.fc!=null) rw._hl='rgba(94,115,145,.12)'; rows.push(rw); }
+    const actS=p.rows.slice(0,upto).reduce((t,q)=>t+(q.act||0),0), fcS=p.rows.slice(0,upto).reduce((t,q)=>t+(q.fc||0),0);
+    return B.table([{t:'اليوم',w:.06,num:true},{t:'التاريخ',w:.14,num:true},{t:'يوم الأسبوع',w:.12},{t:'المبيعات الفعلية',w:.16,num:true},{t:'التوقع اليومي',w:.15,num:true},{t:'مقابل المتوسط',w:.13,num:true},{t:'التراكمي',w:.14,num:true},{t:'الحالة',w:.10}],rows,['','','الإجمالي',fmt(actS,2),fmt(fcS,2),'',fmt(actS+fcS),'']); }
+  function wdTable(p,col){ const mx=Math.max(...p.wdAvg.map(v=>v||0))||1; const rows=[0,1,2,3,4,5,6].map(w=>{ const v=p.wdAvg[w]; const idx=(v&&p.avg)?v/p.avg:null;
+      return [DAYS[w],v!=null?{v:fmt(v,2),b:true}:'—',String(p.wdCnt[w]),idx!=null?{v:idx.toFixed(2)+'x',b:true,col:idx>=1.15?'#1FA16B':idx<=0.9?'#D0453A':'#16233A'}:'—',{bar:(v||0)/mx,col:v===mx?col:hexA(col,.45)}]; });
+    return B.table([{t:'يوم الأسبوع',w:.16,al:'right'},{t:'متوسط المبيعات',w:.2,num:true},{t:'أيام مسجلة',w:.13,num:true},{t:'مؤشر الموسمية',w:.15,num:true},{t:'',w:.36}],rows); }
+  function weekRowsTable(week,col){ const rows=week.map(q=>{ const ch=(q.cur!=null&&q.prev)?q.cur/q.prev-1:null; return [dmy(q.d),DAYS[q.wd],q.cur!=null?{v:fmt(q.cur,2),b:true}:{v:'—',col:'#8A97AA'},q.prev!=null?fmt(q.prev,2):'—',ch!=null?{v:(ch>0?'▲ +':ch<0?'▼ ':'')+(ch*100).toFixed(1)+'%',col:trendCol(ch)}:'—']; });
+    const c=weekSum(week,'cur'), pv=weekSum(week,'prev'); return B.table([{t:'التاريخ',w:.2,num:true},{t:'يوم الأسبوع',w:.18},{t:'هذا الأسبوع',w:.22,num:true},{t:'الأسبوع السابق',w:.22,num:true},{t:'التغير',w:.18,num:true}],rows,['الإجمالي','',fmt(c,2),fmt(pv,2),(c!=null&&pv)?((c/pv-1)*100>0?'+':'')+((c/pv-1)*100).toFixed(1)+'%':'—']); }
+
+  function branchBlocks(r,x,M){ const {k,b,p,week}=x; const t=r.type||'monthly'; const col=b.col; const bl=[]; const [y,m]=r.month.split('-').map(Number); const cut=M.cutoff;
+    const status=!p.rec?'لا توجد بيانات':p.trend==null?'● مستقر':p.trend>0.03?'▲ أداء صاعد':p.trend<-0.03?'▼ أداء هابط':'● أداء مستقر';
+    const per=t==='monthly'?MONTHS[m-1]+' '+y:t==='weekly'?dmy(addDays(r.day,-6))+' — '+dmy(r.day):DAYS[fromIso(r.day).getDay()]+' '+dmy(r.day);
+    const multi=M.branches.length>1; const totA=M.branches.reduce((s_,z)=>s_+z.p.actual,0); const share=totA?p.actual/totA:null; const rank=[...M.branches].sort((a_,b_)=>b_.p.actual-a_.p.actual).findIndex(z=>z.k===k)+1;
+    bl.push(B.theme(col)); bl.push(B.band(b.name,col,per,multi?['المركز '+rank+' من '+M.branches.length,'الحصة \u2066'+pct(share)+'\u2069']:['الثقة: '+p.conf],b.short.replace(/^ال/,'')[0]));
+    if(t==='daily'){ const q=p.rows[cut-1]; const vs=(q.act!=null&&p.avg)?q.act/p.avg-1:null; const lw=week[0]; const lwv=week[6].prev; const vw=(q.act!=null&&lwv)?q.act/lwv-1:null;
+      bl.push(B.kpis([['مبيعات اليوم',fmt(q.act),'#9A7B12',DAYS[q.wd]+' '+dmy(r.day),col],['مقابل متوسط الشهر',vs!=null?(vs>0?'+':'')+(vs*100).toFixed(1)+'%':'—',trendCol(vs),'المتوسط '+fmt(p.avg)],['مقابل '+DAYS[q.wd]+' الماضي',vw!=null?(vw>0?'+':'')+(vw*100).toFixed(1)+'%':'—',trendCol(vw),lwv!=null?fmt(lwv):'لا توجد مقارنة'],['المبيعات من أول الشهر',fmt(p.actual),'#16233A',p.rec+' يوم مسجل']])); }
+    else if(t==='weekly'){ const c=weekSum(week,'cur'), pv=weekSum(week,'prev'); const ch=(c!=null&&pv)?c/pv-1:null; const best=week.filter(q=>q.cur!=null).reduce((a,q)=>!a||q.cur>a.cur?q:a,null); const cnt=week.filter(q=>q.cur!=null).length;
+      bl.push(B.kpis([['مبيعات الأسبوع',fmt(c),'#9A7B12',cnt+' أيام مسجلة',col],['مقابل الأسبوع السابق',ch!=null?(ch>0?'+':'')+(ch*100).toFixed(1)+'%':'—',trendCol(ch),'السابق '+fmt(pv)],['متوسط اليوم في الأسبوع',fmt(cnt?c/cnt:null),'#16233A',''],['أفضل يوم',best?fmt(best.cur):'—','#1FA16B',best?DAYS[best.wd]+' '+dmy(best.d):'']])); }
+    else bl.push(B.kpis([['المبيعات الفعلية',fmt(p.actual),'#9A7B12',p.rec+' يوم مسجل',col],['المتوقع لنهاية الشهر',fmt(p.forecast),'#16233A',p.forecast!=null?fmt(p.low)+' – '+fmt(p.high):''],['نسبة الإنجاز',pct(p.forecast?p.actual/p.forecast:null),'#16233A','متبقي '+p.remaining+' يوم'],['يوم الذروة',p.peak?fmt(p.peak.act):'—','#1FA16B',p.peak?DAYS[p.peak.wd]+' '+p.peak.day:'']]));
+    { const ach=p.forecast?p.actual/p.forecast:null; const above=p.rows.filter(q=>q.act!=null&&p.avg&&q.act>=p.avg).length; const rg=[['الإنجاز من المتوقع',ach,pct(ach),'المتوقع '+lblK(p.forecast||0),col]];
+      if(t==='weekly'){ const cmp=week.filter(q=>q.cur!=null&&q.prev!=null); const up=cmp.filter(q=>q.cur>=q.prev).length; rg.push(['أيام أعلى من السابق',cmp.length?up/cmp.length:0,up+'/'+cmp.length,'يوم أعلى من نظيره',col]); }
+      else rg.push(['أيام الشهر المسجلة',p.n?p.rec/p.n:0,p.rec+'/'+p.n,'متبقي '+p.remaining+' يوم',col]);
+      if(multi) rg.push(['حصة الفرع',share,pct(share),'من إجمالي '+lblK(totA),col]); else rg.push(['أيام فوق المتوسط',p.rec?above/p.rec:0,above+'/'+p.rec,'يوم تجاوز المتوسط اليومي',col]);
+      bl.push(B.rings(rg)); }
+    { const tb=tgtOf(r.month,k,repTargets(r)); bl.push(B.strip([['مؤشر التنبؤ',status,stCol(status)],['اتجاه الأداء',spct(p.trend),trendCol(p.trend),'ltr'],['المتوقع لنهاية الشهر',fmt(p.forecast),'#9A7B12','ltr'],...(tb?[['الهدف الشهري',fmt(tb),'#16233A','ltr'],['تحقق من الهدف',pct(p.actual/tb),p.forecast>=tb?'#1FA16B':'#D0453A','ltr']]:[]),['درجة الثقة',p.conf]])); }
+    if(t==='weekly'){ bl.push(B.bars({title:'المبيعات اليومية — هذا الأسبوع مقابل السابق',rows:week.map(q=>({lab:DAYS[q.wd]+' '+Number(q.d.slice(8)),segs:[{v:q.cur,c:col}],cmp:q.prev})),legend:[[col,'هذا الأسبوع'],['#BAC5D4','الأسبوع السابق']]}));
+      bl.push(B.title('المقارنة يوماً بيوم')); bl.push(weekRowsTable(week,col)); }
+    else { const upto=t==='daily'?cut:p.n; bl.push(B.bars({title:t==='daily'?'المبيعات اليومية — من 1 حتى '+cut+' '+MONTHS[m-1]:'المبيعات اليومية — الفعلي والمتوقع',rows:p.rows.slice(0,upto).map(q=>({lab:String(q.day),segs:[{v:q.act,c:col},{v:t==='daily'?null:q.fc,c:'#B4BFCE'}],fcOnly:q.act==null})),avg:p.avg,legend:t==='daily'?[[col,'فعلي']]:[[col,'فعلي'],['#B4BFCE','متوقع']]}));
+      bl.push(B.cum(p,'المسار التراكمي مقابل المتوقع لنهاية الشهر')); }
+    bl.push(B.heat(p,'اللون حسب مبيعات اليوم مقابل متوسط الفرع'));
+    bl.push(B.title('لوحة مؤشر التنبؤ',t==='monthly'?'':'حتى '+dmy(r.day))); bl.push(B.panel(indicatorItems(p)));
+    if(t!=='weekly'){ bl.push(B.title(t==='daily'?'سجل أيام الشهر حتى '+dmy(r.day):'جدول المبيعات اليومية والتوقع','المائل = متوقع')); bl.push(dayTable(p,t==='daily'?cut:p.n,col)); }
+    bl.push(B.title('نمط المبيعات حسب أيام الأسبوع','الموسمية = متوسط اليوم ÷ المتوسط العام')); bl.push(wdTable(p,col));
+    return bl; }
+  function overviewBlocks(r,M){ const t=r.type||'monthly'; const a=M.all; const bl=[]; const cut=M.cutoff; const [y,m]=r.month.split('-').map(Number);
+    bl.push(B.theme(GOLD)); bl.push(B.band('الملخص الموحد — جميع الفروع',GOLD,'مقارنة الفروع ثم قسم مستقل لكل فرع'));
+    { const tot=M.branches.reduce((s_,z)=>s_+z.p.actual,0); const ord=[...M.branches].sort((a_,b_)=>b_.p.actual-a_.p.actual);
+      bl.push(B.brCards(M.branches.map(x_=>{ const p=x_.p; const ach=p.forecast?p.actual/p.forecast:null; const d=t==='daily'?p.rows[cut-1].act:t==='weekly'?weekSum(x_.week,'cur'):null;
+        return {col:x_.b.col,name:x_.b.name,rank:ord.indexOf(x_)+1,act:fmt(p.actual),fc:fmt(p.forecast),v2:pct(ach),f:ach,
+          ...(t==='monthly'?{l3:'اتجاه الأداء',v3:spct(p.trend),c3:trendCol(p.trend),l4:'الحصة من المبيعات',v4:pct(tot?p.actual/tot:null)}:{l3:t==='daily'?'مبيعات اليوم':'مبيعات الأسبوع',v3:fmt(d),l4:'اتجاه الأداء',v4:spct(p.trend),c4:trendCol(p.trend)})}; }))); }
+    if(t==='daily'){ const tot=M.branches.reduce((s,x)=>s+(x.p.rows[cut-1].act||0),0); const vs=a.avg?tot/a.avg-1:null;
+      bl.push(B.kpis([['مبيعات اليوم — كل الفروع',fmt(tot),'#9A7B12',DAYS[fromIso(r.day).getDay()]+' '+dmy(r.day)],['مقابل متوسط الشهر',vs!=null?(vs>0?'+':'')+(vs*100).toFixed(1)+'%':'—',trendCol(vs),'المتوسط '+fmt(a.avg)],['المبيعات من أول الشهر',fmt(a.actual),'#16233A',a.rec+' يوم'],['المتوقع لنهاية الشهر',fmt(a.forecast),'#9A7B12','الإنجاز '+pct(a.ach)]])); }
+    else if(t==='weekly'){ const c=M.branches.reduce((s,x)=>s+(weekSum(x.week,'cur')||0),0), pv=M.branches.reduce((s,x)=>s+(weekSum(x.week,'prev')||0),0); const ch=pv?c/pv-1:null;
+      bl.push(B.kpis([['مبيعات الأسبوع — كل الفروع',fmt(c),'#9A7B12',dmy(addDays(r.day,-6))+' — '+dmy(r.day)],['مقابل الأسبوع السابق',ch!=null?(ch>0?'+':'')+(ch*100).toFixed(1)+'%':'—',trendCol(ch),'السابق '+fmt(pv)],['المبيعات من أول الشهر',fmt(a.actual),'#16233A',a.rec+' يوم'],['المتوقع لنهاية الشهر',fmt(a.forecast),'#9A7B12','الإنجاز '+pct(a.ach)]])); }
+    else bl.push(B.kpis([['المبيعات الفعلية — كل الفروع',fmt(a.actual),'#9A7B12',a.rec+' يوم'],['المتوقع لنهاية الشهر',fmt(a.forecast),'#16233A',fmt(a.low)+' – '+fmt(a.high)],['نسبة الإنجاز',pct(a.ach),'#16233A','متبقي '+a.remaining+' يوم'],['اتجاه الأداء',spct(a.trend),trendCol(a.trend),'الثقة: '+a.conf]]));
+    { const tb=tgtOf(r.month,'all',repTargets(r)); bl.push(B.strip([['مؤشر التنبؤ الموحد',a.status,stCol(a.status)],['المتوسط اليومي',fmt(a.avg),'#16233A','ltr'],['المطلوب يومياً',fmt(a.req),'#16233A','ltr'],...(tb?[['الهدف الشهري',fmt(tb),'#16233A','ltr'],['تحقق من الهدف',pct(a.actual/tb),a.forecast>=tb?'#1FA16B':'#D0453A','ltr']]:[]),['درجة الثقة',a.conf]])); }
+    bl.push(B.title('مقارنة الفروع'));
+    const cmpRows=M.branches.map(x=>{ const p=x.p; const st_=!p.rec?'—':p.trend==null?'● مستقر':p.trend>0.03?'▲ صاعد':p.trend<-0.03?'▼ هابط':'● مستقر'; const d=t==='daily'?p.rows[cut-1].act:t==='weekly'?weekSum(x.week,'cur'):null;
+      const rw_=[{v:x.b.name,b:true,col:x.b.col},...(t!=='monthly'?[{v:fmt(d),b:true}]:[]),fmt(p.actual),fmt(p.forecast),pct(p.forecast?p.actual/p.forecast:null),{v:spct(p.trend),col:trendCol(p.trend)},{v:st_,col:stCol(st_+' ')}]; rw_._hl=hexA(x.b.col,.08); rw_._dot=x.b.col; return rw_; });
+    const cols=[{t:'الفرع',w:.2,al:'right'},...(t!=='monthly'?[{t:t==='daily'?'مبيعات اليوم':'الأسبوع',w:.13,num:true}]:[]),{t:'من أول الشهر',w:.16,num:true},{t:'المتوقع للشهر',w:.16,num:true},{t:'الإنجاز',w:.1,num:true},{t:'الاتجاه',w:.12,num:true},{t:'المؤشر',w:.13}];
+    const foot=['الإجمالي',...(t!=='monthly'?[fmt(M.branches.reduce((s,x)=>s+((t==='daily'?x.p.rows[cut-1].act:weekSum(x.week,'cur'))||0),0))]:[]),fmt(a.actual),fmt(a.forecast),pct(a.ach),spct(a.trend),''];
+    bl.push(B.table(cols,cmpRows,foot));
+    const upto=t==='monthly'?a.n:cut;
+    bl.push(B.bars({title:t==='monthly'?'المبيعات اليومية لكل الفروع — الفعلي والمتوقع':'المبيعات اليومية لكل الفروع — من 1 حتى '+cut+' '+MONTHS[m-1],rows:a.rows.slice(0,upto).map((q,i)=>({lab:String(q.day),segs:[...M.branches.map(x=>({v:x.p.rows[i].act,c:x.b.col})),{v:t==='monthly'?q.fc:null,c:'#B4BFCE'}],fcOnly:q.act==null})),avg:a.avg,legend:[...BR.map(b=>[b.col,b.short]),...(t==='monthly'?[['#B4BFCE','متوقع']]:[])]}));
+    bl.push(B.heatAll(M,'كل فرع مقابل متوسطه اليومي')); bl.push(B.multiCum(M,upto,t==='monthly'?'المسار التراكمي لكل فرع — الفعلي ثم المتوقع (متقطع)':'المسار التراكمي لكل فرع حتى '+cut+' '+MONTHS[m-1]));
+    bl.push(B.title('حصة كل فرع من المبيعات',t==='monthly'?'من أول الشهر':'من أول الشهر حتى '+dmy(r.day))); bl.push(B.donut(M.branches.map(x=>({name:x.b.name,col:x.b.col,v:x.p.actual})),'إجمالي المبيعات'));
+    return bl; }
+  function analysisPages(r,M){ const a=M.agg; const [y,m]=r.month.split('-').map(Number); const TG=repTargets(r); const multi=r.scope==='all'; const col=multi?GOLD:brOf(r.scope).col; const parts=a.parts;
+    const p1=[B.theme(col),B.band('التقرير التحليلي — '+scopeName(r.scope),col,MONTHS[m-1]+' '+y+(a.rec?'  •  حتى يوم '+a.last:''))];
+    p1.push(B.kpis([['المبيعات الفعلية',fmt(a.actual),'#9A7B12',a.rec+' يوم مسجل'],['المتوقع لنهاية الشهر',fmt(a.forecast),'#16233A',a.forecast!=null?fmt(a.low)+' – '+fmt(a.high):''],['اتجاه الأداء',spct(a.trend),trendCol(a.trend),'آخر 7 أيام مقابل السابقة'],['المتوسط اليومي',fmt(a.avg),'#16233A','الثقة: '+a.conf]]));
+    p1.push(B.title('الملخص التنفيذي','مكتوب تلقائياً من البيانات')); p1.push(B.insights(insightsFor(a,TG)));
+    const T=tgtOf(r.month,r.scope,TG);
+    if(T){ const cov=a.forecast!=null?a.forecast/T:0; const req=a.remaining>0?Math.max(0,(T-a.actual)/a.remaining):null;
+      p1.push(B.title('الهدف الشهري','الهدف '+fmt(T)+' ر.س'));
+      p1.push(B.rings([['تحقق من الهدف',a.actual/T,pct(a.actual/T),'حتى يوم '+a.last,col],['المتوقع يغطي الهدف',Math.min(1,cov),pct(cov),cov>=1?'متوقع تجاوز الهدف':'فجوة '+lblK(Math.max(0,T-(a.forecast||0))),cov>=1?'#1FA16B':cov>=.95?'#C98A0C':'#D0453A'],
+        ['المطلوب يومياً',req&&a.avg?Math.min(1,a.avg/req):1,req!=null?lblK(req):'—','متوسطك '+lblK(a.avg||0),req==null||a.avg>=req?'#1FA16B':'#D0453A']]));
+      if(multi){ const rows=parts.map(pp=>{ const b=brOf(pp.k); const tb=tgtOf(r.month,pp.k,TG); const cv=tb&&pp.forecast!=null?pp.forecast/tb:null; const rq=tb&&pp.remaining>0?Math.max(0,(tb-pp.actual)/pp.remaining):null;
+          const rw=[{v:b.name,b:true,col:b.col},fmt(tb),fmt(pp.actual),{v:tb?pct(pp.actual/tb):'—',b:true},fmt(pp.forecast),{v:cv!=null?pct(cv):'—',b:true,col:cv==null?'#16233A':cv>=1?'#1FA16B':cv>=.95?'#C98A0C':'#D0453A'},{v:rq!=null?fmt(rq):'—',col:rq!=null&&pp.avg>=rq?'#1FA16B':'#D0453A'}]; rw._hl=hexA(b.col,.08); rw._dot=b.col; return rw; });
+        p1.push(B.table([{t:'الفرع',w:.18,al:'right'},{t:'الهدف',w:.14,num:true},{t:'الفعلي',w:.14,num:true},{t:'التحقيق',w:.1,num:true},{t:'المتوقع',w:.14,num:true},{t:'تغطية الهدف',w:.13,num:true},{t:'المطلوب يومياً',w:.17,num:true}],rows,['الإجمالي',fmt(T),fmt(a.actual),pct(a.actual/T),fmt(a.forecast),pct(cov),req!=null?fmt(req):'—'])); } }
+    const wk=weekBuckets(a);
+    p1.push(B.bars({title:'المبيعات حسب أسابيع الشهر',rows:wk.map(w=>({lab:'أسبوع '+w.i+' ('+w.from+'–'+w.to+')',segs:[...(multi?w.parts.map(pp=>({v:pp.act,c:brOf(pp.k).col})):[{v:w.act,c:col}]),{v:w.fc,c:'#B4BFCE'}],fcOnly:!w.act})),legend:[...(multi?BR.map(b=>[b.col,b.short]):[[col,'فعلي']]),['#B4BFCE','متوقع']]}));
+    p1.push(B.table([{t:'الأسبوع',w:.16,al:'right'},{t:'الأيام',w:.1,num:true},{t:'الفعلي',w:.17,num:true},{t:'المتوقع',w:.15,num:true},{t:'الإجمالي',w:.17,num:true},{t:'متوسط اليوم',w:.14,num:true},{t:'التغير',w:.11,num:true}],
+      wk.map(w=>[{v:'أسبوع '+w.i,b:true},w.from+'–'+w.to,fmt(w.act),w.fc?{v:fmt(w.fc),col:'#4A5A72',it:true}:'—',{v:fmt(w.act+w.fc),b:true},fmt((w.act+w.fc)/w.days),w.chg!=null?{v:sgp(w.chg),col:trendCol(w.chg)}:'—']),['الإجمالي','',fmt(a.actual),fmt((a.forecast||0)-a.actual),fmt(a.forecast),'','']));
+    const p2=[B.theme(col),B.band('أنماط الأداء',col,scopeName(r.scope)+'  •  '+MONTHS[m-1]+' '+y)];
+    p2.push(B.wdHeat([...parts.map(pp=>({name:brOf(pp.k).short,col:brOf(pp.k).col,wdAvg:pp.wdAvg,avg:pp.avg})),...(multi?[{name:'الإجمالي',col:GOLD,wdAvg:a.wdAvg,avg:a.avg,total:true}]:[])]));
+    p2.push(B.title('ثبات المبيعات','التذبذب = الانحراف المعياري ÷ المتوسط'));
+    p2.push(B.table([{t:'الفرع',w:.17,al:'right'},{t:'المتوسط',w:.14,num:true},{t:'الانحراف',w:.13,num:true},{t:'التذبذب',w:.11,num:true},{t:'التقييم',w:.13},{t:'أعلى يوم',w:.16,num:true},{t:'أقل يوم',w:.16,num:true}],
+      parts.map(pp=>{ const b=brOf(pp.k); const cv=pp.sd&&pp.avg?pp.sd/pp.avg:null; const rw=[{v:b.name,b:true,col:b.col},fmt(pp.avg),fmt(pp.sd),{v:pct(cv),b:true},{v:stabLabel(cv),col:cv==null?'#16233A':cv<.25?'#1FA16B':cv<.35?'#C98A0C':'#D0453A',b:true},pp.peak?fmt(pp.peak.act)+'  ('+pp.peak.day+')':'—',pp.lowDay?fmt(pp.lowDay.act)+'  ('+pp.lowDay.day+')':'—']; rw._hl=hexA(b.col,.08); rw._dot=b.col; return rw; })));
+    const fr=fullRows(a); if(fr.length>=3){ const dayRow=q=>[dmy(q.key),DAYS[q.wd],{v:fmt(q.act,2),b:true},{v:sgp(a.avg?q.act/a.avg-1:null),col:trendCol(a.avg?q.act/a.avg-1:null)}]; const cols=[{t:'التاريخ',w:.25,num:true},{t:'اليوم',w:.25},{t:'المبيعات',w:.27,num:true},{t:'مقابل المتوسط',w:.23,num:true}];
+      p2.push(B.title('أعلى 5 أيام مبيعاً',scopeName(r.scope))); p2.push(B.table(cols,[...fr].sort((p_,q)=>q.act-p_.act).slice(0,5).map(dayRow)));
+      p2.push(B.title('أقل 5 أيام مبيعاً',scopeName(r.scope))); p2.push(B.table(cols,[...fr].sort((p_,q)=>p_.act-q.act).slice(0,5).map(dayRow))); }
+    p2.push(B.title('ذروة نهاية الأسبوع','الخميس والجمعة مقابل باقي الأيام'));
+    p2.push(B.table([{t:'الفرع',w:.2,al:'right'},{t:'حصة الخميس والجمعة',w:.2,num:true},{t:'متوسط يوم الذروة',w:.2,num:true},{t:'متوسط باقي الأيام',w:.2,num:true},{t:'الفرق',w:.2,num:true}],
+      [...parts.map(pp=>({b:brOf(pp.k),rows:pp.rows.filter(q=>q.act!=null)})),...(multi?[{b:{name:'الإجمالي',col:GOLD},rows:fr}]:[])].map(o=>{ const wk_=o.rows.filter(q=>q.wd===4||q.wd===5), ot=o.rows.filter(q=>q.wd!==4&&q.wd!==5); const S=z=>z.reduce((t,q)=>t+q.act,0); const tot=S(o.rows);
+        const aw=wk_.length?S(wk_)/wk_.length:null, ao=ot.length?S(ot)/ot.length:null; const rw=[{v:o.b.name,b:true,col:o.b.col},{v:tot?pct(S(wk_)/tot):'—',b:true},fmt(aw),fmt(ao),{v:aw&&ao?sgp(aw/ao-1):'—',col:'#1FA16B',b:true}]; rw._hl=hexA(o.b.col,.08); rw._dot=o.b.col; return rw; })));
+    return [p1,p2]; }
+  function comparePages(r,M){ const a=M.agg, b=M.prev; const [y,m]=r.month.split('-').map(Number); const [py,pm]=M.prevMonth.split('-').map(Number); const cn=MONTHS[m-1], pn=MONTHS[pm-1]; const multi=r.scope==='all'; const col=multi?GOLD:brOf(r.scope).col; const L=Math.max(1,a.last);
+    const mtd=(an,up=L)=>an.rows.slice(0,Math.min(up,an.n)).reduce((t,q)=>t+(q.act||0),0); const cM=a.actual, pM=multi?a.parts.reduce((t,pp,i)=>t+mtd(b.parts[i],pp.last),0):mtd(b), part=multi&&a.missing&&a.missing.length, gr=pM?cM/pM-1:null, pF=b.actual, fg=(pF&&a.forecast)?a.forecast/pF-1:null;
+    const p1=[B.theme(col),B.band('مقارنة '+cn+' مع '+pn,col,scopeName(r.scope)+'  •  حتى يوم '+L)];
+    p1.push(B.kpis([[cn+' حتى يوم '+L,fmt(cM),'#9A7B12',part?'كل فرع حتى آخر يوم مسجل له':a.rec+' يوم مسجل'],[pn+' لنفس الفترة',fmt(pM),'#16233A',part?'نفس أيام كل فرع في '+pn:'من 1 إلى '+Math.min(L,b.n)+' '+pn],['النمو',sgp(gr),trendCol(gr),gr==null?'':gr>=0?'أعلى من الشهر السابق':'أقل من الشهر السابق'],['إجمالي '+pn+' كاملاً',fmt(pF),'#16233A',b.rec+' يوم مسجل']]));
+    p1.push(B.strip([['المتوقع لـ'+cn,fmt(a.forecast),'#9A7B12','ltr'],['المتوقع مقابل '+pn,sgp(fg),trendCol(fg),'ltr'],['متوسط اليوم — '+cn,fmt(a.avg),'#16233A','ltr'],['متوسط اليوم — '+pn,fmt(b.avg),'#16233A','ltr']]));
+    const ins=[]; if(gr!=null) ins.push({tone:gr>0.03?'up':gr<-0.03?'down':'flat',t:`مبيعات ${cn} حتى يوم ${L} ${gr>=0?'أعلى':'أقل'} من نفس الفترة في ${pn} بـ ${Math.abs(gr*100).toFixed(1)}% (${fmt(cM)} مقابل ${fmt(pM)} ر.س).`});
+    if(fg!=null) ins.push({tone:fg>=0?'up':'down',t:`المتوقع لنهاية ${cn} ${fmt(a.forecast)} ر.س، أي ${fg>=0?'أعلى':'أقل'} من إجمالي ${pn} (${fmt(pF)}) بـ ${Math.abs(fg*100).toFixed(1)}%.`});
+    if(multi){ const g_=a.parts.map((pp,i)=>{ const pv=mtd(b.parts[i],pp.last); return {k:pp.k,g:pv?pp.actual/pv-1:null}; }).filter(o=>o.g!=null).sort((u,v)=>v.g-u.g); if(g_.length>1) ins.push({tone:'info',t:`الأعلى نمواً: ${brOf(g_[0].k).short} (${sgp(g_[0].g)})، والأقل: ${brOf(g_[g_.length-1].k).short} (${sgp(g_[g_.length-1].g)}).`}); }
+    const wdc=[0,1,2,3,4,5,6].map(w=>({w,c:a.wdAvg[w],p:b.wdAvg[w]})).filter(o=>o.c!=null&&o.p); if(wdc.length>=4){ wdc.forEach(o=>o.g=o.c/o.p-1); const hi=wdc.reduce((u,v)=>v.g>u.g?v:u), lo=wdc.reduce((u,v)=>v.g<u.g?v:u); ins.push({tone:'info',t:hi.g<0?`كل أيام الأسبوع أقل من ${pn}؛ أقلها تراجعاً ${DAYS[hi.w]} (${sgp(hi.g)}) وأكبرها تراجعاً ${DAYS[lo.w]} (${sgp(lo.g)}).`:lo.g>=0?`كل أيام الأسبوع تحسّنت عن ${pn}؛ أكبرها تحسّناً ${DAYS[hi.w]} (${sgp(hi.g)}) وأقلها ${DAYS[lo.w]} (${sgp(lo.g)}).`:`أكبر تحسّن في يوم ${DAYS[hi.w]} (${sgp(hi.g)})، وأكبر تراجع في يوم ${DAYS[lo.w]} (${sgp(lo.g)}) مقارنة بمتوسطاتها في ${pn}.`}); }
+    p1.push(B.title('الخلاصة')); p1.push(B.insights(ins));
+    if(multi){ p1.push(B.title('مقارنة الفروع')); p1.push(B.table([{t:'الفرع',w:.17,al:'right'},{t:cn+' (فعلي)',w:.15,num:true},{t:pn+' نفس الفترة',w:.16,num:true},{t:'النمو',w:.1,num:true},{t:pn+' كاملاً',w:.15,num:true},{t:'المتوقع لـ'+cn,w:.15,num:true},{t:'مقابل '+pn,w:.12,num:true}],
+      a.parts.map((pp,i)=>{ const bb=brOf(pp.k); const q=b.parts[i]; const pv=mtd(q,pp.last); const g_=pv?pp.actual/pv-1:null, f_=q.actual&&pp.forecast?pp.forecast/q.actual-1:null; const rw=[{v:bb.name,b:true,col:bb.col},{v:fmt(pp.actual),b:true},fmt(pv),{v:sgp(g_),col:trendCol(g_),b:true},fmt(q.actual),fmt(pp.forecast),{v:sgp(f_),col:trendCol(f_)}]; rw._hl=hexA(bb.col,.08); rw._dot=bb.col; return rw; }),
+      ['الإجمالي',fmt(cM),fmt(pM),sgp(gr),fmt(pF),fmt(a.forecast),sgp(fg)])); }
+    p1.push(B.overlay(a,b,{title:'المسار التراكمي — '+cn+' مقابل '+pn,col,curL:cn,prevL:pn}));
+    p1.push(B.bars({title:'المبيعات اليومية — '+cn+' مقابل '+pn,rows:a.rows.map((q,i)=>({lab:String(q.day),segs:[{v:q.act,c:col}],cmp:b.rows[i]?b.rows[i].act:null})),legend:[[col,cn],['#BAC5D4',pn]]}));
+    p1.push(B.title('مقارنة أيام الأسبوع','متوسط كل يوم في الشهرين'));
+    p1.push(B.table([{t:'اليوم',w:.22,al:'right'},{t:'متوسط '+cn,w:.22,num:true},{t:'متوسط '+pn,w:.22,num:true},{t:'التغير',w:.14,num:true},{t:'',w:.2}],[0,1,2,3,4,5,6].map(w=>{ const c=a.wdAvg[w], p_=b.wdAvg[w]; const g_=c!=null&&p_?c/p_-1:null; const mx=Math.max(...a.wdAvg.map(v=>v||0))||1; return [{v:DAYS[w],b:true},{v:fmt(c),b:true},fmt(p_),{v:sgp(g_),col:trendCol(g_),b:true},{bar:(c||0)/mx,col:hexA(col,.6)}]; })));
+    const pages=[p1]; if(multi){ const p2=[B.band('مقارنة كل فرع',GOLD,cn+' مقابل '+pn)]; a.parts.forEach((pp,i)=>{ const bb=brOf(pp.k); p2.push(B.theme(bb.col)); p2.push(B.overlay(pp,b.parts[i],{title:bb.name+' — '+cn+' مقابل '+pn,col:bb.col,curL:cn,prevL:pn})); }); p2.push(B.theme(GOLD)); pages.push(p2); }
+    return pages; }
+  // ---- sales trend band ----
+  function tStats(pts,r){ pts=pts.map(p=>({key:p.key,y:p.y,x:Math.round((fromIso(p.key)-fromIso(r.from))/864e5)})).sort((a,b)=>a.x-b.x); const n=pts.length; if(n<3) return {n,pts,last:pts[n-1]||null};
+    const xb=pts.reduce((t,p)=>t+p.x,0)/n, yb=pts.reduce((t,p)=>t+p.y,0)/n; let Sxx=0,Sxy=0,SST=0; pts.forEach(p=>{Sxx+=(p.x-xb)**2;Sxy+=(p.x-xb)*(p.y-yb);SST+=(p.y-yb)**2;});
+    const b=Sxx?Sxy/Sxx:0, a=yb-b*xb, tr=x=>a+b*x; let SSE=0; pts.forEach(p=>{p.t=tr(p.x); p.res=p.y-p.t; SSE+=p.res**2;});
+    const s=Math.sqrt(SSE/Math.max(1,n-2))||1, R2=SST?Math.max(0,1-SSE/SST):0, tstat=Sxx?b/(s/Math.sqrt(Sxx)):0;
+    pts.forEach((p,i)=>{ p.z=p.res/s; const w=pts.slice(Math.max(0,i-6),i+1); p.ma=w.length>=3?w.reduce((t,q)=>t+q.y,0)/w.length:null; });
+    const last=pts[n-1]; const [ly,lm]=r.day.split('-').map(Number); const endKey=r.period==='mtd'?iso(new Date(ly,lm,0)):addDays(r.day,7); const xEnd=Math.max(last.x,Math.round((fromIso(endKey)-fromIso(r.from))/864e5));
+    const PI=x=>1.645*s*Math.sqrt(1+1/n+(Sxx?(x-xb)**2/Sxx:0)); const mPct=yb?b*30/yb:0; const dir=(Math.abs(tstat)<2||Math.abs(mPct)<0.02)?'عرضي':b>0?'صاعد':'هابط';
+    const z=last.z; const pos=z>2?'أعلى من النطاق الواسع':z>1?'أعلى من النطاق الطبيعي':z<-2?'أدنى من النطاق الواسع':z<-1?'أدنى من النطاق الطبيعي':'ضمن النطاق الطبيعي';
+    const ys=pts.map(p=>p.y).sort((u,v)=>u-v); const q=f=>{ const i=(ys.length-1)*f, lo=Math.floor(i), hi=Math.ceil(i); return ys[lo]+(ys[hi]-ys[lo])*(i-lo); };
+    const wd=[0,1,2,3,4,5,6].map(w=>{ const a_=pts.filter(p=>fromIso(p.key).getDay()===w); return {w,n:a_.length,avg:a_.length?a_.reduce((t,p)=>t+p.y,0)/a_.length:null,res:a_.length?a_.reduce((t,p)=>t+p.res/p.t,0)/a_.length:null}; });
+    const mx=pts.reduce((u,v)=>v.y>u.y?v:u), mn=pts.reduce((u,v)=>v.y<u.y?v:u);
+    const seas=n>=14&&wd.filter(o=>o.n>=2).length>=6; const fW=w=>seas&&wd[w].n>=2?1+wd[w].res:1; const wOf=v=>fromIso(addDays(r.from,v)).getDay(); const exp=v=>tr(v)*fW(wOf(v));
+    let sa=s; if(seas){ let e2=0; pts.forEach(p=>{ p.ex=exp(p.x); p.ea=p.y-p.ex; e2+=p.ea**2; }); sa=Math.sqrt(e2/Math.max(1,n-2-6))||s; pts.forEach(p=>p.za=p.ea/sa); } else pts.forEach(p=>{ p.ex=p.t; p.ea=p.res; p.za=p.z; });
+    let fcSum=0; for(let v=last.x+1; v<=xEnd; v++) fcSum+=exp(v); const tot=pts.reduce((t,p)=>t+p.y,0);
+    const za=last.za; const posA=za>2?'أعلى بكثير من المعتاد':za>1?'أعلى من المعتاد':za<-2?'أقل بكثير من المعتاد':za<-1?'أقل من المعتاد':'ضمن المعتاد';
+    const l7=pts.filter(p=>p.x>last.x-7), p7=pts.filter(p=>p.x<=last.x-7&&p.x>last.x-14); const wk=(l7.length&&p7.length)?(l7.reduce((t,p)=>t+p.y,0)/l7.length)/(p7.reduce((t,p)=>t+p.y,0)/p7.length)-1:null;
+    return {n,pts,a,b,tr,s,R2,tstat,xb,Sxx,last,xEnd,endKey,PI,mPct,dir,z,pos,p10:q(.1),p90:q(.9),mx,mn,wd,mean:yb,tot,fcSum,wk,
+      seas,sa,za,posA,exLast:last.ex,endW:wOf(xEnd),
+      proj:exp(xEnd),projLo:Math.max(0,exp(xEnd)-(seas?PI(xEnd)*sa/s:PI(xEnd))),projHi:exp(xEnd)+(seas?PI(xEnd)*sa/s:PI(xEnd)),above:pts.filter(p=>p.z>1).length,below:pts.filter(p=>p.z<-1).length}; }
+  function trendPts(r,map,keys){ const out=[]; for(let k=r.from;k<=r.day;k=addDays(k,1)){ const e=map[k]; if(!e) continue; const v=keys.map(b=>e[b]); if(v.some(x=>x==null||x==='')) continue; out.push({key:k,y:v.reduce((t,x)=>t+Number(x),0)}); } return out; }
+  const sgnF=v=>v==null||isNaN(v)?'—':(v>0?'+':v<0?'−':'')+fmt(Math.abs(v));
+  const zCol=z=>z>1?'#1FA16B':z<-1?'#D0453A':'#16233A';
+  function tInsights(S,label){ const out=[]; if(S.n<3) return out; const L=S.last, tl=S.tr(L.x);
+    if(S.dir==='عرضي') out.push({tone:'flat',t:`مسار ${label} عرضي: لا يوجد اتجاه واضح خلال الفترة، والمبيعات اليومية تتحرك حول ${fmt(S.mean)} ر.س (الميل ${sgnF(S.b)} يومياً فقط).`});
+    else out.push({tone:S.dir==='صاعد'?'up':'down',t:`مسار ${label} ${S.dir}: ${S.b<0?'تنخفض':'ترتفع'} المبيعات اليومية بمتوسط ${fmt(Math.abs(S.b))} ر.س كل يوم، أي نحو ${fmt(Math.abs(S.b*30))} ر.س في مستوى البيع اليومي خلال 30 يوماً (${(S.mPct*100).toFixed(1)}%).`});
+    const dn=DAYS[fromIso(L.key).getDay()];
+    if(S.seas) out.push({tone:S.za>1?'up':S.za<-1?'down':'info',t:`آخر يوم (${dn} ${dmy(L.key)}) بمبيعات ${fmt(L.y)} ر.س، والمعتاد ليوم ${dn} عند هذا المستوى من المسار ${fmt(S.exLast)} ر.س — أي ${S.posA} (${sgnF(L.ea)} ر.س).`});
+    else out.push({tone:S.z>1?'up':S.z<-1?'down':'info',t:`آخر يوم (${dn} ${dmy(L.key)}) بمبيعات ${fmt(L.y)} ر.س ${S.pos}، ${L.res>=0?'فوق':'تحت'} خط الاتجاه بـ ${fmt(Math.abs(L.res))} ر.س.`});
+    if(S.seas) out.push({tone:'info',t:`النطاق الطبيعي ليوم ${dn} حالياً بين ${fmt(Math.max(0,S.exLast-S.sa))} و${fmt(S.exLast+S.sa)} ر.س، والنطاق الواسع بين ${fmt(Math.max(0,S.exLast-2*S.sa))} و${fmt(S.exLast+2*S.sa)} ر.س.`});
+    else out.push({tone:'info',t:`النطاق الطبيعي لمبيعات اليوم حالياً بين ${fmt(Math.max(0,tl-S.s))} و${fmt(tl+S.s)} ر.س، والنطاق الواسع بين ${fmt(Math.max(0,tl-2*S.s))} و${fmt(tl+2*S.s)} ر.س.`});
+    if(S.wk!=null) out.push({tone:S.wk>0.03?'up':S.wk<-0.03?'down':'flat',t:`متوسط آخر 7 أيام ${S.wk>=0?'أعلى':'أقل'} من الأسبوع الذي قبله بـ ${Math.abs(S.wk*100).toFixed(1)}%.`});
+    out.push({tone:S.proj>=S.mean?'up':'down',t:`إذا استمر المسار${S.seas?' مع احتساب نمط أيام الأسبوع':''}: المبيعات المتوقعة يوم ${DAYS[S.endW]} ${dmy(S.endKey)} نحو ${fmt(S.proj)} ر.س (بين ${fmt(S.projLo)} و${fmt(S.projHi)} بثقة 90%)${S.fcSum?`، ومجموع الأيام المتبقية حتى ${dmy(S.endKey)} نحو ${fmt(S.fcSum)} ر.س`:''}.`});
+    const w=S.wd.filter(o=>o.n>=2&&o.res!=null); if(w.length>=3){ const hi=w.reduce((u,v)=>v.res>u.res?v:u), lo=w.reduce((u,v)=>v.res<u.res?v:u);
+      out.push({tone:'info',t:`يوم ${DAYS[hi.w]} يبيع عادة أعلى من خط الاتجاه بـ ${(hi.res*100).toFixed(0)}%، ويوم ${DAYS[lo.w]} أقل منه بـ ${Math.abs(lo.res*100).toFixed(0)}% — لذلك خروج هذه الأيام عن النطاق طبيعي ومتوقع.`}); }
+    if(S.seas){ const ab=S.pts.filter(p=>p.za>1).length, bl=S.pts.filter(p=>p.za<-1).length; out.push({tone:'info',t:`بعد احتساب نمط أيام الأسبوع: ${ab} ${ab===1?'يوم':'أيام'} باعت أعلى من المعتاد و${bl} ${bl===1?'يوم':'أيام'} أقل من المعتاد من أصل ${S.n} يوماً؛ مستوى الدعم ${fmt(S.p10)} والمقاومة ${fmt(S.p90)} ر.س.`}); }
+    else out.push({tone:(S.above+S.below)>S.n*.4?'flat':'info',t:`خرجت المبيعات عن النطاق الطبيعي ${S.above} ${S.above===1?'مرة':'مرات'} للأعلى و${S.below} ${S.below===1?'مرة':'مرات'} للأسفل من أصل ${S.n} يوماً؛ مستوى الدعم ${fmt(S.p10)} والمقاومة ${fmt(S.p90)} ر.س.`});
+    return out; }
+  function trendPages(r,M){ const multi=r.scope==='all'; const keys=multi?BR.map(b=>b.k):[r.scope]; const col=multi?GOLD:brOf(r.scope).col; const label=multi?'إجمالي مبيعات الفروع':'مبيعات '+brOf(r.scope).name; const mtd=r.period==='mtd';
+    const S=tStats(trendPts(r,M.map,keys),r); const p1=[B.theme(col),B.band('نطاق مسار '+(multi?'إجمالي المبيعات':brOf(r.scope).name),col,dmy(r.from)+' — '+dmy(r.day)+'  •  '+S.n+' يوماً')];
+    if(S.n<3){ p1.push(B.title('لا توجد أيام مكتملة كافية لتحليل المسار')); return [p1]; }
+    const L=S.last, dirCol=S.dir==='صاعد'?'#1FA16B':S.dir==='هابط'?'#D0453A':'#C98A0C';
+    p1.push(B.kpis([['آخر يوم مسجل',fmt(L.y),'#9A7B12',DAYS[fromIso(L.key).getDay()]+' '+dmy(L.key)],['اتجاه المسار',(S.dir==='هابط'?'▼ ':S.dir==='صاعد'?'▲ ':'● ')+S.dir,dirCol,sgnF(S.b)+' ر.س يومياً'],S.seas?['مقارنة بالمعتاد لنفس اليوم',sgnF(L.ea),zCol(S.za),S.posA+' • المعتاد '+fmt(S.exLast)]:['موقع آخر يوم في النطاق',(S.z>0?'+':'')+S.z.toFixed(2)+'σ',zCol(S.z),S.pos],[mtd?'المتوقع ليوم '+DAYS[S.endW]+' '+Number(S.endKey.slice(8)):'المتوقع بعد 7 أيام',fmt(S.proj),'#2F6DB5',fmt(S.projLo)+' – '+fmt(S.projHi),'#6B7A90']]));
+    p1.push(B.channel(S,{title:'نطاق مسار '+label+' اليومية',col}));
+    p1.push(B.strip([['الميل اليومي',sgnF(S.b),dirCol,'ltr'],['التغير خلال 30 يوماً',sgnF(S.b*30),dirCol,'ltr'],['قوة الاتجاه (R²)',(S.R2*100).toFixed(0)+'%','#16233A','ltr'],['انحراف النطاق σ','±'+fmt(S.s),'#9A7B12','ltr'],['متوسط اليوم',fmt(S.mean),'#16233A','ltr']]));
+    p1.push(B.title(S.seas?'مستويات النطاق لآخر يوم — مقارنة بالمعتاد ليوم '+DAYS[fromIso(L.key).getDay()]:'مستويات النطاق اليوم',dmy(L.key))); p1.push(B.gauge(S));
+    p1.push(B.title('قراءة المسار','مكتوبة تلقائياً من البيانات')); p1.push(B.insights(tInsights(S,label)));
+    const p2=[B.theme(col),B.band('تفاصيل المسار',col,label)];
+    p2.push(B.wdRes(S)); const tbl=S.pts.slice(-31);
+    p2.push(B.title(S.seas?'سجل الأيام مقابل المعتاد لكل يوم':'سجل الأيام مقابل خط الاتجاه',S.seas?'المعتاد = خط الاتجاه × نمط يوم الأسبوع':(S.pts.length>31?'آخر 31 يوماً':'')));
+    p2.push(B.table([{t:'التاريخ',w:.15,num:true},{t:'اليوم',w:.12},{t:'المبيعات',w:.16,num:true},{t:S.seas?'المعتاد لليوم':'خط الاتجاه',w:.15,num:true},{t:'الفرق',w:.15,num:true},{t:'σ',w:.1,num:true},{t:'الحالة',w:.17}],
+      tbl.map(p=>{ const zz=p.za, st_=zz>2?'أعلى بكثير':zz>1?'أعلى من المعتاد':zz<-2?'أقل بكثير':zz<-1?'أقل من المعتاد':'ضمن المعتاد'; const rw=[dmy(p.key),DAYS[fromIso(p.key).getDay()],{v:fmt(p.y),b:true},{v:fmt(p.ex),col:'#6B7A90'},{v:sgnF(p.ea),col:p.ea>=0?'#1FA16B':'#D0453A',b:true},{v:(zz>0?'+':'')+zz.toFixed(2),col:zCol(zz)},{v:st_,col:zCol(zz),b:true}]; if(Math.abs(zz)>1) rw._hl=zz>0?'rgba(31,161,107,.08)':'rgba(208,69,58,.08)'; return rw; })));
+    const pages=[p1,p2];
+    if(multi){ const p3=[B.band('مسار كل فرع',GOLD,'كل فرع مقابل خط اتجاهه')];
+      BR.forEach(b=>{ const Sk=tStats(trendPts(r,M.map,[b.k]),r); if(Sk.n<3) return; const dc=Sk.dir==='صاعد'?'#1FA16B':Sk.dir==='هابط'?'#D0453A':'#C98A0C';
+        p3.push(B.theme(b.col)); p3.push(B.channel(Sk,{title:b.name+' — '+(Sk.dir==='هابط'?'▼ ':Sk.dir==='صاعد'?'▲ ':'● ')+'مسار '+Sk.dir,col:b.col,compact:true}));
+        p3.push(B.strip([['الميل اليومي',sgnF(Sk.b),dc,'ltr'],['التغير خلال 30 يوماً',sgnF(Sk.b*30),dc,'ltr'],['آخر يوم مقابل المعتاد',sgnF(Sk.last.ea),zCol(Sk.za),'ltr'],['المتوقع '+(mtd?'ليوم '+Number(Sk.endKey.slice(8)):'بعد 7 أيام'),fmt(Sk.proj),'#2F6DB5','ltr'],['قوة الاتجاه',(Sk.R2*100).toFixed(0)+'%','#16233A','ltr']])); });
+      p3.push(B.theme(GOLD)); pages.push(p3); }
+    return pages; }
+  function pagesFor(r){ const M=repModel(r); const pages=[]; const sub=scopeName(r.scope)+((r.type==='daily'||r.type==='weekly'||r.type==='trend')?'  •  حتى '+dmy(r.day):'');
+    if(r.type==='analysis'||r.type==='compare'||r.type==='trend'){ const ps=(r.type==='analysis'?analysisPages:r.type==='trend'?trendPages:comparePages)(r,M); ps[0].unshift(B.header(r,sub)); pages.push(...ps); }
+    else if(r.scope==='all'){ pages.push([B.header(r,sub),...overviewBlocks(r,M)]); M.branches.forEach(x=>pages.push(branchBlocks(r,x,M))); }
+    else pages.push([B.header(r,sub),...branchBlocks(r,M.branches[0],M)]);
+    if(r.note) pages[pages.length-1].push(B.note(r.note));
+    return pages; }
+  async function renderPages(r){
+    try{ await document.fonts.ready; await document.fonts.load('600 20px "Readex Pro"'); await document.fonts.load('400 20px "IBM Plex Sans Arabic"'); }catch(e){}
+    const pages=pagesFor(r); const N=pages.length;
+    return pages.map((bl,pi)=>{ const H=bl.reduce((t,b)=>t+b.h,0)+30+60; const sc=Math.min(2,15000/H); const c=document.createElement('canvas'); c.width=Math.round(W*sc); c.height=Math.round(H*sc); const x=c.getContext('2d'); x.scale(sc,sc);
+      x.fillStyle='#F4F6FA'; x.fillRect(0,0,W,H); AC=GOLD; const g=paint(x); let y=pi===0?0:20; bl.forEach(b=>{ b.draw(x,y,g); y+=b.h; }); if(pi>0||r.scope!=='all'){ const sg=x.createLinearGradient(0,0,0,H); sg.addColorStop(0,AC); sg.addColorStop(1,hexA(AC,.15)); x.fillStyle=sg; x.fillRect(W-6,0,6,H-56); }
+      x.fillStyle='#EAEFF5'; x.fillRect(0,H-56,W,56); x.fillStyle=AC; x.fillRect(0,H-56,W,3); g.T('مبيعات الفروع  •  سري — للاستخدام الداخلي  •  أُعد بواسطة '+AUTHOR,W-P,H-22,{size:13.5,col:'#6B7A90'}); g.T('صفحة '+(pi+1)+' من '+N+'  •  '+r.createdLabel,P,H-22,{size:13.5,col:'#6B7A90',al:'left'});
+      c._h=H; return c; });
+  }
+  async function stitched(r){ const cs=await renderPages(r); if(cs.length===1) return cs[0]; const tot=cs.reduce((t,c)=>t+c._h,0); const sc=Math.min(1.6,16000/tot); const c=document.createElement('canvas'); c.width=Math.round(W*sc); c.height=Math.round(tot*sc); const x=c.getContext('2d'); let y=0; cs.forEach(p=>{ const h=p._h*sc; x.drawImage(p,0,y,W*sc,h); y+=h; }); return c; }
+  const fname=(r,ext)=>({daily:'مبيعات-يومي-',weekly:'مبيعات-أسبوعي-',monthly:'مبيعات-شهري-',analysis:'مبيعات-تحليلي-',compare:'مبيعات-مقارنة-',trend:'مبيعات-اتجاه-'}[r.type||'monthly'])+((r.type==='daily'||r.type==='weekly'||r.type==='trend')?r.day:r.month)+'-'+(r.scope==='all'?'كل-الفروع':brOf(r.scope).short)+'.'+ext;
+  async function dlSave(filename,data){ if(!st.dl){toast('التنزيل غير متاح في هذا العرض');return;} try{ await st.dl.save({filename,data}); toast('جاهز للحفظ والإرسال'); }catch(e){ const c=e&&e.code; if(c==='declined') return; if(c==='rejected_extension'||c==='extension_not_enabled') toast('هذا النوع غير متاح هنا — جرّب صيغة أخرى'); else toast('تعذّر التنزيل، حاول مرة أخرى'); } }
+  async function previewRep(r){ const sh=sheet(r.title,[el('div',{class:'empty',text:'جارِ تجهيز المعاينة…'})]); const cs=await renderPages(r); sh.innerHTML='';
+    sh.append(el('div',{class:'grab'}),el('h4',{text:r.title}),...cs.map(c=>el('div',{class:'prev'},el('img',{src:c.toDataURL('image/jpeg',.9),alt:r.title}))),el('div',{class:'acts'},[el('button',{class:'pr',type:'button',text:'صورة',onclick:()=>savePng(r)}),el('button',{type:'button',text:'PDF',onclick:()=>savePdf(r)}),el('button',{type:'button',text:'صفحة ويب',onclick:()=>saveHtml(r)}),el('button',{type:'button',text:'إغلاق',onclick:closeSheet})])); }
+  async function savePng(r){ toast('جارِ تجهيز الصورة…'); const c=await stitched(r); const blob=await new Promise(res=>c.toBlob(res,'image/png')); await dlSave(fname(r,'png'),blob); }
+  async function savePdf(r){ if(!window.jspdf){toast('مكتبة PDF لم تُحمّل — نزّل الصورة بدلاً منها');return;} toast('جارِ تجهيز PDF…'); const cs=await renderPages(r); const pdf=new window.jspdf.jsPDF({unit:'pt',format:'a4',orientation:'portrait'});
+    const pw=pdf.internal.pageSize.getWidth(), ph=pdf.internal.pageSize.getHeight(); let first=true;
+    cs.forEach(c=>{ const sliceH=Math.floor(c.width*ph/pw); for(let y0=0;y0<c.height;y0+=sliceH){ const h=Math.min(sliceH,c.height-y0); const s=document.createElement('canvas'); s.width=c.width; s.height=h; const sx=s.getContext('2d'); sx.fillStyle='#F4F6FA'; sx.fillRect(0,0,s.width,h); sx.drawImage(c,0,y0,c.width,h,0,0,c.width,h);
+      if(!first) pdf.addPage(); first=false; pdf.setFillColor(244,246,250); pdf.rect(0,0,pw,ph,'F'); pdf.addImage(s.toDataURL('image/jpeg',.9),'JPEG',0,0,pw,h*pw/c.width); } });
+    await dlSave(fname(r,'pdf'),pdf.output('blob')); }
+
+  // ---- HTML export: exact report pages as images (immune to browser dark-mode recoloring) ----
+  async function saveHtml(r){ toast('جارِ تجهيز صفحة الويب…'); const cs=await renderPages(r); const esc=s=>String(s).replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+    const imgs=cs.map((c,i)=>`<img src="${c.toDataURL('image/jpeg',.9)}" alt="صفحة ${i+1}">`).join('');
+    const html=`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light only"><meta name="darkreader-lock"><title>${esc(r.title)}</title>
+<style>:root{color-scheme:light only;forced-color-adjust:none}html,body{margin:0;background:#F4F6FA}main{max-width:1080px;margin:0 auto;padding:10px 8px;display:flex;flex-direction:column;gap:12px}img{display:block;width:100%;height:auto;border-radius:10px}</style></head><body><main>${imgs}</main></body></html>`;
+    await dlSave(fname(r,'html'),html); }
+
+  // ---------- sheets ----------
+  function closeSheet(){ $('#sheetRoot').innerHTML=''; }
+  function sheet(title,body){ const bg=el('div',{class:'sheet-bg',onclick:e=>{if(e.target===bg)closeSheet();}}); const sh=el('div',{class:'sheet',role:'dialog','aria-modal':'true'},[el('div',{class:'grab'}),el('h4',{text:title}),...body]); bg.append(sh); $('#sheetRoot').innerHTML=''; $('#sheetRoot').append(bg); return sh; }
+
+  // ---------- data layer ----------
+  async function write(fn){ if(!st.db){toast('الحفظ غير متاح في هذا العرض');return false;} try{ await fn(); return true; }catch(e){ const c=e&&e.code;
+      if(c==='unavailable'){ try{ await new Promise(r=>setTimeout(r,700)); await fn(); return true; }catch(e2){} }
+      if(c==='invalid_argument') banner('لديك صلاحية عرض فقط — لا يمكنك التعديل.'); else toast('لم يُحفظ — تحقق من الاتصال وحاول مرة أخرى'); return false; } }
+
+  buildChips(); buildEntry(); buildTargets(); setRepType('daily');
+  try{ const s=localStorage.getItem('scope'); if(s&&(s==='all'||brOf(s))) { st.scope=s; buildChips(); } }catch(e){}
+  $('#eDate').value=todayIso(); loadEntry(); $('#tgM').value=todayIso().slice(0,7); loadTargets(); renderDash(); renderLog();
+  try{ const t=localStorage.getItem('stab'); showTab(['dash','entry','rep'].includes(t)?t:'dash'); }catch(e){ showTab('dash'); }
+  let rz; window.addEventListener('resize',()=>{ clearTimeout(rz); rz=setTimeout(()=>{ if(!$('#tab-dash').hidden) renderDash(); },200); });
+
+  (async()=>{
+    const db=window.claude?await window.claude.use('db'):null; st.dl=window.claude?await window.claude.use('downloads'):null;
+    if(!db){ setSync('err','غير متصل'); banner('افتح هذه الصفحة من Claude ليتم تحميل المبيعات وحفظ التعديلات.'); return; }
+    st.db=db; setSync('','مزامنة…'); const onErr=e=>{ setSync('err','انقطع الاتصال'); if(e&&e.code==='revoked') banner('لم تعد لديك صلاحية على هذه الصفحة.'); };
+    db.collection('sales').onSnapshot(s=>{ const o={}; s.docs.forEach(d=>{const v=d.data(); if(v&&v.date) o[v.date]=v;}); st.sales=o; st.ready=true; setSync('on','متزامن');
+      if(!st.month){ const ks=Object.keys(o).sort(); if(ks.length) st.month=ks[ks.length-1].slice(0,7); }
+      renderDash(); renderLog(); if(document.activeElement===document.body||!document.activeElement||!document.activeElement.classList.contains('amount')) loadEntry(); fillRepForm(); renderReports(); }, onErr);
+    db.collection('targets').onSnapshot(s=>{ const o={}; s.docs.forEach(d=>{const v=d.data(); if(v&&v.month) o[v.month]=v;}); st.targets=o; renderDash(); if(document.activeElement&&document.activeElement.id&&document.activeElement.id.startsWith('tg_')) return; loadTargets(); }, onErr);
+    db.collection('reports').onSnapshot(s=>{ st.reports=s.docs.map(d=>({id:d.id,...d.data()})); renderReports(); }, onErr);
+  })();
+})();
+</script>
+
+</body></html>

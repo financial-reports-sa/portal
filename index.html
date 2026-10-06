@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#16233A">
 <title>My Reports · بوابة التقارير</title>
-<link rel="manifest" href="manifest.json?v=3">
+<link rel="manifest" href="manifest.json?v=4">
 <link rel="icon" href="icon.svg?v=3" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@500;600;700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="config.js"></script>
+<script src="config.js?v=4"></script>
 <style>
 :root{
   --bg:#F4F6FA; --card:#FFFFFF; --line:#E1E7EF; --fg:#16233A; --muted:#6B7A90;
@@ -124,6 +124,10 @@ tr.sub td{font-weight:600;background:var(--bg)}
 .toast.hide{opacity:0;pointer-events:none}
 .loading{display:flex;justify-content:center;padding:40px;color:var(--muted)}
 footer{font-size:12px;color:var(--muted);text-align:center}
+.appframe{display:block;width:100%;border:1px solid var(--line);border-radius:14px;background:var(--card);height:70vh}
+.pageframe{display:block;width:100%;border:1px solid var(--line);border-radius:14px;background:var(--card);min-height:400px}
+body.appmode .wrap{padding-bottom:8px;gap:10px}
+body.appmode footer{display:none}
 </style>
 </head>
 <body>
@@ -172,16 +176,17 @@ const sb=window.supabase.createClient(CFG.url,CFG.key,{auth:{persistSession:true
 
 const SECTIONS=[
   {id:'home',name:'الرئيسية'},
-  {id:'sales',name:'المبيعات اليومية'},
-  {id:'channels',name:'منافذ البيع'},
-  {id:'income',name:'قوائم الدخل'},
+  {id:'sales',name:'مبيعات الفروع',app:'sales'},
+  {id:'daily',name:'التقرير اليومي',page:'daily',perm:'sales'},
+  {id:'channels',name:'منافذ المبيعات',app:'channels'},
+  {id:'income',name:'قوائم الدخل',app:'income'},
   {id:'wh',name:'نسبة تكلفة المستودعات'},
-  {id:'chicken',name:'أسعار الدجاج'},
-  {id:'carcass',name:'أسعار الذبايح'},
+  {id:'chicken',name:'أسعار المشتريات',page:'prices'},
   {id:'users',name:'المستخدمين والصلاحيات',admin:true},
   {id:'data',name:'إدخال البيانات',admin:true}
 ];
-const PERM_SECTIONS=['sales','channels','income','wh','chicken','carcass'];
+const PERM_SECTIONS=['sales','channels','income','wh','chicken'];
+const APP_VER='4';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name]));
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -204,20 +209,18 @@ function kpi(l,v,s){return `<div class="card kpi"><span class="lbl">${l}</span><
 function dotTag(b){return `<span class="tag"><i class="dot" style="background:${b.color}"></i>${esc(b.name)}</span>`;}
 
 // ================= state =================
-const st={user:null,profile:null,branches:[],myBranches:[],mySections:[],tab:'home',f:'all',cache:{},month:{}};
+const st={user:null,profile:null,branches:[],myBranches:[],mySections:[],tab:'home',f:'all',cache:{},month:{},page:{}};
 const isAdmin=()=>st.profile&&['owner','admin'].includes(st.profile.role);
 const isOwner=()=>st.profile&&st.profile.role==='owner';
-const allowed=id=>isAdmin()||id==='home'||st.mySections.includes(id);
+const allowed=id=>isAdmin()||id==='home'||(id==='daily'?st.mySections.includes('sales')&&st.allBranches:st.mySections.includes(id));
 const brById=id=>st.branches.find(b=>b.id===id)||{id,name:id,color:'#888'};
 const selBranches=()=>st.f==='all'?st.branches.map(b=>b.id):[st.f];
 
 async function q(key,fn){ if(st.cache[key]) return st.cache[key]; const r=await fn(); if(r.error) throw r.error; st.cache[key]=r.data||[]; return st.cache[key]; }
-const loadSales=()=>q('sales',()=>sb.from('daily_sales').select('branch_id,day,amount').order('day').limit(20000));
-const loadChannels=()=>q('channels',()=>sb.from('channel_sales').select('branch_id,month,data').order('month'));
-const loadIncome=()=>q('income',()=>sb.from('income_statements').select('branch_id,month,is_estimate,meta,groups').order('month'));
+const appList=(app,coll)=>q(app+'/'+coll,()=>sb.rpc('app_list',{p_app:app,p_coll:coll}));
+const loadSales=async()=>{const r=[];(await appList('sales','sales')).forEach(d=>{const v=d.data||{};if(!v.date)return;for(const k in v){if(k!=='date'&&typeof v[k]==='number')r.push({branch_id:k,day:v.date,amount:v[k]});}});return r.sort((a,b)=>a.day<b.day?-1:1);};
+const loadIncome=async()=>(await appList('income','stmts')).map(d=>({branch_id:d.data.br,month:d.data.month,is_estimate:!!d.data.est,groups:d.data.groups||[]}));
 const loadRatio=()=>q('ratio',()=>sb.rpc('get_cogs_ratio'));
-const loadChicken=()=>q('chicken',()=>sb.from('chicken_prices').select('*').order('day'));
-const loadCarcass=()=>q('carcass',()=>sb.from('carcass_prices').select('*').order('day'));
 
 // ================= auth =================
 $('#loginForm').onsubmit=async e=>{
@@ -244,6 +247,7 @@ async function boot(){
   ]);
   st.profile=p.data;
   if(!st.profile||!st.profile.active){ await sb.auth.signOut(); $('#login').hidden=false; $('#app').hidden=true; $('#lerr').textContent='هذا الحساب موقوف — تواصل مع مدير النظام'; return; }
+  try{ const r=await sb.rpc('has_all_branches'); st.allBranches=!!r.data; }catch(e){ st.allBranches=false; }
   st.branches=b.data||[]; st.mySections=(us.data||[]).map(x=>x.section);
   $('#login').hidden=true; $('#app').hidden=false;
   try{ const t=localStorage.getItem('tab'); if(t&&allowed(t)) st.tab=t; }catch(e){}
@@ -371,71 +375,6 @@ V.home=async()=>{
   return h;
 };
 
-V.sales=async()=>{
-  const bs=selBranches(); const S=(await loadSales()).filter(r=>bs.includes(r.branch_id));
-  const months=[...new Set(S.map(r=>r.day.slice(0,7)))].sort(); MONTHS_FOR.sales=months;
-  let h=`<div class="bar-row">${branchChips()}${monthNav('sales',months)}</div>`;
-  if(!months.length) return h+'<div class="card empty">لا توجد مبيعات مسجلة</div>';
-  const m=st.month.sales, n=daysIn(m), cur=S.filter(r=>r.day.startsWith(m));
-  const days=[...Array(n)].map((_,i)=>m+'-'+String(i+1).padStart(2,'0'));
-  const val=(b,d)=>{const r=cur.find(x=>x.branch_id===b&&x.day===d);return r?+r.amount:null;};
-  const dayTot=days.map(d=>{const v=bs.map(b=>val(b,d));return v.some(x=>x!=null)?sum(v):null;});
-  const rec=dayTot.filter(v=>v!=null), tot=sum(rec), avg=rec.length?tot/rec.length:0;
-  const lastDay=rec.length?Math.max(...cur.map(r=>+r.day.slice(8))):0;
-  const pi=months.indexOf(m)-1, pm=months[pi];
-  const prevSame=pm?sum(S.filter(r=>r.day.startsWith(pm)&&+r.day.slice(8)<=lastDay).map(r=>r.amount)):0;
-  const peakI=dayTot.indexOf(Math.max(...rec));
-  // same-weekday forecast for the rest of the month
-  const wd=d=>new Date(d).getDay(); const wdAvg=[0,1,2,3,4,5,6].map(w=>{const v=days.map((d,i)=>wd(d)===w?dayTot[i]:null).filter(x=>x!=null);return v.length?sum(v)/v.length:avg;});
-  const fc=tot+sum(days.map((d,i)=>dayTot[i]==null&&i+1>lastDay?wdAvg[wd(d)]:0));
-  h+=`<div class="kpis">${kpi('مبيعات الشهر',fmt(tot),(prevSame?delta(tot,prevSame,'عن نفس الفترة من '+monShort(pm)):'')+` <span class="muted">· ${rec.length} يوم</span>`)}${kpi('المتوسط اليومي',fmt(avg))}${lastDay<n?kpi('المتوقع لنهاية الشهر',fmt(fc),'<span class="muted">بمتوسط نفس أيام الأسبوع</span>'):''}${peakI>=0?kpi('أعلى يوم',fmt(dayTot[peakI]),`<span class="muted">يوم ${peakI+1}</span>`):''}</div>`;
-  h+=`<div class="card"><h3>المبيعات اليومية <small>${monLbl(m)}</small></h3>${stackBars(days.map((d,i)=>String(i+1)),bs.map(b=>({name:brById(b).name,color:brById(b).color,vals:days.map(d=>val(b,d)||0)})),{label:bs.length===1||n<=31})}${bs.length>1?legend(bs.map(brById)):''}</div>`;
-  if(bs.length>1) h+=`<div class="branch-cards">`+bs.map(b=>{const B=brById(b),v=sum(cur.filter(r=>r.branch_id===b).map(r=>r.amount));return `<div class="card bc" style="--c:${B.color}"><div class="head"><b>${esc(B.name)}</b><span class="tag">${pct(tot?v/tot:0)}</span></div><div class="num" style="font-size:20px;font-weight:700">${fmt(v)}</div><div class="meter"><i style="width:${tot?v/tot*100:0}%"></i></div></div>`;}).join('')+`</div>`;
-  h+=`<div class="card"><h3>جدول المبيعات اليومية</h3><div class="scroller"><table><thead><tr><th>اليوم</th>${bs.map(b=>`<th class="n">${esc(brById(b).name)}</th>`).join('')}${bs.length>1?'<th class="n">الإجمالي</th>':''}</tr></thead><tbody>`+
-    days.map((d,i)=>dayTot[i]==null?'':`<tr><td>${i+1} ${monShort(m)}</td>${bs.map(b=>`<td class="n">${fmt(val(b,d))}</td>`).join('')}${bs.length>1?`<td class="n"><b>${fmt(dayTot[i])}</b></td>`:''}</tr>`).reverse().join('')+
-    `<tr class="total"><td>الإجمالي</td>${bs.map(b=>`<td class="n">${fmt(sum(cur.filter(r=>r.branch_id===b).map(r=>r.amount)))}</td>`).join('')}${bs.length>1?`<td class="n">${fmt(tot)}</td>`:''}</tr></tbody></table></div></div>`;
-  return h;
-};
-
-V.channels=async()=>{
-  const bs=selBranches(); const C=(await loadChannels()).filter(r=>bs.includes(r.branch_id));
-  const months=[...new Set(C.map(r=>r.month))].sort(); MONTHS_FOR.channels=months;
-  let h=`<div class="bar-row">${branchChips()}${monthNav('channels',months)}</div>`;
-  if(!months.length) return h+'<div class="card empty">لا توجد بيانات منافذ مسجلة</div>';
-  const m=st.month.channels; const rows=C.filter(r=>r.month===m);
-  const tot=sum(rows.map(r=>sum(Object.values(r.data.channels||{}))));
-  const inv=sum(rows.map(r=>r.data.inv||0));
-  h+=`<div class="kpis">${kpi('المبيعات قبل الضريبة',fmt(tot))}${kpi('بعد الضريبة',fmt(tot*(1+VAT)))}${inv?kpi('عدد الفواتير',fmt(inv),'<span class="muted">متوسط الفاتورة '+fmt(tot*(1+VAT)/inv,2)+' ر.س</span>'):''}</div><div class="grid2">`;
-  rows.sort((a,b)=>brById(a.branch_id).sort-brById(b.branch_id).sort).forEach(r=>{
-    const B=brById(r.branch_id), ch=Object.entries(r.data.channels||{}).filter(([,v])=>+v>0).sort((a,b)=>b[1]-a[1]); const t=sum(ch.map(c=>c[1]));
-    const parts=ch.map(([k,v],i)=>({name:CH[k]||k,color:PAL[i%PAL.length],v:+v}));
-    const d=r.data, daily=d.inv&&d.days?d.inv/d.days:null;
-    h+=`<div class="card" style="border-top:4px solid ${B.color}"><h3>${esc(B.name)} <small>${d.asOf?'حتى '+esc(d.asOf):''}</small></h3>
-    <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">${donut(parts)}<div style="flex:1;min-width:170px;display:flex;flex-direction:column;gap:4px;font-size:14px">${parts.slice(0,5).map(p=>`<div style="display:flex;justify-content:space-between;gap:8px"><span><i class="dot" style="background:${p.color}"></i> ${esc(p.name)}</span><b class="num">${pct(p.v/t)}</b></div>`).join('')}</div></div>
-    <div class="scroller" style="margin-top:10px"><table><thead><tr><th>المنفذ</th><th class="n">المبيعات</th><th class="n">النسبة</th></tr></thead><tbody>${parts.map(p=>`<tr><td><i class="dot" style="background:${p.color}"></i> ${esc(p.name)}</td><td class="n">${fmt(p.v)}</td><td class="n">${pct(p.v/t)}</td></tr>`).join('')}<tr class="total"><td>الإجمالي</td><td class="n">${fmt(t)}</td><td class="n">100%</td></tr></tbody></table></div>
-    ${d.inv?`<div class="row" style="margin-top:10px;font-size:13px"><div><span class="muted">الفواتير</span><br><b class="num">${fmt(d.inv)}</b></div><div><span class="muted">فواتير يومياً</span><br><b class="num">${fmt(daily,1)}</b></div><div><span class="muted">متوسط الفاتورة</span><br><b class="num">${fmt(t*(1+VAT)/d.inv,2)}</b></div></div>`:''}</div>`;
-  });
-  return h+'</div>';
-};
-
-V.income=async()=>{
-  const bs=selBranches(); const I=(await loadIncome()).filter(r=>bs.includes(r.branch_id));
-  const months=[...new Set(I.map(r=>r.month))].sort(); MONTHS_FOR.income=months;
-  let h=`<div class="bar-row">${branchChips()}${monthNav('income',months)}</div>`;
-  if(!months.length) return h+'<div class="card empty">لا توجد قوائم دخل مسجلة</div>';
-  const m=st.month.income; const t=aggTotals(I.filter(r=>r.month===m));
-  if(t.est) h+=`<div class="note">قائمة <b>تقديرية</b>: الإيرادات وتكلفة المبيعات فعلية، والمصروفات بمتوسط الأشهر السابقة. تُستبدل تلقائياً عند رفع القائمة الفعلية.</div>`;
-  h+=`<div class="kpis">${kpi('الإيرادات',fmt(t.rev))}${kpi('تكلفة المبيعات',fmt(t.cogs),'<span class="muted">'+pct(t.rev?t.cogs/t.rev:null)+' من الإيرادات</span>')}${kpi('مجمل الربح',fmt(t.gross),'<span class="muted">هامش</span> '+pct(t.rev?t.gross/t.rev:null))}${kpi('صافي الربح',`<span class="${t.net>=0?'up':'down'}">${fmt(t.net)}</span>`,'<span class="muted">هامش</span> '+pct(t.rev?t.net/t.rev:null))}</div>`;
-  const opex=Object.entries(t.groups).filter(([k])=>k.startsWith('opex|')).map(([k,v])=>[k.slice(5),v]).sort((a,b)=>b[1]-a[1]);
-  const row=(l,v,c='')=>`<tr class="${c}"><td>${esc(l)}</td><td class="n">${fmt(v)}</td><td class="n">${pct(t.rev?v/t.rev:null)}</td></tr>`;
-  const series=months.map(mm=>aggTotals(I.filter(r=>r.month===mm)));
-  h+=`<div class="grid2"><div class="card"><h3>قائمة الدخل <small>${monLbl(m)}${t.est?' · تقديرية':''}</small></h3><div class="scroller"><table><thead><tr><th>البند</th><th class="n">المبلغ</th><th class="n">% من الإيراد</th></tr></thead><tbody>
-    ${row('الإيرادات',t.rev,'sub')}${row('تكلفة المبيعات (المستودعات)',t.cogs)}${row('مجمل الربح',t.gross,'sub')}${opex.map(([n,v])=>row(n,v)).join('')}${row('إجمالي المصروفات',t.opex,'sub')}${row('صافي الربح',t.net,'total')}</tbody></table></div></div>
-    <div class="card"><h3>الإيرادات مقابل التكاليف</h3>${groupBars(months.map(monShort),[{name:'الإيرادات',color:'#2F5D9E',vals:series.map(s=>s.rev)},{name:'التكاليف والمصروفات',color:'#D4AF37',vals:series.map(s=>s.cogs+s.opex)}])}${legend([{name:'الإيرادات',color:'#2F5D9E'},{name:'التكاليف والمصروفات',color:'#D4AF37'}])}
-    <h3 style="margin-top:16px">صافي الربح الشهري</h3>${groupBars(months.map(monShort),[{name:'صافي الربح',color:v=>v>=0?'#1FA16B':'#D0453A',vals:series.map(s=>s.net)}],{h:200})}</div></div>`;
-  return h;
-};
-
 V.wh=async()=>{
   const bs=selBranches(); const R=(await loadRatio()).filter(r=>bs.includes(r.branch_id)&&r.ratio!=null);
   let h=`<div class="bar-row">${branchChips()}</div>`;
@@ -456,37 +395,34 @@ V.wh=async()=>{
   return h;
 };
 
-function priceView(kind){
+// ----- embedded apps & report pages -----
+function appView(sec){ return async()=>`<iframe class="appframe" src="apps/${sec.app}.html?v=${APP_VER}" title="${esc(sec.name)}"></iframe>`; }
+function pageView(sec){
   return async()=>{
-    const rows=kind==='chicken'?await loadChicken():await loadCarcass();
-    const items=[...new Set(rows.map(r=>r.item))];
-    let h='';
-    if(isAdmin()) h+=`<div class="card"><h3>إضافة سعر</h3><form class="row" id="pf" data-kind="${kind}"><div class="field"><label for="pd">التاريخ</label><input class="inp" type="date" id="pd" value="${todayIso()}" required></div><div class="field"><label for="pi">الصنف</label><input class="inp" id="pi" list="pil" required placeholder="${kind==='chicken'?'دجاج كامل 1000 جم':'نعيمي'}"><datalist id="pil">${items.map(i=>`<option value="${esc(i)}">`).join('')}</datalist></div>${kind==='chicken'?`<div class="field"><label for="pu">الوحدة</label><select class="inp" id="pu"><option>كجم</option><option>حبة</option><option>كرتون</option></select></div>`:''}<div class="field"><label for="pp">السعر (ر.س)</label><input class="inp" id="pp" inputmode="decimal" required dir="ltr"></div><div class="field" style="justify-content:flex-end"><button class="btn" type="submit">حفظ</button></div></form></div>`;
-    if(!rows.length) return h+`<div class="card empty">لا توجد أسعار مسجلة بعد${isAdmin()?' — أضف أول سعر من الأعلى':''}</div>`;
-    const dates=[...new Set(rows.map(r=>r.day))].sort();
-    const get=(it,d)=>{const r=rows.find(x=>x.item===it&&x.day===d);return r?+r.price:null;};
-    const lastOf=it=>{const r=rows.filter(x=>x.item===it);return r[r.length-1];};
-    const prevOf=it=>{const r=rows.filter(x=>x.item===it);return r[r.length-2];};
-    h+=`<div class="kpis">${items.map(it=>{const l=lastOf(it),p=prevOf(it);const d=p?l.price/p.price-1:null;return kpi(esc(it)+(l.unit?' / '+esc(l.unit):''),fmt(l.price,kind==='chicken'?2:0),(d!=null?`<span class="${d>0?'down':'up'}">${d>0?'▲':'▼'} ${pct(Math.abs(d))}</span> `:'')+`<span class="muted">${esc(l.day)}</span>`);}).join('')}</div>`;
-    const ds=dates.slice(-12);
-    h+=`<div class="card"><h3>حركة الأسعار</h3>${lineChart(ds.map(d=>d.slice(5).split('-').reverse().join('/')),items.map((it,i)=>({name:it,color:PAL[i%PAL.length],vals:ds.map(d=>get(it,d))})),{dec:kind==='chicken'?2:0})}${legend(items.map((it,i)=>({name:it,color:PAL[i%PAL.length]})))}</div>`;
-    h+=`<div class="card"><h3>سجل الأسعار</h3><div class="scroller"><table><thead><tr><th>التاريخ</th><th>الصنف</th><th class="n">السعر</th>${isAdmin()?'<th></th>':''}</tr></thead><tbody>${rows.slice().reverse().slice(0,200).map(r=>`<tr><td>${esc(r.day)}</td><td>${esc(r.item)}${r.unit?' <span class="muted">/ '+esc(r.unit)+'</span>':''}</td><td class="n">${fmt(r.price,2)}</td>${isAdmin()?`<td><button class="btn ghost sm" data-delp="${kind}:${r.id}">حذف</button></td>`:''}</tr>`).join('')}</tbody></table></div><div class="muted" style="font-size:12px;margin-top:6px">ارتفاع السعر يظهر بالأحمر لأنه يرفع التكلفة.</div></div>`;
-    return h;
+    const rows=(await appList(sec.page,'pages')).slice().sort((a,b)=>a.id<b.id?1:-1);
+    if(!rows.length) return `<div class="card empty">لا يوجد تقرير بعد — يُضاف تلقائياً مع التحديث اليومي</div>`;
+    let id=st.page[sec.id]; if(!rows.some(r=>r.id===id)) id=st.page[sec.id]=rows[0].id;
+    const fmtD=d=>{try{return new Date(d+'T12:00:00').toLocaleDateString('ar-SA-u-ca-gregory-nu-latn',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}catch(e){return d;}};
+    return `<div class="bar-row"><div class="field" style="flex:1;min-width:200px;max-width:340px"><label for="pgsel">التاريخ</label><select class="inp" id="pgsel" data-sec="${sec.id}">${rows.map(r=>`<option value="${esc(r.id)}" ${r.id===id?'selected':''}>${esc(fmtD(r.data.date||r.id))}${r===rows[0]?' · الأحدث':''}</option>`).join('')}</select></div>
+      <div class="row" style="flex:none;gap:6px"><button class="btn ghost sm" data-pgprint>طباعة / PDF</button><button class="btn ghost sm" data-pgdl="${sec.id}">تنزيل</button></div></div>
+      <iframe class="pageframe" id="pgf" title="${esc(sec.name)}"></iframe>`;
   };
 }
-V.chicken=priceView('chicken'); V.carcass=priceView('carcass');
-document.addEventListener('submit',async e=>{
-  if(e.target.id!=='pf') return; e.preventDefault(); const kind=e.target.dataset.kind;
-  const price=parseFloat(String($('#pp').value).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(',','.'));
-  if(!(price>0)){toast('السعر غير صحيح');return;}
-  const row={day:$('#pd').value,item:$('#pi').value.trim(),price}; if(kind==='chicken') row.unit=$('#pu').value;
-  const {error}=await sb.from(kind==='chicken'?'chicken_prices':'carcass_prices').upsert(row,{onConflict:'day,item'});
-  if(error){toast('تعذّر الحفظ: '+error.message);return;} delete st.cache[kind]; toast('تم الحفظ'); render();
+function mountPage(sec){
+  const f=$('#pgf'); if(!f) return; const rows=st.cache[sec.page+'/pages']||[]; const r=rows.find(x=>x.id===st.page[sec.id]); if(!r) return;
+  const fit=()=>{try{const d=f.contentDocument;f.style.height=Math.max(400,d.documentElement.scrollHeight)+'px';}catch(e){}};
+  f.onload=()=>{fit();try{new ResizeObserver(fit).observe(f.contentDocument.body);}catch(e){} setTimeout(fit,800);};
+  f.srcdoc=r.data.html||'';
+}
+function fitApp(){ const f=document.querySelector('.appframe'); if(f) f.style.height=Math.max(420,window.innerHeight-f.getBoundingClientRect().top-window.scrollY)+'px'; }
+window.addEventListener('resize',fitApp);
+document.addEventListener('change',e=>{ if(e.target.id==='pgsel'){ st.page[e.target.dataset.sec]=e.target.value; mountPage(SECTIONS.find(s=>s.id===e.target.dataset.sec)); } });
+document.addEventListener('click',e=>{
+  if(e.target.closest('[data-pgprint]')){ const f=$('#pgf'); try{f.contentWindow.focus();f.contentWindow.print();}catch(err){toast('تعذّرت الطباعة');} return; }
+  const d=e.target.closest('[data-pgdl]'); if(d){ const sec=SECTIONS.find(s=>s.id===d.dataset.pgdl); const r=(st.cache[sec.page+'/pages']||[]).find(x=>x.id===st.page[sec.id]); if(!r) return;
+    const url=URL.createObjectURL(new Blob([r.data.html],{type:'text/html'})); const a=document.createElement('a'); a.href=url; a.download=sec.name+' '+r.id+'.html'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),30000); }
 });
-document.addEventListener('click',async e=>{const b=e.target.closest('[data-delp]');if(!b)return;
-  if(b.dataset.confirm!=='1'){b.dataset.confirm='1';b.textContent='تأكيد الحذف';setTimeout(()=>{b.dataset.confirm='';b.textContent='حذف';},3000);return;}
-  const [kind,id]=b.dataset.delp.split(':'); const {error}=await sb.from(kind==='chicken'?'chicken_prices':'carcass_prices').delete().eq('id',id);
-  if(error){toast('تعذّر الحذف');return;} delete st.cache[kind]; render();});
+SECTIONS.forEach(sec=>{ if(sec.app) V[sec.id]=appView(sec); if(sec.page) V[sec.id]=pageView(sec); });
 
 // ----- users -----
 V.users=async()=>{
@@ -546,30 +482,19 @@ document.addEventListener('submit',async e=>{
 
 // ----- data entry -----
 V.data=async()=>{
-  return `<div class="card"><h3>إدخال المبيعات اليومية</h3><form id="dsf" style="display:flex;flex-direction:column;gap:10px"><div class="row"><div class="field"><label for="dsd">التاريخ</label><input class="inp" type="date" id="dsd" value="${todayIso()}" required></div></div>
-    <div class="row">${st.branches.map(b=>`<div class="field"><label for="dsa_${b.id}"><i class="dot" style="background:${b.color}"></i> ${esc(b.name)}</label><input class="inp" id="dsa_${b.id}" inputmode="decimal" dir="ltr" placeholder="0.00"></div>`).join('')}</div>
-    <div><button class="btn" type="submit">حفظ</button> <span class="muted" style="font-size:12px">اترك خانة الفرع فارغة إذا لم تتوفر مبيعاته بعد</span></div></form></div>
-  <div class="card"><h3>استيراد ملف بيانات</h3><p class="muted" style="margin-top:0;font-size:13px">ملف JSON يجهزه Claude من تطبيقاتك (مبيعات يومية، منافذ، قوائم دخل). البيانات الموجودة لنفس الفرع والتاريخ تُستبدل بالجديدة.</p>
+  return `<div class="note">إدخال المبيعات والمنافذ وقوائم الدخل صار من داخل كل تطبيق (تبويب «الإدخال» أو «البيانات»)، والتحديث اليومي يصل تلقائياً من المهام المجدولة.</div>
+  <div class="card"><h3>استيراد ملف بيانات</h3><p class="muted" style="margin-top:0;font-size:13px">ملف JSON يجهزه Claude من تطبيقاتك. المستندات الموجودة بنفس المعرّف تُستبدل بالجديدة.</p>
     <input type="file" id="impf" class="inp"><div id="impr" style="margin-top:10px"></div></div>`;
 };
-document.addEventListener('submit',async e=>{
-  if(e.target.id!=='dsf') return; e.preventDefault(); const day=$('#dsd').value;
-  const rows=st.branches.map(b=>{const raw=$('#dsa_'+b.id).value.trim();if(!raw)return null;const v=parseFloat(raw.replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/,/g,''));return isNaN(v)?null:{branch_id:b.id,day,amount:v};}).filter(Boolean);
-  if(!rows.length){toast('أدخل مبيعات فرع واحد على الأقل');return;}
-  const {error}=await sb.from('daily_sales').upsert(rows,{onConflict:'branch_id,day'});
-  if(error){toast('تعذّر الحفظ: '+error.message);return;} delete st.cache.sales; toast('تم حفظ مبيعات '+day); st.branches.forEach(b=>$('#dsa_'+b.id).value='');
-});
 document.addEventListener('change',async e=>{
   if(e.target.id!=='impf'||!e.target.files[0]) return; const out=$('#impr'); out.innerHTML='<span class="muted">جارِ الاستيراد…</span>';
   try{
-    const J=JSON.parse(await e.target.files[0].text()); const res=[];
-    const up=async(tbl,rows,conf)=>{ for(let i=0;i<rows.length;i+=200){const {error}=await sb.from(tbl).upsert(rows.slice(i,i+200),{onConflict:conf});if(error)throw new Error(tbl+': '+error.message);} res.push(`${tbl}: ${rows.length}`); };
-    if(J.daily_sales&&J.daily_sales.length) await up('daily_sales',J.daily_sales,'branch_id,day');
-    if(J.channel_sales&&J.channel_sales.length) await up('channel_sales',J.channel_sales,'branch_id,month');
-    if(J.income_statements&&J.income_statements.length) await up('income_statements',J.income_statements,'branch_id,month');
-    if(J.chicken_prices&&J.chicken_prices.length) await up('chicken_prices',J.chicken_prices,'day,item');
-    if(J.carcass_prices&&J.carcass_prices.length) await up('carcass_prices',J.carcass_prices,'day,item');
-    st.cache={}; out.innerHTML=`<div class="ok">تم الاستيراد ✓ — ${res.join(' · ')}</div>`;
+    const J=JSON.parse(await e.target.files[0].text()); const docs=J.app_docs||[]; if(!docs.length) throw new Error('الملف لا يحتوي بيانات تطبيقات');
+    const now=new Date().toISOString(); const cnt={};
+    for(let i=0;i<docs.length;i+=25){ const part=docs.slice(i,i+25).map(d=>({app:d.app,coll:d.coll,id:String(d.id),data:d.data,branches:d.branches||[],updated_at:now}));
+      const {error}=await sb.from('app_docs').upsert(part,{onConflict:'app,coll,id'}); if(error) throw new Error(error.message);
+      part.forEach(d=>cnt[d.app]=(cnt[d.app]||0)+1); out.innerHTML=`<span class="muted">جارِ الاستيراد… ${Math.min(i+25,docs.length)} / ${docs.length}</span>`; }
+    st.cache={}; out.innerHTML=`<div class="ok">تم الاستيراد ✓ — ${Object.entries(cnt).map(([k,v])=>k+': '+v).join(' · ')}</div>`;
   }catch(err){ out.innerHTML=`<div class="err">تعذّر الاستيراد: ${esc(err.message)}</div>`; }
   e.target.value='';
 });
@@ -580,10 +505,11 @@ async function render(){
   if(st.f!=='all'&&!st.branches.some(b=>b.id===st.f)) st.f='all';
   if(st.branches.length===1) st.f=st.branches[0].id;
   const v=$('#view'); v.innerHTML='<div class="loading">جارِ التحميل…</div>';
-  try{ v.innerHTML=await V[st.tab](); v.querySelectorAll('.sc-end').forEach(s=>s.scrollLeft=s.scrollWidth); }
+  const sec=SECTIONS.find(s=>s.id===st.tab)||{}; document.body.classList.toggle('appmode',!!sec.app);
+  try{ v.innerHTML=await V[st.tab](); v.querySelectorAll('.sc-end').forEach(s=>s.scrollLeft=s.scrollWidth); if(sec.app) fitApp(); if(sec.page) mountPage(sec); }
   catch(err){ console.error(err); v.innerHTML=`<div class="card"><div class="err">تعذّر تحميل البيانات: ${esc(err.message||err)}</div><button class="btn ghost sm" onclick="location.reload()">إعادة المحاولة</button></div>`; }
 }
-document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&st.profile){ st.cache={}; render(); } });
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState!=='visible'||!st.profile) return; const sec=SECTIONS.find(s=>s.id===st.tab)||{}; st.cache={}; if(!sec.app) render(); });
 sb.auth.onAuthStateChange((ev)=>{ if(ev==='SIGNED_OUT'){ $('#app').hidden=true; $('#login').hidden=false; } });
 boot();
 })();
