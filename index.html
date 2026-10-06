@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@500;600;700&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="config.js?v=4"></script>
+<script src="config.js?v=7"></script>
 <style>
 :root{
   --bg:#F4F6FA; --card:#FFFFFF; --line:#E1E7EF; --fg:#16233A; --muted:#6B7A90;
@@ -63,7 +63,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 
 /* header + nav */
 .top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
-.who{display:flex;align-items:center;gap:10px}
+.who{position:relative}
+.top{flex-wrap:nowrap!important}
+.mark{width:38px!important;height:38px!important;border-radius:11px!important;font-size:17px!important}
+.avatar{border:0;cursor:pointer;font:inherit;font-weight:700}
+.umenu{position:absolute;inset-inline-end:0;top:44px;z-index:40;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(22,35,58,.15);padding:12px;width:240px;display:flex;flex-direction:column;gap:10px}
+.umenu .scope{font-size:12px}
 .avatar{width:36px;height:36px;border-radius:50%;background:var(--gold-soft);color:var(--gold-ink);display:grid;place-items:center;font-weight:700;flex:none}
 .scope{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:13px}
 .tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;position:sticky;top:0;z-index:20;background:var(--bg);padding-block:8px;margin-block:-8px;box-shadow:0 6px 10px -10px rgba(22,35,58,.35)}
@@ -121,7 +126,8 @@ tr.sub td{font-weight:600;background:var(--bg)}
 .toast.hide{opacity:0;pointer-events:none}
 .loading{display:flex;justify-content:center;padding:40px;color:var(--muted)}
 footer{font-size:12px;color:var(--muted);text-align:center}
-.appframe{display:block;width:100%;border:1px solid var(--line);border-radius:14px;background:var(--card);height:70vh}
+.appframe{display:block;width:calc(100% + 32px);margin-inline:-16px;border:0;border-radius:0;background:var(--bg);height:70vh}
+@media (min-width:760px){.appframe{width:100%;margin-inline:0;border:1px solid var(--line);border-radius:16px}}
 .pageframe{display:block;width:calc(100% + 32px);margin-inline:-16px;border:0;border-radius:0;background:var(--card);min-height:400px}
 @media (min-width:760px){.pageframe{width:100%;margin-inline:0;border:1px solid var(--line);border-radius:14px}}
 body.appmode .wrap{padding-bottom:8px;gap:10px}
@@ -151,8 +157,9 @@ body.appmode footer{display:none}
 <div id="app" hidden>
   <div class="wrap">
     <div class="top">
-      <div class="brand"><div class="mark">ت</div><div><h1 style="font-size:18px">بوابة التقارير</h1><div class="scope" id="scope"></div></div></div>
-      <div class="who"><div class="avatar" id="av"></div><div><b id="uname"></b><div class="muted" style="font-size:12px" id="urole"></div></div><button class="btn ghost sm" id="logout">خروج</button></div>
+      <div class="brand"><div class="mark">ت</div><div><h1 style="font-size:17px;line-height:1.2">بوابة التقارير</h1><div class="muted" style="font-size:11.5px" id="urole"></div></div></div>
+      <div class="who"><button class="avatar" id="av" type="button" aria-haspopup="true" aria-expanded="false" aria-label="الحساب"></button>
+        <div class="umenu" id="umenu" hidden><b id="uname"></b><div class="scope" id="scope"></div><button class="btn ghost sm" id="logout" style="width:100%">تسجيل الخروج</button></div></div>
     </div>
     <nav class="tabs" id="tabs" aria-label="الأقسام"></nav>
     <main id="view" style="display:flex;flex-direction:column;gap:16px;min-width:0"></main>
@@ -184,7 +191,7 @@ const SECTIONS=[
   {id:'data',name:'إدخال البيانات',admin:true}
 ];
 const PERM_SECTIONS=['sales','channels','income','wh','chicken'];
-const APP_VER='6';
+const APP_VER='7';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name]));
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -233,6 +240,8 @@ $('#loginForm').onsubmit=async e=>{
   boot();
 };
 $('#logout').onclick=async()=>{await sb.auth.signOut(); location.reload();};
+$('#av').onclick=e=>{e.stopPropagation();const m=$('#umenu');m.hidden=!m.hidden;$('#av').setAttribute('aria-expanded',String(!m.hidden));};
+document.addEventListener('click',e=>{const m=$('#umenu');if(m&&!m.hidden&&!e.target.closest('.who'))m.hidden=true;});
 
 async function boot(){
   const {data:{session}}=await sb.auth.getSession();
@@ -257,7 +266,7 @@ function renderShell(){
   const p=st.profile;
   $('#av').textContent=(p.full_name||p.username||'?')[0];
   $('#uname').textContent=p.full_name||p.username;
-  $('#urole').textContent=ROLE_NAME[p.role]+' · '+p.username;
+  $('#urole').textContent=(p.full_name||p.username)+' · '+ROLE_NAME[p.role];
   $('#scope').innerHTML=st.branches.length?'<span class="muted">يظهر لك:</span>'+st.branches.map(dotTag).join(''):'<span class="muted">لا توجد فروع مسموحة</span>';
   $('#tabs').innerHTML=SECTIONS.filter(s=>s.admin?isAdmin():allowed(s.id)).map(s=>`<button data-t="${s.id}" aria-pressed="${st.tab===s.id}">${s.name}</button>`).join('');
   render();
@@ -449,7 +458,7 @@ function mountPage(sec){
   let h=r.data.html||''; h=/<\/body>/i.test(h)?h.replace(/<\/body>/i,inj+'</body>'):h+inj;
   f.srcdoc=h;
 }
-function fitApp(){ const f=document.querySelector('.appframe'); if(f) f.style.height=Math.max(420,window.innerHeight-f.getBoundingClientRect().top-window.scrollY)+'px'; }
+function fitApp(){ const f=document.querySelector('.appframe'); if(f) f.style.height=Math.max(420,window.innerHeight-(f.getBoundingClientRect().top+window.scrollY)-6)+'px'; }
 window.addEventListener('resize',fitApp);
 document.addEventListener('change',e=>{ if(e.target.id==='pgsel'){ st.page[e.target.dataset.sec]=e.target.value; mountPage(SECTIONS.find(s=>s.id===e.target.dataset.sec)); } });
 document.addEventListener('click',e=>{

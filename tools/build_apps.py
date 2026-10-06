@@ -5,10 +5,10 @@ SRC = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else 'apps-src')
 OUT = pathlib.Path(__file__).resolve().parent.parent / 'apps'
 HEAD = '''<script>window.PORTAL_APP='%s';</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../config.js?v=5"></script>
-<script src="../portal-db.js?v=5"></script>
-<script src="../portal-charts.js?v=5"></script>
-<style>html[data-ro] #tbEntry{display:none!important}html[data-ro] .tabs .in{grid-template-columns:1fr 1fr!important}</style>
+<script src="../config.js?v=6"></script>
+<script src="../portal-db.js?v=6"></script>
+<script src="../portal-charts.js?v=6"></script>
+<style>html[data-ro] #tbEntry{display:none!important}html[data-ro] .tabs .in{grid-template-columns:1fr 1fr!important}html{-webkit-text-size-adjust:100%%;text-size-adjust:100%%}header.top{position:static!important;background:none!important;padding-block:12px 4px!important}.hm{grid-template-columns:50px repeat(7,minmax(0,1fr))!important;gap:2px!important}.hm .c{font-size:9.5px!important;padding:7px 0!important;letter-spacing:-.4px;overflow:hidden;white-space:nowrap;cursor:pointer}.hm .h,.hm .r{font-size:9.5px!important}.cal{gap:3px!important}.cal .c{cursor:pointer}.cal .c .v{font-size:9px!important;letter-spacing:-.4px;white-space:nowrap}.cal .c .d{font-size:9.5px!important}</style>
 '''
 for app in ('sales', 'channels', 'income'):
     h = (SRC / f'{app}.src.html').read_text(encoding='utf-8')

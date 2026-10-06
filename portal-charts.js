@@ -20,38 +20,47 @@
   // ---------- styles ----------
   var css = document.createElement('style');
   css.textContent = [
-    '.pc-sheet-bg{position:fixed;inset:0;z-index:60;background:rgba(15,25,40,.38);display:flex;align-items:flex-end;justify-content:center;animation:pcfade .18s ease}',
-    '.pc-sheet{background:#fff;color:#16233A;width:100%;max-width:520px;max-height:78vh;overflow:auto;border-radius:18px 18px 0 0;padding:14px 18px calc(18px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 30px rgba(15,25,40,.2);direction:rtl;font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif;animation:pcup .25s cubic-bezier(.2,.8,.2,1)}',
-    '.pc-sheet .pc-grab{width:40px;height:4px;border-radius:4px;background:#D5DCE6;margin:0 auto 10px}',
-    '.pc-sheet h4{margin:0;font-size:17px;font-family:"Readex Pro","IBM Plex Sans Arabic",Tahoma,sans-serif}',
-    '.pc-sheet .pc-sub{color:#6B7A90;font-size:12.5px;margin:2px 0 10px}',
-    '.pc-big{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;font-family:"Readex Pro",Tahoma,sans-serif}',
-    '.pc-sheet table{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}',
-    '.pc-sheet td,.pc-sheet th{padding:8px 4px;border-bottom:1px solid #EDF1F6;text-align:start}',
-    '.pc-sheet th{font-size:12px;color:#6B7A90;font-weight:600}',
+    '.pc-sheet-bg{position:fixed;inset:0;z-index:60;background:transparent}',
+    '.pc-sheet{position:fixed;z-index:61;background:#16233A;color:#fff;width:min(300px,calc(100vw - 24px));max-height:70vh;overflow:auto;border-radius:12px;padding:11px 13px;box-shadow:0 10px 30px rgba(15,25,40,.35);direction:rtl;font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif;font-size:12.5px;line-height:1.6;animation:pcpop .16s ease-out}',
+    '.pc-sheet h4{margin:0;font-size:14px;font-weight:700;font-family:"Readex Pro","IBM Plex Sans Arabic",Tahoma,sans-serif}',
+    '.pc-sheet .pc-sub{color:#AEB9CC;font-size:11.5px;margin:0 0 6px}',
+    '.pc-big{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums;font-family:"Readex Pro",Tahoma,sans-serif;margin:2px 0}',
+    '.pc-big small{color:#AEB9CC!important}',
+    '.pc-sheet table{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}',
+    '.pc-sheet td,.pc-sheet th{padding:4px 2px;border-bottom:1px solid rgba(255,255,255,.12);text-align:start;color:#fff}',
+    '.pc-sheet th{font-size:10.5px;color:#AEB9CC!important;font-weight:600}',
     '.pc-sheet td.n,.pc-sheet th.n{text-align:end;font-variant-numeric:tabular-nums;white-space:nowrap}',
-    '.pc-sheet tr.t td{font-weight:700;border-top:2px solid #16233A;border-bottom:0}',
-    '.pc-sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-inline-end:6px;vertical-align:middle}',
-    '.pc-up{color:#1FA16B;font-weight:600}.pc-dn{color:#D0453A;font-weight:600}',
-    '.pc-kv{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}',
-    '.pc-kv div{background:#F4F6FA;border-radius:10px;padding:8px 10px}.pc-kv span{display:block;font-size:11.5px;color:#6B7A90}.pc-kv b{font-variant-numeric:tabular-nums}',
-    '.pc-close{position:sticky;bottom:0;width:100%;margin-top:12px;border:0;border-radius:12px;background:#16233A;color:#fff;font:inherit;font-weight:600;padding:11px;cursor:pointer}',
+    '.pc-sheet td[style*="6B7A90"]{color:#AEB9CC!important}',
+    '.pc-sheet tr.t td{font-weight:700;border-top:1px solid rgba(255,255,255,.5);border-bottom:0}',
+    '.pc-sw{display:inline-block;width:8px;height:8px;border-radius:2px;margin-inline-end:5px;vertical-align:middle}',
+    '.pc-up{color:#5FD39A;font-weight:600}.pc-dn{color:#FF8A7E;font-weight:600}',
+    '.pc-kv{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}',
+    '.pc-kv div{background:rgba(255,255,255,.08);border-radius:8px;padding:5px 8px}.pc-kv span{display:block;font-size:10.5px;color:#AEB9CC}.pc-kv b{font-variant-numeric:tabular-nums;font-size:12.5px}',
+    '.pc-close{display:none}',
     '.pc-hit{cursor:pointer}',
     'svg.pc-focus .pc-dim{opacity:.35;transition:opacity .2s}',
-    '@keyframes pcfade{from{opacity:0}}@keyframes pcup{from{transform:translateY(40px);opacity:.4}}'
+    '@keyframes pcpop{from{opacity:0;transform:translateY(4px) scale(.97)}}'
   ].join('\n');
   (document.head || document.documentElement).appendChild(css);
 
   // ---------- sheet ----------
   var lastFocus = null;
   function closeSheet() { var b = document.querySelector('.pc-sheet-bg'); if (b) b.remove(); if (lastFocus) { lastFocus.classList.remove('pc-focus'); lastFocus.querySelectorAll('.pc-dim').forEach(function (e) { e.classList.remove('pc-dim'); }); lastFocus = null; } }
+  var tapX = innerWidth / 2, tapY = innerHeight / 2;
+  document.addEventListener('pointerdown', function (e) { tapX = e.clientX; tapY = e.clientY; }, true);
   function sheet(title, sub, body) {
     closeSheet();
     var bg = document.createElement('div'); bg.className = 'pc-sheet-bg';
-    bg.innerHTML = '<div class="pc-sheet" role="dialog" aria-modal="true" aria-label="' + esc(title) + '"><div class="pc-grab"></div><h4>' + esc(title) + '</h4>' + (sub ? '<div class="pc-sub">' + sub + '</div>' : '') + body + '<button class="pc-close" type="button">إغلاق</button></div>';
-    bg.addEventListener('click', function (e) { if (e.target === bg || e.target.classList.contains('pc-close')) closeSheet(); });
-    document.body.appendChild(bg);
+    var tip = document.createElement('div'); tip.className = 'pc-sheet'; tip.setAttribute('role', 'dialog'); tip.setAttribute('aria-label', title);
+    tip.innerHTML = '<h4>' + esc(title) + '</h4>' + (sub ? '<div class="pc-sub">' + sub + '</div>' : '') + body;
+    bg.appendChild(tip); document.body.appendChild(bg);
+    var w = tip.offsetWidth, h = tip.offsetHeight, x = tapX - w / 2, y = tapY - h - 14;
+    if (y < 8) y = tapY + 16; if (y + h > innerHeight - 8) y = Math.max(8, innerHeight - h - 8);
+    x = Math.max(12, Math.min(innerWidth - w - 12, x));
+    tip.style.left = x + 'px'; tip.style.top = y + 'px';
+    bg.addEventListener('click', function (e) { if (!tip.contains(e.target)) closeSheet(); });
   }
+  window.addEventListener('scroll', function () { closeSheet(); }, { passive: true });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeSheet(); });
 
   // ---------- helpers on SVG ----------
@@ -105,14 +114,16 @@
     sheet(title, 'المبيعات اليومية' + (scope.length === 1 ? ' · ' + esc((B.find(function (x) { return x.k === scope[0]; }) || {}).name || '') : ''), body);
     return true;
   }
-  function salesWeekday(wd) {
+  function salesWeekday(wd, only) {
     var S = st(), B = brs(), m = S.month; if (!m) return false;
-    var scope = S.scope && S.scope !== 'all' ? [S.scope] : B.map(function (b) { return b.k; });
+    var scope = only ? [only] : S.scope && S.scope !== 'all' ? [S.scope] : B.map(function (b) { return b.k; });
     var ds = Object.keys(S.sales || {}).filter(function (k) { return k.slice(0, 7) === m && dt(k).getDay() === wd; }).sort();
     var vals = ds.map(function (k) { return sum(scope.map(function (b) { return S.sales[k][b]; })); }), avg = vals.length ? sum(vals) / vals.length : null;
+    var bn = only ? ((B.find(function (x) { return x.k === only; }) || {}).short || '') : '';
+    if (!ds.length) { sheet('أيام ' + DAYS[wd] + (bn ? ' · ' + bn : ''), 'لا توجد أيام ' + DAYS[wd] + ' مسجلة في ' + MONTHS[+m.slice(5) - 1] + ' بعد', ''); return true; }
     var body = '<div class="pc-big">' + fmt(avg) + ' <small style="font-size:13px;color:#6B7A90">متوسط اليوم</small></div><table><thead><tr><th>التاريخ</th><th class="n">المبيعات</th><th class="n">عن المتوسط</th></tr></thead><tbody>' +
       ds.map(function (k, i) { return '<tr><td>' + dt(k).getDate() + ' ' + MONTHS[dt(k).getMonth()] + '</td><td class="n">' + fmt(vals[i], 2) + '</td><td class="n">' + delta(vals[i], avg) + '</td></tr>'; }).join('') + '</tbody></table>';
-    sheet('أيام ' + DAYS[wd] + ' · ' + MONTHS[+m.slice(5) - 1], ds.length + ' أيام مسجلة هذا الشهر', body); return true;
+    sheet('أيام ' + DAYS[wd] + (bn ? ' · ' + bn : '') + ' · ' + MONTHS[+m.slice(5) - 1], ds.length + ' أيام مسجلة هذا الشهر', body); return true;
   }
   function channelDetail(name) {
     var S = st(), CH = window.__CH || {}, B = brs(), doc = (S.periods || {})[S.month]; if (!doc) return false;
@@ -176,6 +187,7 @@
         if (channelDetail(name)) return;
       }
     }
+    if (APP === 'sales') { var hc = e.target.closest('.hm .c'); if (hc && st().month) { var sib = Array.prototype.slice.call(hc.parentElement.children), idx = sib.indexOf(hc), col = (idx % 8) - 1, rowEl = sib[idx - col - 1], rb = rowEl ? brByName(rowEl.textContent.trim()) : null; if (col >= 0 && salesWeekday(col, rb && rb.k)) return; } }
     if (APP === 'sales') { var cell = e.target.closest('#cal .c:not(.x):not(.h)'); if (cell && st().month) { var d = parseInt(cell.textContent, 10); if (d) { salesDay(st().month + '-' + String(d).padStart(2, '0')); return; } } }
     var el = e.target.closest('rect,circle,path,polygon,polyline'); if (!el) return;
     var svg = el.ownerSVGElement || el.closest('svg'); if (!isChart(svg)) return;
