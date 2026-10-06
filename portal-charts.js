@@ -189,7 +189,7 @@
       }
     }
     if (APP === 'sales') { var hc = e.target.closest('.hm .c'); if (hc && st().month) { var sib = Array.prototype.slice.call(hc.parentElement.children), idx = sib.indexOf(hc), col = (idx % 8) - 1, rowEl = sib[idx - col - 1], rb = rowEl ? brByName(rowEl.textContent.trim()) : null; if (col >= 0 && salesWeekday(col, rb && rb.k)) return; } }
-    if (APP === 'sales') { var cell = e.target.closest('#cal .c:not(.x):not(.h)'); if (cell && st().month) { var d = parseInt(cell.textContent, 10); if (d) { salesDay(st().month + '-' + String(d).padStart(2, '0')); return; } } }
+    if (APP === 'sales') { var cell = e.target.closest('#cal .c:not(.x):not(.h)'); if (cell && st().month) { var dEl = cell.querySelector('.d'), d = parseInt((dEl ? dEl.textContent : cell.textContent).replace(/[^\d]/g, ' ').trim().split(/\s+/)[0], 10); if (d) { salesDay(st().month + '-' + String(d).padStart(2, '0')); return; } } }
     var el = e.target.closest('rect,circle,path,polygon,polyline'); if (!el) return;
     var svg = el.ownerSVGElement || el.closest('svg'); if (!isChart(svg)) return;
     if (el.tagName === 'rect' && (+el.getAttribute('height') || 0) < 2) return;

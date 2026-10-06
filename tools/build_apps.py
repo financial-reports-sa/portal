@@ -7,7 +7,7 @@ HEAD = '''<script>window.PORTAL_APP='%s';</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="../config.js?v=7"></script>
 <script src="../portal-db.js?v=7"></script>
-<script src="../portal-charts.js?v=7"></script>
+<script src="../portal-charts.js?v=8"></script>
 <style>html[data-ro] #tbEntry{display:none!important}html[data-ro] .tabs .in{grid-template-columns:1fr 1fr!important}:root{--bg:#F2F6EA!important;--panel2:#EDF2E3!important;--line:#DCE5CF!important;--line2:#CBD7BA!important;--txt:#1E3326!important;--mute:#647563!important;--dim:#869684!important}html{-webkit-text-size-adjust:100%%;text-size-adjust:100%%}header.top{position:static!important;background:none!important;padding-block:12px 4px!important}.hm{grid-template-columns:50px repeat(7,minmax(0,1fr))!important;gap:2px!important}.hm .c{font-size:9.5px!important;padding:7px 0!important;letter-spacing:-.4px;overflow:hidden;white-space:nowrap;cursor:pointer}.hm .h,.hm .r{font-size:9.5px!important}.cal{gap:3px!important}.cal .c{cursor:pointer}.cal .c .v{font-size:9px!important;letter-spacing:-.4px;white-space:nowrap}.cal .c .d{font-size:9.5px!important}</style>
 '''
 for app in ('sales', 'channels', 'income'):
