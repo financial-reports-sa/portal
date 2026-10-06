@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<meta name="theme-color" content="#16233A">
+<meta name="theme-color" content="#2D5B3B">
 <title>My Reports · بوابة التقارير</title>
 <link rel="manifest" href="manifest.json?v=4">
 <link rel="icon" href="icon.svg?v=3" type="image/svg+xml">
@@ -17,9 +17,10 @@
 <script src="config.js?v=7"></script>
 <style>
 :root{
-  --bg:#F4F6FA; --card:#FFFFFF; --line:#E1E7EF; --fg:#16233A; --muted:#6B7A90;
+  --bg:#F2F6EA; --card:#FFFFFF; --line:#DCE5CF; --fg:#1E3326; --muted:#647563;
+  --green:#3F7A50; --green-dk:#2D5B3B;
   --gold:#D4AF37; --gold-ink:#9A7B12; --gold-soft:#FBF5E1;
-  --up:#1FA16B; --down:#D0453A; --warn:#C98A0C; --chip:#EEF2F7;
+  --up:#1FA16B; --down:#D0453A; --warn:#C98A0C; --chip:#E7EEDB;
   --shadow:0 1px 2px rgba(22,35,58,.05),0 4px 16px rgba(22,35,58,.05);
   --f-body:"IBM Plex Sans Arabic",Tahoma,"Segoe UI",sans-serif;
   --f-disp:"Readex Pro","IBM Plex Sans Arabic",Tahoma,sans-serif;
@@ -126,6 +127,15 @@ tr.sub td{font-weight:600;background:var(--bg)}
 .toast.hide{opacity:0;pointer-events:none}
 .loading{display:flex;justify-content:center;padding:40px;color:var(--muted)}
 footer{font-size:12px;color:var(--muted);text-align:center}
+.mark{background:linear-gradient(135deg,var(--green),var(--green-dk))!important;color:var(--gold)!important;box-shadow:0 4px 12px rgba(45,91,59,.25)}
+.btn{background:var(--green-dk)}
+.tabs button[aria-pressed="true"]{background:linear-gradient(135deg,var(--green),var(--green-dk));color:#fff;border-color:var(--green-dk);box-shadow:0 3px 10px rgba(45,91,59,.25)}
+.chips button[aria-pressed="true"]{border-color:var(--green-dk);box-shadow:inset 0 0 0 1px var(--green-dk);color:var(--green-dk)}
+.card{border-color:var(--line);box-shadow:0 1px 2px rgba(30,51,38,.05),0 6px 18px rgba(30,51,38,.06)}
+.avatar{background:linear-gradient(135deg,#F6E7B0,var(--gold))!important;color:#4A3A08!important}
+.tg[aria-pressed="true"]{background:var(--green);border-color:var(--green)}
+.note{border-color:var(--gold)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline-color:var(--green)}
 .appframe{display:block;width:calc(100% + 32px);margin-inline:-16px;border:0;border-radius:0;background:var(--bg);height:70vh}
 @media (min-width:760px){.appframe{width:100%;margin-inline:0;border:1px solid var(--line);border-radius:16px}}
 .pageframe{display:block;width:calc(100% + 32px);margin-inline:-16px;border:0;border-radius:0;background:var(--card);min-height:400px}
@@ -191,7 +201,7 @@ const SECTIONS=[
   {id:'data',name:'إدخال البيانات',admin:true}
 ];
 const PERM_SECTIONS=['sales','channels','income','wh','chicken'];
-const APP_VER='7';
+const APP_VER='8';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name]));
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];

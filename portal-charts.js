@@ -179,6 +179,7 @@
   }
 
   document.addEventListener('click', function (e) {
+    if (APP === 'income') return; // قوائم الدخل لها تفاصيلها الخاصة
     if (e.target.closest('.pc-sheet-bg')) return;
     // صفوف القوائم والأشرطة في التطبيقات
     if (APP === 'channels') {
