@@ -149,7 +149,7 @@ body.appmode footer{display:none}
 <!-- ============ LOGIN ============ -->
 <section id="login" hidden>
   <div class="card login-card">
-    <div class="brand"><div class="mark">ت</div><div><h1 style="font-size:20px">بوابة التقارير</h1><div class="muted" style="font-size:13px">تقارير الأنشطة والفروع</div></div></div>
+    <div class="brand"><div><h1 style="font-size:22px">بوابة التقارير</h1><div style="font-size:13px;color:var(--gold-ink);font-weight:600">إعداد أمير العريفي</div></div></div>
     <form id="loginForm" class="login-card" style="gap:10px" novalidate>
       <div class="field"><label for="lu">اسم المستخدم</label><input class="inp" id="lu" autocomplete="username" dir="ltr" autocapitalize="none" spellcheck="false"></div>
       <div class="field"><label for="lp">كلمة المرور</label><input class="inp" id="lp" type="password" autocomplete="current-password" dir="ltr"></div>
@@ -167,9 +167,9 @@ body.appmode footer{display:none}
 <div id="app" hidden>
   <div class="wrap">
     <div class="top">
-      <div class="brand"><div class="mark">ت</div><div><h1 style="font-size:17px;line-height:1.2">بوابة التقارير</h1><div class="muted" style="font-size:11.5px" id="urole"></div></div></div>
+      <div class="brand"><div><h1 style="font-size:19px;line-height:1.2">بوابة التقارير</h1><div style="font-size:12px;color:var(--gold-ink);font-weight:600">إعداد أمير العريفي</div></div></div>
       <div class="who"><button class="avatar" id="av" type="button" aria-haspopup="true" aria-expanded="false" aria-label="الحساب"></button>
-        <div class="umenu" id="umenu" hidden><b id="uname"></b><div class="scope" id="scope"></div><button class="btn ghost sm" id="logout" style="width:100%">تسجيل الخروج</button></div></div>
+        <div class="umenu" id="umenu" hidden><div><b id="uname"></b><div class="muted" style="font-size:12px" id="urole"></div></div><div class="scope" id="scope"></div><button class="btn ghost sm" id="logout" style="width:100%">تسجيل الخروج</button></div></div>
     </div>
     <nav class="tabs" id="tabs" aria-label="الأقسام"></nav>
     <main id="view" style="display:flex;flex-direction:column;gap:16px;min-width:0"></main>
@@ -276,7 +276,7 @@ function renderShell(){
   const p=st.profile;
   $('#av').textContent=(p.full_name||p.username||'?')[0];
   $('#uname').textContent=p.full_name||p.username;
-  $('#urole').textContent=(p.full_name||p.username)+' · '+ROLE_NAME[p.role];
+  $('#urole').textContent=ROLE_NAME[p.role]+' · '+p.username;
   $('#scope').innerHTML=st.branches.length?'<span class="muted">يظهر لك:</span>'+st.branches.map(dotTag).join(''):'<span class="muted">لا توجد فروع مسموحة</span>';
   $('#tabs').innerHTML=SECTIONS.filter(s=>s.admin?isAdmin():allowed(s.id)).map(s=>`<button data-t="${s.id}" aria-pressed="${st.tab===s.id}">${s.name}</button>`).join('');
   render();
