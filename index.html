@@ -68,7 +68,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .top{flex-wrap:nowrap!important}
 .mark{width:38px!important;height:38px!important;border-radius:11px!important;font-size:17px!important}
 .avatar{border:0;cursor:pointer;font:inherit;font-weight:700}
-.umenu{position:absolute;inset-inline-end:0;top:44px;z-index:40;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(22,35,58,.15);padding:12px;width:240px;display:flex;flex-direction:column;gap:10px}
+.mybtn{border:1px solid #E3C766;cursor:pointer;background:linear-gradient(135deg,#F6E7B0,var(--gold));color:#3E2F05;font-family:var(--f-disp);font-weight:700;font-size:14px;letter-spacing:.2px;padding:8px 14px;border-radius:99px;box-shadow:0 3px 10px rgba(154,123,18,.22);white-space:nowrap}
+.umenu{position:absolute;inset-inline-end:0;top:46px;z-index:40;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(22,35,58,.15);padding:12px;width:240px;display:flex;flex-direction:column;gap:10px}
 .umenu .scope{font-size:12px}
 .avatar{width:36px;height:36px;border-radius:50%;background:var(--gold-soft);color:var(--gold-ink);display:grid;place-items:center;font-weight:700;flex:none}
 .scope{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:13px}
@@ -168,7 +169,7 @@ body.appmode footer{display:none}
   <div class="wrap">
     <div class="top">
       <div class="brand"><div><h1 style="font-size:19px;line-height:1.2">بوابة التقارير</h1><div style="font-size:12px;color:var(--gold-ink);font-weight:600">إعداد أمير العريفي</div></div></div>
-      <div class="who"><button class="avatar" id="av" type="button" aria-haspopup="true" aria-expanded="false" aria-label="الحساب"></button>
+      <div class="who"><button class="mybtn" id="av" type="button" aria-haspopup="true" aria-expanded="false" aria-label="الحساب" dir="ltr">My Reports</button>
         <div class="umenu" id="umenu" hidden><div><b id="uname"></b><div class="muted" style="font-size:12px" id="urole"></div></div><div class="scope" id="scope"></div><button class="btn ghost sm" id="logout" style="width:100%">تسجيل الخروج</button></div></div>
     </div>
     <nav class="tabs" id="tabs" aria-label="الأقسام"></nav>
@@ -274,7 +275,6 @@ async function boot(){
 
 function renderShell(){
   const p=st.profile;
-  $('#av').textContent=(p.full_name||p.username||'?')[0];
   $('#uname').textContent=p.full_name||p.username;
   $('#urole').textContent=ROLE_NAME[p.role]+' · '+p.username;
   $('#scope').innerHTML=st.branches.length?'<span class="muted">يظهر لك:</span>'+st.branches.map(dotTag).join(''):'<span class="muted">لا توجد فروع مسموحة</span>';
