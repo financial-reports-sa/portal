@@ -1,8 +1,9 @@
 <!doctype html><html><head>
 <script>window.PORTAL_APP='sales';</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../config.js?v=4"></script>
-<script src="../portal-db.js?v=4"></script>
+<script src="../config.js?v=5"></script>
+<script src="../portal-db.js?v=5"></script>
+<script src="../portal-charts.js?v=5"></script>
 <style>html[data-ro] #tbEntry{display:none!important}html[data-ro] .tabs .in{grid-template-columns:1fr 1fr!important}</style>
 <meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>مبيعات الفروع</title>
@@ -278,11 +279,11 @@ nav.tabs{position:fixed;inset-inline:0;bottom:0;z-index:10;background:rgba(255,2
 <script type="text/x-app">
 (function(){
   const $=s=>document.querySelector(s);
-  const BR=[{k:'az',name:'فرع العزيزية',short:'العزيزية',col:'#D4AF37'},{k:'sh',name:'فرع شوران',short:'شوران',col:'#5B8FD0'},{k:'pc',name:'فرع الباتشينو',short:'الباتشينو',col:'#A07BE6'}];window.__pf&&window.__pf(BR);
+  const BR=[{k:'az',name:'فرع العزيزية',short:'العزيزية',col:'#D4AF37'},{k:'sh',name:'فرع شوران',short:'شوران',col:'#5B8FD0'},{k:'pc',name:'فرع الباتشينو',short:'الباتشينو',col:'#A07BE6'}];window.__pf&&window.__pf(BR);window.__BR=BR;
   const DAYS=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
   const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
   const AUTHOR='Ameer Alarifi';
-  const st={db:null,dl:null,sales:{},reports:[],targets:{},scope:'all',month:null,ready:false};
+  const st=window.__st={db:null,dl:null,sales:{},reports:[],targets:{},scope:'all',month:null,ready:false};
 
   // ---------- helpers ----------
   const fmt=(n,d=0)=>(n==null||isNaN(n))?'—':Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});

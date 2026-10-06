@@ -1,8 +1,9 @@
 <!doctype html><html><head>
 <script>window.PORTAL_APP='income';</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../config.js?v=4"></script>
-<script src="../portal-db.js?v=4"></script>
+<script src="../config.js?v=5"></script>
+<script src="../portal-db.js?v=5"></script>
+<script src="../portal-charts.js?v=5"></script>
 <style>html[data-ro] #tbEntry{display:none!important}html[data-ro] .tabs .in{grid-template-columns:1fr 1fr!important}</style>
 <meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>قوائم الدخل</title>
@@ -437,13 +438,13 @@ html[dir=ltr] .month{flex-direction:row-reverse}
   const DARK=!!window.__DARKOK&&!!window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches;
   const DK={'#16233A':'#E6EBF2','#4A5A72':'#B3BECC','#6B7A90':'#95A2B3','#8A97AA':'#8793A4','#9AA6B8':'#7B8797','#A3AEBD':'#6F7B8C','#EEF2F7':'#263041','#CBD4E0':'#3A4556','#B8C2D1':'#4A5668','#9A7B12':'#E3C45E','#137A4C':'#5FD39E','#178A5A':'#5FD39E','#B83227':'#FF8A7E','#E9EEF4':'#263041','#F4F6FA':'#1E2734','#FFFFFF':'#171E29','rgba(255,255,255,.92)':'rgba(23,30,41,.92)','rgba(255,255,255,.45)':'rgba(23,30,41,.45)'};
   const DK_RX=new RegExp(Object.keys(DK).map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|'),'g');
-  const BR=[{k:'az',name:'فرع العزيزية',short:'العزيزية',col:'#D4AF37',ini:'ع',keys:['العزيزية','عزيزية']},{k:'sh',name:'فرع شوران',short:'شوران',col:'#5B8FD0',ini:'ش',keys:['شوران']},{k:'pc',name:'فرع الباتشينو',short:'الباتشينو',col:'#A07BE6',ini:'ب',keys:['الباتشينو','باتشينو','الباتشينو']}];window.__pf&&window.__pf(BR);
+  const BR=[{k:'az',name:'فرع العزيزية',short:'العزيزية',col:'#D4AF37',ini:'ع',keys:['العزيزية','عزيزية']},{k:'sh',name:'فرع شوران',short:'شوران',col:'#5B8FD0',ini:'ش',keys:['شوران']},{k:'pc',name:'فرع الباتشينو',short:'الباتشينو',col:'#A07BE6',ini:'ب',keys:['الباتشينو','باتشينو','الباتشينو']}];window.__pf&&window.__pf(BR);window.__BR=BR;
   if(EN){ [['Al-Azizia','A'],['Shuran','S'],['Al-Pacino','P']].forEach(([n,i],k)=>{ BR[k].short=n; BR[k].name=n+' Branch'; BR[k].ini=i; }); }
   const MONTHS=EN?['January','February','March','April','May','June','July','August','September','October','November','December']:['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
   const MN={'يناير':1,'فبراير':2,'مارس':3,'أبريل':4,'ابريل':4,'إبريل':4,'مايو':5,'يونيو':6,'يونية':6,'يوليو':7,'يوليه':7,'أغسطس':8,'اغسطس':8,'سبتمبر':9,'أكتوبر':10,'اكتوبر':10,'نوفمبر':11,'ديسمبر':12};
   const AUTHOR='Ameer Alarifi';
   const UP='#1FA16B', DOWN='#D0453A', WARN='#C98A0C', EXP='#8FA0B8', GOLD='#D4AF37';
-  const st={db:null,dl:null,stmts:{},reports:[],scope:'all',month:null,mode:'m',covYear:null,ready:false,view:'ov',fRev:'rev',fCost:'cost'};
+  const st=window.__st={db:null,dl:null,stmts:{},reports:[],scope:'all',month:null,mode:'m',covYear:null,ready:false,view:'ov',fRev:'rev',fCost:'cost'};
 
   // ---------- helpers ----------
   const fmt=(n,d=0)=>(n==null||isNaN(n))?'—':Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});

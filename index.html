@@ -186,7 +186,7 @@ const SECTIONS=[
   {id:'data',name:'إدخال البيانات',admin:true}
 ];
 const PERM_SECTIONS=['sales','channels','income','wh','chicken'];
-const APP_VER='4';
+const APP_VER='5';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name]));
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -412,7 +412,9 @@ function mountPage(sec){
   const f=$('#pgf'); if(!f) return; const rows=st.cache[sec.page+'/pages']||[]; const r=rows.find(x=>x.id===st.page[sec.id]); if(!r) return;
   const fit=()=>{try{const d=f.contentDocument;f.style.height=Math.max(400,d.documentElement.scrollHeight)+'px';}catch(e){}};
   f.onload=()=>{fit();try{new ResizeObserver(fit).observe(f.contentDocument.body);}catch(e){} setTimeout(fit,800);};
-  f.srcdoc=r.data.html||'';
+  const inj='<script>window.PORTAL_APP="page";<\/script><script src="portal-charts.js?v='+APP_VER+'"><\/script>';
+  let h=r.data.html||''; h=/<\/body>/i.test(h)?h.replace(/<\/body>/i,inj+'</body>'):h+inj;
+  f.srcdoc=h;
 }
 function fitApp(){ const f=document.querySelector('.appframe'); if(f) f.style.height=Math.max(420,window.innerHeight-f.getBoundingClientRect().top-window.scrollY)+'px'; }
 window.addEventListener('resize',fitApp);

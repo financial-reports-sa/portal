@@ -21,14 +21,16 @@
     return r.data || [];
   }
 
-  async function refresh(coll) {
+  async function refresh(coll, quiet) {
     var ls = listeners.filter(function (l) { return !coll || l.coll === coll; });
     var colls = Array.from(new Set(ls.map(function (l) { return l.coll; })));
     for (var i = 0; i < colls.length; i++) {
       var c = colls[i];
       try {
         var rows = await fetchColl(c);
+        if (quiet) window.__pcQuiet = true;
         ls.filter(function (l) { return l.coll === c; }).forEach(function (l) { try { l.cb(snapshot(rows)); } catch (e) { console.error(e); } });
+        if (quiet) setTimeout(function () { window.__pcQuiet = false; }, 0);
       } catch (e) {
         ls.filter(function (l) { return l.coll === c; }).forEach(function (l) { if (l.err) l.err(e); });
       }
@@ -108,8 +110,8 @@
     for (var i = BR.length - 1; i >= 0; i--) { if (ctx.branches.indexOf(BR[i].k) < 0) BR.splice(i, 1); }
   };
 
-  setInterval(function () { if (document.visibilityState === 'visible') refresh(); }, 60000);
-  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') refresh(); });
+  setInterval(function () { if (document.visibilityState === 'visible') refresh(null, true); }, 60000);
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') refresh(null, true); });
 
   async function boot() {
     var s = (await sb.auth.getSession()).data.session;

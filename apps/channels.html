@@ -1,8 +1,9 @@
 <!doctype html><html><head>
 <script>window.PORTAL_APP='channels';</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="../config.js?v=4"></script>
-<script src="../portal-db.js?v=4"></script>
+<script src="../config.js?v=5"></script>
+<script src="../portal-db.js?v=5"></script>
+<script src="../portal-charts.js?v=5"></script>
 <style>html[data-ro] #tbEntry{display:none!important}html[data-ro] .tabs .in{grid-template-columns:1fr 1fr!important}</style>
 <meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>منافذ المبيعات</title>
@@ -268,11 +269,11 @@ nav.tabs{position:fixed;inset-inline:0;bottom:0;z-index:10;background:rgba(255,2
     ajl:{name:'آجل عملاء',col:'#95A5A6'}, shaden:{name:'تطبيق الشادن',col:'#1ABC9C'}, meals:{name:'وجبات',col:'#8BC34A'}, family:{name:'قسم العائلات',col:'#9B51E0'},
     keeta:{name:'تطبيق كيتا',col:'#F2994A'}, hs:{name:'تطبيق هانقرستيشن',col:'#EB5757'}, dlv:{name:'توصيل',col:'#2F80ED'}, tkl:{name:'سفري / محلي',col:'#F2C94C'},
     ninja:{name:'تطبيق نينجا',col:'#5B5FEF'}, bonat:{name:'تطبيق بونات',col:'#E84393'}, awail:{name:'عوائل',col:'#BB6BD9'}, sfr:{name:'سفري',col:'#27AE60'}, mhl:{name:'محلي',col:'#56CCF2'}
-  };
+  };window.__CH=CH;
   const BR=[
     {k:'az',name:'فرع العزيزية',short:'العزيزية',col:'#D4AF37',ch:['ajl','shaden','meals','family','keeta','hs','dlv','awail','tkl']},
     {k:'sh',name:'فرع شوران',short:'شوران',col:'#2F80ED',ch:['shaden','meals','keeta','hs','dlv','tkl']},
-    {k:'pc',name:'فرع الباتشينو',short:'الباتشينو',col:'#9B51E0',ch:['ninja','bonat','keeta','hs','awail','sfr','mhl']}];window.__pf&&window.__pf(BR);
+    {k:'pc',name:'فرع الباتشينو',short:'الباتشينو',col:'#9B51E0',ch:['ninja','bonat','keeta','hs','awail','sfr','mhl']}];window.__pf&&window.__pf(BR);window.__BR=BR;
   const VAT=0.15;
   const SH_CATS=[[102,'المعجنات'],[103,'الصحون'],[104,'المقبلات'],[105,'الحلويات'],[106,'العصائر'],[112,'الذبائح'],[115,'الإيدامات'],[117,'الكوكتيل'],[118,'المشروبات الباردة'],[120,'بوفيات خارجية'],[121,'أرز الدجاج'],[123,'طبخ الذبائح'],[126,'الأصناف المضافة حديثاً'],[127,'دجاج المطعم'],[129,'اللحوم'],[130,'البطاطس'],[131,'المشويات'],[132,'فئة التوالف اليومية']];
   const CATS={az:SH_CATS,sh:SH_CATS,pc:[[101,'المشروبات الباردة'],[107,'بروست الباتشينو / الدجاج'],[108,'الاستربس والجمبري'],[109,'البرجر والساندوتش'],[110,'وجبات الأطفال'],[111,'المقبلات'],[113,'الصوصات'],[114,'الخبز'],[116,'المسحب']]};
@@ -288,7 +289,7 @@ nav.tabs{position:fixed;inset-inline:0;bottom:0;z-index:10;background:rgba(255,2
 
   const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
   const AUTHOR='Ameer Alarifi';
-  const st={db:null,dl:null,periods:{},reports:[],scope:'all',month:null,eBr:'az'};
+  const st=window.__st={db:null,dl:null,periods:{},reports:[],scope:'all',month:null,eBr:'az'};
 
   // ---------- helpers ----------
   const fmt=(n,d=0)=>(n==null||isNaN(n))?'—':Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
