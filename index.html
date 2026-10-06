@@ -179,7 +179,6 @@ const SECTIONS=[
   {id:'sales',name:'مبيعات الفروع',app:'sales'},
   {id:'daily',name:'التقرير اليومي',page:'daily',perm:'sales'},
   {id:'channels',name:'منافذ المبيعات',app:'channels'},
-  {id:'income',name:'قوائم الدخل',app:'income'},
   {id:'wh',name:'نسبة تكلفة المستودعات'},
   {id:'chicken',name:'أسعار المشتريات',page:'prices'},
   {id:'users',name:'المستخدمين والصلاحيات',admin:true},
@@ -187,7 +186,7 @@ const SECTIONS=[
 ];
 const PERM_SECTIONS=['sales','channels','income','wh','chicken'];
 const APP_VER='5';
-const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name]));
+const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.income='مبالغ الإيراد والتكلفة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 const CH={ajl:'آجل عملاء',shaden:'تطبيق الشادن',meals:'وجبات',family:'قسم العائلات',keeta:'تطبيق كيتا',hs:'تطبيق هانقرستيشن',dlv:'توصيل',tkl:'سفري / محلي',ninja:'تطبيق نينجا',bonat:'تطبيق بونات',awail:'عوائل',sfr:'سفري',mhl:'محلي'};
@@ -219,7 +218,6 @@ const selBranches=()=>st.f==='all'?st.branches.map(b=>b.id):[st.f];
 async function q(key,fn){ if(st.cache[key]) return st.cache[key]; const r=await fn(); if(r.error) throw r.error; st.cache[key]=r.data||[]; return st.cache[key]; }
 const appList=(app,coll)=>q(app+'/'+coll,()=>sb.rpc('app_list',{p_app:app,p_coll:coll}));
 const loadSales=async()=>{const r=[];(await appList('sales','sales')).forEach(d=>{const v=d.data||{};if(!v.date)return;for(const k in v){if(k!=='date'&&typeof v[k]==='number')r.push({branch_id:k,day:v.date,amount:v[k]});}});return r.sort((a,b)=>a.day<b.day?-1:1);};
-const loadIncome=async()=>(await appList('income','stmts')).map(d=>({branch_id:d.data.br,month:d.data.month,is_estimate:!!d.data.est,groups:d.data.groups||[]}));
 const loadRatio=()=>q('ratio',()=>sb.rpc('get_cogs_ratio'));
 const loadDaily=()=>q('daily-cogs',async()=>{const r=await sb.rpc('get_cogs_daily');return r.error&&/function|schema cache/i.test(r.error.message)?{data:[],error:null}:r;});
 
@@ -361,13 +359,12 @@ V.home=async()=>{
     }
   }
   let more='';
-  if(allowed('income')){
-    const I=(await loadIncome()).filter(r=>bs.includes(r.branch_id)&&!r.is_estimate);
-    const ms=[...new Set(I.map(r=>r.month))].sort(); if(ms.length){const m=ms[ms.length-1];const t=aggTotals(I.filter(r=>r.month===m));
-      more+=kpi('صافي الربح · '+monLbl(m),`<span class="${t.net>=0?'up':'down'}">${fmt(t.net)}</span>`,'<span class="muted">هامش</span> '+pct(t.rev?t.net/t.rev:null));}
-  }
   if(allowed('wh')){
     const R=(await loadRatio()).filter(r=>bs.includes(r.branch_id)&&r.ratio!=null);
+    const DD=(await loadDaily()).filter(r=>bs.includes(r.branch_id)&&r.ratio!=null); const dm={};
+    DD.forEach(r=>{const k=r.branch_id+'|'+r.day.slice(0,7);(dm[k]=dm[k]||[]).push(r);});
+    Object.entries(dm).forEach(([k,list])=>{const [b,m]=k.split('|');const money=list.some(x=>x.rev!=null);const ratio=money?sum(list.map(x=>x.cogs))/(sum(list.map(x=>x.rev))||1):sum(list.map(x=>+x.ratio))/list.length;
+      const i=R.findIndex(x=>x.branch_id===b&&x.month===m); const row={branch_id:b,month:m,ratio,is_estimate:false}; if(i>=0) R[i]=row; else R.push(row);});
     const ms=[...new Set(R.map(r=>r.month))].sort(); if(ms.length){const m=ms[ms.length-1];const rs=R.filter(r=>r.month===m);const avg=sum(rs.map(r=>+r.ratio))/rs.length;
       more+=kpi('نسبة تكلفة المستودعات · '+monLbl(m),pct(avg),rs.some(r=>r.is_estimate)?'<span class="tag est">تقديري</span>':'<span class="muted">من الإيرادات</span>');}
   }
@@ -404,6 +401,10 @@ async function whDaily(bs){
 V.wh=async()=>{
   const bs=selBranches(); const R=(await loadRatio()).filter(r=>bs.includes(r.branch_id)&&r.ratio!=null);
   let h=`<div class="bar-row">${branchChips()}</div>`+await whDaily(bs);
+  const DD=(await loadDaily()).filter(r=>bs.includes(r.branch_id)&&r.ratio!=null); const dm={};
+  DD.forEach(r=>{const k=r.branch_id+'|'+r.day.slice(0,7);(dm[k]=dm[k]||[]).push(r);});
+  Object.entries(dm).forEach(([k,list])=>{const [b,m]=k.split('|');const money=list.some(x=>x.rev!=null);const ratio=money?sum(list.map(x=>x.cogs))/(sum(list.map(x=>x.rev))||1):sum(list.map(x=>+x.ratio))/list.length;
+    const i=R.findIndex(x=>x.branch_id===b&&x.month===m); const row={branch_id:b,month:m,ratio,is_estimate:false}; if(i>=0) R[i]=row; else R.push(row);});
   if(!R.length) return h+'<div class="card empty">لا توجد بيانات شهرية</div>';
   const months=[...new Set(R.map(r=>r.month))].sort();
   const get=(b,m)=>{const r=R.find(x=>x.branch_id===b&&x.month===m);return r?+r.ratio:null;};

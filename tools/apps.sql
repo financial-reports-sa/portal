@@ -18,7 +18,7 @@ alter table public.app_docs enable row level security;
 create or replace function public.app_section(p_app text) returns text
 language sql immutable as $$
   select case p_app when 'sales' then 'sales' when 'daily' then 'sales' when 'channels' then 'channels'
-                    when 'income' then 'income' when 'prices' then 'chicken' else null end
+                    when 'income' then 'income' when 'wh' then 'wh' when 'prices' then 'chicken' else null end
 $$;
 
 -- فروع المستخدم الحالي (كل الفروع للمالك والآدمن والمزامنة)
@@ -99,17 +99,17 @@ language sql stable security definer set search_path = public as $$
 $$;
 grant execute on function public.get_cogs_ratio() to authenticated;
 
--- تكلفة المستودعات اليومية (من الحقل daily في قوائم الدخل)
--- الإيراد والتكلفة يظهران فقط لمن عنده قسم قوائم الدخل، والباقي يشوف النسبة فقط
+-- تكلفة المستودعات اليومية (app='wh', coll='daily': {br, date, rev, cogs})
+-- الإيراد والتكلفة يظهران فقط لمن عنده صلاحية المبالغ (income)، والباقي يشوف النسبة فقط
 create or replace function public.get_cogs_daily()
 returns table (branch_id text, day text, rev numeric, cogs numeric, ratio numeric)
 language sql stable security definer set search_path = public as $$
-  select d.data->>'br', e.key,
-         case when has_section('income') then (e.value->>'rev')::numeric end,
-         case when has_section('income') then (e.value->>'cogs')::numeric end,
-         round((e.value->>'cogs')::numeric / nullif((e.value->>'rev')::numeric, 0), 6)
-  from app_docs d, jsonb_each(coalesce(d.data->'daily', '{}'::jsonb)) e
-  where d.app = 'income' and d.coll = 'stmts'
+  select d.data->>'br', d.data->>'date',
+         case when has_section('income') then (d.data->>'rev')::numeric end,
+         case when has_section('income') then (d.data->>'cogs')::numeric end,
+         round((d.data->>'cogs')::numeric / nullif((d.data->>'rev')::numeric, 0), 6)
+  from app_docs d
+  where d.app = 'wh' and d.coll = 'daily'
     and has_section('wh') and has_branch(d.data->>'br')
   order by 2, 1
 $$;
