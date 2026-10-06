@@ -38,8 +38,7 @@
     '.pc-close{position:sticky;bottom:0;width:100%;margin-top:12px;border:0;border-radius:12px;background:#16233A;color:#fff;font:inherit;font-weight:600;padding:11px;cursor:pointer}',
     '.pc-hit{cursor:pointer}',
     'svg.pc-focus .pc-dim{opacity:.35;transition:opacity .2s}',
-    '@keyframes pcfade{from{opacity:0}}@keyframes pcup{from{transform:translateY(40px);opacity:.4}}',
-    '@media (prefers-color-scheme:dark){.pc-sheet{background:#172033;color:#E8EDF6}.pc-sheet td,.pc-sheet th{border-color:#26324A}.pc-kv div{background:#1E2940}.pc-sheet tr.t td{border-top-color:#E8EDF6}.pc-close{background:#E8EDF6;color:#16233A}}'
+    '@keyframes pcfade{from{opacity:0}}@keyframes pcup{from{transform:translateY(40px);opacity:.4}}'
   ].join('\n');
   (document.head || document.documentElement).appendChild(css);
 
