@@ -143,9 +143,37 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline-color:var(
 @media (min-width:760px){.pageframe{width:100%;margin-inline:0;border:1px solid var(--line);border-radius:14px}}
 body.appmode .wrap{padding-bottom:8px;gap:10px}
 body.appmode footer{display:none}
+
+/* splash */
+#splash{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:radial-gradient(120% 90% at 50% 35%,#3F7A50 0%,#2D5B3B 45%,#183424 100%);color:#fff;transition:opacity .55s ease,visibility .55s;cursor:pointer;overflow:hidden}
+#splash.out{opacity:0;visibility:hidden}
+#splash .sp-in{display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;padding:24px}
+#splash .sp-mark{width:92px;height:92px;border-radius:26px;background:linear-gradient(145deg,rgba(255,255,255,.14),rgba(255,255,255,.04));border:1px solid rgba(233,207,122,.45);display:grid;place-items:end center;padding:20px 18px;box-shadow:0 18px 40px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.2);animation:spPop .7s cubic-bezier(.2,.9,.25,1.2) both}
+#splash .sp-bars{display:flex;align-items:flex-end;gap:7px;height:50px;direction:ltr}
+#splash .sp-bars i{display:block;width:11px;border-radius:4px 4px 2px 2px;background:linear-gradient(#F6E7B0,#D4AF37);transform-origin:bottom;animation:spBar .7s cubic-bezier(.2,.8,.2,1) both}
+#splash .sp-bars i:nth-child(1){height:42%;animation-delay:.35s}#splash .sp-bars i:nth-child(2){height:70%;animation-delay:.5s}#splash .sp-bars i:nth-child(3){height:100%;animation-delay:.65s;background:linear-gradient(#FFF6D6,#E9CF7A)}
+#splash .sp-title{font-family:"Readex Pro",var(--f-disp);font-weight:700;font-size:40px;letter-spacing:.5px;direction:ltr;background:linear-gradient(100deg,#D4AF37 0%,#F6E7B0 40%,#FFFFFF 50%,#F6E7B0 60%,#D4AF37 100%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:spUp .7s .85s cubic-bezier(.2,.8,.2,1) both,spShine 1.6s 1.3s ease-in-out both}
+#splash .sp-line{width:0;height:1px;background:linear-gradient(90deg,transparent,#E9CF7A,transparent);animation:spLine .8s 1.2s ease-out forwards}
+#splash .sp-sub{font-size:15px;color:#E8EEDC;opacity:0;animation:spFade .6s 1.45s ease-out forwards}
+#splash .sp-by{font-size:12.5px;color:#E9CF7A;opacity:0;animation:spFade .6s 1.7s ease-out forwards;letter-spacing:.3px}
+@keyframes spPop{from{opacity:0;transform:scale(.6) translateY(10px)}}
+@keyframes spBar{from{transform:scaleY(0)}}
+@keyframes spUp{from{opacity:0;transform:translateY(14px);filter:blur(4px)}}
+@keyframes spShine{from{background-position:100% 0}to{background-position:0 0}}
+@keyframes spLine{to{width:180px}}
+@keyframes spFade{to{opacity:1}}
+@media (prefers-reduced-motion:reduce){#splash *{animation-duration:.01s!important;animation-delay:0s!important}}
 </style>
 </head>
 <body>
+<div id="splash" aria-hidden="true"><div class="sp-in">
+  <div class="sp-mark"><div class="sp-bars"><i></i><i></i><i></i></div></div>
+  <div class="sp-title">My Reports</div><div class="sp-line"></div>
+  <div class="sp-sub">بوابة التقارير</div><div class="sp-by">إعداد أمير العريفي</div>
+</div></div>
+<script>(function(){var s=document.getElementById('splash');var seen=false;try{seen=sessionStorage.getItem('splash')==='1';sessionStorage.setItem('splash','1');}catch(e){}
+function hide(){if(!s||s.classList.contains('out'))return;s.classList.add('out');setTimeout(function(){s&&s.remove();},700);}
+if(seen){s.remove();return;}s.addEventListener('click',hide);setTimeout(hide,2900);})();</script>
 
 <!-- ============ LOGIN ============ -->
 <section id="login" hidden>
@@ -203,7 +231,7 @@ const SECTIONS=[
   {id:'data',name:'إدخال البيانات',admin:true}
 ];
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury'];
-const APP_VER='9';
+const APP_VER='10';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name]));
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];

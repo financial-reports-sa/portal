@@ -43,6 +43,8 @@ for app in ('sales', 'channels', 'income', 'treasury'):
         h = rep1(h, 'drawLine(rows,n); drawBars(rows,n);', 'drawLine(rows,n); drawBars(rows,n); drawLiveTrend();')
         h = rep1(h, '<div class="card" id="barCard">', '<div class="card" id="trendCard"><h3>اتجاه السيولة <small id="trTxt"></small></h3><div id="trendBody"></div></div>\n    <div class="card" id="barCard">')
         h = rep1(h, "const U=50, pl=26, pr=26, pt=34, pb=30;", "const U=56, pl=44, pr=44, pt=34, pb=30;")
+        h = rep1(h, 'stroke="#D4AF37" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>`', 'stroke="#C9A227" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/>`')
+        h = rep1(h, 'r="${r===last?4.6:3}"', 'r="${r===last?3.8:2.2}"')
         h = rep1(h, "line+=`<polyline points=\"${pts.join(' ')}\" fill=\"none\"", "const PP=s.map(r=>[X(r.day),Y(r.total)]); line+=`<path d=\"${smoothD(PP)}\" fill=\"none\"")
         h = rep1(h, "if(s.length>1) area+=`<polygon points=\"${X(s[0].day)},${pt+ih} ${pts.join(' ')} ${X(s[s.length-1].day)},${pt+ih}\" fill=\"url(#ga)\"/>`;",
                  "if(s.length>1) area+=`<path d=\"M${X(s[0].day)},${pt+ih} L${smoothD(PP).slice(1)} L${X(s[s.length-1].day)},${pt+ih} Z\" fill=\"url(#ga)\"/>`;")
