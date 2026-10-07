@@ -10,7 +10,13 @@ HEAD = '''<script>window.PORTAL_APP='%s';</script>
 <script src="../portal-charts.js?v=8"></script>
 <style>html[data-ro] #tbEntry{display:none!important}html[data-ro] .tabs .in{grid-template-columns:1fr 1fr!important}:root{--bg:#F2F6EA!important;--panel2:#EDF2E3!important;--line:#DCE5CF!important;--line2:#CBD7BA!important;--txt:#1E3326!important;--mute:#647563!important;--dim:#869684!important}html{-webkit-text-size-adjust:100%%;text-size-adjust:100%%}header.top{position:static!important;background:none!important;padding-block:12px 4px!important}.hm{grid-template-columns:50px repeat(7,minmax(0,1fr))!important;gap:2px!important}.hm .c{font-size:9.5px!important;padding:7px 0!important;letter-spacing:-.4px;overflow:hidden;white-space:nowrap;cursor:pointer}.hm .h,.hm .r{font-size:9.5px!important}.cal{gap:3px!important}.cal .c{cursor:pointer}.cal .c .v{font-size:9px!important;letter-spacing:-.4px;white-space:nowrap}.cal .c .d{font-size:9.5px!important}</style>
 '''
-for app in ('sales', 'channels', 'income'):
+TREASURY_COLORS = {  # الخزينة تصميمها غامق — نحوّلها لنفس ألوان البوابة الفاتحة
+    '#08111F': '#F2F6EA', '#0F1D33': '#FFFFFF', '#142744': '#EDF2E3', '#22395C': '#DCE5CF', '#2C4870': '#CBD7BA',
+    '#EAF0F8': '#1E3326', '#8FA5C0': '#647563', '#5E7597': '#869684', '#EBCF7A': '#9A7B12', '#3FB98A': '#1FA16B',
+    '#E0654A': '#D0453A', '#E0A72E': '#C98A0C', '#1B3358': '#EEF2E6', '#1B3152': '#EEF2E6', '#17304F': '#EEF2E6',
+    '#3E5577': '#B9C6A8', '#AFC0D6': '#4E5F4E', '#8FB4E3': '#3C6FB0', '#F4A493': '#C24A33', '#6FC3DF': '#2A8BA8',
+    '#7FD8B2': '#1F8F63', '#F2CE85': '#A9790F', 'rgba(8,17,31,.94)': 'rgba(255,255,255,.95)'}
+for app in ('sales', 'channels', 'income', 'treasury'):
     h = (SRC / f'{app}.src.html').read_text(encoding='utf-8')
     n = 0
     def mark(m):
@@ -19,9 +25,14 @@ for app in ('sales', 'channels', 'income'):
     h = re.sub(r'<script>', mark, h)
     h = h.replace('<head>', '<head>\n' + HEAD % app, 1)
     assert 'PORTAL_APP' in h, app
-    i = h.index('const BR=[')
-    j = h.index('];', i) + 2
-    h = h[:j] + 'window.__pf&&window.__pf(BR);' + h[j:]
+    if 'const BR=[' in h:
+        i = h.index('const BR=[')
+        j = h.index('];', i) + 2
+        h = h[:j] + 'window.__pf&&window.__pf(BR);' + h[j:]
+    if app == 'treasury':
+        for a, b in TREASURY_COLORS.items():
+            h = re.sub(re.escape(a), b, h, flags=re.I)
+        h = h.replace('color-scheme: dark', 'color-scheme: light').replace("localStorage.getItem('tab')", "localStorage.getItem('ttab')").replace("localStorage.setItem('tab'", "localStorage.setItem('ttab'")
     # كشف حالة التطبيق لطبقة تفاصيل الرسوم
     h = h.replace('const st={', 'const st=window.__st={', 1)
     h = h.replace('window.__pf&&window.__pf(BR);', 'window.__pf&&window.__pf(BR);window.__BR=BR;', 1)

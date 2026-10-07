@@ -38,6 +38,7 @@
   }
 
   function branchesFor(coll, data) {
+    if (APP === 'treasury') return [];
     if (coll === 'reports') { var s = data && data.scope; return (!s || s === 'all') ? ctx.branches.slice() : [s]; }
     if (coll === 'stmts') return data && data.br ? [data.br] : [];
     return [];
@@ -82,6 +83,11 @@
           return write(coll, id, Object.assign({}, cur, patch));
         },
         delete: function () { return del(coll, id); },
+        onSnapshot: function (cb, onErr) {
+          var l = { coll: coll, cb: function (snap) { var d = snap.docs.find(function (x) { return x.id === id; }); cb({ exists: !!d, id: id, data: function () { return d ? d.data() : undefined; } }); }, err: onErr };
+          listeners.push(l); refresh(coll);
+          return function () { listeners = listeners.filter(function (x) { return x !== l; }); };
+        },
         get: async function () {
           var rows = await fetchColl(coll); var r = rows.find(function (x) { return x.id === id; });
           return { exists: !!r, id: id, data: function () { return r ? r.data : undefined; } };

@@ -1,0 +1,907 @@
+<!doctype html><html><head>
+<script>window.PORTAL_APP='treasury';</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="../config.js?v=7"></script>
+<script src="../portal-db.js?v=7"></script>
+<script src="../portal-charts.js?v=8"></script>
+<style>html[data-ro] #tbEntry{display:none!important}html[data-ro] .tabs .in{grid-template-columns:1fr 1fr!important}:root{--bg:#F2F6EA!important;--panel2:#EDF2E3!important;--line:#DCE5CF!important;--line2:#CBD7BA!important;--txt:#1E3326!important;--mute:#647563!important;--dim:#869684!important}html{-webkit-text-size-adjust:100%;text-size-adjust:100%}header.top{position:static!important;background:none!important;padding-block:12px 4px!important}.hm{grid-template-columns:50px repeat(7,minmax(0,1fr))!important;gap:2px!important}.hm .c{font-size:9.5px!important;padding:7px 0!important;letter-spacing:-.4px;overflow:hidden;white-space:nowrap;cursor:pointer}.hm .h,.hm .r{font-size:9.5px!important}.cal{gap:3px!important}.cal .c{cursor:pointer}.cal .c .v{font-size:9px!important;letter-spacing:-.4px;white-space:nowrap}.cal .c .d{font-size:9.5px!important}</style>
+<meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>خزينة الأرصدة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  color-scheme: light;
+  --bg:#F2F6EA; --panel:#FFFFFF; --panel2:#EDF2E3; --line:#DCE5CF; --line2:#CBD7BA;
+  --gold:#D4AF37; --gold2:#9A7B12; --goldInk:#1A1406;
+  --txt:#1E3326; --mute:#647563; --dim:#869684;
+  --up:#1FA16B; --down:#D0453A; --warn:#C98A0C;
+  --r:16px;
+  --f:"IBM Plex Sans Arabic", "Segoe UI", Tahoma, system-ui, sans-serif;
+  --fd:"Readex Pro", "IBM Plex Sans Arabic", "Segoe UI", system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--txt);font-family:var(--f);font-size:15px;line-height:1.5;direction:rtl;
+  -webkit-tap-highlight-color:transparent;padding-inline:16px;padding-block:0 96px}
+.num{font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;display:inline-block}
+.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:linear-gradient(var(--bg) 70%,transparent);
+  padding-block:14px 10px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:10px}
+.mark{width:36px;height:36px;border-radius:10px;background:linear-gradient(145deg,var(--gold2),var(--gold));display:grid;place-items:center;
+  color:var(--goldInk);font-family:var(--fd);font-weight:700;font-size:17px}
+.brand h1{font-family:var(--fd);font-size:18px;margin:0;font-weight:600;letter-spacing:.2px}
+.brand small{display:block;color:var(--mute);font-size:11.5px;margin-top:1px}
+.sync{font-size:11.5px;color:var(--mute);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--dim)}
+.dot.on{background:var(--up);box-shadow:0 0 0 3px rgba(63,185,138,.18)}
+.dot.err{background:var(--down)}
+
+.hero{background:radial-gradient(120% 140% at 100% 0%,#EEF2E6 0%,var(--panel) 55%);border:1px solid var(--line);border-radius:20px;
+  padding:18px 18px 16px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:auto -40px -60px auto;width:180px;height:180px;border-radius:50%;
+  border:1px solid rgba(212,175,55,.18)}
+.eyebrow{font-size:12px;color:var(--mute);letter-spacing:.3px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.big{font-family:var(--fd);font-size:clamp(32px,9vw,42px);font-weight:600;color:var(--gold2);margin:6px 0 2px;line-height:1.15}
+.big .cur{font-size:14px;color:var(--mute);font-family:var(--f);font-weight:500;margin-inline-start:6px}
+.split{display:flex;height:8px;border-radius:99px;overflow:hidden;background:var(--line);margin-top:12px}
+.split i{display:block;height:100%}
+.legend{display:flex;justify-content:space-between;gap:10px;margin-top:8px;font-size:12.5px;color:var(--mute)}
+.legend b{color:var(--txt);font-weight:600}
+.sw{display:inline-block;width:8px;height:8px;border-radius:2px;margin-inline-end:6px;vertical-align:middle}
+
+.datebar{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--panel);border:1px solid var(--line);
+  border-radius:14px;padding:10px 14px}
+.datebar label{font-size:13px;color:var(--mute)}
+input,select,button{font:inherit;color:inherit}
+input[type=date]{background:var(--panel2);border:1px solid var(--line2);border-radius:10px;padding:8px 10px;color:var(--txt);min-height:40px}
+
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;margin-top:6px}
+.sec-h h2{font-family:var(--fd);font-size:16px;font-weight:600;margin:0}
+.sec-h span{font-size:12px;color:var(--mute)}
+
+.list{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.acc{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:13px 14px;border-bottom:1px solid var(--line);
+  cursor:pointer;background:none;border-inline:0;border-top:0;width:100%;text-align:right}
+.acc:last-child{border-bottom:0}
+.acc:active{background:var(--panel2)}
+.acc:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+.chip{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-weight:700;font-size:13px;color:var(--goldInk)}
+.acc .nm{font-weight:600;font-size:14.5px;line-height:1.3}
+.acc .sub{font-size:11.5px;color:var(--mute);display:flex;gap:8px;align-items:center;margin-top:3px}
+.bar{height:4px;border-radius:9px;background:var(--line);width:72px;overflow:hidden}
+.bar i{display:block;height:100%}
+.acc .val{font-family:var(--fd);font-weight:600;font-size:16px;text-align:left}
+.acc .val.neg{color:var(--down)}
+.acc .edit{font-size:11px;color:var(--dim);text-align:left;margin-top:2px}
+
+.btn{border:0;border-radius:12px;padding:12px 16px;font-weight:600;cursor:pointer;min-height:46px}
+.btn.gold{background:linear-gradient(145deg,var(--gold2),var(--gold));color:var(--goldInk)}
+.btn.ghost{background:var(--panel2);border:1px solid var(--line2);color:var(--txt)}
+.btn.danger{background:rgba(224,101,74,.14);border:1px solid rgba(224,101,74,.45);color:#C24A33}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:focus-visible{outline:2px solid var(--gold2);outline-offset:2px}
+.row{display:flex;gap:10px}
+.row > *{flex:1}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.card h3{font-family:var(--fd);font-size:14.5px;margin:0 0 10px;font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.card h3 small{font-family:var(--f);font-size:11.5px;color:var(--mute);font-weight:400}
+
+.entry{display:flex;flex-direction:column;gap:10px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:12.5px;color:var(--mute)}
+.amount{background:var(--panel2);border:1px solid var(--line2);border-radius:12px;padding:12px 14px;font-family:var(--fd);
+  font-size:24px;font-weight:600;color:var(--gold2);direction:ltr;text-align:left;width:100%;min-height:54px}
+.amount:focus,input[type=date]:focus,.txt:focus,select:focus{outline:2px solid var(--gold);outline-offset:1px;border-color:transparent}
+.hint{font-size:12px;color:var(--mute)}
+.linkbtn{background:none;border:0;color:var(--gold2);font-size:12.5px;padding:4px 0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px}
+.kpi .l{font-size:11.5px;color:var(--mute)}
+.kpi .v{font-family:var(--fd);font-size:20px;font-weight:600;margin-top:2px}
+.kpi .s{font-size:11px;color:var(--dim);margin-top:1px}
+.up{color:var(--up)} .down{color:var(--down)} .flat{color:var(--warn)}
+
+.month{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.month b{font-family:var(--fd);font-weight:600;font-size:15px}
+.icb{width:40px;height:40px;border-radius:12px;background:var(--panel2);border:1px solid var(--line2);cursor:pointer;display:grid;place-items:center;color:var(--txt);font-size:16px}
+.icb:disabled{opacity:.35}
+
+svg text{font-family:var(--f)}
+.chart{width:100%;height:auto;display:block}
+
+.log{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.lg{display:grid;grid-template-columns:1fr auto;gap:8px;padding:11px 14px;border-bottom:1px solid var(--line);cursor:pointer;background:none;border-inline:0;border-top:0;width:100%;text-align:right}
+.lg:last-child{border-bottom:0}
+.lg:active{background:var(--panel2)}
+.lg .d{font-weight:600;font-size:13.5px}
+.lg .w{font-size:11.5px;color:var(--mute)}
+.lg .t{font-family:var(--fd);font-weight:600;font-size:15px;text-align:left}
+.pill{display:inline-block;font-size:11px;padding:1px 8px;border-radius:99px;margin-top:3px;font-weight:600}
+.pill.up{background:rgba(63,185,138,.14)} .pill.down{background:rgba(224,101,74,.14)} .pill.flat{background:rgba(224,167,46,.14)}
+
+nav.tabs{position:fixed;inset-inline:0;bottom:0;z-index:10;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border-top:1px solid var(--line);padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center}
+.tabs .in{max-width:560px;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tab{background:none;border:0;border-radius:12px;padding:9px;color:var(--mute);font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12.5px}
+.tab svg{width:22px;height:22px}
+.tab[aria-selected=true]{color:var(--gold2);background:var(--panel)}
+
+.sheet-bg{position:fixed;inset:0;background:rgba(3,8,16,.62);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--panel);border:1px solid var(--line2);border-bottom:0;border-radius:22px 22px 0 0;width:100%;max-width:560px;
+  padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px;max-height:92%;overflow:auto}
+.sheet h4{font-family:var(--fd);margin:0;font-size:17px;font-weight:600}
+.grab{width:40px;height:4px;border-radius:9px;background:var(--line2);margin:-6px auto 4px}
+.txt,select{background:var(--panel2);border:1px solid var(--line2);border-radius:12px;padding:11px 12px;min-height:46px;width:100%}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg button{background:var(--panel2);border:1px solid var(--line2);border-radius:12px;padding:10px;cursor:pointer;font-weight:600;color:var(--mute)}
+.seg button[aria-pressed=true]{border-color:var(--gold);color:var(--gold2)}
+.confirm{background:rgba(224,101,74,.08);border:1px solid rgba(224,101,74,.35);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;font-size:13.5px}
+
+.toast{position:fixed;bottom:calc(84px + env(safe-area-inset-bottom,0px));inset-inline:16px;margin:0 auto;max-width:360px;background:var(--gold);color:var(--goldInk);
+  font-weight:600;text-align:center;border-radius:12px;padding:10px 14px;z-index:30;transition:opacity .25s, transform .25s}
+.toast.hide{opacity:0;transform:translateY(8px);pointer-events:none}
+.empty{padding:22px 16px;text-align:center;color:var(--mute);font-size:13.5px}
+.note{font-size:12px;color:var(--mute);text-align:center;padding-block:4px 0}
+.banner{background:rgba(224,167,46,.1);border:1px solid rgba(224,167,46,.4);color:#A9790F;border-radius:12px;padding:10px 12px;font-size:13px}
+
+.rep{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
+.rep .hd{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.rep .tt{font-family:var(--fd);font-weight:600;font-size:15px}
+.rep .mt{font-size:12px;color:var(--mute)}
+.rep .tv{font-family:var(--fd);font-weight:600;color:var(--gold2);font-size:17px;text-align:left}
+.acts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.acts button{background:var(--panel2);border:1px solid var(--line2);border-radius:10px;padding:9px 4px;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--txt);min-height:42px}
+.acts button.pr{border-color:var(--gold);color:var(--gold2)}
+.acts button:focus-visible{outline:2px solid var(--gold2)}
+textarea.txt{min-height:70px;resize:vertical;line-height:1.5}
+.wrap>*{min-width:0;max-width:100%}
+.card{min-width:0;overflow:hidden}
+#lineChart,#barChart{width:100%;min-width:0}
+.cscroll{max-width:100%;overflow-x:auto;direction:ltr;-webkit-overflow-scrolling:touch;scrollbar-width:thin;margin-inline:-4px}
+.cscroll svg{display:block}
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:1px 9px;border-radius:99px;margin-bottom:4px}
+.badge.bd{background:rgba(63,185,138,.15);color:#1FA16B}.badge.bt{background:rgba(91,143,208,.18);color:#3C6FB0}.badge.bm{background:rgba(212,175,55,.15);color:#9A7B12}
+.prev img{width:100%;border-radius:12px;border:1px solid var(--line)}
+.tabs .in{grid-template-columns:1fr 1fr 1fr}
+@media (min-width:900px){
+  .wrap{max-width:1120px}
+  .tabs .in{max-width:520px}
+  #tab-acc{display:grid;grid-template-columns:1.25fr 1fr;align-items:start}
+  #tab-acc[hidden]{display:none!important}
+  #tab-acc > .hero,#tab-acc > .datebar,#tab-acc > .sec-h,#tab-acc > .list,#tab-acc > .row{grid-column:1}
+  #tab-acc > .card{grid-column:2;grid-row:1 / span 5}
+  #tab-day{display:grid;grid-template-columns:380px 1fr;align-items:start}
+  #tab-day[hidden]{display:none!important}
+  #tab-day > .entry,#tab-day > .month,#tab-day > .kpis,#tab-day > .sec-h,#tab-day > .log,#tab-day > #exportCsv{grid-column:1}
+  #tab-day > .card:not(.entry){grid-column:2}
+  #lineCard{grid-row:1 / span 3}
+  #barCard{grid-row:4 / span 4}
+  #tab-rep{display:grid;grid-template-columns:380px 1fr;align-items:start}
+  #tab-rep[hidden]{display:none!important}
+  #tab-rep > .card{grid-column:1}
+  #tab-rep > .card:not(.entry){grid-row:2}
+  #tab-rep > #repList{grid-column:2;grid-row:1 / span 3}
+  .sheet{max-width:640px;border-radius:22px;margin-bottom:24px;border-bottom:1px solid var(--line2)}
+  .sheet-bg{align-items:center}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><div class="mark">خ</div><div><h1>خزينة الأرصدة</h1><small>البنوك والصناديق — متابعة يومية</small></div></div>
+    <div class="sync"><span class="dot" id="dot"></span><span id="syncTxt">جارِ الاتصال…</span></div>
+  </header>
+  <div id="banner" class="banner" hidden></div>
+
+  <!-- ============ TAB 1: balances ============ -->
+  <section id="tab-acc" class="wrap" style="gap:14px">
+    <div class="hero">
+      <div class="eyebrow"><span>إجمالي الأرصدة</span><span id="accCount"></span></div>
+      <div class="big"><span class="num" id="grand">—</span><span class="cur">ر.س</span></div>
+      <div class="split" id="split"></div>
+      <div class="legend"><span><span class="sw" style="background:var(--gold)"></span>البنوك <b class="num" id="banks">—</b></span>
+        <span><span class="sw" style="background:#5B8FD0"></span>الصناديق <b class="num" id="cash">—</b></span></div>
+    </div>
+
+    <div class="datebar"><label for="balDate">تاريخ الأرصدة</label><input type="date" id="balDate"></div>
+
+    <div class="sec-h"><h2>الحسابات</h2><span>اضغط على أي حساب لتعديل رصيده</span></div>
+    <div class="list" id="accList"><div class="empty">جارِ تحميل الحسابات…</div></div>
+
+    <div class="row"><button class="btn ghost" id="addAcc">+ إضافة حساب</button><button class="btn gold" id="toDaily">سجّل الإجمالي اليوم</button></div>
+
+    <div class="card"><h3>توزيع الأرصدة <small id="topAcc"></small></h3><div id="donut"></div></div>
+  </section>
+
+  <!-- ============ TAB 2: daily ============ -->
+  <section id="tab-day" class="wrap" style="gap:14px" hidden>
+    <div class="card entry">
+      <h3>تسجيل إجمالي الأرصدة <small id="entryState"></small></h3>
+      <div class="field"><label for="dDate">التاريخ</label><input type="date" id="dDate"></div>
+      <div class="field"><label for="dAmt">إجمالي الأرصدة (ر.س)</label>
+        <input id="dAmt" class="amount" inputmode="decimal" autocomplete="off" placeholder="0">
+        <button class="linkbtn" id="useSum" type="button">استخدم إجمالي الحسابات الحالي</button></div>
+      <button class="btn gold" id="saveDay">حفظ</button>
+    </div>
+
+    <div class="month"><button class="icb" id="mNext" aria-label="الشهر التالي">›</button><b id="mLabel">—</b><button class="icb" id="mPrev" aria-label="الشهر السابق">‹</button></div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="l">آخر رصيد مسجل</div><div class="v num" id="kLast">—</div><div class="s" id="kLastD"></div></div>
+      <div class="kpi"><div class="l">التغير عن اليوم السابق</div><div class="v num" id="kChg">—</div><div class="s" id="kChgP"></div></div>
+      <div class="kpi"><div class="l">أعلى رصيد بالشهر</div><div class="v num up" id="kMax">—</div><div class="s" id="kMaxD"></div></div>
+      <div class="kpi"><div class="l">أدنى رصيد بالشهر</div><div class="v num down" id="kMin">—</div><div class="s" id="kMinD"></div></div>
+    </div>
+
+    <div class="card" id="lineCard"><h3>حركة إجمالي الأرصدة <small id="avgTxt"></small></h3><div id="lineChart"></div><div class="hint" style="margin-top:6px">↔ اسحب المخطط يميناً ويساراً لرؤية كل أيام الشهر</div></div>
+    <div class="card" id="barCard"><h3>التغير اليومي <small id="udTxt"></small></h3><div id="barChart"></div></div>
+
+    <div class="sec-h"><h2>سجل الشهر</h2><span>اضغط على أي يوم لتعديله</span></div>
+    <div class="log" id="dayLog"><div class="empty">لا توجد أيام مسجلة في هذا الشهر</div></div>
+    <button class="btn ghost" id="exportCsv" hidden>تنزيل سجل الشهر (CSV يفتح في إكسل)</button>
+  </section>
+  <!-- ============ TAB 3: reports ============ -->
+  <section id="tab-rep" class="wrap" style="gap:14px" hidden>
+    <div class="card entry">
+      <h3>إنشاء تقرير <small>يومي • شهري • اتجاه السيولة — يُحفظ ويُرسل</small></h3>
+      <div class="field"><label>نوع التقرير</label><div class="seg" style="grid-template-columns:1fr 1fr 1fr"><button type="button" id="rtD" aria-pressed="true">يومي</button><button type="button" id="rtM" aria-pressed="false">شهري</button><button type="button" id="rtT" aria-pressed="false">اتجاه السيولة</button></div></div>
+      <div class="field" id="fDay"><label for="rDay">يوم التقرير</label><input type="date" id="rDay"></div>
+      <div class="field" id="fPer" hidden><label for="rPer">فترة تحليل المسار</label><select id="rPer"><option value="mtd">من بداية الشهر — والتوقع لنهاية الشهر</option><option value="30">آخر 30 يوماً — والتوقع لـ 7 أيام</option><option value="60">آخر 60 يوماً — والتوقع لـ 7 أيام</option><option value="90">آخر 90 يوماً — والتوقع لـ 7 أيام</option></select></div>
+      <div class="field" id="fMonth" hidden><label for="rMonth">شهر التقرير</label><select id="rMonth"></select></div>
+      <div class="field"><label for="rNote">ملاحظة (اختياري)</label><textarea id="rNote" class="txt" placeholder="مثال: تم تحويل 50,000 من التجارية إلى المطعم"></textarea></div>
+      <button class="btn gold" id="mkRep">إنشاء التقرير وحفظه</button>
+      <div class="hint" id="repHint"></div>
+    </div>
+    <div class="card"><h3>طريقة الإرسال</h3>
+      <div class="hint" style="line-height:1.8">• <b>صورة</b>: الأنسب للواتساب.<br>• <b>PDF</b>: للطباعة والأرشفة.<br>• <b>صفحة ويب</b>: ملف يُفتح في أي متصفح على الجوال أو الكمبيوتر.<br>بعد التنزيل أرسل الملف من تطبيق الملفات أو المعرض.</div></div>
+    <div id="repList" style="display:flex;flex-direction:column;gap:12px">
+      <div class="sec-h"><h2>التقارير المحفوظة</h2><span id="repCount"></span></div>
+      <div id="reps"><div class="empty">لا توجد تقارير محفوظة بعد</div></div>
+    </div>
+  </section>
+  <p class="note">سري — للاستخدام الداخلي • تُحفظ التعديلات فوراً وتظهر على كل أجهزتك</p>
+</div>
+
+<nav class="tabs"><div class="in">
+  <button class="tab" id="tbAcc" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 10l9-6 9 6"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18"/></svg>الأرصدة</button>
+  <button class="tab" id="tbDay" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l5-5 4 3 8-8"/><path d="M15 7h5v5"/></svg>اليومي</button>
+  <button class="tab" id="tbRep" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></svg>التقارير</button>
+</div></nav>
+
+<div id="sheetRoot"></div>
+<div class="toast hide" id="toast"></div>
+
+<script type="text/x-app">
+(function(){
+  const $ = s => document.querySelector(s);
+  const PAL = ['#D4AF37','#1FA16B','#9B7FD1','#5B8FD0','#E07A5F','#9A7B12','#2A8BA8','#C97BB2'];
+  const DAYS = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  const MONTHS = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  const st = { db:null, accounts:[], daily:{}, meta:{}, ready:{a:false,d:false}, canWrite:true, month:null };
+
+  // ---------- helpers ----------
+  const fmt = (n, d=0) => (n==null||isNaN(n)) ? '—' : Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+  const fmtK = n => { const a=Math.abs(n); return (a>=1e6? (n/1e6).toFixed(2)+'M' : (n/1e3).toFixed(a>=1e5?0:1)+'K'); };
+  const signed = n => (n>0?'▲ ':n<0?'▼ ':'● ') + fmt(Math.abs(n));
+  const cls = n => n>0?'up':n<0?'down':'flat';
+  function parseNum(s){
+    if(s==null) return NaN;
+    s = String(s).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
+      .replace(/٫/g,'.').replace(/[,،\s]/g,'').replace(/−/g,'-');
+    if(s==='' ) return NaN; return Number(s);
+  }
+  const iso = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  const fromIso = s => { const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); };
+  const dmy = s => { const [y,m,d]=s.split('-'); return d+'/'+m+'/'+y; };
+  const todayIso = () => iso(new Date());
+  let toastT; function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.remove('hide'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.add('hide'),1900); }
+  function setSync(state, txt){ const d=$('#dot'); d.className='dot'+(state==='on'?' on':state==='err'?' err':''); $('#syncTxt').textContent=txt; }
+  function banner(m){ const b=$('#banner'); if(!m){b.hidden=true;return;} b.textContent=m; b.hidden=false; }
+  function el(tag, attrs={}, kids=[]){ const e=document.createElement(tag); for(const k in attrs){ if(k==='text') e.textContent=attrs[k]; else if(k==='html') e.innerHTML=attrs[k]; else if(k.startsWith('on')) e.addEventListener(k.slice(2),attrs[k]); else e.setAttribute(k,attrs[k]); } (Array.isArray(kids)?kids:[kids]).forEach(c=>c!=null&&e.append(c)); return e; }
+
+  // ---------- tabs ----------
+  function showTab(which){
+    ['acc','day','rep'].forEach(t=>{ $('#tab-'+t).hidden = t!==which; });
+    $('#tbAcc').setAttribute('aria-selected',which==='acc'); $('#tbDay').setAttribute('aria-selected',which==='day'); $('#tbRep').setAttribute('aria-selected',which==='rep');
+    try{ localStorage.setItem('ttab',which);}catch(e){}
+    if(which==='rep') fillMonths();
+    window.scrollTo({top:0});
+  }
+  $('#tbAcc').onclick=()=>showTab('acc'); $('#tbDay').onclick=()=>showTab('day'); $('#tbRep').onclick=()=>showTab('rep');
+  $('#toDaily').onclick=()=>{ showTab('day'); $('#dDate').value=todayIso(); fillEntry(); $('#dAmt').value=fmt(sumAcc().total,2); $('#dAmt').focus(); };
+
+  // ---------- accounts ----------
+  function sumAcc(){ let b=0,c=0; st.accounts.forEach(a=>{ const v=Number(a.balance)||0; if(a.kind==='cash') c+=v; else b+=v; }); return {banks:b,cash:c,total:b+c}; }
+  function renderAccounts(){
+    const L=$('#accList'); L.innerHTML='';
+    const s=sumAcc(); const list=[...st.accounts].sort((a,b)=>(a.order??99)-(b.order??99));
+    $('#grand').textContent=fmt(s.total,2); $('#banks').textContent=fmt(s.banks); $('#cash').textContent=fmt(s.cash);
+    $('#accCount').textContent=list.length? list.length+' حسابات':'';
+    const pos = Math.max(0,s.banks)+Math.max(0,s.cash) || 1;
+    $('#split').innerHTML=`<i style="width:${Math.max(0,s.banks)/pos*100}%;background:var(--gold)"></i><i style="width:${Math.max(0,s.cash)/pos*100}%;background:#5B8FD0"></i>`;
+    if(!list.length){ L.append(el('div',{class:'empty',text: st.ready.a?'لا توجد حسابات بعد — أضف أول حساب':'جارِ تحميل الحسابات…'})); }
+    list.forEach((a,i)=>{
+      const v=Number(a.balance)||0; const share = s.total? v/s.total : 0; const col=a.color||PAL[i%PAL.length];
+      const btn=el('button',{class:'acc',type:'button','aria-label':'تعديل '+a.name, onclick:()=>openAccSheet(a)},[
+        el('div',{class:'chip',style:`background:${col}`,text:String(i+1)}),
+        el('div',{},[ el('div',{class:'nm',text:a.name}), el('div',{class:'sub'},[ el('span',{text:a.kind==='cash'?'صندوق':'بنك'}),
+          el('span',{class:'bar'},el('i',{style:`width:${Math.max(0,Math.min(1,share))*100}%;background:${col}`})), el('span',{class:'num',text:(share*100).toFixed(1)+'%'}) ]) ]),
+        el('div',{},[ el('div',{class:'val num'+(v<0?' neg':''),text:fmt(v,2)}), el('div',{class:'edit',text:'تعديل ✎'}) ])
+      ]);
+      L.append(btn);
+    });
+    renderDonut(list,s);
+  }
+  function renderDonut(list,s){
+    const box=$('#donut'); const pos=list.map((a,i)=>({a,i,v:Math.max(0,Number(a.balance)||0)})).filter(x=>x.v>0);
+    const tot=pos.reduce((t,x)=>t+x.v,0);
+    if(!tot){ box.innerHTML='<div class="empty">لا توجد أرصدة موجبة لعرضها</div>'; $('#topAcc').textContent=''; return; }
+    const R=62, r=40, cx=80, cy=80; let ang=-Math.PI/2; let paths='';
+    pos.forEach(x=>{ const frac=x.v/tot; const a2=ang+frac*Math.PI*2; const large=frac>.5?1:0;
+      const p=(rad,rr)=>[cx+rr*Math.cos(rad), cy+rr*Math.sin(rad)];
+      const [x1,y1]=p(ang,R),[x2,y2]=p(a2,R),[x3,y3]=p(a2,r),[x4,y4]=p(ang,r);
+      const col=x.a.color||PAL[x.i%PAL.length];
+      paths += frac>=.9999 ? `<circle cx="${cx}" cy="${cy}" r="${(R+r)/2}" fill="none" stroke="${col}" stroke-width="${R-r}"/>`
+        : `<path d="M${x1} ${y1}A${R} ${R} 0 ${large} 1 ${x2} ${y2}L${x3} ${y3}A${r} ${r} 0 ${large} 0 ${x4} ${y4}Z" fill="${col}" stroke="#FFFFFF" stroke-width="2"/>`;
+      ang=a2; });
+    const top=pos.reduce((m,x)=>x.v>m.v?x:m,pos[0]);
+    $('#topAcc').textContent='الأكبر: '+top.a.name;
+    const legend=pos.sort((a,b)=>b.v-a.v).map(x=>`<div style="display:flex;justify-content:space-between;gap:8px;font-size:12.5px;padding:3px 0">
+      <span><span class="sw" style="background:${x.a.color||PAL[x.i%PAL.length]}"></span>${x.a.name.replace(/</g,'&lt;')}</span><b class="num">${(x.v/tot*100).toFixed(1)}%</b></div>`).join('');
+    box.innerHTML=`<div style="display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:center">
+      <svg viewBox="0 0 160 160" class="chart" role="img" aria-label="توزيع الأرصدة">${paths}
+      <text x="80" y="76" text-anchor="middle" fill="#647563" font-size="10">الإجمالي</text>
+      <text x="80" y="94" text-anchor="middle" fill="#9A7B12" font-size="15" font-weight="700">${fmtK(s.total)}</text></svg>
+      <div>${legend}</div></div>`;
+  }
+
+  // ---------- sheets ----------
+  function closeSheet(){ $('#sheetRoot').innerHTML=''; }
+  function sheet(title, body){
+    const bg=el('div',{class:'sheet-bg',onclick:e=>{ if(e.target===bg) closeSheet(); }});
+    const sh=el('div',{class:'sheet',role:'dialog','aria-modal':'true'},[el('div',{class:'grab'}),el('h4',{text:title}),...body]);
+    bg.append(sh); $('#sheetRoot').innerHTML=''; $('#sheetRoot').append(bg); return sh;
+  }
+  function openAccSheet(a){
+    const isNew=!a; a=a||{name:'',balance:'',kind:'bank'};
+    let kind=a.kind||'bank';
+    const name=el('input',{class:'txt',id:'fName',value:a.name||'',placeholder:'مثال: بنك الراجحي — المطعم'});
+    const bal=el('input',{class:'amount',id:'fBal',inputmode:'decimal',autocomplete:'off',value: a.balance===''?'':fmt(a.balance,2)});
+    const bB=el('button',{type:'button','aria-pressed':kind==='bank',text:'بنك'}); const bC=el('button',{type:'button','aria-pressed':kind==='cash',text:'صندوق'});
+    bB.onclick=()=>{kind='bank';bB.setAttribute('aria-pressed',true);bC.setAttribute('aria-pressed',false)};
+    bC.onclick=()=>{kind='cash';bC.setAttribute('aria-pressed',true);bB.setAttribute('aria-pressed',false)};
+    const err=el('div',{class:'hint',style:'color:#C24A33'});
+    const save=el('button',{class:'btn gold',text:isNew?'إضافة الحساب':'حفظ الرصيد'});
+    const del=isNew?null:el('button',{class:'btn danger',text:'حذف الحساب'});
+    const confirmBox=el('div');
+    save.onclick=async()=>{
+      const v=parseNum(bal.value); const n=name.value.trim();
+      if(!n){err.textContent='اكتب اسم الحساب.';return;} if(isNaN(v)){err.textContent='اكتب الرصيد بالأرقام، مثل 125000.50';return;}
+      save.disabled=true;
+      const body={name:n,balance:Math.round(v*100)/100,kind,order: a.order ?? (st.accounts.length+1), color:a.color||PAL[st.accounts.length%PAL.length]};
+      const ok = await write(()=> isNew? st.db.collection('accounts').add(body) : st.db.doc('accounts/'+a.id).set(body));
+      if(ok){ await write(()=>st.db.doc('meta/settings').set({...st.meta,balanceDate:todayIso()})); closeSheet(); toast(isNew?'أضيف الحساب':'حُفظ الرصيد'); } else save.disabled=false;
+    };
+    if(del) del.onclick=()=>{
+      confirmBox.innerHTML=''; const yes=el('button',{class:'btn danger',text:'نعم، احذف'}), no=el('button',{class:'btn ghost',text:'تراجع'});
+      yes.onclick=async()=>{ yes.disabled=true; if(await write(()=>st.db.doc('accounts/'+a.id).delete())){ closeSheet(); toast('حُذف الحساب'); } };
+      no.onclick=()=>confirmBox.innerHTML='';
+      confirmBox.append(el('div',{class:'confirm'},[el('span',{text:'سيُحذف "'+a.name+'" نهائياً من القائمة.'}),el('div',{class:'row'},[no,yes])]));
+    };
+    sheet(isNew?'إضافة حساب':'تعديل الحساب',[
+      el('div',{class:'field'},[el('label',{for:'fName',text:'اسم الحساب'}),name]),
+      el('div',{class:'field'},[el('label',{text:'النوع'}),el('div',{class:'seg'},[bB,bC])]),
+      el('div',{class:'field'},[el('label',{for:'fBal',text:'الرصيد (ر.س)'}),bal]),
+      err, save, ...(del?[del,confirmBox]:[]), el('button',{class:'btn ghost',text:'إغلاق',onclick:closeSheet})
+    ]);
+    setTimeout(()=>{ (isNew?name:bal).focus(); if(!isNew) bal.select(); },60);
+  }
+  $('#addAcc').onclick=()=>openAccSheet(null);
+
+  $('#balDate').addEventListener('change',async e=>{ const v=e.target.value; if(!v) return; if(await write(()=>st.db.doc('meta/settings').set({...st.meta,balanceDate:v}))) toast('حُدّث تاريخ الأرصدة'); });
+
+  // ---------- daily ----------
+  function monthKeys(){ const ks=Object.keys(st.daily).sort(); return ks; }
+  function fillEntry(){ const d=$('#dDate').value; const ex=st.daily[d]; $('#entryState').textContent= ex? 'مسجل: '+fmt(ex.total)+' — الحفظ يحدّثه' : 'يوم جديد'; $('#saveDay').textContent= ex?'تحديث':'حفظ'; }
+  $('#dDate').addEventListener('change',()=>{ fillEntry(); const ex=st.daily[$('#dDate').value]; $('#dAmt').value= ex? fmt(ex.total,2):''; });
+  $('#useSum').onclick=()=>{ $('#dAmt').value=fmt(sumAcc().total,2); };
+  $('#dAmt').addEventListener('blur',()=>{ const v=parseNum($('#dAmt').value); if(!isNaN(v)) $('#dAmt').value=fmt(v,2); });
+  $('#saveDay').onclick=async()=>{
+    const d=$('#dDate').value, v=parseNum($('#dAmt').value);
+    if(!d){toast('اختر التاريخ');return;} if(isNaN(v)){toast('اكتب الإجمالي بالأرقام');$('#dAmt').focus();return;}
+    $('#saveDay').disabled=true;
+    const ok=await write(()=>st.db.doc('daily/'+d).set({date:d,total:Math.round(v*100)/100}));
+    $('#saveDay').disabled=false;
+    if(ok){ st.month=d.slice(0,7); toast('حُفظ رصيد '+dmy(d)); }
+  };
+  $('#mPrev').onclick=()=>shiftMonth(-1); $('#mNext').onclick=()=>shiftMonth(1);
+  function shiftMonth(k){ const [y,m]=st.month.split('-').map(Number); const d=new Date(y,m-1+k,1); st.month=iso(d).slice(0,7); renderDaily(); }
+
+  function monthData(){
+    const [y,m]=st.month.split('-').map(Number); const n=new Date(y,m,0).getDate();
+    const rows=[]; const all=monthKeys();
+    for(let d=1; d<=n; d++){ const k=st.month+'-'+String(d).padStart(2,'0'); const e=st.daily[k];
+      let prev=null; if(e){ const idx=all.indexOf(k); if(idx>0){ const pk=all[idx-1]; if((fromIso(k)-fromIso(pk))/864e5===1) prev=st.daily[pk].total; } }
+      rows.push({day:d,key:k,total:e?Number(e.total):null,chg:(e&&prev!=null)?Number(e.total)-prev:null}); }
+    return {y,m,n,rows};
+  }
+  function renderDaily(){
+    if(!st.month){ const ks=monthKeys(); st.month=(ks.length?ks[ks.length-1]:todayIso()).slice(0,7); }
+    const {y,m,n,rows}=monthData(); $('#mLabel').textContent=MONTHS[m-1]+' '+y;
+    const has=rows.filter(r=>r.total!=null);
+    const last=has[has.length-1];
+    $('#kLast').textContent= last?fmt(last.total):'—'; $('#kLastD').textContent= last? dmy(last.key)+' • '+DAYS[fromIso(last.key).getDay()] : 'لا توجد بيانات';
+    const kc=$('#kChg'); if(last&&last.chg!=null){ kc.textContent=signed(last.chg); kc.className='v num '+cls(last.chg); const pv=last.total-last.chg; $('#kChgP').textContent= pv? ((last.chg/pv*100>0?'+':'')+(last.chg/pv*100).toFixed(2)+'%'):''; }
+    else { kc.textContent='—'; kc.className='v num'; $('#kChgP').textContent='لا توجد مقارنة'; }
+    if(has.length){ const mx=has.reduce((a,b)=>b.total>a.total?b:a), mn=has.reduce((a,b)=>b.total<a.total?b:a);
+      $('#kMax').textContent=fmt(mx.total); $('#kMaxD').textContent='يوم '+mx.day+' • '+DAYS[fromIso(mx.key).getDay()];
+      $('#kMin').textContent=fmt(mn.total); $('#kMinD').textContent='يوم '+mn.day+' • '+DAYS[fromIso(mn.key).getDay()];
+      const avg=has.reduce((t,r)=>t+r.total,0)/has.length; $('#avgTxt').textContent='المتوسط '+fmt(avg)+' • '+has.length+' يوم';
+    } else { ['kMax','kMin'].forEach(i=>$('#'+i).textContent='—'); ['kMaxD','kMinD'].forEach(i=>$('#'+i).textContent=''); $('#avgTxt').textContent=''; }
+    const ups=rows.filter(r=>r.chg>0).length, dns=rows.filter(r=>r.chg<0).length;
+    $('#udTxt').innerHTML=`<span class="up">▲ ${ups}</span> &nbsp; <span class="down">▼ ${dns}</span>`;
+    drawLine(rows,n); drawBars(rows,n);
+    const L=$('#dayLog'); L.innerHTML='';
+    if(!has.length) L.append(el('div',{class:'empty',text:'لا توجد أيام مسجلة في هذا الشهر'}));
+    [...has].reverse().forEach(r=>{
+      L.append(el('button',{class:'lg',type:'button',onclick:()=>openDaySheet(r)},[
+        el('div',{},[el('div',{class:'d',text:dmy(r.key)}),el('div',{class:'w',text:DAYS[fromIso(r.key).getDay()]})]),
+        el('div',{},[el('div',{class:'t num',text:fmt(r.total)}), r.chg!=null? el('div',{style:'text-align:left'},el('span',{class:'pill num '+cls(r.chg),text:signed(r.chg)})):null])
+      ]));
+    });
+    $('#exportCsv').hidden = !has.length || !st.dl;
+  }
+  function scale(rows){ const v=rows.filter(r=>r.total!=null).map(r=>r.total); if(!v.length) return null;
+    let lo=Math.min(...v), hi=Math.max(...v); if(lo===hi){lo*=.95;hi*=1.05||1;} const pad=(hi-lo)*.12; lo-=pad; hi+=pad;
+    const step=niceStep((hi-lo)/4); lo=Math.floor(lo/step)*step; hi=Math.ceil(hi/step)*step; return {lo,hi,step}; }
+  function niceStep(x){ const p=Math.pow(10,Math.floor(Math.log10(x||1))); const f=x/p; return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p; }
+  function chartFrame(box,W,H,body,aria){
+    box.innerHTML=`<div class="cscroll"><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${aria}">${body}</svg></div>`;
+    return box.querySelector('.cscroll');
+  }
+  function scrollToX(sc,x){ requestAnimationFrame(()=>{ sc.scrollLeft=Math.max(0,x-sc.clientWidth/2); }); }
+  const lblK = v => { const a=Math.abs(v); return (a>=1e6?(v/1e6).toFixed(2)+'M':(v/1e3).toFixed(1)+'K'); };
+  function drawLine(rows,n){
+    const box=$('#lineChart'); const has=rows.filter(r=>r.total!=null); if(!has.length){ box.innerHTML='<div class="empty">سجّل أول يوم ليظهر المخطط</div>'; return; }
+    const U=50, pl=26, pr=26, pt=34, pb=30; const W=Math.max(Math.min(box.clientWidth||340,1000), pl+pr+n*U), H=236, ih=H-pt-pb;
+    const X=d=> pl + (n-d)*U + U/2;    // day 1 on the right
+    const v=has.map(r=>r.total); let lo=Math.min(...v), hi=Math.max(...v); if(lo===hi){lo*=.9;hi*=1.1||1;} const pad=(hi-lo)*.1; lo-=pad; hi+=pad;
+    const Y=val=> pt + (hi-val)/(hi-lo)*ih;
+    let g=''; for(let i=0;i<=4;i++){ const y=pt+ih*i/4; g+=`<line x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}" stroke="#EEF2E6" stroke-dasharray="3 5"/>`; }
+    let xt=''; for(let d=1; d<=n; d++){ const has_=rows[d-1].total!=null; xt+=`<text x="${X(d)}" y="${H-10}" fill="${has_?'#647563':'#B9C6A8'}" font-size="10.5" text-anchor="middle">${d}</text>`; }
+    let segs=[], cur=[]; rows.forEach(r=>{ if(r.total!=null) cur.push(r); else if(cur.length){segs.push(cur);cur=[];} }); if(cur.length) segs.push(cur);
+    let area='', line='';
+    segs.forEach(s=>{ const pts=s.map(r=>`${X(r.day)},${Y(r.total)}`); line+=`<polyline points="${pts.join(' ')}" fill="none" stroke="#D4AF37" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>`;
+      if(s.length>1) area+=`<polygon points="${X(s[0].day)},${pt+ih} ${pts.join(' ')} ${X(s[s.length-1].day)},${pt+ih}" fill="url(#ga)"/>`; });
+    const last=has[has.length-1];
+    const dots=has.map(r=>`<circle cx="${X(r.day)}" cy="${Y(r.total)}" r="${r===last?4.6:3}" fill="${r===last?'#9A7B12':'#F2F6EA'}" stroke="#9A7B12" stroke-width="1.6"/>`).join('');
+    const labs=has.map(r=>{ const y=Y(r.total)-10; if(r===last) return `<rect x="${X(r.day)-27}" y="${y-14}" width="54" height="18" rx="5" fill="#D4AF37"/><text x="${X(r.day)}" y="${y-1}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1A1406">${lblK(r.total)}</text>`;
+      return `<text x="${X(r.day)}" y="${y}" text-anchor="middle" font-size="10.5" font-weight="600" fill="#FFFFFF">${lblK(r.total)}</text>`; }).join('');
+    const sc=chartFrame(box,W,H,`<defs><linearGradient id="ga" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#D4AF37" stop-opacity=".28"/><stop offset="1" stop-color="#D4AF37" stop-opacity="0"/></linearGradient></defs>${g}${area}${line}${dots}${labs}${xt}`,'حركة إجمالي الأرصدة');
+    scrollToX(sc,X(last.day));
+  }
+  function drawBars(rows,n){
+    const box=$('#barChart'); const ch=rows.filter(r=>r.chg!=null); if(!ch.length){ box.innerHTML='<div class="empty">يظهر التغير بعد تسجيل يومين متتاليين</div>'; return; }
+    const U=50, pl=26, pr=26, pt=26, pb=30; const W=Math.max(Math.min(box.clientWidth||340,1000), pl+pr+n*U), H=220, ih=H-pt-pb;
+    const X=d=> pl + (n-d)*U + U/2; const lim=Math.max(...ch.map(r=>Math.abs(r.chg)))*1.18||1; const Y=v=> pt + (lim-v)/(2*lim)*ih; const bw=U*.56;
+    let g=`<line x1="${pl}" x2="${W-pr}" y1="${Y(0)}" y2="${Y(0)}" stroke="#CBD7BA"/>`;
+    const bars=ch.map(r=>{ const y0=Y(0), y1=Y(r.chg); const c=r.chg>=0?'#1FA16B':'#D0453A'; const ty=r.chg>=0? y1-6 : y1+14;
+      return `<rect x="${X(r.day)-bw/2}" y="${Math.min(y0,y1)}" width="${bw}" height="${Math.max(1.5,Math.abs(y1-y0))}" rx="2" fill="${c}"/>`+
+        `<text x="${X(r.day)}" y="${ty}" text-anchor="middle" font-size="10" font-weight="700" fill="${c}">${r.chg>0?'+':''}${lblK(r.chg)}</text>`; }).join('');
+    let xt=''; for(let d=1; d<=n; d++) xt+=`<text x="${X(d)}" y="${H-10}" fill="${rows[d-1].chg!=null?'#647563':'#B9C6A8'}" font-size="10.5" text-anchor="middle">${d}</text>`;
+    const sc=chartFrame(box,W,H,g+bars+xt,'التغير اليومي'); scrollToX(sc,X(ch[ch.length-1].day));
+  }
+  function openDaySheet(r){
+    const amt=el('input',{class:'amount',id:'eAmt',inputmode:'decimal',autocomplete:'off',value:fmt(r.total,2)});
+    const save=el('button',{class:'btn gold',text:'حفظ التعديل'}), del=el('button',{class:'btn danger',text:'حذف هذا اليوم'}), cb=el('div');
+    save.onclick=async()=>{ const v=parseNum(amt.value); if(isNaN(v)){toast('اكتب الإجمالي بالأرقام');return;} save.disabled=true;
+      if(await write(()=>st.db.doc('daily/'+r.key).set({date:r.key,total:Math.round(v*100)/100}))){ closeSheet(); toast('حُفظ التعديل'); } else save.disabled=false; };
+    del.onclick=()=>{ cb.innerHTML=''; const yes=el('button',{class:'btn danger',text:'نعم، احذف'}), no=el('button',{class:'btn ghost',text:'تراجع'});
+      yes.onclick=async()=>{ yes.disabled=true; if(await write(()=>st.db.doc('daily/'+r.key).delete())){ closeSheet(); toast('حُذف اليوم'); } }; no.onclick=()=>cb.innerHTML='';
+      cb.append(el('div',{class:'confirm'},[el('span',{text:'سيُحذف رصيد يوم '+dmy(r.key)+'.'}),el('div',{class:'row'},[no,yes])])); };
+    sheet('تعديل رصيد '+dmy(r.key)+' — '+DAYS[fromIso(r.key).getDay()],[el('div',{class:'field'},[el('label',{for:'eAmt',text:'إجمالي الأرصدة (ر.س)'}),amt]),save,del,cb,el('button',{class:'btn ghost',text:'إغلاق',onclick:closeSheet})]);
+    setTimeout(()=>{amt.focus();amt.select();},60);
+  }
+  $('#exportCsv').onclick=async()=>{
+    const {rows}=monthData(); let csv='﻿التاريخ,يوم الأسبوع,إجمالي الأرصدة,التغير عن اليوم السابق\n';
+    rows.filter(r=>r.total!=null).forEach(r=>csv+=`${dmy(r.key)},${DAYS[fromIso(r.key).getDay()]},${r.total},${r.chg??''}\n`);
+    try{ await st.dl.save({filename:'إجمالي-الأرصدة-'+st.month+'.csv',data:csv}); }catch(e){ if(e&&e.code!=='declined') toast('تعذّر التنزيل هنا'); }
+  };
+
+  // ---------- reports ----------
+  st.reports=[]; let repType='daily';
+  function monthList(){ const set=new Set(Object.keys(st.daily).map(k=>k.slice(0,7))); set.add(todayIso().slice(0,7)); return [...set].sort().reverse(); }
+  function fillMonths(){ const sel=$('#rMonth'); const cur=sel.value||st.month||todayIso().slice(0,7); sel.innerHTML='';
+    monthList().forEach(m=>{ const [y,mm]=m.split('-').map(Number); sel.append(el('option',{value:m,text:MONTHS[mm-1]+' '+y})); }); sel.value=monthList().includes(cur)?cur:monthList()[0];
+    if(!$('#rDay').value){ const ks=Object.keys(st.daily).sort(); $('#rDay').value= ks.length? ks[ks.length-1] : todayIso(); } }
+  function setRepType(t){ repType=t; $('#rtD').setAttribute('aria-pressed',t==='daily'); $('#rtM').setAttribute('aria-pressed',t==='monthly'); $('#rtT').setAttribute('aria-pressed',t==='trend');
+    $('#fDay').hidden=t==='monthly'; $('#fMonth').hidden=t!=='monthly'; $('#fPer').hidden=t!=='trend'; $('#fDay').querySelector('label').textContent=t==='trend'?'آخر يوم في التحليل':'يوم التقرير';
+    $('#repHint').textContent= t==='trend'? 'يشمل: خط اتجاه إجمالي السيولة، والنطاق الطبيعي (±1σ) والواسع (±2σ)، والمتوسط المتحرك 7 أيام، والتوقع مع نطاق ثقة 90%، وموقع الرصيد الحالي داخل النطاق، ومستويات الدعم والمقاومة، ومتوسط التغير حسب يوم الأسبوع، وقراءة مكتوبة للمسار.' : t==='daily'? 'يشمل: إجمالي أرصدة اليوم والتغير عن اليوم السابق، ومقارنته بمتوسط الشهر، وأرصدة الحسابات، ومخططات وحركة كل أيام الشهر من أوله حتى يوم التقرير.' : 'يشمل: أرصدة الحسابات، وإجمالي الأرصدة لكل أيام الشهر مع المخططات، وأعلى وأدنى رصيد والمتوسط.'; }
+  $('#rtD').onclick=()=>setRepType('daily'); $('#rtM').onclick=()=>setRepType('monthly'); $('#rtT').onclick=()=>setRepType('trend');
+
+  const addDays=(k,n)=>{ const d=fromIso(k); d.setDate(d.getDate()+n); return iso(d); };
+  function snapAccounts(){ return [...st.accounts].sort((a,b)=>(a.order??99)-(b.order??99)).map((a,i)=>({name:a.name,balance:Number(a.balance)||0,kind:a.kind||'bank',color:a.color||PAL[i%PAL.length]})); }
+  $('#mkRep').onclick=async()=>{
+    if(!st.accounts.length && !Object.keys(st.daily).length){ toast('لا توجد بيانات لإنشاء تقرير'); return; }
+    const now=new Date(); const base={createdAt:now.toISOString(), createdLabel:dmy(iso(now))+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0'),
+      balanceDate:st.meta.balanceDate||'', note:$('#rNote').value.trim(), accounts:snapAccounts()};
+    let rep;
+    if(repType==='trend'){
+      const day=$('#rDay').value; if(!day){ toast('اختر آخر يوم في التحليل'); return; } const per=$('#rPer').value;
+      const from= per==='mtd'? day.slice(0,7)+'-01' : addDays(day,-(Number(per)-1));
+      const daily=Object.values(st.daily).filter(d=>d.date>=from && d.date<=day).map(d=>({date:d.date,total:Number(d.total)})).sort((a,b)=>a.date<b.date?-1:1);
+      if(daily.length<5){ toast('يحتاج التقرير 5 أيام مسجلة على الأقل في الفترة'); return; }
+      rep={...base,type:'trend',day,month:day.slice(0,7),from,period:per,title:'تقرير نطاق مسار السيولة — حتى '+dmy(day),daily};
+    } else if(repType==='daily'){
+      const day=$('#rDay').value; if(!day){ toast('اختر يوم التقرير'); return; }
+      const month=day.slice(0,7); const from=addDays(month+'-01',-1);
+      const daily=Object.values(st.daily).filter(d=>d.date>=from && d.date<=day).map(d=>({date:d.date,total:Number(d.total)})).sort((a,b)=>a.date<b.date?-1:1);
+      const mvals=Object.values(st.daily).filter(d=>d.date.startsWith(month) && d.date<=day).map(d=>Number(d.total));
+      rep={...base,type:'daily',day,month,title:'التقرير اليومي — '+DAYS[fromIso(day).getDay()]+' '+dmy(day),daily,
+        monthAvg: mvals.length? mvals.reduce((t,v)=>t+v,0)/mvals.length : null, monthMax: mvals.length?Math.max(...mvals):null, monthMin: mvals.length?Math.min(...mvals):null, monthCount:mvals.length};
+    } else {
+      const month=$('#rMonth').value; const [y,m]=month.split('-').map(Number);
+      const daily=Object.values(st.daily).filter(d=>d.date.startsWith(month)).map(d=>({date:d.date,total:Number(d.total)})).sort((a,b)=>a.date<b.date?-1:1);
+      const prevKey=iso(new Date(y,m-1,0));
+      rep={...base,type:'monthly',month,title:'التقرير الشهري — '+MONTHS[m-1]+' '+y,daily,prevTotal: st.daily[prevKey]? Number(st.daily[prevKey].total): null};
+    }
+    $('#mkRep').disabled=true; const ok=await write(()=>st.db.collection('reports').add(rep)); $('#mkRep').disabled=false;
+    if(ok){ $('#rNote').value=''; toast('حُفظ التقرير'); }
+  };
+
+  // ---- shared stats ----
+  function repRows(rep){ const [y,m]=rep.month.split('-').map(Number); const n=new Date(y,m,0).getDate(); const map={}; rep.daily.forEach(d=>map[d.date]=d.total);
+    const rows=[]; for(let d=1; d<=n; d++){ const k=rep.month+'-'+String(d).padStart(2,'0'); const pk=d>1? rep.month+'-'+String(d-1).padStart(2,'0'):null;
+      const t=map[k]; const pv=pk!=null?map[pk]:(rep.prevTotal??undefined); rows.push({day:d,lab:String(d),key:k,total:t??null,chg:(t!=null&&pv!=null)?t-pv:null}); } return {y,m,n,rows}; }
+  function weekRows(rep){ const map={}; Object.values(st.daily).forEach(d=>{ if(d.date<=rep.day && d.date>=addDays(rep.month+'-01',-1)) map[d.date]=Number(d.total); });
+    rep.daily.forEach(d=>map[d.date]=d.total); const rows=[]; const last=Number(rep.day.slice(8));
+    for(let i=1;i<=last;i++){ const k=rep.month+'-'+String(i).padStart(2,'0'), pk=addDays(k,-1); const t=map[k], pv=map[pk];
+      rows.push({key:k,day:i,lab:String(i),wlab:DAYS[fromIso(k).getDay()]+' '+i,total:t??null,chg:(t!=null&&pv!=null)?t-pv:null}); } return rows; }
+  function accStats(rep){ const tot=rep.accounts.reduce((t,a)=>t+(Number(a.balance)||0),0); const banks=rep.accounts.filter(a=>a.kind!=='cash').reduce((t,a)=>t+(Number(a.balance)||0),0); return {tot,banks,cash:tot-banks}; }
+  function repStats(rep){ const a=accStats(rep);
+    if(rep.type==='daily'){ const rows=weekRows(rep); const today=rows[rows.length-1]; const has=rows.filter(r=>r.total!=null);
+      return {...a,rows,today,has,ups:rows.filter(r=>r.chg>0).length,dns:rows.filter(r=>r.chg<0).length,
+        vsAvg:(today.total!=null&&rep.monthAvg)? today.total/rep.monthAvg-1 : null}; }
+    const {rows,n,y,m}=repRows(rep); const has=rows.filter(r=>r.total!=null); const last=has[has.length-1];
+    const mx=has.length?has.reduce((p,q)=>q.total>p.total?q:p):null, mn=has.length?has.reduce((p,q)=>q.total<p.total?q:p):null;
+    return {...a,rows,n,y,m,has,last,mx,mn,avg:has.length?has.reduce((t,r)=>t+r.total,0)/has.length:null,ups:rows.filter(r=>r.chg>0).length,dns:rows.filter(r=>r.chg<0).length}; }
+
+  function renderReports(){
+    const box=$('#reps'); box.innerHTML=''; const list=[...st.reports].sort((a,b)=>a.createdAt<b.createdAt?1:-1);
+    $('#repCount').textContent= list.length? list.length+' تقرير':'';
+    if(!list.length){ box.append(el('div',{class:'empty',text:'لا توجد تقارير محفوظة بعد — أنشئ أول تقرير'})); return; }
+    list.forEach(r=>{ const trend=r.type==='trend'; const s=trend?null:repStats(r); const ts=trend?trendStats(r):null; const cb=el('div'); const daily=r.type==='daily';
+      const mainV= trend? (ts.last?ts.last.y:null) : daily? (s.today.total!=null? s.today.total : s.tot) : s.tot;
+      const card=el('div',{class:'rep'},[
+        el('div',{class:'hd'},[ el('div',{},[el('span',{class:'badge '+(trend?'bt':daily?'bd':'bm'),text:trend?'اتجاه السيولة':daily?'يومي':'شهري'}),el('div',{class:'tt',text:r.title}),el('div',{class:'mt',text:'أُنشئ '+r.createdLabel+(r.note?' • '+r.note:'')})]),
+          el('div',{},[el('div',{class:'tv num',text:fmt(mainV)}),el('div',{class:'mt',style:'text-align:left',text:trend?(ts.dir?'آخر رصيد • مسار '+ts.dir:'آخر رصيد'):daily&&s.today.total!=null?'إجمالي اليوم':'إجمالي الحسابات'})]) ]),
+        el('div',{class:'acts'},[ el('button',{class:'pr',type:'button',text:'عرض',onclick:()=>previewRep(r)}), el('button',{type:'button',text:'صورة',onclick:()=>savePng(r)}),
+          el('button',{type:'button',text:'PDF',onclick:()=>savePdf(r)}), el('button',{type:'button',text:'صفحة ويب',onclick:()=>saveHtml(r)}) ]),
+        el('button',{class:'linkbtn',type:'button',style:'align-self:flex-start;color:#C24A33',text:'حذف التقرير',onclick:()=>{ cb.innerHTML='';
+          const yes=el('button',{class:'btn danger',text:'نعم، احذف'}), no=el('button',{class:'btn ghost',text:'تراجع'});
+          yes.onclick=async()=>{ yes.disabled=true; if(await write(()=>st.db.doc('reports/'+r.id).delete())) toast('حُذف التقرير'); }; no.onclick=()=>cb.innerHTML='';
+          cb.append(el('div',{class:'confirm'},[el('span',{text:'سيُحذف "'+r.title+'" نهائياً.'}),el('div',{class:'row'},[no,yes])])); }}), cb ]);
+      box.append(card); });
+  }
+
+  // ---- canvas ----
+  async function drawRep(r){
+    if(r.type==='trend') return drawTrend(r);
+    try{ await document.fonts.ready; await document.fonts.load('600 20px "Readex Pro"'); await document.fonts.load('400 20px "IBM Plex Sans Arabic"'); }catch(e){}
+    const s=repStats(r); const daily=r.type==='daily'; const W=1080, P=56; const accH=64*r.accounts.length+70;
+    const H= 190 + 190 + 80 + accH + 90 + (daily?120:0) + 480 + 380 + (r.note?90:0) + 80;
+    const c=document.createElement('canvas'); c.width=W*2; c.height=H*2; const x=c.getContext('2d'); x.scale(2,2);
+    const FA='"IBM Plex Sans Arabic", Tahoma, sans-serif', FD='"Readex Pro", "IBM Plex Sans Arabic", Tahoma, sans-serif';
+    const T=(t,px,py,{size=20,w=400,col='#1E3326',al='right',f=FA,dir='rtl'}={})=>{ x.font=`${w} ${size}px ${f}`; x.fillStyle=col; x.textAlign=al; x.direction=dir; x.fillText(t,px,py); };
+    const N=(t,px,py,o={})=>T(t,px,py,{f:FD,dir:'ltr',...o});
+    const NS=(t,px,py,o={})=>{ x.save(); x.lineWidth=5; x.strokeStyle='#FFFFFF'; x.lineJoin='round'; x.font=`${o.w||600} ${o.size||13}px ${FD}`; x.textAlign=o.al||'center'; x.direction='ltr'; x.strokeText(t,px,py); x.fillStyle=o.col||'#1E3326'; x.fillText(t,px,py); x.restore(); };
+    const NR=(t,px,py,o={})=>{ x.save(); x.translate(px,py); x.rotate(-Math.PI/2); x.lineWidth=5; x.strokeStyle='#FFFFFF'; x.lineJoin='round'; x.font=`${o.w||600} ${o.size||13}px ${FD}`; x.textAlign='left'; x.direction='ltr'; x.strokeText(t,0,4); x.fillStyle=o.col||'#1E3326'; x.fillText(t,0,4); x.restore(); };
+    const rr=(px,py,w,h,rad,fill,stroke)=>{ x.beginPath(); x.roundRect(px,py,w,h,rad); if(fill){x.fillStyle=fill;x.fill();} if(stroke){x.strokeStyle=stroke;x.lineWidth=1;x.stroke();} };
+    x.fillStyle='#F2F6EA'; x.fillRect(0,0,W,H);
+    const g=x.createLinearGradient(W,0,0,190); g.addColorStop(0,'#EEF2E6'); g.addColorStop(1,'#FFFFFF'); x.fillStyle=g; x.fillRect(0,0,W,170); x.fillStyle='#D4AF37'; x.fillRect(0,170,W,4);
+    rr(W-P-56,50,56,56,14,'#D4AF37'); T('خ',W-P-28,89,{size:30,w:700,col:'#1A1406',al:'center',f:FD});
+    T(r.title,W-P-76,78,{size:32,w:600,f:FD});
+    T('تاريخ الأرصدة: '+(r.balanceDate?dmy(r.balanceDate):'—')+'   •   أُعد في '+r.createdLabel,W-P-76,118,{size:17,col:'#9A7B12'});
+    rr(P,34,120,32,16,daily?'rgba(63,185,138,.16)':'rgba(212,175,55,.16)'); T(daily?'تقرير يومي':'تقرير شهري',P+60,56,{size:15,w:600,col:daily?'#1FA16B':'#9A7B12',al:'center'});
+    x.fillStyle='#D4AF37'; x.fillRect(P,84,190,2);
+    T('أُعد بواسطة',P+190,110,{size:14,col:'#647563'});
+    x.save(); x.font='600 25px '+FD; x.fillStyle='#9A7B12'; x.textAlign='left'; x.direction='ltr'; x.fillText('Ameer Alarifi',P,143); x.restore();
+    let y=210; const kw=(W-2*P-3*16)/4;
+    const k= daily ? [
+      ['إجمالي أرصدة اليوم', s.today.total!=null?fmt(s.today.total):'—','#9A7B12', DAYS[fromIso(r.day).getDay()]+' '+dmy(r.day)],
+      ['التغير عن اليوم السابق', s.today.chg!=null?(s.today.chg>0?'▲ ':s.today.chg<0?'▼ ':'● ')+fmt(Math.abs(s.today.chg)):'—', s.today.chg>0?'#1FA16B':s.today.chg<0?'#D0453A':'#1E3326', s.today.chg!=null&&s.today.total-s.today.chg? ((s.today.chg/(s.today.total-s.today.chg)*100)>0?'+':'')+(s.today.chg/(s.today.total-s.today.chg)*100).toFixed(2)+'%':'لا توجد مقارنة'],
+      ['مقارنة بمتوسط الشهر', s.vsAvg!=null? (s.vsAvg>0?'+':'')+(s.vsAvg*100).toFixed(1)+'%':'—', s.vsAvg>0?'#1FA16B':s.vsAvg<0?'#D0453A':'#1E3326', r.monthAvg?'المتوسط '+fmt(r.monthAvg):''],
+      ['إجمالي الحسابات', fmt(s.tot),'#1E3326','البنوك '+fmt(s.banks)] ] : [
+      ['إجمالي الحسابات',fmt(s.tot),'#9A7B12','ر.س'],['آخر رصيد يومي',s.last?fmt(s.last.total):'—','#1E3326',s.last?'يوم '+s.last.day:''],
+      ['أعلى رصيد بالشهر',s.mx?fmt(s.mx.total):'—','#1FA16B',s.mx?'يوم '+s.mx.day:''],['أدنى رصيد بالشهر',s.mn?fmt(s.mn.total):'—','#D0453A',s.mn?'يوم '+s.mn.day:''] ];
+    k.forEach((kk,i)=>{ const px=W-P-(i+1)*kw-i*16; rr(px,y,kw,150,16,'#FFFFFF','#DCE5CF'); x.fillStyle='#D4AF37'; x.fillRect(px+16,y,kw-32,3);
+      T(kk[0],px+kw-20,y+42,{size:16,col:'#647563'}); N(kk[1],px+kw-20,y+92,{size:28,w:600,col:kk[2],al:'right'}); T(kk[3],px+kw-20,y+126,{size:14,col:'#869684'}); });
+    y+=190;
+    if(daily){ rr(P,y,W-2*P,96,16,'#FFFFFF','#DCE5CF');
+      const it=[['أعلى رصيد بالشهر حتى اليوم',r.monthMax!=null?fmt(r.monthMax):'—','#1FA16B'],['أدنى رصيد بالشهر حتى اليوم',r.monthMin!=null?fmt(r.monthMin):'—','#D0453A'],['أيام مسجلة بالشهر',String(r.monthCount||0),'#1E3326'],['منذ بداية الشهر','▲ '+s.ups+'   ▼ '+s.dns,'#9A7B12']];
+      const iw=(W-2*P)/4; it.forEach((q,i)=>{ const cx=W-P-iw*i-iw/2; T(q[0],cx,y+38,{size:14,col:'#647563',al:'center'}); N(q[1],cx,y+72,{size:21,w:600,col:q[2],al:'center'}); }); y+=120; }
+    T('أرصدة الحسابات',W-P,y+30,{size:22,w:600,f:FD}); T('البنوك '+fmt(s.banks)+'   •   الصناديق '+fmt(s.cash),P,y+30,{size:15,col:'#647563',al:'left'});
+    y+=56; rr(P,y,W-2*P,accH,16,'#FFFFFF','#DCE5CF');
+    let ry=y+18; T('الحساب',W-P-90,ry+16,{size:15,col:'#D4AF37',w:600}); T('النوع',W-P-520,ry+16,{size:15,col:'#D4AF37',w:600,al:'center'});
+    T('الرصيد (ر.س)',P+300,ry+16,{size:15,col:'#D4AF37',w:600,al:'center'}); T('الحصة',P+70,ry+16,{size:15,col:'#D4AF37',w:600,al:'center'}); ry+=34;
+    r.accounts.forEach((a,i)=>{ x.fillStyle='#DCE5CF'; x.fillRect(P+16,ry,W-2*P-32,1); rr(W-P-66,ry+14,36,36,9,a.color); N(String(i+1),W-P-48,ry+39,{size:16,w:700,col:'#1A1406',al:'center'});
+      T(a.name,W-P-90,ry+40,{size:19,w:600}); T(a.kind==='cash'?'صندوق':'بنك',W-P-520,ry+40,{size:16,col:'#647563',al:'center'});
+      N(fmt(a.balance,2),P+300,ry+40,{size:21,w:600,col:a.balance<0?'#D0453A':'#1E3326',al:'center'}); N(s.tot?(a.balance/s.tot*100).toFixed(1)+'%':'—',P+70,ry+40,{size:17,col:'#647563',al:'center'}); ry+=64; });
+    y+=accH+16; rr(P,y,W-2*P,56,14,'#D4AF37'); T('إجمالي الأرصدة',W-P-24,y+37,{size:21,w:700,col:'#1A1406',f:FD}); N(fmt(s.tot,2),P+24,y+38,{size:24,w:700,col:'#1A1406',al:'left'});
+    y+=90;
+    // ---- line chart with labels ----
+    const rows=s.rows; const cnt=rows.length; const rot=cnt>10;
+    rr(P,y,W-2*P,450,16,'#FFFFFF','#DCE5CF');
+    T(daily?'حركة إجمالي الأرصدة — من 1 حتى '+Number(r.day.slice(8))+' '+MONTHS[Number(r.month.slice(5))-1]:'حركة إجمالي الأرصدة اليومية — '+MONTHS[s.m-1]+' '+s.y,W-P-24,y+42,{size:21,w:600,f:FD});
+    if(!daily) T(s.avg!=null?'المتوسط '+fmt(s.avg)+'  •  '+s.has.length+' يوم مسجل':'',P+24,y+42,{size:15,col:'#647563',al:'left'});
+    const cx0=P+40, cx1=W-P-40, cy0=y+(rot?150:110), cy1=y+400; const step=(cx1-cx0)/cnt; const X=i=>cx1-step*(i+.5);
+    const hs=rows.filter(q=>q.total!=null);
+    if(hs.length){ const v=hs.map(q=>q.total); let lo=Math.min(...v),hi=Math.max(...v); if(lo===hi){lo*=.9;hi*=1.1;} const pd=(hi-lo)*.1; lo-=pd; hi+=pd; const Y=vv=>cy0+(hi-vv)/(hi-lo)*(cy1-cy0);
+      x.setLineDash([4,6]); x.strokeStyle='#EEF2E6'; x.lineWidth=1; for(let i=0;i<=4;i++){ const yy=cy0+(cy1-cy0)*i/4; x.beginPath(); x.moveTo(cx0,yy); x.lineTo(cx1,yy); x.stroke(); } x.setLineDash([]);
+      let seg=[]; const segs=[]; rows.forEach((q,i)=>{ if(q.total!=null) seg.push([i,q]); else if(seg.length){segs.push(seg);seg=[];} }); if(seg.length) segs.push(seg);
+      segs.forEach(sg=>{ if(sg.length>1){ const gr=x.createLinearGradient(0,cy0,0,cy1); gr.addColorStop(0,'rgba(212,175,55,.30)'); gr.addColorStop(1,'rgba(212,175,55,0)');
+          x.beginPath(); x.moveTo(X(sg[0][0]),cy1); sg.forEach(([i,q])=>x.lineTo(X(i),Y(q.total))); x.lineTo(X(sg[sg.length-1][0]),cy1); x.closePath(); x.fillStyle=gr; x.fill(); }
+        x.beginPath(); sg.forEach(([i,q],j)=>j?x.lineTo(X(i),Y(q.total)):x.moveTo(X(i),Y(q.total))); x.strokeStyle='#D4AF37'; x.lineWidth=3.5; x.lineJoin='round'; x.stroke(); });
+      const lastI=rows.map(q=>q.total!=null).lastIndexOf(true);
+      rows.forEach((q,i)=>{ if(q.total==null) return; x.beginPath(); x.arc(X(i),Y(q.total),i===lastI?7:4.5,0,7); x.fillStyle=i===lastI?'#9A7B12':'#F2F6EA'; x.fill(); x.strokeStyle='#9A7B12'; x.lineWidth=2; x.stroke();
+        const t=(daily&&!rot)? fmt(q.total) : lblK(q.total); if(rot) NR(t,X(i),Y(q.total)-14,{size:13,col:i===lastI?'#9A7B12':'#1E3326'}); else NS(t,X(i),Y(q.total)-16,{size:15,col:i===lastI?'#9A7B12':'#1E3326'}); });
+    } else T('لا توجد بيانات يومية لهذه الفترة',W/2,y+240,{size:18,col:'#647563',al:'center'});
+    rows.forEach((q,i)=>{ const wl=daily&&!rot; if(wl||i===0||(i+1)%5===0||i===cnt-1||q.total!=null) T(wl?q.wlab:String(i+1),X(i),cy1+28,{size:wl?14:12,col:q.total!=null?'#647563':'#B9C6A8',al:'center',f:wl?FA:FD,dir:wl?'rtl':'ltr'}); });
+    y+=480;
+    // ---- bars with labels ----
+    rr(P,y,W-2*P,350,16,'#FFFFFF','#DCE5CF'); T(daily?'التغير اليومي — منذ بداية الشهر':'التغير اليومي في الأرصدة',W-P-24,y+42,{size:21,w:600,f:FD});
+    T('▲ ارتفاع '+s.ups+'   •   ▼ انخفاض '+s.dns,P+24,y+42,{size:15,col:'#647563',al:'left'});
+    const chs=rows.map((q,i)=>[i,q]).filter(([i,q])=>q.chg!=null); const by0=y+(rot?120:90), by1=y+300;
+    if(chs.length){ const lim=Math.max(...chs.map(([i,q])=>Math.abs(q.chg)))*1.15||1; const Y=vv=>by0+(lim-vv)/(2*lim)*(by1-by0); const bw=Math.max(8,step*.55);
+      x.strokeStyle='#CBD7BA'; x.lineWidth=1; x.beginPath(); x.moveTo(cx0,Y(0)); x.lineTo(cx1,Y(0)); x.stroke();
+      chs.forEach(([i,q])=>{ const a=Y(0), b=Y(q.chg); const col=q.chg>=0?'#1FA16B':'#D0453A'; rr(X(i)-bw/2,Math.min(a,b),bw,Math.max(2,Math.abs(b-a)),3,col);
+        const t=(q.chg>0?'+':'')+((daily&&!rot)?fmt(q.chg):lblK(q.chg));
+        if(rot){ if(q.chg>=0) NR(t,X(i),b-8,{size:12,col}); else { x.save(); x.translate(X(i),b+8); x.rotate(-Math.PI/2); x.font=`600 12px ${FD}`; x.textAlign='right'; x.direction='ltr'; x.lineWidth=5; x.strokeStyle='#FFFFFF'; x.strokeText(t,0,4); x.fillStyle=col; x.fillText(t,0,4); x.restore(); } }
+        else NS(t,X(i),q.chg>=0?b-10:b+22,{size:14,col}); });
+    } else T('يظهر التغير بعد تسجيل يومين متتاليين',W/2,y+190,{size:17,col:'#647563',al:'center'});
+    y+=380;
+    if(r.note){ rr(P,y,W-2*P,70,14,'rgba(212,175,55,.10)','#D4AF37'); T('ملاحظة: '+r.note,W-P-24,y+43,{size:18,col:'#9A7B12'}); y+=90; }
+    x.fillStyle='#EEF2E6'; x.fillRect(0,H-56,W,56); T('خزينة الأرصدة  •  سري — للاستخدام الداخلي',W-P,H-22,{size:14,col:'#647563'}); T('أُعد في '+r.createdLabel,P,H-22,{size:14,col:'#647563',al:'left'});
+    return c;
+  }
+  function smoothPath(ctx,P){ const n=P.length; if(!n) return; ctx.moveTo(P[0][0],P[0][1]); if(n===2){ ctx.lineTo(P[1][0],P[1][1]); return; } if(n<2) return;
+    const dx=[],m=[]; for(let i=0;i<n-1;i++){ dx.push(P[i+1][0]-P[i][0]); m.push(dx[i]?(P[i+1][1]-P[i][1])/dx[i]:0); }
+    const t=[m[0]]; for(let i=1;i<n-1;i++){ t.push(m[i-1]*m[i]<=0?0:(3*(dx[i-1]+dx[i]))/((2*dx[i]+dx[i-1])/m[i-1]+(dx[i]+2*dx[i-1])/m[i])); } t.push(m[n-2]);
+    for(let i=0;i<n-1;i++){ const h=dx[i]/3; ctx.bezierCurveTo(P[i][0]+h,P[i][1]+t[i]*h,P[i+1][0]-h,P[i+1][1]-t[i+1]*h,P[i+1][0],P[i+1][1]); } }
+  // ---------- liquidity trend band ----------
+  function trendStats(r){
+    const pts=(r.daily||[]).filter(d=>d.date>=r.from&&d.date<=r.day).map(d=>({key:d.date,y:Number(d.total),x:Math.round((fromIso(d.date)-fromIso(r.from))/864e5)})).sort((a,b)=>a.x-b.x);
+    const n=pts.length; if(n<3) return {n,pts,last:pts[n-1]||null};
+    const xb=pts.reduce((t,p)=>t+p.x,0)/n, yb=pts.reduce((t,p)=>t+p.y,0)/n; let Sxx=0,Sxy=0,SST=0; pts.forEach(p=>{Sxx+=(p.x-xb)**2;Sxy+=(p.x-xb)*(p.y-yb);SST+=(p.y-yb)**2;});
+    const b=Sxx?Sxy/Sxx:0, a=yb-b*xb, tr=x=>a+b*x; let SSE=0; pts.forEach(p=>{p.t=tr(p.x); p.res=p.y-p.t; SSE+=p.res**2;});
+    const s=Math.sqrt(SSE/Math.max(1,n-2))||1; const R2=SST?Math.max(0,1-SSE/SST):0; const seb=Sxx?s/Math.sqrt(Sxx):Infinity; const tstat=b/seb;
+    pts.forEach((p,i)=>{ p.z=p.res/s; const w=pts.slice(Math.max(0,i-6),i+1); p.ma=w.length>=3?w.reduce((t,q)=>t+q.y,0)/w.length:null; const pv=pts[i-1]; p.chg=(pv&&p.x-pv.x===1)?p.y-pv.y:null; });
+    const last=pts[n-1]; const [ly,lm]=r.day.split('-').map(Number);
+    const endKey=r.period==='mtd'?iso(new Date(ly,lm,0)):addDays(r.day,7); const xEnd=Math.max(last.x,Math.round((fromIso(endKey)-fromIso(r.from))/864e5));
+    const PI=x=>1.645*s*Math.sqrt(1+1/n+(Sxx?(x-xb)**2/Sxx:0));
+    const mPct=yb?b*30/yb:0; const dir=(Math.abs(tstat)<2||Math.abs(mPct)<0.02)?'عرضي':b>0?'صاعد':'هابط';
+    const z=last.z; const pos=z>2?'أعلى من النطاق الواسع':z>1?'أعلى من النطاق الطبيعي':z<-2?'أدنى من النطاق الواسع':z<-1?'أدنى من النطاق الطبيعي':'ضمن النطاق الطبيعي';
+    const ys=pts.map(p=>p.y).sort((u,v)=>u-v); const q=f=>{ const i=(ys.length-1)*f, lo=Math.floor(i), hi=Math.ceil(i); return ys[lo]+(ys[hi]-ys[lo])*(i-lo); };
+    const chs=pts.filter(p=>p.chg!=null); const avgChg=chs.length?chs.reduce((t,p)=>t+p.chg,0)/chs.length:null; const sdChg=chs.length>1?Math.sqrt(chs.reduce((t,p)=>t+(p.chg-avgChg)**2,0)/(chs.length-1)):null;
+    const wd=[0,1,2,3,4,5,6].map(w=>{ const a_=chs.filter(p=>fromIso(p.key).getDay()===w); return {w,n:a_.length,avg:a_.length?a_.reduce((t,p)=>t+p.chg,0)/a_.length:null}; });
+    const mx=pts.reduce((u,v)=>v.y>u.y?v:u), mn=pts.reduce((u,v)=>v.y<u.y?v:u);
+    const upB=chs.length?chs.reduce((u,v)=>v.chg>u.chg?v:u):null, dnB=chs.length?chs.reduce((u,v)=>v.chg<u.chg?v:u):null;
+    return {n,pts,a,b,tr,s,R2,tstat,xb,Sxx,last,xEnd,endKey,PI,mPct,dir,z,pos,p10:q(.1),p90:q(.9),mx,mn,avgChg,sdChg,wd,upB,dnB,mean:yb,
+      proj:tr(xEnd),projLo:tr(xEnd)-PI(xEnd),projHi:tr(xEnd)+PI(xEnd),above:pts.filter(p=>p.z>1).length,below:pts.filter(p=>p.z<-1).length}; }
+  const sgnF=v=>(v>0?'+':v<0?'−':'')+fmt(Math.abs(v));
+  function trendInsights(r,S){ const out=[]; if(S.n<3) return out; const L=S.last, tl=S.tr(L.x);
+    if(S.dir==='عرضي') out.push({tone:'flat',t:`المسار عرضي: لا يوجد اتجاه واضح خلال الفترة، والرصيد يتحرك حول ${fmt(S.mean)} ر.س (الميل ${sgnF(S.b)} يومياً فقط).`});
+    else out.push({tone:S.dir==='صاعد'?'up':'down',t:`المسار ${S.dir}: ${S.b<0?'ينخفض':'يرتفع'} إجمالي السيولة بمتوسط ${fmt(Math.abs(S.b))} ر.س يومياً، أي نحو ${fmt(Math.abs(S.b*30))} ر.س خلال 30 يوماً (${(S.mPct*100).toFixed(1)}% من متوسط الرصيد).`});
+    out.push({tone:S.z>1?'up':S.z<-1?'down':'info',t:`آخر رصيد ${fmt(L.y)} ر.س (${dmy(L.key)}) ${S.pos}، ${L.res>=0?'فوق':'تحت'} خط الاتجاه بـ ${fmt(Math.abs(L.res))} ر.س.`});
+    out.push({tone:'info',t:`النطاق الطبيعي اليوم بين ${fmt(tl-S.s)} و${fmt(tl+S.s)} ر.س، والنطاق الواسع بين ${fmt(tl-2*S.s)} و${fmt(tl+2*S.s)} ر.س.`});
+    out.push({tone:S.proj>=L.y?'up':'down',t:`إذا استمر المسار نفسه: الرصيد المتوقع في ${dmy(S.endKey)} نحو ${fmt(S.proj)} ر.س (بين ${fmt(S.projLo)} و${fmt(S.projHi)} بثقة 90%).`});
+    const w=S.wd.filter(o=>o.n>=2&&o.avg!=null); if(w.length>=3){ const lo=w.reduce((u,v)=>v.avg<u.avg?v:u), hi=w.reduce((u,v)=>v.avg>u.avg?v:u);
+      out.push({tone:'info',t:`أكبر سحب للسيولة يكون يوم ${DAYS[lo.w]} بمتوسط ${sgnF(lo.avg)} ر.س، وأكبر إضافة يوم ${DAYS[hi.w]} بمتوسط ${sgnF(hi.avg)} ر.س.`}); }
+    if(S.sdChg!=null) out.push({tone:'info',t:`متوسط التغير اليومي ${sgnF(S.avgChg)} ر.س والتذبذب المعتاد ±${fmt(S.sdChg)}؛ أكبر ارتفاع ${sgnF(S.upB.chg)} يوم ${dmy(S.upB.key)} وأكبر انخفاض ${sgnF(S.dnB.chg)} يوم ${dmy(S.dnB.key)}.`});
+    out.push({tone:(S.above+S.below)>S.n*.4?'flat':'info',t:`خرج الرصيد عن النطاق الطبيعي ${S.above} ${S.above===1?'مرة':'مرات'} للأعلى و${S.below} ${S.below===1?'مرة':'مرات'} للأسفل من أصل ${S.n} يوماً؛ ومستوى الدعم ${fmt(S.p10)} والمقاومة ${fmt(S.p90)} ر.س.`});
+    return out; }
+  async function drawTrend(r){
+    try{ await document.fonts.ready; await document.fonts.load('600 20px "Readex Pro"'); await document.fonts.load('400 20px "IBM Plex Sans Arabic"'); }catch(e){}
+    const S=trendStats(r); const W=1080, P=56; const FA='"IBM Plex Sans Arabic", Tahoma, sans-serif', FD='"Readex Pro", "IBM Plex Sans Arabic", Tahoma, sans-serif';
+    const mc=document.createElement('canvas').getContext('2d');
+    const wrap=(t,size,maxW)=>{ mc.font=`400 ${size}px ${FA}`; mc.direction='rtl'; const ws=String(t).split(' '); const out=[]; let cur=''; ws.forEach(w=>{ const tt=cur?cur+' '+w:w; if(mc.measureText(tt).width>maxW&&cur){out.push(cur);cur=w;} else cur=tt; }); if(cur) out.push(cur); return out; };
+    const ins=trendInsights(r,S); const insL=ins.map(it=>wrap(it.t,17,W-2*P-90)); const insH=insL.reduce((t,l)=>t+l.length*31+18,0)+36;
+    const tbl=S.pts.slice(-31); const tblH=58+50+tbl.length*40+30;
+    const H=190+190+720+140+(58+310)+(58+insH+20)+(58+330)+tblH+(r.note?90:0)+90;
+    const c=document.createElement('canvas'); c.width=W*2; c.height=H*2; const x=c.getContext('2d'); x.scale(2,2);
+    const T=(t,px,py,{size=20,w=400,col='#1E3326',al='right',f=FA,dir='rtl'}={})=>{ x.font=`${w} ${size}px ${f}`; x.fillStyle=col; x.textAlign=al; x.direction=dir; x.fillText(t,px,py); };
+    const N=(t,px,py,o={})=>T(t,px,py,{f:FD,dir:'ltr',...o});
+    const NS=(t,px,py,o={})=>{ x.save(); x.lineWidth=5; x.strokeStyle=o.bg||'#FFFFFF'; x.lineJoin='round'; x.font=`${o.w||600} ${o.size||13}px ${FD}`; x.textAlign=o.al||'center'; x.direction='ltr'; x.strokeText(t,px,py); x.fillStyle=o.col||'#1E3326'; x.fillText(t,px,py); x.restore(); };
+    const NR=(t,px,py,o={})=>{ x.save(); x.translate(px,py); x.rotate(-Math.PI/2); x.lineWidth=5; x.strokeStyle='#FFFFFF'; x.lineJoin='round'; x.font=`${o.w||600} ${o.size||13}px ${FD}`; x.textAlign='left'; x.direction='ltr'; x.strokeText(t,0,4); x.fillStyle=o.col||'#1E3326'; x.fillText(t,0,4); x.restore(); };
+    const rr=(px,py,w,h,rad,fill,stroke)=>{ x.beginPath(); x.roundRect(px,py,w,h,rad); if(fill){x.fillStyle=fill;x.fill();} if(stroke){x.strokeStyle=stroke;x.lineWidth=1;x.stroke();} };
+    const line=(x1,y1,x2,y2,col,w=1,dash)=>{ x.save(); x.strokeStyle=col; x.lineWidth=w; if(dash) x.setLineDash(dash); x.beginPath(); x.moveTo(x1,y1); x.lineTo(x2,y2); x.stroke(); x.restore(); };
+    const secT=(t,y,sub)=>{ rr(W-P-6,y+14,6,28,3,'#5B8FD0'); T(t,W-P-18,y+37,{size:22,w:600,f:FD}); if(sub) T(sub,P,y+37,{size:14.5,col:'#647563',al:'left'}); };
+    const dirCol=S.dir==='صاعد'?'#1FA16B':S.dir==='هابط'?'#D0453A':'#C98A0C'; const zCol=z=>z>1?'#1FA16B':z<-1?'#D0453A':'#1E3326';
+    x.fillStyle='#F2F6EA'; x.fillRect(0,0,W,H);
+    // header
+    const g=x.createLinearGradient(W,0,0,190); g.addColorStop(0,'#EEF2E6'); g.addColorStop(1,'#FFFFFF'); x.fillStyle=g; x.fillRect(0,0,W,170); x.fillStyle='#D4AF37'; x.fillRect(0,170,W,4);
+    rr(W-P-56,50,56,56,14,'#D4AF37'); T('خ',W-P-28,89,{size:30,w:700,col:'#1A1406',al:'center',f:FD});
+    T(r.title,W-P-76,78,{size:30,w:600,f:FD});
+    T('الفترة: '+dmy(r.from)+' — '+dmy(r.day)+'   •   '+S.n+' يوماً مسجلاً   •   أُعد في '+r.createdLabel,W-P-76,118,{size:16,col:'#9A7B12'});
+    rr(P,34,150,32,16,'rgba(91,143,208,.2)'); T('تقرير اتجاه السيولة',P+75,56,{size:15,w:600,col:'#3C6FB0',al:'center'});
+    x.fillStyle='#D4AF37'; x.fillRect(P,84,190,2); T('أُعد بواسطة',P+190,110,{size:14,col:'#647563'});
+    x.save(); x.font='600 25px '+FD; x.fillStyle='#9A7B12'; x.textAlign='left'; x.direction='ltr'; x.fillText('Ameer Alarifi',P,143); x.restore();
+    let y=210;
+    if(S.n<3){ T('لا توجد بيانات كافية لتحليل المسار',W/2,y+80,{size:20,col:'#647563',al:'center'}); return c; }
+    const L=S.last, tl=S.tr(L.x); const mtd=r.period==='mtd';
+    // KPIs
+    const kw=(W-2*P-3*16)/4;
+    const K=[['آخر رصيد',fmt(L.y),'#9A7B12',DAYS[fromIso(L.key).getDay()]+' '+dmy(L.key),0],
+      ['اتجاه المسار',(S.dir==='هابط'?'▼ ':S.dir==='صاعد'?'▲ ':'● ')+S.dir,dirCol,sgnF(S.b)+' ر.س يومياً',1],
+      ['موقع الرصيد في النطاق',(S.z>0?'+':'')+S.z.toFixed(2)+'σ',zCol(S.z),S.pos,0],
+      [mtd?'المتوقع لنهاية الشهر':'المتوقع بعد 7 أيام',fmt(S.proj),'#3C6FB0',fmt(S.projLo)+' – '+fmt(S.projHi),0]];
+    K.forEach((k,i)=>{ const px=W-P-(i+1)*kw-i*16; rr(px,y,kw,150,16,'#FFFFFF','#DCE5CF'); x.fillStyle=i===3?'#5B8FD0':'#D4AF37'; x.fillRect(px+16,y,kw-32,3);
+      T(k[0],px+kw-20,y+42,{size:16,col:'#647563'}); (k[4]?T:N)(k[1],px+kw-20,y+92,{size:28,w:600,col:k[2],al:'right',f:FD}); T(k[3],px+kw-20,y+126,{size:13.5,col:'#869684'}); });
+    y+=190;
+    // ---- main channel chart ----
+    rr(P,y,W-2*P,690,16,'#FFFFFF','#DCE5CF'); T('نطاق مسار إجمالي السيولة اليومية',W-P-24,y+44,{size:22,w:600,f:FD});
+    const lg=[['#1E3326','الرصيد الفعلي','l'],['#2A8BA8','متوسط 7 أيام','l'],['#D4AF37','خط الاتجاه','d'],['rgba(212,175,55,.45)','النطاق الطبيعي ±1σ','b'],['rgba(212,175,55,.16)','النطاق الواسع ±2σ','b'],['rgba(91,143,208,.5)','نطاق التوقع 90%','b']];
+    let lx=W-P-24, ly=y+82; lg.forEach(([cl,t,k])=>{ x.font='400 14px '+FA; const tw=x.measureText(t).width; if(lx-tw-30<P+20){ lx=W-P-24; ly+=26; }
+      if(k==='b') rr(lx-16,ly-12,16,14,3,cl); else if(k==='d') line(lx-18,ly-5,lx,ly-5,cl,3,[5,3]); else line(lx-18,ly-5,lx,ly-5,cl,3.5); T(t,lx-24,ly,{size:14,col:'#4E5F4E'}); lx-=tw+52; });
+    const cx0=P+82, cx1=W-P-30, cy0=ly+40, cy1=y+630; const X=v=>cx1-(v/S.xEnd)*(cx1-cx0);
+    const cand=[...S.pts.map(p=>p.y),S.tr(0)+2*S.s,S.tr(0)-2*S.s,tl+2*S.s,tl-2*S.s,S.projLo,S.projHi]; let lo=Math.min(...cand), hi=Math.max(...cand); const pd=(hi-lo)*.06; lo-=pd; hi+=pd; const Y=v=>cy0+(hi-v)/(hi-lo)*(cy1-cy0);
+    for(let i=0;i<=5;i++){ const vv=lo+(hi-lo)*i/5, yy=Y(vv); line(cx0,yy,cx1,yy,'#EEF2E6',1,[4,6]); N(lblK(vv),cx0-10,yy+5,{size:12.5,col:'#869684',al:'right'}); }
+    if(S.xEnd>L.x){ x.fillStyle='rgba(91,143,208,.07)'; x.fillRect(X(S.xEnd),cy0-6,X(L.x)-X(S.xEnd),cy1-cy0+6); T('التوقع',(X(S.xEnd)+X(L.x))/2,cy0+14,{size:13.5,w:600,col:'#3C6FB0',al:'center'}); }
+    const poly=(fu,fl,x0,x1,fill,stroke)=>{ const k=Math.max(2,Math.ceil((x1-x0)*2)); x.beginPath(); for(let i=0;i<=k;i++){ const v=x0+(x1-x0)*i/k; i?x.lineTo(X(v),Y(fu(v))):x.moveTo(X(v),Y(fu(v))); } for(let i=k;i>=0;i--){ const v=x0+(x1-x0)*i/k; x.lineTo(X(v),Y(fl(v))); } x.closePath(); x.fillStyle=fill; x.fill(); if(stroke){ x.save(); x.setLineDash([6,5]); x.strokeStyle=stroke; x.lineWidth=1.2; x.stroke(); x.restore(); } };
+    poly(v=>S.tr(v)+2*S.s,v=>S.tr(v)-2*S.s,0,L.x,'rgba(212,175,55,.07)');
+    poly(v=>S.tr(v)+S.s,v=>S.tr(v)-S.s,0,L.x,'rgba(212,175,55,.15)');
+    [1,-1].forEach(k=>line(X(0),Y(S.tr(0)+k*S.s),X(L.x),Y(tl+k*S.s),'rgba(212,175,55,.5)',1.2,[6,5]));
+    [2,-2].forEach(k=>line(X(0),Y(S.tr(0)+k*S.s),X(L.x),Y(tl+k*S.s),'rgba(212,175,55,.25)',1,[3,6]));
+    if(S.xEnd>L.x) poly(v=>S.tr(v)+S.PI(v),v=>S.tr(v)-S.PI(v),L.x,S.xEnd,'rgba(91,143,208,.18)','rgba(91,143,208,.65)');
+    line(X(0),Y(S.tr(0)),X(S.xEnd),Y(S.proj),'#D4AF37',2.6,[10,6]);
+    const maP=S.pts.filter(p=>p.ma!=null); if(maP.length>1){ x.save(); x.beginPath(); smoothPath(x,maP.map(p=>[X(p.x),Y(p.ma)])); x.strokeStyle='#2A8BA8'; x.lineWidth=2.6; x.lineJoin='round'; x.stroke(); x.restore(); }
+    x.save(); x.beginPath(); smoothPath(x,S.pts.map(p=>[X(p.x),Y(p.y)])); x.strokeStyle='#1E3326'; x.lineWidth=3; x.lineJoin='round'; x.stroke(); x.restore();
+    const rot=S.n>14;
+    S.pts.forEach((p,i)=>{ const isL=p===L; x.beginPath(); x.arc(X(p.x),Y(p.y),isL?7.5:5,0,7); x.fillStyle=zCol(p.z); x.fill(); x.strokeStyle='#FFFFFF'; x.lineWidth=2; x.stroke();
+      if(isL) return; const t=lblK(p.y); if(rot) NR(t,X(p.x),Y(p.y)-12,{size:12.5,col:zCol(p.z)}); else NS(t,X(p.x),Y(p.y)-14,{size:14,col:zCol(p.z)}); });
+    { const bx=X(L.x), by=Y(L.y); const t=fmt(L.y); x.font='700 15px '+FD; const tw=x.measureText(t).width+20; const above=by-cy0>60; const ry=above?by-46:by+16; rr(bx-tw/2,ry,tw,28,8,'#9A7B12'); N(t,bx,ry+19.5,{size:15,w:700,col:'#1A1406',al:'center'}); }
+    if(S.xEnd>L.x){ const ex=X(S.xEnd), ey=Y(S.proj); x.beginPath(); x.arc(ex,ey,6.5,0,7); x.fillStyle='#5B8FD0'; x.fill(); NS(lblK(S.proj),ex+10,ey-12,{size:14.5,col:'#3C6FB0',al:'left'}); NS(lblK(S.projLo)+' – '+lblK(S.projHi),ex+10,ey+22,{size:12.5,col:'#647563',al:'left',w:500}); }
+    const days=S.xEnd+1, every=days<=35?(days<=20?1:2):Math.ceil(days/18);
+    for(let v=0;v<=S.xEnd;v++){ if(v%every&&v!==S.xEnd&&v!==L.x) continue; const k=addDays(r.from,v); const has=S.pts.some(p=>p.x===v); N(String(Number(k.slice(8))),X(v),cy1+26,{size:12,col:has?'#647563':'#B9C6A8',al:'center'}); }
+    y+=720;
+    // ---- strip ----
+    rr(P,y,W-2*P,110,16,'#FFFFFF','#DCE5CF');
+    const it=[['الميل اليومي',sgnF(S.b),dirCol],['التغير خلال 30 يوماً',sgnF(S.b*30),dirCol],['قوة الاتجاه (R²)',(S.R2*100).toFixed(0)+'%','#1E3326'],['انحراف النطاق σ','±'+fmt(S.s),'#9A7B12'],['متوسط التغير اليومي',S.avgChg!=null?sgnF(S.avgChg):'—',S.avgChg>0?'#1FA16B':S.avgChg<0?'#D0453A':'#1E3326']];
+    const iw=(W-2*P)/it.length; it.forEach((q,i)=>{ const cx=W-P-iw*i-iw/2; if(i) line(W-P-iw*i,y+22,W-P-iw*i,y+88,'#DCE5CF'); T(q[0],cx,y+42,{size:14,col:'#647563',al:'center'}); N(q[1],cx,y+80,{size:21,w:600,col:q[2],al:'center'}); });
+    y+=140;
+    // ---- band gauge ----
+    secT('مستويات النطاق اليوم',y,dmy(L.key)); y+=58; rr(P,y,W-2*P,290,16,'#FFFFFF','#DCE5CF');
+    const gx0=P+50, gx1=W-P-50, gy=y+92, gh=26; const GX=zz=>gx0+(Math.max(-3,Math.min(3,zz))+3)/6*(gx1-gx0);
+    [[-3,-2,'rgba(224,101,74,.85)'],[-2,-1,'rgba(224,101,74,.4)'],[-1,1,'rgba(212,175,55,.45)'],[1,2,'rgba(63,185,138,.4)'],[2,3,'rgba(63,185,138,.85)']].forEach(([a_,b_,cl],i)=>{ x.beginPath(); x.roundRect(GX(a_)+1,gy,GX(b_)-GX(a_)-2,gh,i===0?[13,0,0,13]:i===4?[0,13,13,0]:0); x.fillStyle=cl; x.fill(); });
+    const names={'-2':'الحد الأدنى الواسع','-1':'الحد الأدنى الطبيعي','0':'خط الاتجاه','1':'الحد الأعلى الطبيعي','2':'الحد الأعلى الواسع'};
+    [-2,-1,0,1,2].forEach(k=>{ const gx=GX(k); line(gx,gy-8,gx,gy+gh+8,'#1E3326',1.5); T(names[k],gx,gy-18,{size:13.5,col:'#4E5F4E',al:'center'}); N(fmt(tl+k*S.s),gx,gy+gh+30,{size:15,w:600,col:k===0?'#9A7B12':'#1E3326',al:'center'}); });
+    T('أدنى',gx0,gy+gh+30,{size:12.5,col:'#869684',al:'left'}); T('أعلى',gx1,gy+gh+30,{size:12.5,col:'#869684',al:'right'});
+    { const mx_=GX(S.z); x.beginPath(); x.moveTo(mx_,gy+gh+4); x.lineTo(mx_-11,gy+gh+20); x.lineTo(mx_+11,gy+gh+20); x.closePath(); x.fillStyle='#FFFFFF'; x.fill(); x.beginPath(); x.moveTo(mx_,gy-4); x.lineTo(mx_-11,gy-20); x.lineTo(mx_+11,gy-20); x.closePath(); x.fill(); line(mx_,gy-4,mx_,gy+gh+4,'#FFFFFF',3);
+      const t='الرصيد الحالي '+fmt(L.y); x.font='600 14px '+FA; const tw=x.measureText(t).width+22; const bx=Math.max(P+10,Math.min(W-P-10-tw,mx_-tw/2)); rr(bx,gy+gh+44,tw,28,8,zCol(S.z)===('#1E3326')?'#1E3326':zCol(S.z)); T(t,bx+tw/2,gy+gh+63,{size:14,w:600,col:'#0B1424',al:'center'}); }
+    line(P+24,y+200,W-P-24,y+200,'#DCE5CF');
+    const lv=[['مستوى الدعم (أدنى 10%)',fmt(S.p10),'#D0453A'],['مستوى المقاومة (أعلى 10%)',fmt(S.p90),'#1FA16B'],['أدنى رصيد في الفترة',fmt(S.mn.y)+'  ('+Number(S.mn.key.slice(8))+')','#1E3326'],['أعلى رصيد في الفترة',fmt(S.mx.y)+'  ('+Number(S.mx.key.slice(8))+')','#1E3326']];
+    const lw=(W-2*P)/4; lv.forEach((q,i)=>{ const cx=W-P-lw*i-lw/2; T(q[0],cx,y+236,{size:13.5,col:'#647563',al:'center'}); N(q[1],cx,y+268,{size:18,w:600,col:q[2],al:'center'}); });
+    y+=310;
+    // ---- insights ----
+    secT('قراءة المسار',y,'مكتوبة تلقائياً من البيانات'); y+=58; rr(P,y,W-2*P,insH,16,'#FFFFFF','#DCE5CF'); let iy=y+22;
+    ins.forEach((o,i)=>{ const cl=o.tone==='up'?'#1FA16B':o.tone==='down'?'#D0453A':o.tone==='flat'?'#C98A0C':'#D4AF37'; x.beginPath(); x.arc(W-P-30,iy+13,6.5,0,7); x.fillStyle=cl; x.fill();
+      insL[i].forEach((ln,j)=>T(ln,W-P-48,iy+20+j*31,{size:17,col:o.tone==='up'?'#1F8F63':o.tone==='down'?'#C24A33':'#1E3326'})); iy+=insL[i].length*31+18; });
+    y+=insH+20;
+    // ---- weekday change ----
+    secT('متوسط التغير اليومي حسب يوم الأسبوع',y,'أين تُسحب السيولة وأين تُضاف'); y+=58; rr(P,y,W-2*P,300,16,'#FFFFFF','#DCE5CF');
+    { const wv=S.wd.map(o=>o.avg||0); const lim=Math.max(1,...wv.map(Math.abs))*1.25; const by0=y+40, by1=y+230; const Yc=v=>by0+(lim-v)/(2*lim)*(by1-by0); const u=(W-2*P-60)/7, bw=u*.5;
+      line(P+30,Yc(0),W-P-30,Yc(0),'#CBD7BA',1.2);
+      S.wd.forEach((o,i)=>{ const cx=W-P-30-u*(i+.5); T(DAYS[i],cx,y+262,{size:14.5,w:600,col:'#4E5F4E',al:'center'}); T(o.n?o.n+' أيام':'—',cx,y+284,{size:12,col:'#869684',al:'center'});
+        if(o.avg==null) return; const cl=o.avg>=0?'#1FA16B':'#D0453A'; const a_=Yc(0), b_=Yc(o.avg); rr(cx-bw/2,Math.min(a_,b_),bw,Math.max(2,Math.abs(b_-a_)),4,cl); NS(sgnF(o.avg).replace('+','+'),cx,o.avg>=0?b_-10:b_+22,{size:13.5,col:cl}); }); }
+    y+=330;
+    // ---- day table ----
+    secT('سجل الأيام مقابل خط الاتجاه',y,S.pts.length>31?'آخر 31 يوماً':''); y+=58; const th=50+tbl.length*40+16; rr(P,y,W-2*P,th,16,'#FFFFFF','#DCE5CF');
+    const cols=[['التاريخ',.15],['اليوم',.13],['الرصيد',.16],['خط الاتجاه',.16],['الانحراف',.15],['σ',.1],['الحالة',.15]]; const tw_=W-2*P-40; let cxp=W-P-20; const pos=cols.map(([t,w])=>{ const ww=w*tw_; const r0=cxp; cxp-=ww; return {t,c:(r0+cxp)/2}; });
+    x.fillStyle='rgba(91,143,208,.10)'; x.beginPath(); x.roundRect(P+1,y+1,W-2*P-2,48,[16,16,0,0]); x.fill();
+    pos.forEach(o=>T(o.t,o.c,y+32,{size:14.5,w:600,col:'#3C6FB0',al:'center'})); line(P+20,y+48,W-P-20,y+48,'#5B8FD0',1.4);
+    tbl.forEach((p,i)=>{ const ry=y+50+i*40; const st_=p.z>2?'فوق الواسع':p.z>1?'فوق الطبيعي':p.z<-2?'تحت الواسع':p.z<-1?'تحت الطبيعي':'ضمن النطاق'; const cl=zCol(p.z);
+      if(Math.abs(p.z)>1){ x.fillStyle=p.z>0?'rgba(63,185,138,.07)':'rgba(224,101,74,.08)'; x.fillRect(P+20,ry+2,W-2*P-40,36); }
+      N(dmy(p.key),pos[0].c,ry+26,{size:14,col:'#4E5F4E',al:'center'}); T(DAYS[fromIso(p.key).getDay()],pos[1].c,ry+26,{size:14,col:'#4E5F4E',al:'center'}); N(fmt(p.y),pos[2].c,ry+26,{size:15,w:700,col:'#1E3326',al:'center'});
+      N(fmt(p.t),pos[3].c,ry+26,{size:14,col:'#647563',al:'center'}); N(sgnF(p.res),pos[4].c,ry+26,{size:14,w:600,col:p.res>=0?'#1FA16B':'#D0453A',al:'center'}); N((p.z>0?'+':'')+p.z.toFixed(2),pos[5].c,ry+26,{size:14,col:cl,al:'center'});
+      T(st_,pos[6].c,ry+26,{size:14,w:600,col:cl,al:'center'}); line(P+20,ry+40,W-P-20,ry+40,'#EEF2E6'); });
+    y+=th+30;
+    if(r.note){ rr(P,y,W-2*P,70,14,'rgba(212,175,55,.10)','#D4AF37'); T('ملاحظة: '+r.note,W-P-24,y+43,{size:18,col:'#9A7B12'}); y+=90; }
+    x.fillStyle='#EEF2E6'; x.fillRect(0,H-56,W,56); T('خزينة الأرصدة  •  سري — للاستخدام الداخلي  •  أُعد بواسطة Ameer Alarifi',W-P,H-22,{size:14,col:'#647563'}); T('أُعد في '+r.createdLabel,P,H-22,{size:14,col:'#647563',al:'left'});
+    return c;
+  }
+  const fname=(r,ext)=>(r.type==='trend'?'تقرير-اتجاه-السيولة-'+r.day:r.type==='daily'?'تقرير-يومي-'+r.day:'تقرير-شهري-'+r.month)+'.'+ext;
+  async function dlSave(filename,data){
+    if(!st.dl){ toast('التنزيل غير متاح في هذا العرض'); return; }
+    try{ await st.dl.save({filename,data}); toast('جاهز للحفظ والإرسال'); }
+    catch(e){ const c=e&&e.code; if(c==='declined') return; if(c==='rejected_extension'||c==='extension_not_enabled') toast('هذا النوع غير متاح هنا — جرّب صيغة أخرى'); else toast('تعذّر التنزيل، حاول مرة أخرى'); }
+  }
+  async function previewRep(r){ const sh=sheet(r.title,[el('div',{class:'empty',text:'جارِ تجهيز المعاينة…'})]); const c=await drawRep(r);
+    sh.innerHTML=''; sh.append(el('div',{class:'grab'}),el('h4',{text:r.title}),el('div',{class:'prev'},el('img',{src:c.toDataURL('image/png'),alt:r.title})),
+      el('div',{class:'acts'},[el('button',{class:'pr',type:'button',text:'صورة',onclick:()=>savePng(r)}),el('button',{type:'button',text:'PDF',onclick:()=>savePdf(r)}),el('button',{type:'button',text:'صفحة ويب',onclick:()=>saveHtml(r)}),el('button',{type:'button',text:'إغلاق',onclick:closeSheet})])); }
+  async function savePng(r){ toast('جارِ تجهيز الصورة…'); const c=await drawRep(r); const blob=await new Promise(res=>c.toBlob(res,'image/png')); await dlSave(fname(r,'png'),blob); }
+  async function savePdf(r){
+    if(!window.jspdf){ toast('مكتبة PDF لم تُحمّل — نزّل الصورة بدلاً منها'); return; }
+    toast('جارِ تجهيز PDF…'); const c=await drawRep(r); const pdf=new window.jspdf.jsPDF({unit:'pt',format:'a4',orientation:'portrait'});
+    const pw=pdf.internal.pageSize.getWidth(), ph=pdf.internal.pageSize.getHeight(); const ratio=c.height/c.width;
+    if(pw*ratio<=ph*1.25){ let w=pw, h=pw*ratio; if(h>ph){ h=ph; w=ph/ratio; } pdf.setFillColor(8,17,31); pdf.rect(0,0,pw,ph,'F'); pdf.addImage(c.toDataURL('image/jpeg',.92),'JPEG',(pw-w)/2,0,w,h); }
+    else { const sliceH=Math.floor(c.width*ph/pw); let first=true; for(let y0=0;y0<c.height;y0+=sliceH){ const hh=Math.min(sliceH,c.height-y0); const sc=document.createElement('canvas'); sc.width=c.width; sc.height=hh; const sx=sc.getContext('2d'); sx.drawImage(c,0,y0,c.width,hh,0,0,c.width,hh);
+      if(!first) pdf.addPage(); first=false; pdf.setFillColor(8,17,31); pdf.rect(0,0,pw,ph,'F'); pdf.addImage(sc.toDataURL('image/jpeg',.92),'JPEG',0,0,pw,hh*pw/c.width); } }
+    await dlSave(fname(r,'pdf'),pdf.output('blob'));
+  }
+  async function saveHtml(r){
+    if(r.type==='trend'){ toast('جارِ تجهيز صفحة الويب…'); const c=await drawTrend(r); const esc=t=>String(t).replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+      const html=`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark only"><meta name="darkreader-lock"><title>${esc(r.title)}</title><style>:root{color-scheme:dark only;forced-color-adjust:none}html,body{margin:0;background:#F2F6EA}main{max-width:1080px;margin:0 auto;padding:10px 8px}img{display:block;width:100%;height:auto;border-radius:10px}</style></head><body><main><img src="${c.toDataURL('image/jpeg',.9)}" alt="${esc(r.title)}"></main></body></html>`;
+      return dlSave(fname(r,'html'),html); }
+    const s=repStats(r); const daily=r.type==='daily'; const esc=t=>String(t).replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+    const accRows=r.accounts.map((a,i)=>`<tr><td><span class="c" style="background:${a.color}">${i+1}</span>${esc(a.name)}</td><td>${a.kind==='cash'?'صندوق':'بنك'}</td><td class="n ${a.balance<0?'dn':''}">${fmt(a.balance,2)}</td><td class="n">${s.tot?(a.balance/s.tot*100).toFixed(1)+'%':'—'}</td></tr>`).join('');
+    const listRows=s.rows.filter(q=>q.total!=null).map(q=>`<tr><td class="n">${dmy(q.key)}</td><td>${DAYS[fromIso(q.key).getDay()]}</td><td class="n">${fmt(q.total)}</td><td class="n ${q.chg>0?'up':q.chg<0?'dn':''}">${q.chg==null?'—':signed(q.chg)}</td></tr>`).join('');
+    const svg=(()=>{ const rows=s.rows, cnt=rows.length, hs=rows.filter(q=>q.total!=null); if(!hs.length) return ''; const fit=cnt<=8; const U=fit?100:56, pl=46, W=pl*2+cnt*U, H=270, pt=44, pb=32, ih=H-pt-pb;
+      const X=i=>pl+(cnt-1-i)*U+U/2; const v=hs.map(q=>q.total); let lo=Math.min(...v),hi=Math.max(...v); if(lo===hi){lo*=.9;hi*=1.1;} const pd=(hi-lo)*.1; lo-=pd; hi+=pd; const Y=vv=>pt+(hi-vv)/(hi-lo)*ih;
+      let segs=[],cur=[]; rows.forEach((q,i)=>{ if(q.total!=null) cur.push([i,q]); else if(cur.length){segs.push(cur);cur=[];} }); if(cur.length) segs.push(cur);
+      const pl2=segs.map(sg=>`<polyline points="${sg.map(([i,q])=>X(i)+','+Y(q.total)).join(' ')}" fill="none" stroke="#D4AF37" stroke-width="2.6"/>`).join('');
+      const pts=rows.map((q,i)=>q.total==null?'':`<circle cx="${X(i)}" cy="${Y(q.total)}" r="4" fill="#9A7B12"/><text x="${X(i)}" y="${Y(q.total)-12}" text-anchor="middle" font-size="12.5" font-weight="700" fill="#FFFFFF">${fit?fmt(q.total):lblK(q.total)}</text>`).join('');
+      const xt=rows.map((q,i)=>`<text x="${X(i)}" y="${H-8}" fill="${q.total!=null?'#647563':'#B9C6A8'}" font-size="11" text-anchor="middle">${esc(fit&&daily?q.wlab:String(i+1))}</text>`).join('');
+      return fit? `<svg width="100%" viewBox="0 0 ${W} ${H}" style="display:block;max-width:100%">${pl2}${pts}${xt}</svg>` : `<div class="sc"><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block">${pl2}${pts}${xt}</svg></div>`; })();
+    const bars=(()=>{ const rows=s.rows, cnt=rows.length, ch=rows.map((q,i)=>[i,q]).filter(([i,q])=>q.chg!=null); if(!ch.length) return ''; const fit=cnt<=8, U=fit?100:56, pl=46, W=pl*2+cnt*U, H=240, pt=30, pb=32, ih=H-pt-pb;
+      const X=i=>pl+(cnt-1-i)*U+U/2; const lim=Math.max(...ch.map(([i,q])=>Math.abs(q.chg)))*1.2||1; const Y=v=>pt+(lim-v)/(2*lim)*ih; const bw=U*.5;
+      const b=ch.map(([i,q])=>{ const y0=Y(0),y1=Y(q.chg),c=q.chg>=0?'#1FA16B':'#D0453A'; return `<rect x="${X(i)-bw/2}" y="${Math.min(y0,y1)}" width="${bw}" height="${Math.max(1.5,Math.abs(y1-y0))}" rx="2" fill="${c}"/><text x="${X(i)}" y="${q.chg>=0?y1-6:y1+15}" text-anchor="middle" font-size="11.5" font-weight="700" fill="${c}">${q.chg>0?'+':''}${fit?fmt(q.chg):lblK(q.chg)}</text>`; }).join('');
+      const xt=rows.map((q,i)=>`<text x="${X(i)}" y="${H-8}" fill="${q.chg!=null?'#647563':'#B9C6A8'}" font-size="11" text-anchor="middle">${esc(fit&&daily?q.wlab:String(i+1))}</text>`).join('');
+      const body=`<line x1="${pl-20}" x2="${W-pl+20}" y1="${Y(0)}" y2="${Y(0)}" stroke="#CBD7BA"/>${b}${xt}`;
+      return fit? `<svg width="100%" viewBox="0 0 ${W} ${H}" style="display:block;max-width:100%">${body}</svg>` : `<div class="sc"><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block">${body}</svg></div>`; })();
+    const kp= daily? [['إجمالي أرصدة اليوم',s.today.total!=null?fmt(s.today.total):'—',''],['التغير عن اليوم السابق',s.today.chg!=null?signed(s.today.chg):'—',s.today.chg>0?'up':s.today.chg<0?'dn':''],['مقارنة بمتوسط الشهر',s.vsAvg!=null?(s.vsAvg>0?'+':'')+(s.vsAvg*100).toFixed(1)+'%':'—',s.vsAvg>0?'up':s.vsAvg<0?'dn':''],['إجمالي الحسابات',fmt(s.tot),'']]
+      : [['إجمالي الحسابات',fmt(s.tot),''],['آخر رصيد يومي',s.last?fmt(s.last.total):'—',''],['أعلى رصيد بالشهر',s.mx?fmt(s.mx.total):'—','up'],['أدنى رصيد بالشهر',s.mn?fmt(s.mn.total):'—','dn']];
+    const html=`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark only"><meta name="darkreader-lock"><title>${esc(r.title)}</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600&family=Readex+Pro:wght@600&display=swap">
+<style>:root{color-scheme:dark only;forced-color-adjust:none}html{background:#F2F6EA}body{margin:0;background:#F2F6EA;color:#1E3326;font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif;padding:20px 16px}main{max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+header{background:linear-gradient(135deg,#EEF2E6,#FFFFFF);border-bottom:3px solid #D4AF37;border-radius:16px;padding:18px}h1{font-family:"Readex Pro",sans-serif;margin:0 0 6px;font-size:23px}header p{margin:0;color:#9A7B12;font-size:13px}
+.k{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}.k div{background:#FFFFFF;border:1px solid #DCE5CF;border-top:3px solid #D4AF37;border-radius:12px;padding:12px}.k span{display:block;color:#647563;font-size:12px}.k b{font-family:"Readex Pro",sans-serif;font-size:20px}
+section{background:#FFFFFF;border:1px solid #DCE5CF;border-radius:14px;padding:14px}.sc{overflow-x:auto;direction:ltr}h2{font-family:"Readex Pro",sans-serif;font-size:16px;margin:0 0 10px}table{width:100%;border-collapse:collapse;font-size:14px}th{color:#D4AF37;text-align:right;font-weight:600;border-bottom:1px solid #D4AF37;padding:8px 6px}td{padding:8px 6px;border-bottom:1px solid #DCE5CF}
+.n{font-variant-numeric:tabular-nums;direction:ltr;text-align:left}.c{display:inline-block;width:22px;height:22px;border-radius:6px;color:#1A1406;text-align:center;font-weight:700;font-size:12px;line-height:22px;margin-left:8px}.up{color:#1FA16B}.dn{color:#D0453A}
+tfoot td{background-color:#D4AF37!important;color:#1A1406!important;font-weight:700}.note{background:rgba(212,175,55,.1);border:1px solid #D4AF37;border-radius:12px;padding:12px;color:#9A7B12}footer{color:#647563;font-size:12px;text-align:center}.sig{float:left;border-bottom:2px solid #D4AF37;padding-bottom:6px;margin:0 0 10px 0;text-align:left}.sig span{display:block;color:#647563;font-size:12px;text-align:right}.sig b{display:block;font-family:"Readex Pro",sans-serif;color:#9A7B12;font-size:18px}header::after{content:'';display:block;clear:both}.tw{overflow-x:auto}.sc::after{content:'↔ اسحب المخطط لرؤية كل الأيام';display:block;direction:rtl;color:#647563;font-size:12px;padding-top:6px}</style></head><body><main>
+<header><div class="sig"><span>أُعد بواسطة</span><b dir="ltr">Ameer Alarifi</b></div><h1>${esc(r.title)}</h1><p>${daily?'تقرير يومي':'تقرير شهري'} • تاريخ الأرصدة: ${r.balanceDate?dmy(r.balanceDate):'—'} • أُعد في ${r.createdLabel}</p></header>
+<div class="k">${kp.map(q=>`<div><span>${q[0]}</span><b class="n ${q[2]}">${q[1]}</b></div>`).join('')}</div>
+<section><h2>أرصدة الحسابات</h2><div class="tw"><table><thead><tr><th>الحساب</th><th>النوع</th><th>الرصيد (ر.س)</th><th>الحصة</th></tr></thead><tbody>${accRows}</tbody><tfoot><tr><td colspan="2">إجمالي الأرصدة</td><td class="n">${fmt(s.tot,2)}</td><td class="n">100%</td></tr></tfoot></table></div></section>
+${svg?`<section><h2>${daily?'حركة إجمالي الأرصدة — من بداية الشهر حتى '+dmy(r.day):'حركة إجمالي الأرصدة اليومية'}</h2>${svg}</section>`:''}${bars?`<section><h2>${daily?'التغير اليومي — منذ بداية الشهر':'التغير اليومي في الأرصدة'}</h2>${bars}</section>`:''}
+<section><h2>${daily?'حركة أيام الشهر حتى '+dmy(r.day):'سجل الأيام — '+MONTHS[s.m-1]+' '+s.y}</h2>${listRows?`<div class="tw"><table><thead><tr><th>التاريخ</th><th>اليوم</th><th>إجمالي الأرصدة</th><th>التغير</th></tr></thead><tbody>${listRows}</tbody></table></div>`:'<p>لا توجد أيام مسجلة.</p>'}</section>
+${r.note?`<div class="note">ملاحظة: ${esc(r.note)}</div>`:''}<footer>خزينة الأرصدة • سري — للاستخدام الداخلي</footer></main></body></html>`;
+    dlSave(fname(r,'html'),html);
+  }
+
+  // ---------- data layer ----------
+  async function write(fn){
+    if(!st.db){ toast('الحفظ غير متاح في هذا العرض'); return false; }
+    try{ await fn(); return true; }
+    catch(e){ const c=e&&e.code;
+      if(c==='unavailable'){ try{ await new Promise(r=>setTimeout(r,600+Math.random()*600)); await fn(); return true; }catch(e2){} }
+      if(c==='invalid_argument'){ st.canWrite=false; banner('لديك صلاحية عرض فقط — لا يمكنك تعديل الأرصدة.'); }
+      else toast('لم يُحفظ — تحقق من الاتصال وحاول مرة أخرى');
+      return false; }
+  }
+  function renderAll(){ renderAccounts(); renderDaily(); const bd=st.meta.balanceDate; if(bd && document.activeElement!==$('#balDate')) $('#balDate').value=bd; }
+
+  try{ const t=localStorage.getItem('ttab'); showTab(['acc','day','rep'].includes(t)?t:'acc'); }catch(e){ showTab('acc'); }
+  $('#dDate').value=todayIso(); fillEntry(); setRepType('daily');
+  renderAll();
+  let rz; window.addEventListener('resize',()=>{ clearTimeout(rz); rz=setTimeout(()=>{ if(!$('#tab-day').hidden) renderDaily(); },200); });
+
+  (async()=>{
+    const db = window.claude ? await window.claude.use('db') : null;
+    st.dl = window.claude ? await window.claude.use('downloads') : null;
+    if(!db){ setSync('err','غير متصل'); banner('افتح هذه الصفحة من Claude ليتم تحميل الأرصدة وحفظ التعديلات.'); return; }
+    st.db=db; setSync('','مزامنة…');
+    const onErr=e=>{ setSync('err','انقطع الاتصال'); if(e&&e.code==='revoked') banner('لم تعد لديك صلاحية على هذه الصفحة.'); };
+    db.collection('accounts').onSnapshot(s=>{ st.accounts=s.docs.map(d=>({id:d.id,...d.data()})); st.ready.a=true; setSync('on','متزامن'); renderAccounts(); }, onErr);
+    db.collection('daily').onSnapshot(s=>{ const o={}; s.docs.forEach(d=>{ const v=d.data(); if(v&&v.date) o[v.date]=v; }); st.daily=o; st.ready.d=true; setSync('on','متزامن'); renderDaily(); fillEntry(); }, onErr);
+    db.collection('reports').onSnapshot(s=>{ st.reports=s.docs.map(d=>({id:d.id,...d.data()})); renderReports(); }, onErr);
+    db.doc('meta/settings').onSnapshot(s=>{ st.meta=s.exists? s.data():{}; if(st.meta.balanceDate && document.activeElement!==$('#balDate')) $('#balDate').value=st.meta.balanceDate; }, onErr);
+  })();
+})();
+</script>
+
+</body></html>
