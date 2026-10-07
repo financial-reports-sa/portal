@@ -53,7 +53,7 @@
     var bg = document.createElement('div'); bg.className = 'pc-sheet-bg';
     var tip = document.createElement('div'); tip.className = 'pc-sheet'; tip.setAttribute('role', 'dialog'); tip.setAttribute('aria-label', title);
     tip.innerHTML = '<h4>' + esc(title) + '</h4>' + (sub ? '<div class="pc-sub">' + sub + '</div>' : '') + body;
-    bg.appendChild(tip); document.body.appendChild(bg);
+    bg.appendChild(tip); document.documentElement.appendChild(bg);
     var w = tip.offsetWidth, h = tip.offsetHeight, x = tapX - w / 2, y = tapY - h - 14;
     if (y < 8) y = tapY + 16; if (y + h > innerHeight - 8) y = Math.max(8, innerHeight - h - 8);
     x = Math.max(12, Math.min(innerWidth - w - 12, x));
