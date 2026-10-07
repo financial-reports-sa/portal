@@ -18,7 +18,7 @@
     const xMax=Math.max(S.xEnd,S.last.x)||1; const X=x=>pl+iw-(x/xMax)*iw;
     const vals=S.pts.map(p=>p.y).concat([S.projLo,S.projHi,S.tr(0)]); let lo=Math.min(...vals), hi=Math.max(...vals); const pad=(hi-lo)*.08||1; lo-=pad; hi+=pad;
     const Y=v=>pt+(hi-v)/(hi-lo)*ih;
-    let g=''; for(let i=0;i<=3;i++){ const y=pt+ih*i/3; g+=`<line x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}" stroke="#DCE5CF" stroke-dasharray="3 5"/>`; }
+    let g=''; for(let i=0;i<=3;i++){ const y=pt+ih*i/3; g+=`<line x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}" stroke="#E6E6E0" stroke-dasharray="3 5"/>`; }
     const band=[]; for(let x=0;x<=xMax;x+=Math.max(1,Math.round(xMax/20))) band.push(x); if(band[band.length-1]!==xMax) band.push(xMax);
     const up=band.map(x=>[X(x),Y(S.tr(x)+S.s)]), dn=band.map(x=>[X(x),Y(S.tr(x)-S.s)]).reverse();
     const bandP=`<path d="M${up.map(p=>p.join(',')).join(' L')} L${dn.map(p=>p.join(',')).join(' L')} Z" fill="${dc}" fill-opacity=".08"/>`;
@@ -28,8 +28,8 @@
     const act=`<path d="${smoothD(P)}" fill="none" stroke="#C9A227" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>`;
     const dots=S.pts.map((p,i)=>`<circle cx="${P[i][0]}" cy="${P[i][1]}" r="${i===S.pts.length-1?3.6:1.9}" fill="${i===S.pts.length-1?'#C9A227':'#fff'}" stroke="#C9A227" stroke-width="1.1"><title>${dmy(p.key)}: ${fmt(p.y)}</title></circle>`).join('');
     const pj=`<circle cx="${X(S.xEnd)}" cy="${Y(S.proj)}" r="3.2" fill="#fff" stroke="${dc}" stroke-width="1.4"/><text x="${Math.max(pl+36,X(S.xEnd)+2)}" y="${Y(S.proj)-9}" font-size="10" font-weight="700" fill="${dc}" text-anchor="middle">${fmt(S.proj)}</text>`;
-    const lx=X(S.last.x); const ll=`<text x="${Math.min(W-pr-34,lx)}" y="${P[P.length-1][1]-10}" font-size="10" font-weight="700" fill="#1E3326" text-anchor="middle">${fmt(S.last.y)}</text>`;
-    const xl=`<text x="${X(0)}" y="${H-8}" font-size="10" fill="#647563" text-anchor="end">${dmy(from).slice(0,5)}</text>${(X(S.last.x)-X(S.xEnd))>70?`<text x="${lx}" y="${H-8}" font-size="10" fill="#647563" text-anchor="middle">${dmy(day).slice(0,5)}</text>`:""}<text x="${X(S.xEnd)}" y="${H-8}" font-size="10" fill="${dc}" text-anchor="start">${dmy(S.endKey).slice(0,5)} متوقع</text>`;
+    const lx=X(S.last.x); const ll=`<text x="${Math.min(W-pr-34,lx)}" y="${P[P.length-1][1]-10}" font-size="10" font-weight="700" fill="#18231C" text-anchor="middle">${fmt(S.last.y)}</text>`;
+    const xl=`<text x="${X(0)}" y="${H-8}" font-size="10" fill="#6B706A" text-anchor="end">${dmy(from).slice(0,5)}</text>${(X(S.last.x)-X(S.xEnd))>70?`<text x="${lx}" y="${H-8}" font-size="10" fill="#6B706A" text-anchor="middle">${dmy(day).slice(0,5)}</text>`:""}<text x="${X(S.xEnd)}" y="${H-8}" font-size="10" fill="${dc}" text-anchor="start">${dmy(S.endKey).slice(0,5)} متوقع</text>`;
     const svg=`<svg width="100%" viewBox="0 0 ${W} ${H}" role="img" aria-label="اتجاه السيولة" style="display:block;direction:ltr">${g}${bandP}${trendL}${act}${dots}${pj}${ll}${xl}</svg>`;
     const ins=trendInsights(r,S).slice(0,4).map(it=>`<li style="margin-bottom:6px;line-height:1.6">${esc(it.t)}</li>`).join('');
     box.innerHTML=`<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px"><span style="background:${dc}1A;color:${dc};font-weight:700;border-radius:99px;padding:4px 14px;font-size:15px">${arrow} ${S.dir}</span><span class="hint">قوة الاتجاه: ${conf} • آخر رصيد ${S.pos}</span></div>

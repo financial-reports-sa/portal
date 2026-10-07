@@ -8,13 +8,13 @@ HEAD = '''<script>window.PORTAL_APP='%s';</script>
 <script src="../config.js?v=7"></script>
 <script src="../portal-db.js?v=7"></script>
 <script src="../portal-charts.js?v=8"></script>
-<style>html[data-ro] #tbEntry{display:none!important}html[data-ro] .tabs .in{grid-template-columns:1fr 1fr!important}:root{--bg:#F2F6EA!important;--panel2:#EDF2E3!important;--line:#DCE5CF!important;--line2:#CBD7BA!important;--txt:#1E3326!important;--mute:#647563!important;--dim:#869684!important}html{-webkit-text-size-adjust:100%%;text-size-adjust:100%%}header.top{position:static!important;background:none!important;padding-block:12px 4px!important}.hm{grid-template-columns:50px repeat(7,minmax(0,1fr))!important;gap:2px!important}.hm .c{font-size:9.5px!important;padding:7px 0!important;letter-spacing:-.4px;overflow:hidden;white-space:nowrap;cursor:pointer}.hm .h,.hm .r{font-size:9.5px!important}.cal{gap:3px!important}.cal .c{cursor:pointer}.cal .c .v{font-size:9px!important;letter-spacing:-.4px;white-space:nowrap}.cal .c .d{font-size:9.5px!important}</style>
+<style>html[data-ro] #tbEntry{display:none!important}html[data-ro] .tabs .in{grid-template-columns:1fr 1fr!important}:root{--bg:#F5F5F1!important;--panel2:#EFEFEA!important;--line:#E6E6E0!important;--line2:#D7D8D0!important;--txt:#18231C!important;--mute:#6B706A!important;--dim:#8E928C!important}html{-webkit-text-size-adjust:100%%;text-size-adjust:100%%}header.top{position:static!important;background:none!important;padding-block:12px 4px!important}.hm{grid-template-columns:50px repeat(7,minmax(0,1fr))!important;gap:2px!important}.hm .c{font-size:9.5px!important;padding:7px 0!important;letter-spacing:-.4px;overflow:hidden;white-space:nowrap;cursor:pointer}.hm .h,.hm .r{font-size:9.5px!important}.cal{gap:3px!important}.cal .c{cursor:pointer}.cal .c .v{font-size:9px!important;letter-spacing:-.4px;white-space:nowrap}.cal .c .d{font-size:9.5px!important}</style>
 '''
 TREASURY_COLORS = {  # الخزينة تصميمها غامق — نحوّلها لنفس ألوان البوابة الفاتحة
-    '#08111F': '#F2F6EA', '#0F1D33': '#FFFFFF', '#142744': '#EDF2E3', '#22395C': '#DCE5CF', '#2C4870': '#CBD7BA',
-    '#EAF0F8': '#1E3326', '#8FA5C0': '#647563', '#5E7597': '#869684', '#EBCF7A': '#9A7B12', '#3FB98A': '#1FA16B',
-    '#E0654A': '#D0453A', '#E0A72E': '#C98A0C', '#1B3358': '#EEF2E6', '#1B3152': '#EEF2E6', '#17304F': '#EEF2E6',
-    '#3E5577': '#B9C6A8', '#AFC0D6': '#4E5F4E', '#8FB4E3': '#3C6FB0', '#F4A493': '#C24A33', '#6FC3DF': '#2A8BA8',
+    '#08111F': '#F5F5F1', '#0F1D33': '#FFFFFF', '#142744': '#EFEFEA', '#22395C': '#E6E6E0', '#2C4870': '#D7D8D0',
+    '#EAF0F8': '#18231C', '#8FA5C0': '#6B706A', '#5E7597': '#8E928C', '#EBCF7A': '#9A7B12', '#3FB98A': '#1FA16B',
+    '#E0654A': '#D0453A', '#E0A72E': '#C98A0C', '#1B3358': '#F0F0EB', '#1B3152': '#F0F0EB', '#17304F': '#F0F0EB',
+    '#3E5577': '#C9CBC3', '#AFC0D6': '#4F554F', '#8FB4E3': '#3C6FB0', '#F4A493': '#C24A33', '#6FC3DF': '#2A8BA8',
     '#7FD8B2': '#1F8F63', '#F2CE85': '#A9790F', 'rgba(8,17,31,.94)': 'rgba(255,255,255,.95)'}
 for app in ('sales', 'channels', 'income', 'treasury'):
     h = (SRC / f'{app}.src.html').read_text(encoding='utf-8')
@@ -34,7 +34,7 @@ for app in ('sales', 'channels', 'income', 'treasury'):
             h = re.sub(re.escape(a), b, h, flags=re.I)
         h = h.replace("const lblK = v => { const a=Math.abs(v); return (a>=1e6?(v/1e6).toFixed(2)+'M':(v/1e3).toFixed(1)+'K'); };",
                       "const lblK = v => Math.round(v).toLocaleString('en-US');")
-        h = h.replace('font-size="10.5" font-weight="600" fill="#FFFFFF">${lblK(r.total)}', 'font-size="10" font-weight="600" fill="#1E3326">${lblK(r.total)}')
+        h = h.replace('font-size="10.5" font-weight="600" fill="#FFFFFF">${lblK(r.total)}', 'font-size="10" font-weight="600" fill="#18231C">${lblK(r.total)}')
         patch = (pathlib.Path(__file__).resolve().parent / 'patches' / 'treasury_trend.js').read_text(encoding='utf-8')
         def rep1(h, old, new):
             assert old in h, old[:60]
