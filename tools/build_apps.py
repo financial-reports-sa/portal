@@ -35,6 +35,17 @@ for app in ('sales', 'channels', 'income', 'treasury'):
         h = h.replace("const lblK = v => { const a=Math.abs(v); return (a>=1e6?(v/1e6).toFixed(2)+'M':(v/1e3).toFixed(1)+'K'); };",
                       "const lblK = v => Math.round(v).toLocaleString('en-US');")
         h = h.replace('font-size="10.5" font-weight="600" fill="#FFFFFF">${lblK(r.total)}', 'font-size="10" font-weight="600" fill="#1E3326">${lblK(r.total)}')
+        patch = (pathlib.Path(__file__).resolve().parent / 'patches' / 'treasury_trend.js').read_text(encoding='utf-8')
+        def rep1(h, old, new):
+            assert old in h, old[:60]
+            return h.replace(old, new, 1)
+        h = rep1(h, '  function renderDaily(){', patch + '\n  function renderDaily(){')
+        h = rep1(h, 'drawLine(rows,n); drawBars(rows,n);', 'drawLine(rows,n); drawBars(rows,n); drawLiveTrend();')
+        h = rep1(h, '<div class="card" id="barCard">', '<div class="card" id="trendCard"><h3>اتجاه السيولة <small id="trTxt"></small></h3><div id="trendBody"></div></div>\n    <div class="card" id="barCard">')
+        h = rep1(h, "const U=50, pl=26, pr=26, pt=34, pb=30;", "const U=56, pl=44, pr=44, pt=34, pb=30;")
+        h = rep1(h, "line+=`<polyline points=\"${pts.join(' ')}\" fill=\"none\"", "const PP=s.map(r=>[X(r.day),Y(r.total)]); line+=`<path d=\"${smoothD(PP)}\" fill=\"none\"")
+        h = rep1(h, "if(s.length>1) area+=`<polygon points=\"${X(s[0].day)},${pt+ih} ${pts.join(' ')} ${X(s[s.length-1].day)},${pt+ih}\" fill=\"url(#ga)\"/>`;",
+                 "if(s.length>1) area+=`<path d=\"M${X(s[0].day)},${pt+ih} L${smoothD(PP).slice(1)} L${X(s[s.length-1].day)},${pt+ih} Z\" fill=\"url(#ga)\"/>`;")
         h = h.replace('color-scheme: dark', 'color-scheme: light').replace("localStorage.getItem('tab')", "localStorage.getItem('ttab')").replace("localStorage.setItem('tab'", "localStorage.setItem('ttab'")
     # كشف حالة التطبيق لطبقة تفاصيل الرسوم
     h = h.replace('const st={', 'const st=window.__st={', 1)
