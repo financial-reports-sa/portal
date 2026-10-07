@@ -452,8 +452,16 @@ V.home=async()=>{
       h+=`<div class="kpis">${parts.join('')}__MORE__</div>`;
       h+=`<div class="branch-cards">`+bs.map(b=>{const B=brById(b),v=sum(cur.filter(r=>r.branch_id===b).map(r=>r.amount)),pv=pm?sum(S.filter(r=>r.branch_id===b&&r.day.startsWith(pm)&&+r.day.slice(8)<=lastDay).map(r=>r.amount)):0;
         return `<div class="card bc" style="--c:${B.color}"><div class="head"><b>${esc(B.name)}</b><span class="tag">${pct(tot?v/tot:0)}</span></div><div class="num" style="font-size:22px;font-weight:700">${fmt(v)}</div><div class="meter"><i style="width:${tot?v/tot*100:0}%"></i></div><div style="font-size:12px">${delta(v,pv,'عن '+monShort(pm||m))}</div></div>`;}).join('')+`</div>`;
-      const ms=months.slice(-9);
-      h+=`<div class="card"><h3>المبيعات الشهرية</h3>${stackBars(ms.map(monShort),bs.map(b=>({name:brById(b).name,color:brById(b).color,vals:ms.map(mm=>sum(S.filter(r=>r.branch_id===b&&r.day.startsWith(mm)).map(r=>r.amount)))})))}${bs.length>1?legend(bs.map(brById)):''}</div>`;
+      // الأشهر السابقة من قوائم الدخل (الإيرادات + الضريبة) للأشهر اللي ما فيها مبيعات يومية
+      const I=allowed('income')?(await loadIncome()).filter(r=>bs.includes(r.branch_id)):[];
+      const revOf=r=>sum((r.groups||[]).filter(g=>g.cat==='rev').flatMap(g=>(g.a||[]).map(a=>a.v)));
+      const allM=[...new Set(months.concat(I.map(r=>r.month)))].sort().filter(m=>m<=months[months.length-1]);
+      const ms=allM.slice(-12); const fromStmt={};
+      const mval=(b,mm)=>{ const rows=S.filter(r=>r.branch_id===b&&r.day.startsWith(mm)); if(rows.length) return sum(rows.map(r=>r.amount));
+        const st_=I.find(r=>r.branch_id===b&&r.month===mm); if(st_){ fromStmt[mm]=1; return revOf(st_)*(1+VAT); } return 0; };
+      const ser=bs.map(b=>({name:brById(b).name,color:brById(b).color,vals:ms.map(mm=>mval(b,mm))}));
+      const yTot=sum(ser.flatMap(x=>x.vals));
+      h+=`<div class="card"><h3>المبيعات الشهرية <small>${ms.length} شهر · الإجمالي ${fmt(yTot)}</small></h3>${stackBars(ms.map(monShort),ser)}${bs.length>1?legend(bs.map(brById)):''}${Object.keys(fromStmt).length?'<div class="muted" style="font-size:11.5px;margin-top:6px">الأشهر قبل '+monShort(months[0])+' من إيرادات قوائم الدخل شاملة الضريبة، وما بعدها من المبيعات اليومية.</div>':''}</div>`;
     }
   }
   let more='';
