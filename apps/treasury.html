@@ -466,7 +466,7 @@ textarea.txt{min-height:70px;resize:vertical;line-height:1.5}
     return box.querySelector('.cscroll');
   }
   function scrollToX(sc,x){ requestAnimationFrame(()=>{ sc.scrollLeft=Math.max(0,x-sc.clientWidth/2); }); }
-  const lblK = v => { const a=Math.abs(v); return (a>=1e6?(v/1e6).toFixed(2)+'M':(v/1e3).toFixed(1)+'K'); };
+  const lblK = v => Math.round(v).toLocaleString('en-US');
   function drawLine(rows,n){
     const box=$('#lineChart'); const has=rows.filter(r=>r.total!=null); if(!has.length){ box.innerHTML='<div class="empty">سجّل أول يوم ليظهر المخطط</div>'; return; }
     const U=50, pl=26, pr=26, pt=34, pb=30; const W=Math.max(Math.min(box.clientWidth||340,1000), pl+pr+n*U), H=236, ih=H-pt-pb;
@@ -482,7 +482,7 @@ textarea.txt{min-height:70px;resize:vertical;line-height:1.5}
     const last=has[has.length-1];
     const dots=has.map(r=>`<circle cx="${X(r.day)}" cy="${Y(r.total)}" r="${r===last?4.6:3}" fill="${r===last?'#9A7B12':'#F2F6EA'}" stroke="#9A7B12" stroke-width="1.6"/>`).join('');
     const labs=has.map(r=>{ const y=Y(r.total)-10; if(r===last) return `<rect x="${X(r.day)-27}" y="${y-14}" width="54" height="18" rx="5" fill="#D4AF37"/><text x="${X(r.day)}" y="${y-1}" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1A1406">${lblK(r.total)}</text>`;
-      return `<text x="${X(r.day)}" y="${y}" text-anchor="middle" font-size="10.5" font-weight="600" fill="#FFFFFF">${lblK(r.total)}</text>`; }).join('');
+      return `<text x="${X(r.day)}" y="${y}" text-anchor="middle" font-size="10" font-weight="600" fill="#1E3326">${lblK(r.total)}</text>`; }).join('');
     const sc=chartFrame(box,W,H,`<defs><linearGradient id="ga" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#D4AF37" stop-opacity=".28"/><stop offset="1" stop-color="#D4AF37" stop-opacity="0"/></linearGradient></defs>${g}${area}${line}${dots}${labs}${xt}`,'حركة إجمالي الأرصدة');
     scrollToX(sc,X(last.day));
   }

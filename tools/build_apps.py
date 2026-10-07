@@ -32,6 +32,9 @@ for app in ('sales', 'channels', 'income', 'treasury'):
     if app == 'treasury':
         for a, b in TREASURY_COLORS.items():
             h = re.sub(re.escape(a), b, h, flags=re.I)
+        h = h.replace("const lblK = v => { const a=Math.abs(v); return (a>=1e6?(v/1e6).toFixed(2)+'M':(v/1e3).toFixed(1)+'K'); };",
+                      "const lblK = v => Math.round(v).toLocaleString('en-US');")
+        h = h.replace('font-size="10.5" font-weight="600" fill="#FFFFFF">${lblK(r.total)}', 'font-size="10" font-weight="600" fill="#1E3326">${lblK(r.total)}')
         h = h.replace('color-scheme: dark', 'color-scheme: light').replace("localStorage.getItem('tab')", "localStorage.getItem('ttab')").replace("localStorage.setItem('tab'", "localStorage.setItem('ttab'")
     # كشف حالة التطبيق لطبقة تفاصيل الرسوم
     h = h.replace('const st={', 'const st=window.__st={', 1)
