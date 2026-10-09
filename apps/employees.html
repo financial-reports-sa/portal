@@ -150,7 +150,7 @@ const BR_FALLBACK=[{id:'az',name:'العزيزية',color:'#D4AF37'},{id:'sh',na
 const JOBS=['مدير فرع','مشرف','كاشير','طباخ','مساعد طباخ','معلم بروست','معلم شاورما','عامل تحضير','عامل نظافة','مباشر صالة','سائق','محاسب'];
 const ST={active:{t:'على رأس العمل',cl:'p-ok'},vacation:{t:'إجازة',cl:'p-vac'},left:{t:'منتهية خدماته',cl:'p-bad'}};
 const REASONS=['استقالة','إنهاء من الشركة','انتهاء العقد','انقطاع عن العمل','نقل كفالة','خروج نهائي','أخرى'];
-const FLD={name:'الاسم',branch:'الفرع',job:'المسمى',nationality:'الجنسية',phone:'الجوال',iqama:'رقم الإقامة',has_iqama:'يوجد إقامة',has_health:'يوجد شهادة صحية',health_no:'رقم الشهادة الصحية',iqama_exp:'انتهاء الإقامة',health_exp:'انتهاء الشهادة الصحية',start_date:'تاريخ المباشرة',salary:'الراتب',status:'الحالة',left_date:'تاريخ انتهاء الخدمة',end_reason:'سبب الانتهاء',notes:'ملاحظات'};
+const FLD={name:'الاسم',branch:'الفرع',job:'المسمى',nationality:'الجنسية',phone:'الجوال',iqama:'رقم الإقامة',has_iqama:'يوجد إقامة',has_health:'يوجد شهادة صحية',health_no:'رقم الشهادة الصحية',health_exp:'انتهاء الشهادة الصحية',start_date:'تاريخ المباشرة',salary:'الراتب',status:'الحالة',left_date:'تاريخ انتهاء الخدمة',end_reason:'سبب الانتهاء',notes:'ملاحظات'};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const toEn=s=>String(s??'').replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
@@ -198,7 +198,7 @@ function docState(d){
 }
 function alertsOf(rows){
   const a=[];rows.filter(isOn).forEach(r=>{
-    [['iqama_exp','الإقامة'],['health_exp','الشهادة الصحية']].forEach(([k,n])=>{const s=docState(r[k]);if(s&&s.n<=30)a.push({r,k,n,s})});
+    [['health_exp','الشهادة الصحية']].forEach(([k,n])=>{const s=docState(r[k]);if(s&&s.n<=30)a.push({r,k,n,s})});
   });
   return a.sort((x,y)=>x.s.n-y.s.n);
 }
@@ -275,7 +275,7 @@ function renderList(){
     const br=rows.filter(r=>r.branch===b.id).sort((x,y)=>(x.status==='left')-(y.status==='left')||x.name.localeCompare(y.name,'ar'));
     if(!br.length)return;
     h+=`<div class="card">${S.branches.length>1?`<div class="grp"><i style="background:${b.color}"></i>${esc(b.name)} · ${br.length}</div>`:''}${br.map(r=>{
-      const w=[docState(r.iqama_exp),docState(r.health_exp)].filter(s=>s&&s.n<=30&&r.status!=='left');
+      const w=[docState(r.health_exp)].filter(s=>s&&s.n<=30&&r.status!=='left');
       return `<button class="emp ${r.status==='left'?'left':''}" data-open="${r.id}"><span class="av" style="background:${b.color}">${esc((r.name||'?').trim().charAt(0))}</span><span class="nm"><b>${esc(r.name)}</b><small>${esc(r.job||'—')} · ${r.status==='left'?'انتهت '+dShort(r.left_date)+(r.end_reason?' · '+esc(r.end_reason):''):'من '+dShort(r.start_date)}</small></span><span class="v"><b class="num">${fmt(r.salary)}</b>${r.status!=='active'?`<span class="pill ${ST[r.status].cl}">${ST[r.status].t}</span>`:w.length?`<span class="pill ${w.some(s=>s.n<0)?'p-bad':'p-warn'}">وثيقة</span>`:''}</span></button>`}).join('')}</div>`;
   });
   el.innerHTML=h;
@@ -296,7 +296,6 @@ function openDetail(id){
   <div class="kv"><span>الجنسية</span><b>${esc(r.nationality||'—')}</b></div>
   <div class="kv"><span>الجوال</span><b class="num">${r.phone?`<a href="tel:${esc(r.phone)}" style="color:inherit">${esc(r.phone)}</a>`:'—'}</b></div>
   <div class="kv"><span>الإقامة</span><b class="num">${r.has_iqama||r.iqama?esc(r.iqama||'—'):'لا يوجد'}</b></div>
-  ${r.has_iqama||r.iqama_exp?`<div class="kv"><span>انتهاء الإقامة</span><b>${ds('iqama_exp')}</b></div>`:''}
   <div class="kv"><span>الشهادة الصحية</span><b class="num">${r.has_health||r.health_exp?esc(r.health_no||'—'):'لا يوجد'}</b></div>
   ${r.has_health||r.health_exp?`<div class="kv"><span>انتهاء الشهادة الصحية</span><b>${ds('health_exp')}</b></div>`:''}
   ${r.notes?`<div class="note">${esc(r.notes)}</div>`:''}
@@ -341,14 +340,14 @@ function openEnd(r){
 function openForm(r){
   const isNew=!r;r=r||{branch:S.f!=='all'?S.f:(S.branches.length===1?S.branches[0].id:''),status:'active',start_date:today()};
   const m=document.createElement('div');m.className='modal';
-  let yi=isNew?null:!!(r.has_iqama||r.iqama||r.iqama_exp),yh=isNew?null:!!(r.has_health||r.health_no||r.health_exp);
+  let yi=isNew?null:!!(r.has_iqama||r.iqama),yh=isNew?null:!!(r.has_health||r.health_no||r.health_exp);
   const opt=(v,t,sel)=>`<option value="${esc(v)}" ${v===sel?'selected':''}>${esc(t)}</option>`;
   m.innerHTML=`<div class="sheet"><h3>${isNew?'موظف جديد':'تعديل بيانات '+esc(r.name)}</h3>
   <form id="ef" class="fg" novalidate>
     <label class="fld full"><span>الاسم <em>*</em></span><input name="name" value="${esc(r.name||'')}" autocomplete="off"></label>
     <div class="fld"><span>هل يوجد إقامة؟ <em>*</em></span><div class="seg yn" data-yn="iq"><button type="button" data-v="1" class="${yi===true?'on':''}">نعم</button><button type="button" data-v="0" class="${yi===false?'on':''}">لا</button></div></div>
     <div class="fld"><span>هل يوجد شهادة صحية؟ <em>*</em></span><div class="seg yn" data-yn="hc"><button type="button" data-v="1" class="${yh===true?'on':''}">نعم</button><button type="button" data-v="0" class="${yh===false?'on':''}">لا</button></div></div>
-    <div class="docbox full ${yi?'':'hide'}" id="iqBox"><b>الإقامة</b><div class="fg"><label class="fld"><span>رقم الإقامة <em>*</em></span><input name="iqama" class="ltr num" inputmode="numeric" value="${esc(r.iqama||'')}"></label><label class="fld"><span>تاريخ الانتهاء <em>*</em></span><input type="date" name="iqama_exp" value="${esc(r.iqama_exp||'')}"></label></div></div>
+    <div class="docbox full ${yi?'':'hide'}" id="iqBox"><b>الإقامة</b><label class="fld"><span>رقم الإقامة <em>*</em></span><input name="iqama" class="ltr num" inputmode="numeric" value="${esc(r.iqama||'')}"></label></div>
     <div class="docbox full ${yh?'':'hide'}" id="hcBox"><b>الشهادة الصحية</b><div class="fg"><label class="fld"><span>رقم الشهادة <em>*</em></span><input name="health_no" class="ltr num" value="${esc(r.health_no||'')}"></label><label class="fld"><span>تاريخ الانتهاء <em>*</em></span><input type="date" name="health_exp" value="${esc(r.health_exp||'')}"></label></div></div>
     ${S.branches.length>1?`<label class="fld"><span>الفرع <em>*</em></span><select name="branch"><option value="">اختر</option>${S.branches.map(b=>opt(b.id,b.name,r.branch)).join('')}</select></label>`:`<input type="hidden" name="branch" value="${esc(r.branch||(S.branches[0]||{}).id||'')}">`}
     <label class="fld ${S.branches.length>1?'':'full'}"><span>المسمى الوظيفي <em>*</em></span><input name="job" list="jobs" value="${esc(r.job||'')}" autocomplete="off"></label>
@@ -372,8 +371,8 @@ function openForm(r){
     if(!a||a.dataset.a!=='1')return;
     const f=new FormData(m.querySelector('#ef'));const g=k=>String(f.get(k)||'').trim();
     const sal=toEn(g('salary')).replace(/[,،\s]/g,'').replace('٫','.');
-    const rec={name:g('name'),branch:g('branch'),job:g('job'),start_date:g('start_date'),salary:sal===''?null:Number(sal),nationality:g('nationality'),phone:toEn(g('phone')),has_iqama:!!yi,iqama:yi?toEn(g('iqama')):'',iqama_exp:yi?(g('iqama_exp')||null):null,has_health:!!yh,health_no:yh?toEn(g('health_no')):'',health_exp:yh?(g('health_exp')||null):null,status,left_date:status==='left'?(g('left_date')||null):null,notes:g('notes')};if(!isNew)rec.end_reason=status==='left'?g('end_reason'):'';
-    const err=!rec.name?'اكتب اسم الموظف':!rec.branch?'اختر الفرع':!rec.job?'اكتب المسمى الوظيفي':!rec.start_date?'حدد تاريخ المباشرة':(rec.salary==null||isNaN(rec.salary)||rec.salary<0)?'اكتب الراتب المتفق عليه بالأرقام':yi==null?'حدد: هل يوجد إقامة؟':(yi&&!rec.iqama)?'اكتب رقم الإقامة':(yi&&!rec.iqama_exp)?'حدد تاريخ انتهاء الإقامة':yh==null?'حدد: هل يوجد شهادة صحية؟':(yh&&!rec.health_no)?'اكتب رقم الشهادة الصحية':(yh&&!rec.health_exp)?'حدد تاريخ انتهاء الشهادة الصحية':(status==='left'&&!rec.left_date)?'حدد تاريخ انتهاء الخدمة':(rec.left_date&&rec.left_date<rec.start_date)?'تاريخ انتهاء الخدمة قبل تاريخ المباشرة':'';
+    const rec={name:g('name'),branch:g('branch'),job:g('job'),start_date:g('start_date'),salary:sal===''?null:Number(sal),nationality:g('nationality'),phone:toEn(g('phone')),has_iqama:!!yi,iqama:yi?toEn(g('iqama')):'',iqama_exp:null,has_health:!!yh,health_no:yh?toEn(g('health_no')):'',health_exp:yh?(g('health_exp')||null):null,status,left_date:status==='left'?(g('left_date')||null):null,notes:g('notes')};if(!isNew)rec.end_reason=status==='left'?g('end_reason'):'';
+    const err=!rec.name?'اكتب اسم الموظف':!rec.branch?'اختر الفرع':!rec.job?'اكتب المسمى الوظيفي':!rec.start_date?'حدد تاريخ المباشرة':(rec.salary==null||isNaN(rec.salary)||rec.salary<0)?'اكتب الراتب المتفق عليه بالأرقام':yi==null?'حدد: هل يوجد إقامة؟':(yi&&!rec.iqama)?'اكتب رقم الإقامة':yh==null?'حدد: هل يوجد شهادة صحية؟':(yh&&!rec.health_no)?'اكتب رقم الشهادة الصحية':(yh&&!rec.health_exp)?'حدد تاريخ انتهاء الشهادة الصحية':(status==='left'&&!rec.left_date)?'حدد تاريخ انتهاء الخدمة':(rec.left_date&&rec.left_date<rec.start_date)?'تاريخ انتهاء الخدمة قبل تاريخ المباشرة':'';
     if(err){m.querySelector('#fe').textContent=err;return}
     a.disabled=true;a.textContent='جاري الحفظ…';
     const res=isNew?await SBC.from('employees').insert(rec):await SBC.from('employees').update(rec).eq('id',r.id);
@@ -443,7 +442,7 @@ async function doExport(){
       const ws=wb.addWorksheet(b.name.slice(0,30),{views:[{rightToLeft:true}],
         pageSetup:{paperSize:9,orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0,margins:{left:.4,right:.4,top:.6,bottom:.6,header:.3,footer:.3}},
         headerFooter:{oddHeader:'&R&"Arial,Bold"كشف الموظفين الشهري&L&"Arial"'+b.name,oddFooter:'&R&"Arial"'+AUTHOR+'&C&"Arial"صفحة &P من &N&L&"Arial"&D'}});
-      const W=[5,26,16,11,13,14,13,15,13,13,15,13,15,10,15,26];ws.columns=W.map(w=>({width:w}));const last=W.length;
+      const W=[5,26,16,11,13,14,15,13,13,15,13,15,10,15,26];ws.columns=W.map(w=>({width:w}));const last=W.length;
       ws.mergeCells(1,1,1,last);ws.getCell(1,1).value='كشف الموظفين — فرع '+b.name;
       ws.getCell(1,1).font={name:F,bold:true,size:15};ws.getCell(1,1).alignment={horizontal:'center',vertical:'middle'};ws.getRow(1).height=26;
       ws.mergeCells(2,1,2,last);ws.getCell(2,1).value='عن شهر '+mLong(E.month)+'  ·  تاريخ الإصدار '+dLong(today());
@@ -453,31 +452,31 @@ async function doExport(){
       let rn=5;const sums=[];
       const block=(title,rows,ended)=>{
         ws.mergeCells(rn,1,rn,last);const tc=ws.getCell(rn,1);tc.value=title;tc.font={name:F,bold:true,size:12};tc.alignment={horizontal:'right'};rn++;
-        const H=['م','اسم الموظف','المسمى الوظيفي','الجنسية','الجوال','رقم الإقامة','انتهاء الإقامة','رقم الشهادة الصحية','انتهاء الشهادة الصحية','تاريخ المباشرة',ended?'سبب الانتهاء':'الحالة',ended?'آخر يوم عمل':'','الراتب المتفق عليه','أيام العمل','المستحق للشهر','ملاحظات'];
+        const H=['م','اسم الموظف','المسمى الوظيفي','الجنسية','الجوال','رقم الإقامة','رقم الشهادة الصحية','انتهاء الشهادة الصحية','تاريخ المباشرة',ended?'سبب الانتهاء':'الحالة',ended?'آخر يوم عمل':'','الراتب المتفق عليه','أيام العمل','المستحق للشهر','ملاحظات'];
         const hr=ws.getRow(rn++);H.forEach((t,i)=>{const c=hr.getCell(i+1);c.value=t;c.font={name:F,bold:true,size:11};c.alignment={horizontal:'center',vertical:'middle',wrapText:true};c.border={top:{style:'medium'},bottom:{style:'medium'},left:thin,right:thin};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFEDEDED'}}});hr.height=30;
         const f0=rn;
         rows.forEach((r,i)=>{
           const row=ws.getRow(rn++);
           const st=ended?(r.end_reason||'—'):r.status==='vacation'?'إجازة':(r.isNew?'مباشر جديد':'على رأس العمل');
-          const vals=[i+1,r.name,r.job,r.nationality||'',r.phone||'',r.iqama||'لا يوجد',r.iqama_exp?xd(r.iqama_exp):'',r.health_no||'لا يوجد',r.health_exp?xd(r.health_exp):'',xd(r.start_date),st,ended&&r.left_date?xd(r.left_date):'',+r.salary||0,r.days,r.due,r.notes||''];
-          vals.forEach((v,j)=>{const c=row.getCell(j+1);c.value=v;c.font={name:F,size:11};c.border=box;c.alignment={vertical:'middle',horizontal:[1,2,15].includes(j)?'right':'center',wrapText:j===15}});
-          [7,9,10,12].forEach(k=>row.getCell(k).numFmt='yyyy-mm-dd');[13,15].forEach(k=>row.getCell(k).numFmt='#,##0.00');[5,6,8].forEach(k=>row.getCell(k).numFmt='@');
+          const vals=[i+1,r.name,r.job,r.nationality||'',r.phone||'',r.iqama||'لا يوجد',r.health_no||'لا يوجد',r.health_exp?xd(r.health_exp):'',xd(r.start_date),st,ended&&r.left_date?xd(r.left_date):'',+r.salary||0,r.days,r.due,r.notes||''];
+          vals.forEach((v,j)=>{const c=row.getCell(j+1);c.value=v;c.font={name:F,size:11};c.border=box;c.alignment={vertical:'middle',horizontal:[1,2,14].includes(j)?'right':'center',wrapText:j===14}});
+          [8,9,11].forEach(k=>row.getCell(k).numFmt='yyyy-mm-dd');[12,14].forEach(k=>row.getCell(k).numFmt='#,##0.00');[5,6,7].forEach(k=>row.getCell(k).numFmt='@');
         });
         if(!rows.length){ws.mergeCells(rn,1,rn,last);const c=ws.getCell(rn,1);c.value='لا يوجد';c.font={name:F,size:10,italic:true};c.alignment={horizontal:'center'};c.border=box;rn++}
-        const f1=rn-1,tr=ws.getRow(rn);ws.mergeCells(rn,1,rn,12);tr.getCell(1).value='المجموع';
-        tr.getCell(13).value=rows.length?{formula:`SUM(M${f0}:M${f1})`,result:rows.reduce((s,r)=>s+(+r.salary||0),0)}:0;
-        tr.getCell(15).value=rows.length?{formula:`SUM(O${f0}:O${f1})`,result:Math.round(rows.reduce((s,r)=>s+r.due,0)*100)/100}:0;
+        const f1=rn-1,tr=ws.getRow(rn);ws.mergeCells(rn,1,rn,11);tr.getCell(1).value='المجموع';
+        tr.getCell(12).value=rows.length?{formula:`SUM(L${f0}:L${f1})`,result:rows.reduce((s,r)=>s+(+r.salary||0),0)}:0;
+        tr.getCell(14).value=rows.length?{formula:`SUM(N${f0}:N${f1})`,result:Math.round(rows.reduce((s,r)=>s+r.due,0)*100)/100}:0;
         for(let j=1;j<=last;j++){const c=tr.getCell(j);c.font={name:F,bold:true,size:11};c.border={top:{style:'double'},bottom:{style:'medium'},left:thin,right:thin};c.alignment={horizontal:'center',vertical:'middle'}}
-        tr.getCell(13).numFmt='#,##0.00';tr.getCell(15).numFmt='#,##0.00';tr.height=22;sums.push(rn);rn+=2;
+        tr.getCell(12).numFmt='#,##0.00';tr.getCell(14).numFmt='#,##0.00';tr.height=22;sums.push(rn);rn+=2;
       };
       block('أولاً: الموظفين النشيطين',act,0);
       if(end.length)block('ثانياً: الموظفين المنتهية خدماتهم خلال الشهر',end,1);
-      if(sums.length>1){const g=ws.getRow(rn);ws.mergeCells(rn,1,rn,14);g.getCell(1).value='إجمالي المستحق للفرع';g.getCell(15).value={formula:sums.map(x=>'O'+x).join('+'),result:Math.round(p.reduce((s,r)=>s+r.due,0)*100)/100};
-        for(let j=1;j<=last;j++){const c=g.getCell(j);c.font={name:F,bold:true,size:12};c.border={top:{style:'medium'},bottom:{style:'double'},left:thin,right:thin};c.alignment={horizontal:'center',vertical:'middle'}}g.getCell(15).numFmt='#,##0.00';g.height=24;rn+=2}
+      if(sums.length>1){const g=ws.getRow(rn);ws.mergeCells(rn,1,rn,13);g.getCell(1).value='إجمالي المستحق للفرع';g.getCell(14).value={formula:sums.map(x=>'N'+x).join('+'),result:Math.round(p.reduce((s,r)=>s+r.due,0)*100)/100};
+        for(let j=1;j<=last;j++){const c=g.getCell(j);c.font={name:F,bold:true,size:12};c.border={top:{style:'medium'},bottom:{style:'double'},left:thin,right:thin};c.alignment={horizontal:'center',vertical:'middle'}}g.getCell(14).numFmt='#,##0.00';g.height=24;rn+=2}
       ws.mergeCells(rn,1,rn,last);ws.getCell(rn,1).value='المستحق: الشهر الكامل بالراتب المتفق عليه، والمباشر أو المنتهية خدماته خلال الشهر (الراتب ÷ 30) × أيام العمل.';ws.getCell(rn,1).font={name:F,size:9,italic:true};
       const sr=rn+3;
-      [['مدير الفرع',2],['المحاسب',8],['الاعتماد',14]].forEach(([t,c])=>{ws.getCell(sr,c).value=t+':';ws.getCell(sr,c).font={name:F,bold:true,size:11};ws.getCell(sr+1,c).value='التوقيع: ____________________';ws.getCell(sr+1,c).font={name:F,size:10}});
-      ws.pageSetup.printArea=`A1:P${sr+1}`;
+      [['مدير الفرع',2],['المحاسب',7],['الاعتماد',13]].forEach(([t,c])=>{ws.getCell(sr,c).value=t+':';ws.getCell(sr,c).font={name:F,bold:true,size:11};ws.getCell(sr+1,c).value='التوقيع: ____________________';ws.getCell(sr+1,c).font={name:F,size:10}});
+      ws.pageSetup.printArea=`A1:O${sr+1}`;
     });
     const buf=await wb.xlsx.writeBuffer();
     const name=`كشف-الموظفين-${E.branch==='all'?'كل-الفروع':brById(E.branch).name}-${E.month}.xlsx`;

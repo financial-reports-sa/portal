@@ -36,7 +36,7 @@ alter table public.employees add column if not exists end_reason text not null d
 alter table public.employees add column if not exists has_iqama  boolean not null default false;
 alter table public.employees add column if not exists has_health boolean not null default false;
 alter table public.employees add column if not exists health_no  text    not null default '';
-update public.employees set has_iqama = true  where not has_iqama  and (iqama <> '' or iqama_exp is not null);
+update public.employees set has_iqama = true  where not has_iqama  and iqama <> '';
 update public.employees set has_health = true where not has_health and health_exp is not null;
 
 -- 3) سجل التعديلات (مين أضاف / عدّل / حذف وإيش تغيّر)
@@ -77,7 +77,7 @@ begin
   new.end_reason := left(btrim(coalesce(new.end_reason, '')), 80);
   new.health_no := left(btrim(coalesce(new.health_no, '')), 30);
   if not new.has_iqama then new.iqama := ''; new.iqama_exp := null;
-  elsif new.iqama = '' or new.iqama_exp is null then raise exception 'رقم الإقامة وتاريخ انتهائها مطلوبين';
+  elsif new.iqama = '' then raise exception 'رقم الإقامة مطلوب';
   end if;
   if not new.has_health then new.health_no := ''; new.health_exp := null;
   elsif new.health_no = '' or new.health_exp is null then raise exception 'رقم الشهادة الصحية وتاريخ انتهائها مطلوبين';
