@@ -96,7 +96,7 @@ begin
   end if;
   v_allowed := case v_branch
     when 'az' then array['تطبيق الشادن','هنقرستيشن','كيتا','نينجا']
-    when 'sh' then array['هنقرستيشن','كيتا','فرصة','نينجا']
+    when 'sh' then array['تطبيق الشادن','هنقرستيشن','كيتا','نينجا']
     when 'pc' then array['هنقرستيشن','كيتا','نينجا'] end;
   if v_allowed is null then return jsonb_build_object('ok', false, 'error', 'branch', 'message', 'الفرع غير معروف'); end if;
   select code into v_code from cashier_codes where pin = btrim(coalesce(p->>'pin', '')) and branch = v_branch;
@@ -221,4 +221,9 @@ grant execute on function public.handover_codes() to authenticated;
 grant execute on function public.handover_admin_save(text, jsonb) to authenticated;
 grant execute on function public.handover_can(text) to authenticated;
 
-select 'تم تفعيل تسليم الورديات (مع الفواتير والتعديل) ✓' as result;
+-- شوران: «فرصة» صارت «تطبيق الشادن» — نقل المبالغ المسجلة سابقاً
+update public.handovers
+   set apps = (apps - 'فرصة') || jsonb_build_object('تطبيق الشادن', coalesce((apps->>'تطبيق الشادن')::numeric,0) + (apps->>'فرصة')::numeric)
+ where apps ? 'فرصة';
+
+select 'تم تفعيل تسليم الورديات (مع الفواتير والتعديل — شوران: تطبيق الشادن) ✓' as result;
