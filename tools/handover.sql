@@ -188,6 +188,19 @@ begin
   return jsonb_build_object('ok', true);
 end $$;
 
+-- تعديل تسليم من المالك/الآدمن (نفس تحقق تسليم الكاشير، والتاريخ والكاشير ثابتين)
+create or replace function public.handover_admin_save(p_hid text, p jsonb) returns jsonb
+language plpgsql volatile security definer set search_path = public as $$
+declare h handovers; v_pin text;
+begin
+  if not coalesce(is_writer(), false) then return jsonb_build_object('ok', false, 'message', 'للمالك والآدمن فقط'); end if;
+  select * into h from handovers where hid = p_hid;
+  if h.hid is null then return jsonb_build_object('ok', false, 'message', 'التسليم غير موجود'); end if;
+  select pin into v_pin from cashier_codes where code = h.code;
+  if v_pin is null then return jsonb_build_object('ok', false, 'message', 'رمز الكاشير غير موجود'); end if;
+  return submit_handover(p || jsonb_build_object('pin', v_pin, 'branch', h.branch, 'date', h.date::text, 'shift', h.shift));
+end $$;
+
 create or replace function public.handover_codes() returns table (pin text, code text, branch text)
 language sql stable security definer set search_path = public as $$
   select c.pin, c.code, c.branch from cashier_codes c where coalesce(is_writer(), false) order by c.branch, c.code
@@ -198,12 +211,14 @@ revoke all on function public.handover_list(text) from public;
 revoke all on function public.handover_mark(text, text, text) from public;
 revoke all on function public.handover_delete(text) from public;
 revoke all on function public.handover_codes() from public;
+revoke all on function public.handover_admin_save(text, jsonb) from public;
 revoke all on function public.handover_can(text) from public;
 grant execute on function public.submit_handover(jsonb) to anon, authenticated;
 grant execute on function public.handover_list(text) to authenticated;
 grant execute on function public.handover_mark(text, text, text) to authenticated;
 grant execute on function public.handover_delete(text) to authenticated;
 grant execute on function public.handover_codes() to authenticated;
+grant execute on function public.handover_admin_save(text, jsonb) to authenticated;
 grant execute on function public.handover_can(text) to authenticated;
 
-select 'تم تفعيل تسليم الورديات (مع الفواتير) ✓' as result;
+select 'تم تفعيل تسليم الورديات (مع الفواتير والتعديل) ✓' as result;
