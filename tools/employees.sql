@@ -36,6 +36,8 @@ alter table public.employees add column if not exists end_reason text not null d
 alter table public.employees add column if not exists has_iqama  boolean not null default false;
 alter table public.employees add column if not exists has_health boolean not null default false;
 alter table public.employees add column if not exists health_no  text    not null default '';
+-- نوع الهوية: مقيم / زائر / مواطن / لا يوجد
+alter table public.employees add column if not exists id_type text not null default '';
 update public.employees set has_iqama = true  where not has_iqama  and iqama <> '';
 update public.employees set has_health = true where not has_health and health_exp is not null;
 
@@ -76,8 +78,12 @@ begin
   new.notes := left(coalesce(new.notes, ''), 500);
   new.end_reason := left(btrim(coalesce(new.end_reason, '')), 80);
   new.health_no := left(btrim(coalesce(new.health_no, '')), 30);
+  if coalesce(new.id_type, '') not in ('resident','visitor','citizen','none') then
+    new.id_type := case when new.has_iqama then 'resident' else 'none' end;
+  end if;
+  new.has_iqama := new.id_type <> 'none';
   if not new.has_iqama then new.iqama := ''; new.iqama_exp := null;
-  elsif new.iqama = '' then raise exception 'رقم الإقامة مطلوب';
+  elsif new.iqama = '' then raise exception 'رقم الهوية مطلوب';
   end if;
   if not new.has_health then new.health_no := ''; new.health_exp := null;
   elsif new.health_no = '' or new.health_exp is null then raise exception 'رقم الشهادة الصحية وتاريخ انتهائها مطلوبين';
@@ -144,10 +150,15 @@ grant select on public.employee_log to authenticated;
 revoke all on function public.employees_can(text) from public;
 grant execute on function public.employees_can(text) to authenticated;
 
+-- تعبئة نوع الهوية للموظفين المسجلين قبل (بدون ما تنزل في سجل التعديلات)
+alter table public.employees disable trigger employees_audit;
+update public.employees set id_type = case when has_iqama then 'resident' else 'none' end where id_type = '';
+alter table public.employees enable trigger employees_audit;
+
 -- 5) تفعيل القسم لمدراء الفروع الحاليين (اللي عندهم قسم المبيعات)
 insert into public.user_sections (user_id, section)
 select distinct us.user_id, 'employees' from public.user_sections us
 where us.section = 'sales'
   and not exists (select 1 from public.user_sections x where x.user_id = us.user_id and x.section = 'employees');
 
-select 'تم تفعيل جدول الموظفين (مع الإقامة والشهادة الصحية) ✓' as result;
+select 'تم تفعيل جدول الموظفين (مع نوع الهوية والشهادة الصحية) ✓' as result;
