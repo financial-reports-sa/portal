@@ -97,7 +97,7 @@ toast(status==='ok'?'تم تعليمه كمراجَع':status==='issue'?'تم ح
 }
 async function delRow(id){
 const r=S.rows.find(x=>x.id===id);if(!r)return;
-if(!confirm('حذف تسليم '+r.cashier+' ('+SM[r.shift].s+') نهائياً؟'))return;
+if(!confirm('حذف تسليم '+r.cashier+' نهائياً؟'))return;
 const {data,error}=await SBC.rpc('handover_delete',{p_hid:id});
 if(error||!data||!data.ok){toast((data&&data.message)||'تعذّر الحذف',1);return}
 S.rows=S.rows.filter(x=>x.id!==id);toast('تم الحذف');renderDash();
@@ -185,7 +185,7 @@ h+=`<div class="card bcard" style="border-top-color:${b.c}"><div class="bhead"><
 if(!br.length)h+=`<div class="shift miss"><div class="h"><div class="nm"><small>ما فيه تسليمات لهذا اليوم</small></div></div></div>`;
 else if(!shown.length)h+=`<div class="shift miss"><div class="h"><div class="nm"><small>كل التسليمات مراجَعة</small></div></div></div>`;
 shown.forEach(r=>{const op=S.open[r.id],rv=rvOf(r);
-h+=`<div class="shift"><button class="h" data-open="${r.id}"><div class="nm"><b>${esc(r.cashier)} <span class="rv ${rv.cl}">${rv.t}</span></b><small>${slotLabel(r.code)} · ${SM[r.shift].s} · ${tm(r.updatedAt||r.createdAt)}</small></div>${diffBadge(diffOf(r))}<span class="v num">${fmt(totOf(r))}</span>
+h+=`<div class="shift"><button class="h" data-open="${r.id}"><div class="nm"><b>${esc(r.cashier)} <span class="rv ${rv.cl}">${rv.t}</span></b><small>${slotLabel(r.code)} · ${tm(r.updatedAt||r.createdAt)}</small></div>${diffBadge(diffOf(r))}<span class="v num">${fmt(totOf(r))}</span>
 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7A90" stroke-width="2" style="transform:rotate(${op?180:0}deg);flex:none"><path d="m6 9 6 6 6-6"/></svg></button>
 ${op?`<div class="det">${detailHTML(r)}${reviewBox(r)}</div>`:''}</div>`});
 h+=`</div>`;
@@ -434,9 +434,9 @@ Object.assign(['الإجمالي',String(t.n),...PAY.map(p=>fmt0(t[p.k])),fmt0(t
 const rvCell=r=>r.reviewStatus==='ok'?{t:'مراجَع',c:'#137A50',w:600}:r.reviewStatus==='issue'?{t:'ملاحظة',c:'#9A6A06',w:600}:{t:'بانتظار',c:'#9AA6B8'};
 function handoverTable(R,list,byDate){
 const t=agg(list);
-R.table([{h:byDate?'التاريخ':'الكاشير',w:byDate?1.35:1.45,t:1},{h:'الوردية',w:.85},{h:'كاش',w:1},{h:'شبكة',w:1},{h:'آجل',w:.8},{h:'تحويلات',w:.95},{h:'فواتير',w:.9},{h:'تطبيقات',w:.95},{h:'الإجمالي',w:1.15},{h:'حجوزات*',w:.9},{h:'الفرق',w:.95},{h:'المراجعة',w:.9}],
-[...list.map(r=>[byDate?dShort(r.date):{t:r.cashier,w:600},SM[r.shift].s,fmt0(r.cash),fmt0(r.card),r.credit?fmt0(r.credit):'—',r.transfer?fmt0(r.transfer):'—',r.invoice?fmt0(r.invoice):'—',fmt0(appsTotal(r)),{t:fmt(totOf(r)),w:700},r.reserve?{t:fmt0(r.reserve),c:RESC}:'—',dCell(diffOf(r)),rvCell(r)]),
-Object.assign(['الإجمالي',String(list.length),fmt0(t.cash),fmt0(t.card),fmt0(t.credit),fmt0(t.transfer),fmt0(t.invoice),fmt0(t.apps),fmt(t.total),fmt0(t.reserve),netD(t),`${list.length-t.pend}/${list.length}`],{_tot:1})],{after:4,fs:13});
+R.table([{h:byDate?'التاريخ':'الكاشير',w:byDate?1.4:1.5,t:1},{h:'كاش',w:1},{h:'شبكة',w:1},{h:'آجل',w:.8},{h:'تحويلات',w:.95},{h:'فواتير',w:.9},{h:'تطبيقات',w:.95},{h:'الإجمالي',w:1.15},{h:'حجوزات*',w:.9},{h:'الفرق',w:.95},{h:'المراجعة',w:.9}],
+[...list.map(r=>[byDate?dShort(r.date):{t:r.cashier,w:600},fmt0(r.cash),fmt0(r.card),r.credit?fmt0(r.credit):'—',r.transfer?fmt0(r.transfer):'—',r.invoice?fmt0(r.invoice):'—',fmt0(appsTotal(r)),{t:fmt(totOf(r)),w:700},r.reserve?{t:fmt0(r.reserve),c:RESC}:'—',dCell(diffOf(r)),rvCell(r)]),
+Object.assign([`الإجمالي (${list.length})`,fmt0(t.cash),fmt0(t.card),fmt0(t.credit),fmt0(t.transfer),fmt0(t.invoice),fmt0(t.apps),fmt(t.total),fmt0(t.reserve),netD(t),`${list.length-t.pend}/${list.length}`],{_tot:1})],{after:4,fs:13});
 if(t.reserve)R.para(['* الحجوزات مبالغ مستلمة لكنها لا تُجمع مع إجمالي اليومية.']);else R.gap(8);
 }
 function detailTable(R,list,byDate){
@@ -463,7 +463,7 @@ handoverTable(R,list,true);
 const apps=b.apps.filter(a=>t.appsBy[a]);
 if(apps.length){R.section('تطبيقات التوصيل',APPC);R.table([{h:'التطبيق',w:2,t:1},{h:'المبلغ',w:1.3},{h:'النسبة',w:1}],apps.map(a=>[a,fmt(t.appsBy[a]),t.apps?Math.round(t.appsBy[a]/t.apps*100)+'%':'—']))}
 if(list.some(r=>(r.transfers||[]).length||(r.invoices||[]).length||(r.reservations||[]).length||(r.returns||[]).length)){R.section('تفاصيل التحويلات والفواتير والحجوزات والمردود');detailTable(R,list,true)}
-const notes=list.filter(r=>r.notes||r.reviewNote).flatMap(r=>[r.notes?`• ${dShort(r.date)} (${SM[r.shift].s}): ${r.notes}`:null,r.reviewNote?`• ملاحظة المراجعة ${dShort(r.date)}: ${r.reviewNote}`:null].filter(Boolean));
+const notes=list.filter(r=>r.notes||r.reviewNote).flatMap(r=>[r.notes?`• ${dShort(r.date)}: ${r.notes}`:null,r.reviewNote?`• ملاحظة المراجعة ${dShort(r.date)}: ${r.reviewNote}`:null].filter(Boolean));
 if(notes.length){R.section('الملاحظات');R.para(notes)}
 return R.finish();
 }
@@ -481,9 +481,9 @@ handoverTable(R,list,false);
 const apps=b.apps.filter(a=>bt.appsBy[a]);
 if(apps.length)R.table([{h:'تطبيق التوصيل',w:2,t:1},...apps.map(a=>({h:a,w:1.2})),{h:'الإجمالي',w:1.3}],[[{t:'المجموع',w:600},...apps.map(a=>fmt(bt.appsBy[a])),{t:fmt(bt.apps),w:700}]],{after:12});
 detailTable(R,list,false);
-const rvn=list.filter(r=>r.reviewNote).map(r=>`• ملاحظة المراجعة — ${r.cashier} (${SM[r.shift].s}): ${r.reviewNote}`);
+const rvn=list.filter(r=>r.reviewNote).map(r=>`• ملاحظة المراجعة — ${r.cashier}: ${r.reviewNote}`);
 if(rvn.length)R.para(rvn);
-const notes=list.filter(r=>r.notes).map(r=>`• ${r.cashier} (${SM[r.shift].s}): ${r.notes}`);
+const notes=list.filter(r=>r.notes).map(r=>`• ${r.cashier}: ${r.notes}`);
 if(notes.length)R.para(notes);else R.gap(10);
 });
 return R.finish();

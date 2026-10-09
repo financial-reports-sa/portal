@@ -66,7 +66,7 @@ function diffBadge(d){if(d==null)return'';if(Math.abs(d)<0.005)return`<span clas
 function toast(msg,err){const t=document.createElement('div');t.className='toast'+(err?' err':'');t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),err?4200:2400)}
 function ask(title,body,ok){return new Promise(res=>{const m=document.createElement('div');m.className='modal';m.innerHTML=`<div class="sheet"><h3>${title}</h3><div>${body}</div><div class="acts"><button class="btn ghost" data-a="0">رجوع</button><button class="btn" data-a="1">${ok}</button></div></div>`;m.addEventListener('click',e=>{const a=e.target.closest('[data-a]');if(a||e.target===m){m.remove();res(a?.dataset.a==='1')}});document.body.appendChild(m)})}
 const h=new Date().getHours();
-const S={done:null,f:{branch:lsGet('ho_branch')||'',shift:(h>=6&&h<16)?'am':'',date:bizDate(),cashier:lsGet('ho_cashier')||'',pin:lsGet('ho_pin')||'',cash:'',card:'',credit:'',apps:{},transfers:[],reservations:[],returns:[],invoices:[],system:'',notes:''}};
+const S={done:null,f:{branch:lsGet('ho_branch')||'',shift:'am',date:bizDate(),cashier:lsGet('ho_cashier')||'',pin:lsGet('ho_pin')||'',cash:'',card:'',credit:'',apps:{},transfers:[],reservations:[],returns:[],invoices:[],system:'',notes:''}};
 function listCard(L){const items=S.f[L.k];return`<div class="card"><h2><i class="dot" style="width:8px;height:8px;border-radius:50%;background:${L.c};display:inline-block"></i>${L.t}${L.k==='returns'?'<span class="tag">للعلم — لا يُخصم</span>':L.k==='reservations'?'<span class="tag">لا يُجمع مع اليومية</span>':''}</h2>${items.map((it,i)=>`<div class="li"><input class="la num" data-l="${L.k}" data-i="${i}" data-f="a" inputmode="decimal" placeholder="المبلغ" value="${esc(it.a)}"><input class="ln" data-l="${L.k}" data-i="${i}" data-f="n" placeholder="${L.ph}" value="${esc(it.n)}"><button class="lx" data-lx="${L.k}" data-i="${i}">×</button></div>`).join('')}<button class="ladd" data-ladd="${L.k}">+ ${L.add}</button>${items.length?`<div class="sum"><span>المجموع (${items.length})</span><b class="num" id="ls_${L.k}">0.00</b></div>`:''}</div>`}
 const cleanList=a=>(a||[]).map(x=>({a:pn(x.a),n:String(x.n||'').trim()})).filter(x=>x.a>0);
 function amtRow(id,label,color,val){return`<label class="amt"><i class="dot" style="background:${color}"></i><span>${label}</span><input id="${id}" inputmode="decimal" placeholder="0" value="${esc(val)}" autocomplete="off"><em>ر.س</em></label>`}
@@ -88,7 +88,7 @@ if(S.done){
 const r=S.done,b=BM[r.branch];
 $('#bar').classList.add('hide');
 el.innerHTML=`<div class="card done"><div class="ok"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
-<h2>تم تسليم الوردية</h2><p style="color:var(--mut);font-size:14px">فرع ${b.n} · ${SM[r.shift].n} · ${dShort(r.date)}</p>
+<h2>تم تسليم الوردية</h2><p style="color:var(--mut);font-size:14px">فرع ${b.n} · ${dShort(r.date)}</p>
 <div style="text-align:right;margin-top:16px">${detailHTML(r)}</div>
 <div class="acts" style="margin-top:18px"><button class="btn" id="newBtn">تسليم جديد</button></div></div>`;
 $('#newBtn').onclick=()=>{S.done=null;Object.assign(f,{cash:'',card:'',credit:'',apps:{},transfers:[],reservations:[],returns:[],invoices:[],system:'',notes:'',date:bizDate()});$('#bar').classList.remove('hide');render()};
@@ -100,16 +100,13 @@ el.innerHTML=`
 <span class="lbl">الفرع</span>
 <div class="brs">${BR.map(x=>`<button class="br ${f.branch===x.k?'on':''}" data-br="${x.k}" style="${f.branch===x.k?`background:${x.c};border-color:${x.c}`:''}"><i style="background:${f.branch===x.k?'#fff':x.c}"></i>${x.n}</button>`).join('')}</div>
 <div style="height:14px"></div>
-<span class="lbl">الوردية</span>
-<div class="seg">${SH.map(s=>`<button data-sh="${s.k}" class="${f.shift===s.k?'on':''}">${s.n}</button>`).join('')}</div>
-<div style="height:14px"></div>
 <div class="row2">
 <label class="fld"><span class="lbl">اسم الكاشير</span><input id="fCashier" value="${esc(f.cashier)}" placeholder="الاسم" autocomplete="name"></label>
-<label class="fld"><span class="lbl">تاريخ الوردية</span><input id="fDate" type="date" value="${f.date}" class="num"></label>
+<label class="fld"><span class="lbl">التاريخ</span><input id="fDate" type="date" value="${f.date}" class="num"></label>
 </div>
 <div style="height:12px"></div>
 <label class="fld"><span class="lbl">رمزك الشخصي</span><input id="fPin" value="${esc(f.pin)}" inputmode="numeric" placeholder="٤ أرقام" autocomplete="off" class="num" style="direction:ltr;text-align:right"></label>
-<p class="hint">الرمز خاص فيك، لا تعطيه أحد. الوردية اللي تسكّر بعد منتصف الليل تُسجَّل بتاريخ يومها.</p>
+<p class="hint">الرمز خاص فيك، لا تعطيه أحد. التسليم اللي بعد منتصف الليل يُسجَّل بتاريخ اليوم اللي قبله.</p>
 </div>
 <div class="card"><h2>المدفوعات في الفرع</h2>${PAY.map(p=>amtRow('p_'+p.k,p.n,p.c,f[p.k])).join('')}</div>
 ${listCard(LISTS[0])}${listCard(LISTS[3])}
@@ -157,11 +154,10 @@ const sd=$('#sysDiff');if(sd)sd.innerHTML=d==null?'':`<div class="kv"><span>ال
 async function submit(){
 const f=S.f,r=rec();
 if(!f.branch)return toast('اختر الفرع',1);
-if(!f.shift)return toast('اختر الوردية',1);
 if(!r.cashier){$('#fCashier').classList.add('err-in');return toast('اكتب اسم الكاشير',1)}
 if(!r.pin){$('#fPin').classList.add('err-in');return toast('اكتب رمزك الشخصي',1)}
 if(r.total<=0&&!r.returnsTotal&&!r.reserve)return toast('ما فيه أي مبلغ مدخل',1);
-if(!await ask('تأكيد التسليم',`<p>فرع ${BM[r.branch].n} · ${SM[r.shift].n} · ${dShort(r.date)} · ${esc(r.cashier)}</p>${detailHTML(r)}`,'تسليم'))return;
+if(!await ask('تأكيد التسليم',`<p>فرع ${BM[r.branch].n} · ${dShort(r.date)} · ${esc(r.cashier)}</p>${detailHTML(r)}`,'تسليم'))return;
 const btn=$('#submitBtn');btn.disabled=true;btn.textContent='جاري الإرسال…';
 try{
 if(!SB)throw new Error('cfg');
