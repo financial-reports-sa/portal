@@ -30,6 +30,8 @@ create table if not exists public.employees (
   updated_by  text not null default ''
 );
 create index if not exists employees_branch_idx on public.employees (branch);
+-- سبب إنهاء الخدمات (استقالة، إنهاء، انتهاء عقد…)
+alter table public.employees add column if not exists end_reason text not null default '';
 
 -- 3) سجل التعديلات (مين أضاف / عدّل / حذف وإيش تغيّر)
 create table if not exists public.employee_log (
@@ -66,7 +68,8 @@ begin
   new.phone := left(btrim(coalesce(new.phone, '')), 20);
   new.iqama := left(btrim(coalesce(new.iqama, '')), 20);
   new.notes := left(coalesce(new.notes, ''), 500);
-  if new.status <> 'left' then new.left_date := null; end if;
+  new.end_reason := left(btrim(coalesce(new.end_reason, '')), 80);
+  if new.status <> 'left' then new.left_date := null; new.end_reason := ''; end if;
   if tg_op = 'INSERT' then
     new.created_at := now(); new.created_by := v_who;
   else
@@ -134,4 +137,4 @@ select distinct us.user_id, 'employees' from public.user_sections us
 where us.section = 'sales'
   and not exists (select 1 from public.user_sections x where x.user_id = us.user_id and x.section = 'employees');
 
-select 'تم تفعيل جدول الموظفين ✓' as result;
+select 'تم تفعيل جدول الموظفين (مع إنهاء الخدمات) ✓' as result;
