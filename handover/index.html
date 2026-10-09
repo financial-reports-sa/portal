@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#F4F6FA">
+<title>تسليم الوردية</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="تسليم الوردية">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="../config.js?v=8"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>:root{color-scheme:light;--bg:#F4F6FA;--card:#FFFFFF;--line:#E1E7EF;--ink:#16233A;--mut:#6B7A90;--gold:#D4AF37;--up:#1FA16B;--down:#D0453A;--soft:#F8FAFC;--soft2:#EEF2F7}*{box-sizing:border-box;margin:0;padding:0}html,body{background:var(--bg)}body{color:var(--ink);font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;font-size:15px;line-height:1.5;-webkit-tap-highlight-color:transparent;overflow-x:hidden}button,input,textarea{font-family:inherit;font-size:inherit;color:inherit}button{cursor:pointer;border:0;background:none}.num{font-family:'Readex Pro',sans-serif;font-variant-numeric:tabular-nums}.wrap{max-width:560px;margin:0 auto;padding:16px 16px 150px}.wrap>*{min-width:0}.top{display:flex;align-items:center;gap:12px;margin:4px 0 16px}.top h1{font-size:22px;font-weight:700}.top .sub{font-size:13px;color:var(--mut)}.logo{width:42px;height:42px;border-radius:12px;background:var(--ink);color:var(--gold);display:grid;place-items:center;font-weight:700;font-size:19px;flex:none}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;overflow:hidden;margin-bottom:12px}.card h2{font-size:15px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}.card h2 .tag{font-size:12px;color:var(--mut);font-weight:500;margin-inline-start:auto}.lbl{font-size:13px;color:var(--mut);margin-bottom:8px;display:block}.brs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.br{border:1.5px solid var(--line);border-radius:12px;padding:12px 6px;text-align:center;font-weight:600;background:var(--card)}.br i{display:block;width:10px;height:10px;border-radius:50%;margin:0 auto 6px}.br.on{color:#fff}.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--soft2);border-radius:12px;padding:4px;gap:4px}.seg button{padding:9px;border-radius:9px;font-weight:600;color:var(--mut)}.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(22,35,58,.12)}.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.fld{display:block}.fld input,.fld textarea{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:11px 12px;background:var(--card);outline:none}input:focus,textarea:focus{border-color:var(--ink)!important}.fld textarea{min-height:70px;resize:vertical}.amt{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--soft2)}.amt:last-child{border-bottom:0}.amt .dot{width:8px;height:8px;border-radius:50%;flex:none}.amt span{flex:1;font-weight:600;min-width:0}.amt input{width:46%;max-width:190px;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;text-align:left;direction:ltr;font-family:'Readex Pro',sans-serif;font-size:17px;background:var(--soft);outline:none}.amt em{font-style:normal;font-size:12px;color:var(--mut);width:22px}.li{display:flex;gap:6px;align-items:center;margin-bottom:8px}.li input{border:1.5px solid var(--line);border-radius:10px;padding:10px;background:var(--soft);outline:none;min-width:0}.li .la{width:34%;flex:none;direction:ltr;text-align:left;font-size:16px}.li .ln{flex:1;font-size:14px}.lx{width:34px;height:34px;flex:none;border-radius:8px;background:#FBEBEA;color:#B23126;font-size:20px;line-height:1}.ladd{width:100%;padding:10px;border:1.5px dashed var(--line);border-radius:10px;font-weight:600;font-size:14px}.sum{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--mut);padding-top:10px}.sum b{color:var(--ink);font-size:15px}.hint{font-size:12px;color:var(--mut);margin-top:6px}.diff{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap}.diff.up{background:#E6F6EF;color:#137A50}.diff.down{background:#FBEBEA;color:#B23126}.diff.eq{background:var(--soft2);color:var(--mut)}.bar{position:fixed;inset-inline:0;bottom:0;z-index:20;background:rgba(255,255,255,.96);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom))}.bar .in{max-width:560px;margin:0 auto}.totline{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px}.totline small{color:var(--mut);font-size:12px;display:block}.totline b{font-size:22px}.btn{display:flex;align-items:center;justify-content:center;width:100%;padding:13px;border-radius:12px;background:var(--ink);color:#fff;font-weight:700;font-size:16px}.btn:disabled{opacity:.45}.btn.ghost{background:var(--soft2);color:var(--ink)}.hide{display:none!important}.kv{display:flex;justify-content:space-between;padding:4px 0;font-size:14px;gap:8px}.kv span{color:var(--mut)}.kv.t{border-top:1px solid var(--line);margin-top:4px;padding-top:8px;font-weight:700}.kv.sub{font-size:12.5px;padding:2px 12px 2px 0}.note{font-size:13px;background:#FFF8E6;border-radius:8px;padding:8px 10px;margin-top:8px;color:#6B5208}.acts{display:flex;gap:8px;margin-top:10px}.acts .btn{flex:1}.empty{text-align:center;color:var(--mut);padding:12px;font-size:14px}.done{text-align:center;padding:26px 16px}.done .ok{width:64px;height:64px;border-radius:50%;background:#E6F6EF;color:var(--up);display:grid;place-items:center;margin:0 auto 12px}.done h2{justify-content:center;font-size:20px}.modal{position:fixed;inset:0;background:rgba(22,35,58,.45);z-index:50;display:flex;align-items:flex-end;justify-content:center}.sheet{background:var(--card);width:100%;max-width:560px;border-radius:20px 20px 0 0;padding:20px 16px calc(16px + env(safe-area-inset-bottom));max-height:88vh;overflow:auto}.sheet h3{font-size:18px;margin-bottom:6px}.sheet p{color:var(--mut);font-size:14px;margin-bottom:14px}.toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;z-index:60;max-width:90vw;text-align:center}.toast.err{background:var(--down)}.err-in{border-color:var(--down)!important}</style>
+</head>
+<body>
+<div class="wrap">
+<div class="top">
+<div style="display:flex;gap:12px;align-items:center;min-width:0">
+<div class="logo">ت</div>
+<div style="min-width:0"><h1>تسليم الوردية</h1><div class="sub">عهدة الكاشير عند نهاية الوردية</div></div>
+</div>
+</div>
+<section id="vForm"></section>
+</div>
+<div class="bar" id="bar"><div class="in" id="formBar">
+<div class="totline">
+<div><small>إجمالي الوردية</small><b class="num" id="barTotal">0.00</b> <small style="display:inline">ر.س</small></div>
+<div id="barDiff"></div>
+</div>
+<button class="btn" id="submitBtn">تسليم الوردية</button>
+</div></div>
+<script>
+const BR=[
+{k:'az',  n:'العزيزية', c:'#D4AF37', apps:['تطبيق الشادن','هنقرستيشن','كيتا','نينجا']},
+{k:'sh',n:'شوران',    c:'#5B8FD0', apps:['هنقرستيشن','كيتا','فرصة','نينجا']},
+{k:'pc',n:'الباتشينو',c:'#A07BE6', apps:['هنقرستيشن','كيتا','نينجا']},
+];
+const BM=Object.fromEntries(BR.map(b=>[b.k,b]));
+const SH=[{k:'am',n:'الوردية الصباحية'},{k:'pm',n:'الوردية المسائية'}];
+const SM=Object.fromEntries(SH.map(s=>[s.k,s]));
+const PAY=[{k:'cash',n:'كاش',c:'#0F766E'},{k:'card',n:'شبكة',c:'#334E9E'},{k:'credit',n:'آجل',c:'#B45309'}];
+const APPC='#BE185D';
+const LISTS=[{k:'transfers',t:'التحويلات البنكية',add:'إضافة تحويل',ph:'اسم المحوِّل / رقم العملية',c:'#0891B2'},{k:'reservations',t:'الحجوزات',add:'إضافة حجز',ph:'اسم العميل / نوع الحجز',c:'#7C3AED'},{k:'returns',t:'المردود',add:'إضافة مردود',ph:'سبب المردود',c:'#64748B'}];
+const $=s=>document.querySelector(s);
+const SB=(window.supabase&&window.PORTAL_CONFIG)?window.supabase.createClient(window.PORTAL_CONFIG.url,window.PORTAL_CONFIG.key,{auth:{persistSession:false,autoRefreshToken:false}}):null;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const toEn=s=>String(s??'').replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/٫/g,'.').replace(/[,٬\s]/g,'').replace(/[^\d.]/g,'');
+const pn=v=>{const x=parseFloat(toEn(v));return isFinite(x)?Math.round(x*100)/100:0};
+const r2=n=>Math.round((n||0)*100)/100;
+const fmt=n=>Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const pad=n=>String(n).padStart(2,'0');
+const iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const pd=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const bizDate=()=>{const d=new Date();if(d.getHours()<6)d.setDate(d.getDate()-1);return iso(d)};
+const dShort=s=>pd(s).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn',{weekday:'long',day:'numeric',month:'long'});
+const appsTotal=r=>Object.values(r.apps||{}).reduce((a,b)=>a+(+b||0),0);
+const listSum=a=>r2((a||[]).reduce((s,x)=>s+(+x.a||0),0));
+const totOf=r=>r2((+r.cash||0)+(+r.card||0)+(+r.credit||0)+(+r.transfer||0)+(+r.reserve||0)+appsTotal(r));
+const diffOf=r=>r.system==null?null:r2(totOf(r)-r.system);
+const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+function diffBadge(d){if(d==null)return'';if(Math.abs(d)<0.005)return`<span class="diff eq">مطابق</span>`;return d>0?`<span class="diff up">زيادة <span class="num">${fmt(d)}</span></span>`:`<span class="diff down">عجز <span class="num">${fmt(-d)}</span></span>`}
+function toast(msg,err){const t=document.createElement('div');t.className='toast'+(err?' err':'');t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),err?4200:2400)}
+function ask(title,body,ok){return new Promise(res=>{const m=document.createElement('div');m.className='modal';m.innerHTML=`<div class="sheet"><h3>${title}</h3><div>${body}</div><div class="acts"><button class="btn ghost" data-a="0">رجوع</button><button class="btn" data-a="1">${ok}</button></div></div>`;m.addEventListener('click',e=>{const a=e.target.closest('[data-a]');if(a||e.target===m){m.remove();res(a?.dataset.a==='1')}});document.body.appendChild(m)})}
+const h=new Date().getHours();
+const S={done:null,f:{branch:lsGet('ho_branch')||'',shift:(h>=6&&h<16)?'am':'',date:bizDate(),cashier:lsGet('ho_cashier')||'',pin:lsGet('ho_pin')||'',cash:'',card:'',credit:'',apps:{},transfers:[],reservations:[],returns:[],system:'',notes:''}};
+function listCard(L){const items=S.f[L.k];return`<div class="card"><h2><i class="dot" style="width:8px;height:8px;border-radius:50%;background:${L.c};display:inline-block"></i>${L.t}${L.k==='returns'?'<span class="tag">للعلم — لا يُخصم</span>':''}</h2>${items.map((it,i)=>`<div class="li"><input class="la num" data-l="${L.k}" data-i="${i}" data-f="a" inputmode="decimal" placeholder="المبلغ" value="${esc(it.a)}"><input class="ln" data-l="${L.k}" data-i="${i}" data-f="n" placeholder="${L.ph}" value="${esc(it.n)}"><button class="lx" data-lx="${L.k}" data-i="${i}">×</button></div>`).join('')}<button class="ladd" data-ladd="${L.k}">+ ${L.add}</button>${items.length?`<div class="sum"><span>المجموع (${items.length})</span><b class="num" id="ls_${L.k}">0.00</b></div>`:''}</div>`}
+const cleanList=a=>(a||[]).map(x=>({a:pn(x.a),n:String(x.n||'').trim()})).filter(x=>x.a>0);
+function amtRow(id,label,color,val){return`<label class="amt"><i class="dot" style="background:${color}"></i><span>${label}</span><input id="${id}" inputmode="decimal" placeholder="0" value="${esc(val)}" autocomplete="off"><em>ر.س</em></label>`}
+function detailHTML(r){
+const li=a=>(a||[]).map(x=>`<div class="kv sub"><span>${esc(x.n)||'—'}</span><span class="num">${fmt(x.a)}</span></div>`).join('');
+return `${PAY.map(p=>`<div class="kv"><span>${p.n}</span><b class="num">${fmt(r[p.k])}</b></div>`).join('')}
+${r.transfer?`<div class="kv"><span>التحويلات البنكية</span><b class="num">${fmt(r.transfer)}</b></div>${li(r.transfers)}`:''}
+${r.reserve?`<div class="kv"><span>الحجوزات</span><b class="num">${fmt(r.reserve)}</b></div>${li(r.reservations)}`:''}
+${Object.entries(r.apps||{}).map(([a,v])=>`<div class="kv"><span>${esc(a)}</span><b class="num">${fmt(v)}</b></div>`).join('')}
+<div class="kv t"><span style="color:var(--ink)">الإجمالي</span><b class="num">${fmt(totOf(r))}</b></div>
+${r.system!=null?`<div class="kv"><span>إجمالي النظام</span><b class="num">${fmt(r.system)}</b></div><div class="kv"><span>الفرق</span>${diffBadge(diffOf(r))}</div>`:''}
+${r.returnsTotal?`<div class="kv" style="margin-top:6px"><span>المردود</span><b class="num">${fmt(r.returnsTotal)}</b></div>${li(r.returns)}`:''}
+${r.notes?`<div class="note">${esc(r.notes)}</div>`:''}`;
+}
+function render(){
+const f=S.f,el=$('#vForm');
+if(S.done){
+const r=S.done,b=BM[r.branch];
+$('#bar').classList.add('hide');
+el.innerHTML=`<div class="card done"><div class="ok"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+<h2>تم تسليم الوردية</h2><p style="color:var(--mut);font-size:14px">فرع ${b.n} · ${SM[r.shift].n} · ${dShort(r.date)}</p>
+<div style="text-align:right;margin-top:16px">${detailHTML(r)}</div>
+<div class="acts" style="margin-top:18px"><button class="btn" id="newBtn">تسليم جديد</button></div></div>`;
+$('#newBtn').onclick=()=>{S.done=null;Object.assign(f,{cash:'',card:'',credit:'',apps:{},transfers:[],reservations:[],returns:[],system:'',notes:'',date:bizDate()});$('#bar').classList.remove('hide');render()};
+return;
+}
+const b=BM[f.branch];
+el.innerHTML=`
+<div class="card">
+<span class="lbl">الفرع</span>
+<div class="brs">${BR.map(x=>`<button class="br ${f.branch===x.k?'on':''}" data-br="${x.k}" style="${f.branch===x.k?`background:${x.c};border-color:${x.c}`:''}"><i style="background:${f.branch===x.k?'#fff':x.c}"></i>${x.n}</button>`).join('')}</div>
+<div style="height:14px"></div>
+<span class="lbl">الوردية</span>
+<div class="seg">${SH.map(s=>`<button data-sh="${s.k}" class="${f.shift===s.k?'on':''}">${s.n}</button>`).join('')}</div>
+<div style="height:14px"></div>
+<div class="row2">
+<label class="fld"><span class="lbl">اسم الكاشير</span><input id="fCashier" value="${esc(f.cashier)}" placeholder="الاسم" autocomplete="name"></label>
+<label class="fld"><span class="lbl">تاريخ الوردية</span><input id="fDate" type="date" value="${f.date}" class="num"></label>
+</div>
+<div style="height:12px"></div>
+<label class="fld"><span class="lbl">رمزك الشخصي</span><input id="fPin" value="${esc(f.pin)}" inputmode="numeric" placeholder="٤ أرقام" autocomplete="off" class="num" style="direction:ltr;text-align:right"></label>
+<p class="hint">الرمز خاص فيك، لا تعطيه أحد. الوردية اللي تسكّر بعد منتصف الليل تُسجَّل بتاريخ يومها.</p>
+</div>
+<div class="card"><h2>المدفوعات في الفرع</h2>${PAY.map(p=>amtRow('p_'+p.k,p.n,p.c,f[p.k])).join('')}</div>
+${listCard(LISTS[0])}${listCard(LISTS[1])}
+<div class="card">
+<h2>تطبيقات التوصيل ${b?'':'<span class="tag">اختر الفرع أولاً</span>'}</h2>
+${b?b.apps.map((a,i)=>amtRow('a_'+i,a,APPC,f.apps[a]??'')).join(''):`<div class="empty" style="padding:12px">تظهر التطبيقات حسب الفرع</div>`}
+${b?`<div class="sum"><span>مجموع التطبيقات</span><b class="num" id="appsSum">0.00</b></div>`:''}
+</div>
+${listCard(LISTS[2])}
+<div class="card">
+<h2>المطابقة <span class="tag">اختياري</span></h2>
+${amtRow('fSystem','إجمالي النظام','#6B7A90',f.system)}
+<p class="hint">إجمالي مبيعات الوردية من تقرير الكاشير في النظام. يُحسب العجز أو الزيادة تلقائياً.</p>
+<div id="sysDiff" style="margin-top:8px"></div>
+<label class="fld" style="margin-top:14px"><span class="lbl">ملاحظات</span><textarea id="fNotes" placeholder="مثل: مصروف من الدرج، مرتجع، عطل في الشبكة…">${esc(f.notes)}</textarea></label>
+</div>`;
+el.querySelectorAll('[data-br]').forEach(x=>x.onclick=()=>{if(f.branch!==x.dataset.br){f.branch=x.dataset.br;f.apps={};lsSet('ho_branch',f.branch)}render()});
+el.querySelectorAll('[data-sh]').forEach(x=>x.onclick=()=>{f.shift=x.dataset.sh;render()});
+$('#fCashier').oninput=e=>{f.cashier=e.target.value;e.target.classList.remove('err-in')};
+$('#fPin').oninput=e=>{f.pin=e.target.value;e.target.classList.remove('err-in')};
+$('#fDate').onchange=e=>{f.date=e.target.value||bizDate()};
+$('#fNotes').oninput=e=>{f.notes=e.target.value};
+PAY.forEach(p=>{$('#p_'+p.k).oninput=e=>{f[p.k]=e.target.value;calc()}});
+if(b)b.apps.forEach((a,i)=>{$('#a_'+i).oninput=e=>{f.apps[a]=e.target.value;calc()}});
+$('#fSystem').oninput=e=>{f.system=e.target.value;calc()};
+el.querySelectorAll('[data-l]').forEach(x=>x.oninput=e=>{f[x.dataset.l][+x.dataset.i][x.dataset.f]=e.target.value;calc()});
+el.querySelectorAll('[data-lx]').forEach(x=>x.onclick=()=>{f[x.dataset.lx].splice(+x.dataset.i,1);render()});
+el.querySelectorAll('[data-ladd]').forEach(x=>x.onclick=()=>{const k=x.dataset.ladd;f[k].push({a:'',n:''});render();const ins=document.querySelectorAll(`.la[data-l="${k}"]`);if(ins.length)ins[ins.length-1].focus()});
+calc();
+}
+function rec(){
+const f=S.f,b=BM[f.branch],apps={};
+if(b)b.apps.forEach(a=>{const v=pn(f.apps[a]);if(v)apps[a]=v});
+const r={date:f.date,branch:f.branch,shift:f.shift,cashier:f.cashier.trim(),pin:toEn(f.pin),cash:pn(f.cash),card:pn(f.card),credit:pn(f.credit),apps,transfers:cleanList(f.transfers),reservations:cleanList(f.reservations),returns:cleanList(f.returns),system:String(f.system).trim()===''?null:pn(f.system),notes:f.notes.trim()};
+r.transfer=listSum(r.transfers);r.reserve=listSum(r.reservations);r.returnsTotal=listSum(r.returns);
+r.total=totOf(r);return r;
+}
+function calc(){
+const r=rec();$('#barTotal').textContent=fmt(r.total);
+const as=$('#appsSum');if(as)as.textContent=fmt(appsTotal(r));
+LISTS.forEach(L=>{const e=$('#ls_'+L.k);if(e)e.textContent=fmt(listSum(r[L.k]))});
+const d=diffOf(r);$('#barDiff').innerHTML=diffBadge(d);
+const sd=$('#sysDiff');if(sd)sd.innerHTML=d==null?'':`<div class="kv"><span>الفرق بين التسليم والنظام</span>${diffBadge(d)}</div>`;
+}
+async function submit(){
+const f=S.f,r=rec();
+if(!f.branch)return toast('اختر الفرع',1);
+if(!f.shift)return toast('اختر الوردية',1);
+if(!r.cashier){$('#fCashier').classList.add('err-in');return toast('اكتب اسم الكاشير',1)}
+if(!r.pin){$('#fPin').classList.add('err-in');return toast('اكتب رمزك الشخصي',1)}
+if(r.total<=0&&!r.returnsTotal)return toast('ما فيه أي مبلغ مدخل',1);
+if(!await ask('تأكيد التسليم',`<p>فرع ${BM[r.branch].n} · ${SM[r.shift].n} · ${dShort(r.date)} · ${esc(r.cashier)}</p>${detailHTML(r)}`,'تسليم'))return;
+const btn=$('#submitBtn');btn.disabled=true;btn.textContent='جاري الإرسال…';
+try{
+if(!SB)throw new Error('cfg');
+const {data:j,error}=await SB.rpc('submit_handover',{p:r});
+if(error)throw error;
+if(j&&j.ok){lsSet('ho_cashier',r.cashier);lsSet('ho_pin',r.pin);S.done=r;render();window.scrollTo(0,0)}
+else if(j&&j.error==='pin'){$('#fPin').classList.add('err-in');toast(j.message||'رمزك الشخصي غلط',1)}
+else toast('تعذّر الإرسال: '+((j&&j.message)||'حاول مرة ثانية'),1);
+}catch(e){toast('ما فيه اتصال — تأكد من الإنترنت وحاول مرة ثانية',1)}
+btn.disabled=false;btn.textContent='تسليم الوردية';
+}
+$('#submitBtn').onclick=submit;
+render();
+</script>
+</body>
+</html>

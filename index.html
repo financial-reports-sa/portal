@@ -323,11 +323,12 @@ const SECTIONS=[
   {id:'wh',name:'نسبة تكلفة المستودعات'},
   {id:'chicken',name:'أسعار المشتريات',page:'prices'},
   {id:'treasury',name:'خزينة الأرصدة',app:'treasury'},
+  {id:'handover',name:'تسليم الورديات',app:'handover'},
   {id:'users',name:'المستخدمين والصلاحيات',admin:true},
   {id:'data',name:'إدخال البيانات',admin:true}
 ];
-const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury'];
-const APP_VER='12';
+const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','handover'];
+const APP_VER='13';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name]));
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];

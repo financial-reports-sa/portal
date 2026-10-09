@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#F4F6FA">
+<title>مراجعة تسليم الورديات</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="../config.js?v=8"></script>
+<style>:root{color-scheme:light;--bg:#F5F5F1;--card:#FFFFFF;--line:#E6E6E0;--ink:#18231C;--mut:#6B706A;--gold:#D4AF37;--up:#1FA16B;--down:#D0453A;--soft:#FAFAF7;--soft2:#EFEFEA}*{box-sizing:border-box;margin:0;padding:0}body,html{background:var(--bg)}body{color:var(--ink);font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;font-size:15px;line-height:1.5;-webkit-tap-highlight-color:transparent;overflow-x:hidden}button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}button{cursor:pointer;border:0;background:0 0}.num{font-family:"Readex Pro",sans-serif;font-variant-numeric:tabular-nums}.wrap{max-width:620px;margin:0 auto;padding:12px 16px 110px}.top{display:none!important}.codes{margin-top:12px}.codes>b{display:block;font-size:13px;margin-bottom:6px}.codes>div{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px}.codes span{border:1px solid var(--line);border-radius:10px;padding:6px 8px;text-align:center;min-width:0}.codes small{display:block;font-size:11px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.codes span b{font-size:17px;letter-spacing:2px}.link{direction:ltr;text-align:left;font-family:"Readex Pro";font-size:13px;background:var(--soft);border:1px dashed var(--line);border-radius:10px;padding:10px;word-break:break-all;user-select:all}.btn.del{background:#fbebea;color:#b23126}.wrap>*{min-width:0}.top{display:flex;align-items:center;gap:12px;margin:4px 0 16px}.top h1{font-size:22px;font-weight:700}.top .sub{font-size:13px;color:var(--mut)}.logo{width:42px;height:42px;border-radius:12px;background:var(--ink);color:var(--gold);display:grid;place-items:center;font-size:19px;font-weight:700;flex:none}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;overflow:hidden;margin-bottom:12px}.card h2{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:12px}.card h2 .tag{font-size:12px;font-weight:500;color:var(--mut);margin-inline-start:auto}.lbl{display:block;font-size:13px;color:var(--mut);margin-bottom:8px}.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--soft2);border-radius:12px;padding:4px;gap:4px}.seg3{grid-template-columns:1fr 1fr 1fr}.seg button{padding:9px;border-radius:9px;font-weight:600;color:var(--mut)}.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(22,35,58,.12)}.fld{display:block}.fld input,.fld textarea,.fld select{width:100%;border:1.5px solid var(--line);border-radius:12px;background:var(--card);padding:11px 12px;outline:0}.fld input:focus,.fld textarea:focus{border-color:var(--ink)}.fld textarea{min-height:80px;resize:vertical}.hint{color:var(--mut);font-size:12px;margin-top:6px}.diff{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap}.diff.up{background:#e6f6ef;color:#137a50}.diff.down{background:#fbebea;color:#b23126}.diff.eq{background:var(--soft2);color:var(--mut)}.bar{position:fixed;inset-inline:0;bottom:0;z-index:20;background:rgba(255,255,255,.96);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:8px 16px calc(8px + env(safe-area-inset-bottom))}.bar .in{max-width:560px;margin:0 auto}.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border-radius:12px;background:var(--ink);color:#fff;font-weight:700;font-size:16px}.btn:disabled{opacity:.45}.btn.gold{background:var(--gold);color:var(--ink)}.btn.ghost{background:var(--soft2);color:var(--ink)}.btn.sm{padding:9px 12px;font-size:14px;width:auto}.btn.okb{background:#137a50;color:#fff}.tabs{display:flex;gap:4px}.tabs button{flex:1;padding:8px 4px;border-radius:10px;font-size:12px;font-weight:600;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:2px}.tabs button svg{width:22px;height:22px}.tabs button.on{color:var(--ink);background:var(--soft2)}.hide{display:none!important}.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}.chip{flex:none;display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--card);font-weight:600;font-size:13px}.chip i{width:8px;height:8px;border-radius:50%}.chip.on{background:var(--ink);border-color:var(--ink);color:#fff}.dnav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:12px 0}.dnav button.ar{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none;background:var(--card);border:1px solid var(--line)}.dnav .d{text-align:center;flex:1;min-width:0}.dnav .d b{display:block;font-size:16px}.dnav .d input{border:0;background:0 0;color:var(--mut);font-size:12px;text-align:center;font-family:"Readex Pro"}.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;min-width:0}.kpi.big{grid-column:1/-1;background:var(--ink);color:#fff;border-color:var(--ink)}.kpi.big small{color:#afc0d6}.kpi small{display:flex;align-items:center;font-size:12px;color:var(--mut);gap:6px}.kpi small i,.legend i{width:8px;height:8px;border-radius:2px}.kpi b{font-size:20px;display:block;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.kpi.big b{font-size:28px;color:var(--gold)}.kpi .pc{color:var(--mut);font-size:12px}.split{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--soft2)}.split div{height:100%}.legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;color:var(--mut);font-size:12px}.legend span{display:flex;align-items:center;gap:5px}.bcard{border-top:4px solid}.bhead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}.bhead h3{display:flex;align-items:center;font-size:16px;gap:8px}.bsub{font-size:12.5px;color:var(--mut);margin:-4px 0 4px}.badge{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;color:#fff;font-weight:700;font-size:14px}.shift{border:1px solid var(--line);border-radius:12px;margin-top:8px;overflow:hidden}.shift .h{display:flex;align-items:center;gap:10px;padding:11px 12px;width:100%;text-align:right}.shift .h .nm{flex:1;min-width:0}.shift .h .nm b{display:block;font-size:14px}.shift .h .nm small{display:block;color:var(--mut);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.shift .h .v{font-size:16px;font-weight:600;text-align:left}.shift.miss{border-style:dashed;background:var(--soft)}.shift.miss .h{color:var(--mut)}.shift .det{border-top:1px solid var(--line);padding:10px 12px;background:var(--soft)}.kv{display:flex;justify-content:space-between;padding:4px 0;font-size:14px;gap:8px}.kv span{color:var(--mut)}.kv.t{border-top:1px solid var(--line);margin-top:4px;padding-top:8px;font-weight:700}.kv.sub{font-size:12.5px;padding:2px 12px 2px 0}.kv.sub span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.note{font-size:13px;background:#fff8e6;border-radius:8px;padding:8px 10px;margin-top:8px;color:#6b5208}.acts{display:flex;gap:8px;margin-top:10px}.acts .btn{flex:1}.rv{display:inline-block;font-size:11px;font-weight:600;padding:1px 8px;border-radius:999px;vertical-align:middle;margin-inline-start:4px}.rv-ok{background:#e6f6ef;color:#137a50}.rv-issue{background:#fff1d6;color:#9a6a06}.rv-pend{background:var(--soft2);color:var(--mut)}.rvbox{border-top:1px dashed var(--line);margin-top:10px;padding-top:8px}.rvbox .acts{flex-wrap:wrap}.rvbox .acts .btn{flex:1 1 auto}.tbl{width:100%;border-collapse:collapse;font-size:13px}.tbl th{color:var(--mut);font-weight:600;font-size:12px;text-align:center;padding:8px 4px;border-bottom:1px solid var(--line);white-space:nowrap}.tbl td:first-child,.tbl th:first-child{text-align:right}.tbl td{padding:9px 4px;text-align:center;border-bottom:1px solid var(--soft2);white-space:nowrap}.tbl tr.tot td{font-weight:700;border-top:1.5px solid var(--line);border-bottom:0}.tscroll{overflow-x:auto}.scroll{overflow-x:auto;direction:ltr}.empty{text-align:center;padding:26px 10px;color:var(--mut);font-size:14px}.modal{position:fixed;inset:0;background:rgba(22,35,58,.45);z-index:50;display:flex;align-items:flex-end;justify-content:center}.sheet{background:var(--card);width:100%;max-width:560px;border-radius:20px 20px 0 0;padding:20px 16px calc(16px + env(safe-area-inset-bottom));max-height:88vh;overflow:auto}.sheet h3{font-size:18px;margin-bottom:10px}.sheet .acts{margin-top:16px}.toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;z-index:60;max-width:90vw;text-align:center}.toast.err{background:var(--down)}.banner{background:#fff8e6;border:1px solid #f1dfa6;color:#6b5208;padding:10px 12px;border-radius:12px;font-size:13px;margin-bottom:12px}.prev img{width:100%;display:block;border:1px solid var(--line);border-radius:8px;margin-bottom:10px;background:#fff}.sync{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--mut);margin:-4px 0 12px}.sync button{display:flex;align-items:center;gap:5px;font-weight:600;color:var(--ink);background:var(--card);border:1px solid var(--line);padding:6px 12px;border-radius:999px;font-size:13px}.login{max-width:420px;margin:30px auto}</style>
+</head>
+<body>
+<div class="wrap">
+<div class="top"><div class="logo">ت</div><div style="min-width:0"><h1>مراجعة التسليمات</h1><div class="sub" id="topSub">تسليمات الكاشيرات · كل الفروع</div></div></div>
+<section id="vDash"></section>
+<section id="vRep" class="hide"></section>
+</div>
+<div class="bar" id="bar"><div class="in"><nav class="tabs" id="tabs">
+<button data-t="dash" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>اللوحة</button>
+<button data-t="rep"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>التقارير</button>
+
+</nav></div></div>
+<script>
+const BR=[
+{k:'az',n:'العزيزية',c:'#D4AF37',d:'#9A7B12',apps:['تطبيق الشادن','هنقرستيشن','كيتا','نينجا']},
+{k:'sh',n:'شوران',c:'#5B8FD0',d:'#2F67AE',apps:['هنقرستيشن','كيتا','فرصة','نينجا']},
+{k:'pc',n:'الباتشينو',c:'#A07BE6',d:'#7A52C9',apps:['هنقرستيشن','كيتا','نينجا']}];
+const BM=Object.fromEntries(BR.map(b=>[b.k,b]));
+const SH=[{k:'am',n:'الوردية الصباحية',s:'صباحية'},{k:'pm',n:'الوردية المسائية',s:'مسائية'}];
+const SM=Object.fromEntries(SH.map(s=>[s.k,s]));
+const PAY=[{k:'cash',n:'كاش',c:'#0F766E'},{k:'card',n:'شبكة',c:'#334E9E'},{k:'credit',n:'آجل',c:'#B45309'},{k:'transfer',n:'تحويلات',c:'#0891B2',list:1},{k:'reserve',n:'حجوزات',c:'#7C3AED',list:1}];
+const RETC='#64748B',APPC='#BE185D',AUTHOR='Ameer Alarifi';
+const SLOTS={az:5,sh:3,pc:3};
+const CASHIER_URL=new URL('../handover/',location.href).href;
+const SBC=window.supabase.createClient(window.PORTAL_CONFIG.url,window.PORTAL_CONFIG.key,{auth:{persistSession:true,autoRefreshToken:true}});
+const r2=n=>Math.round((n||0)*100)/100;
+const listSum=a=>r2((a||[]).reduce((s,x)=>s+(+x.a||0),0));
+const slotNo=c=>{const m=/(\d+)$/.exec(c||'');return m?+m[1]:0};
+const slotLabel=c=>slotNo(c)?'كاشير '+slotNo(c):'—';
+const RV={ok:{t:'تمت المراجعة',cl:'rv-ok'},issue:{t:'عليه ملاحظة',cl:'rv-issue'},'':{t:'بانتظار المراجعة',cl:'rv-pend'}};
+const rvOf=r=>RV[r.reviewStatus||'']||RV[''];
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const toEn=s=>String(s??'').replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[^\d]/g,'');
+const fmt=n=>Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmt0=n=>Number(n||0).toLocaleString('en-US',{maximumFractionDigits:0});
+const fmtK=n=>{n=+n||0;return n>=1000?(n/1000).toFixed(n>=10000?0:1)+'k':fmt0(n)};
+const pad=n=>String(n).padStart(2,'0');
+const iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const pd=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const addD=(s,n)=>{const d=pd(s);d.setDate(d.getDate()+n);return iso(d)};
+const bizDate=()=>{const d=new Date();if(d.getHours()<6)d.setDate(d.getDate()-1);return iso(d)};
+const LOC='ar-SA-u-ca-gregory-nu-latn';
+const dLong=s=>pd(s).toLocaleDateString(LOC,{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+const dShort=s=>pd(s).toLocaleDateString(LOC,{weekday:'short',day:'numeric',month:'short'});
+const mLong=m=>pd(m+'-01').toLocaleDateString(LOC,{month:'long',year:'numeric'});
+const daysIn=m=>{const[y,mo]=m.split('-').map(Number);return new Date(y,mo,0).getDate()};
+const tm=s=>{try{return new Date(s).toLocaleTimeString(LOC,{hour:'numeric',minute:'2-digit'})}catch(e){return''}};
+const appsTotal=r=>Object.values(r.apps||{}).reduce((a,b)=>a+(+b||0),0);
+const totOf=r=>r2((+r.cash||0)+(+r.card||0)+(+r.credit||0)+(+r.transfer||0)+(+r.reserve||0)+appsTotal(r));
+const diffOf=r=>(r.system==null||r.system==='')?null:r2(totOf(r)-(+r.system));
+const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+function diffBadge(d){if(d==null)return'';if(Math.abs(d)<0.005)return`<span class="diff eq">مطابق</span>`;return d>0?`<span class="diff up">زيادة <span class="num">${fmt(d)}</span></span>`:`<span class="diff down">عجز <span class="num">${fmt(-d)}</span></span>`}
+function toast(msg,err){const t=document.createElement('div');t.className='toast'+(err?' err':'');t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),err?4200:2400)}
+const S={tab:'dash',view:'day',onlyPending:false,date:bizDate(),month:bizDate().slice(0,7),filter:'all',rows:[],loaded:false,open:{},key:'',ready:false,rep:{type:'day',date:bizDate(),month:bizDate().slice(0,7),scope:'all',cashier:'',pages:null,busy:false}};
+function knownName(code){const r=[...S.rows].filter(x=>x.code===code).sort((a,b)=>String(b.updatedAt).localeCompare(String(a.updatedAt)))[0];return r?r.cashier:''}
+function detailHTML(r){
+const li=a=>(a||[]).map(x=>`<div class="kv sub"><span>${esc(x.n)||'—'}</span><span class="num">${fmt(x.a)}</span></div>`).join('');
+return `${PAY.filter(p=>!p.list).map(p=>`<div class="kv"><span>${p.n}</span><b class="num">${fmt(r[p.k])}</b></div>`).join('')}
+${r.transfer?`<div class="kv"><span>التحويلات البنكية (${(r.transfers||[]).length})</span><b class="num">${fmt(r.transfer)}</b></div>${li(r.transfers)}`:''}
+${r.reserve?`<div class="kv"><span>الحجوزات (${(r.reservations||[]).length})</span><b class="num">${fmt(r.reserve)}</b></div>${li(r.reservations)}`:''}
+${Object.entries(r.apps||{}).map(([a,v])=>`<div class="kv"><span>${esc(a)}</span><b class="num">${fmt(v)}</b></div>`).join('')}
+<div class="kv t"><span style="color:var(--ink)">الإجمالي</span><b class="num">${fmt(totOf(r))}</b></div>
+${r.system!=null?`<div class="kv"><span>إجمالي النظام</span><b class="num">${fmt(r.system)}</b></div><div class="kv"><span>الفرق</span>${diffBadge(diffOf(r))}</div>`:''}
+${r.returnsTotal?`<div class="kv" style="margin-top:6px"><span>المردود (${(r.returns||[]).length})</span><b class="num" style="color:${RETC}">${fmt(r.returnsTotal)}</b></div>${li(r.returns)}`:''}
+${r.notes?`<div class="note">${esc(r.notes)}</div>`:''}`;
+}
+const pj=(v,d)=>{try{return typeof v==='string'?(v?JSON.parse(v):d):(v||d)}catch(e){return d}};
+function normRow(x){const apps=pj(x.apps,{}),transfers=pj(x.transfers,[]),reservations=pj(x.reservations,[]),returns=pj(x.returns,[]);
+return{id:x.hid,date:x.date,month:x.month,branch:x.branch,shift:x.shift,code:x.code||'',cashier:x.cashier||'',reviewStatus:x.review_status||'',reviewNote:x.review_note||'',reviewedAt:x.reviewed_at||'',reviewedBy:x.reviewed_by||'',cash:+x.cash||0,card:+x.card||0,credit:+x.credit||0,apps,transfers,reservations,returns,transfer:+x.transfer||0,reserve:+x.reserve||0,returnsTotal:+x.returns_total||0,
+system:(x.system===null||x.system===undefined||x.system==='')?null:+x.system,notes:x.notes||'',createdAt:x.submitted_at,updatedAt:x.submitted_at}}
+async function fetchMonth(month){const {data,error}=await SBC.rpc('handover_list',{p_month:month});if(error){const e=new Error(error.message);e.msg='تعذّر تحميل البيانات — تأكد من الإنترنت';throw e}return(data||[]).map(normRow)}
+async function markReview(id,status,note){
+const r=S.rows.find(x=>x.id===id);if(!r)return;
+try{const {data,error}=await SBC.rpc('handover_mark',{p_hid:id,p_status:status,p_note:note||''});
+if(error||!data||!data.ok){toast((data&&data.message)||'تعذّر الحفظ — تأكد من الإنترنت',1);return}
+const i=S.rows.indexOf(r);S.rows[i]={...r,reviewStatus:status,reviewNote:status?(note||''):'',reviewedAt:status?new Date().toISOString():'',reviewedBy:status?(data.who||''):''};
+toast(status==='ok'?'تم تعليمه كمراجَع':status==='issue'?'تم حفظ الملاحظة':'تم إلغاء المراجعة');renderDash();
+}catch(e){toast('تعذّر الحفظ — تأكد من الإنترنت',1)}
+}
+async function delRow(id){
+const r=S.rows.find(x=>x.id===id);if(!r)return;
+if(!confirm('حذف تسليم '+r.cashier+' ('+SM[r.shift].s+') نهائياً؟'))return;
+const {data,error}=await SBC.rpc('handover_delete',{p_hid:id});
+if(error||!data||!data.ok){toast((data&&data.message)||'تعذّر الحذف',1);return}
+S.rows=S.rows.filter(x=>x.id!==id);toast('تم الحذف');renderDash();
+}
+async function loadMonth(month,force){
+if(!S.ready)return;
+if(!force&&S.subMonth===month&&S.loaded)return;
+if(S.subMonth!==month){S.loaded=false;S.rows=[]}
+S.subMonth=month;const tok=(S.loadTok=(S.loadTok||0)+1);
+if(S.tab==='dash')renderDash();
+try{const rows=await fetchMonth(month);if(tok!==S.loadTok)return;S.rows=rows;S.loadErr=null}
+catch(e){if(tok!==S.loadTok)return;S.loadErr=e.msg||'تعذّر تحميل البيانات — تأكد من الإنترنت'}
+S.loaded=true;S.lastLoad=new Date();
+if(S.tab==='dash')renderDash();
+}
+function agg(rows){
+const t={cash:0,card:0,credit:0,transfer:0,reserve:0,ret:0,apps:0,total:0,n:rows.length,short:0,over:0,appsBy:{},pend:0,issue:0};
+rows.forEach(r=>{t.ret+=+r.returnsTotal||0;if(!r.reviewStatus)t.pend++;if(r.reviewStatus==='issue')t.issue++;PAY.forEach(p=>t[p.k]+=+r[p.k]||0);t.apps+=appsTotal(r);t.total+=totOf(r);
+Object.entries(r.apps||{}).forEach(([k,v])=>t.appsBy[k]=(t.appsBy[k]||0)+(+v||0));
+const d=diffOf(r);if(d!=null){if(d<0)t.short+=-d;else t.over+=d}});
+return t;
+}
+function renderDash(){
+const el=$('#vDash');
+if(!S.ready){el.innerHTML='<div class="empty">جاري التحميل…</div>';return}
+const cur=S.view==='day'?S.date.slice(0,7):S.month;
+if(S.subMonth!==cur)loadMonth(cur);
+const scopeBr=S.filter==='all'?BR:[BM[S.filter]];
+const arR='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg>',arL='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 6-6 6 6 6"/></svg>';
+let head=`<div class="seg" style="margin-bottom:12px"><button data-v="day" class="${S.view==='day'?'on':''}">يومي</button><button data-v="month" class="${S.view==='month'?'on':''}">شهري</button></div>
+<div class="chips"><button class="chip ${S.filter==='all'?'on':''}" data-f="all">كل الفروع</button>${BR.map(b=>`<button class="chip ${S.filter===b.k?'on':''}" data-f="${b.k}"><i style="background:${b.c}"></i>${b.n}</button>`).join('')}</div>`;
+if(S.view==='day'){
+head+=`<div class="chips" style="margin-top:8px"><button class="chip ${S.onlyPending?'on':''}" id="pendBtn">بانتظار المراجعة فقط</button></div>
+<div class="dnav"><button class="ar" data-n="1" aria-label="اليوم السابق">${arR}</button><div class="d"><b>${dLong(S.date)}</b><input type="date" id="dPick" value="${S.date}"></div><button class="ar" data-n="-1" aria-label="اليوم التالي">${arL}</button></div>`;
+}else{
+head+=`<div class="dnav"><button class="ar" data-m="-1" aria-label="الشهر السابق">${arR}</button><div class="d"><b>${mLong(S.month)}</b></div><button class="ar" data-m="1" aria-label="الشهر التالي">${arL}</button></div>`;
+}
+head+=`<div class="sync"><span>${S.loaded&&S.lastLoad?'آخر تحديث '+S.lastLoad.toLocaleTimeString(LOC,{hour:'numeric',minute:'2-digit'}):''}</span><button id="refBtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 4v5h-5"/></svg>تحديث</button></div>`;
+if(S.writer&&S.codes)head+=codesCard();
+let body='';
+if(S.loaded&&S.loadErr)body=`<div class="banner">${esc(S.loadErr)}</div>`;
+else if(!S.loaded)body=`<div class="empty">جاري التحميل…</div>`;
+else body=S.view==='day'?dayView(scopeBr):monthView(scopeBr);
+el.innerHTML=head+body;
+el.querySelectorAll('[data-v]').forEach(x=>x.onclick=()=>{S.view=x.dataset.v;if(S.view==='month')S.month=S.date.slice(0,7);renderDash()});
+el.querySelectorAll('[data-f]').forEach(x=>x.onclick=()=>{S.filter=x.dataset.f;renderDash()});
+el.querySelectorAll('[data-n]').forEach(x=>x.onclick=()=>{S.date=addD(S.date,-(+x.dataset.n));renderDash()});
+el.querySelectorAll('[data-m]').forEach(x=>x.onclick=()=>{const d=pd(S.month+'-01');d.setMonth(d.getMonth()+(+x.dataset.m));S.month=iso(d).slice(0,7);renderDash()});
+const dp=$('#dPick');if(dp)dp.onchange=e=>{if(e.target.value){S.date=e.target.value;renderDash()}};
+el.querySelectorAll('[data-open]').forEach(x=>x.onclick=()=>{const k=x.dataset.open;S.open[k]=!S.open[k];renderDash()});
+el.querySelectorAll('[data-del]').forEach(x=>x.onclick=()=>delRow(x.dataset.del));
+const cc=$('#ccT');if(cc)cc.onclick=()=>{S.codesOpen=!S.codesOpen;renderDash()};
+const rb=$('#refBtn');if(rb)rb.onclick=()=>loadMonth(S.subMonth,true);
+const pb=$('#pendBtn');if(pb)pb.onclick=()=>{S.onlyPending=!S.onlyPending;renderDash()};
+el.querySelectorAll('[data-rv]').forEach(x=>x.onclick=async()=>{const[id,st]=x.dataset.rv.split('|');let note='';
+if(st==='issue'){const r=S.rows.find(z=>z.id===id);note=await askNote(r&&r.reviewNote);if(note===null)return}
+markReview(id,st,note)});
+const sc=el.querySelector('.scroll');if(sc)sc.scrollLeft=sc.scrollWidth;
+}
+function kpiBlock(t){
+const pc=v=>t.total?Math.round(v/t.total*100)+'%':'0%';
+return `<div class="kpis">
+<div class="kpi big"><small>إجمالي التسليمات · ${t.n} تسليم</small><b class="num">${fmt(t.total)}</b></div>
+${PAY.map(p=>`<div class="kpi"><small><i style="background:${p.c}"></i>${p.n}</small><b class="num">${fmt(t[p.k])}</b><span class="pc num">${pc(t[p.k])}</span></div>`).join('')}
+<div class="kpi"><small><i style="background:${APPC}"></i>التطبيقات</small><b class="num">${fmt(t.apps)}</b><span class="pc num">${pc(t.apps)}</span></div>
+<div class="kpi"><small><i style="background:${RETC}"></i>المردود</small><b class="num" style="color:${RETC}">${fmt(t.ret)}</b><span class="pc">للعلم</span></div>
+<div class="kpi"><small><i style="background:#C98A0C"></i>بانتظار المراجعة</small><b class="num" style="color:${t.pend?'#9A6A06':'#16233A'}">${t.pend} من ${t.n}</b><span class="pc">${t.issue?t.issue+' عليها ملاحظة':'—'}</span></div>
+</div>
+<div class="card"><h2>توزيع طرق الدفع</h2>
+<div class="split">${[...PAY.map(p=>[t[p.k],p.c]),[t.apps,APPC]].map(([v,c])=>t.total&&v?`<div style="width:${v/t.total*100}%;background:${c}"></div>`:'').join('')}</div>
+<div class="legend">${PAY.map(p=>`<span><i style="background:${p.c}"></i>${p.n} <b class="num">${pc(t[p.k])}</b></span>`).join('')}<span><i style="background:${APPC}"></i>التطبيقات <b class="num">${pc(t.apps)}</b></span></div>
+${(t.short||t.over)?`<div class="kv t" style="margin-top:10px"><span>الفروقات</span><span>${t.short?diffBadge(-t.short):''} ${t.over?diffBadge(t.over):''}</span></div>`:''}
+</div>`;
+}
+function dayView(scopeBr){
+const day=S.rows.filter(r=>r.date===S.date&&scopeBr.some(b=>b.k===r.branch));
+let h=kpiBlock(agg(day));
+scopeBr.forEach(b=>{
+let br=day.filter(r=>r.branch===b.k);const bt=agg(br);
+br=br.sort((x,y)=>(x.shift+slotNo(x.code)).localeCompare(y.shift+slotNo(y.code)));
+const shown=S.onlyPending?br.filter(r=>!r.reviewStatus):br;
+h+=`<div class="card bcard" style="border-top-color:${b.c}"><div class="bhead"><h3><span class="badge" style="background:${b.c}">${b.n[0]==='ا'?b.n[2]:b.n[0]}</span>فرع ${b.n}</h3><b class="num">${fmt(bt.total)}</b></div>
+<div class="bsub">${bt.n} تسليم من ${SLOTS[b.k]} كاشير${bt.pend?` · <span style="color:#9A6A06">${bt.pend} بانتظار المراجعة</span>`:bt.n?' · <span style="color:#137A50">كلها مراجَعة</span>':''}</div>`;
+if(!br.length)h+=`<div class="shift miss"><div class="h"><div class="nm"><small>ما فيه تسليمات لهذا اليوم</small></div></div></div>`;
+else if(!shown.length)h+=`<div class="shift miss"><div class="h"><div class="nm"><small>كل التسليمات مراجَعة</small></div></div></div>`;
+shown.forEach(r=>{const op=S.open[r.id],rv=rvOf(r);
+h+=`<div class="shift"><button class="h" data-open="${r.id}"><div class="nm"><b>${esc(r.cashier)} <span class="rv ${rv.cl}">${rv.t}</span></b><small>${slotLabel(r.code)} · ${SM[r.shift].s} · ${tm(r.updatedAt||r.createdAt)}</small></div>${diffBadge(diffOf(r))}<span class="v num">${fmt(totOf(r))}</span>
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7A90" stroke-width="2" style="transform:rotate(${op?180:0}deg);flex:none"><path d="m6 9 6 6 6-6"/></svg></button>
+${op?`<div class="det">${detailHTML(r)}${reviewBox(r)}</div>`:''}</div>`});
+h+=`</div>`;
+});
+return h;
+}
+function codesCard(){
+const by={};S.codes.forEach(c=>{(by[c.branch]=by[c.branch]||[]).push(c)});
+return `<div class="card"><h2>رابط ورموز الكاشيرات <button class="tag" id="ccT" style="color:var(--ink);font-weight:600">${S.codesOpen?'إخفاء':'عرض'}</button></h2>${S.codesOpen?`<div class="link">${CASHIER_URL}</div><p class="hint">أرسل الرابط للكاشيرات، وكل واحد له رمزه الشخصي:</p>${BR.map(b=>`<div class="codes"><b style="color:${b.d}">${b.n}</b><div>${(by[b.k]||[]).map(c=>`<span><small>${slotLabel(c.code)}${knownName(c.code)?' · '+esc(knownName(c.code)):''}</small><b class="num">${c.pin}</b></span>`).join('')}</div></div>`).join('')}`:'<p class="hint" style="margin:0">للمالك والآدمن فقط.</p>'}</div>`;
+}
+function reviewBox(r){
+const rv=rvOf(r);
+return `<div class="rvbox"><div class="kv"><span>المراجعة</span><span class="rv ${rv.cl}">${rv.t}</span></div>
+${r.reviewStatus?`<div class="hint">${esc(r.reviewedBy||'')} · ${r.reviewedAt?new Date(r.reviewedAt).toLocaleString(LOC,{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):''}</div>`:''}
+${r.reviewNote?`<div class="note">${esc(r.reviewNote)}</div>`:''}
+<div class="acts">
+${r.reviewStatus!=='ok'?`<button class="btn sm okb" data-rv="${r.id}|ok">✓ تمت المراجعة</button>`:''}
+<button class="btn sm ghost" data-rv="${r.id}|issue">${r.reviewStatus==='issue'?'تعديل الملاحظة':'عليه ملاحظة'}</button>
+${r.reviewStatus?`<button class="btn sm ghost" data-rv="${r.id}|">إلغاء</button>`:''}
+${S.writer?`<button class="btn sm del" data-del="${r.id}">حذف</button>`:''}
+</div></div>`;
+}
+function askNote(cur){
+return new Promise(res=>{
+const m=document.createElement('div');m.className='modal';
+m.innerHTML=`<div class="sheet"><h3>ملاحظة المراجعة</h3><label class="fld"><textarea id="rvNote" placeholder="مثل: الكاش ناقص 50، التحويل الثاني ما وصل…">${esc(cur||'')}</textarea></label><div class="acts"><button class="btn ghost" data-a="0">رجوع</button><button class="btn" data-a="1">حفظ</button></div></div>`;
+m.addEventListener('click',e=>{const a=e.target.closest('[data-a]');if(a||e.target===m){const v=m.querySelector('#rvNote').value.trim();m.remove();res(a?.dataset.a==='1'?(v||'عليه ملاحظة'):null)}});
+document.body.appendChild(m);setTimeout(()=>m.querySelector('#rvNote').focus(),50);
+});
+}
+function monthView(scopeBr){
+const rows=S.rows.filter(r=>scopeBr.some(b=>b.k===r.branch));
+const t=agg(rows);
+if(!rows.length)return kpiBlock(t)+`<div class="card empty">ما فيه تسليمات في ${mLong(S.month)}</div>`;
+let h=kpiBlock(t);
+h+=`<div class="card"><h2>حسب الفرع</h2><div class="tscroll"><table class="tbl"><tr><th>الفرع</th>${PAY.map(p=>`<th>${p.n}</th>`).join('')}<th>التطبيقات</th><th>الإجمالي</th></tr>`;
+scopeBr.forEach(b=>{const a=agg(rows.filter(r=>r.branch===b.k));h+=`<tr><td><span style="color:${b.d};font-weight:700">●</span> ${b.n}</td>${PAY.map(p=>`<td class="num">${fmt0(a[p.k])}</td>`).join('')}<td class="num">${fmt0(a.apps)}</td><td class="num"><b>${fmt0(a.total)}</b></td></tr>`});
+if(scopeBr.length>1)h+=`<tr class="tot"><td>الإجمالي</td>${PAY.map(p=>`<td class="num">${fmt0(t[p.k])}</td>`).join('')}<td class="num">${fmt0(t.apps)}</td><td class="num">${fmt0(t.total)}</td></tr>`;
+h+=`</table></div></div>`;
+const apps=[...new Set(scopeBr.flatMap(b=>b.apps))];
+h+=`<div class="card"><h2>تطبيقات التوصيل</h2><div class="tscroll"><table class="tbl"><tr><th>التطبيق</th>${scopeBr.map(b=>`<th>${b.n}</th>`).join('')}${scopeBr.length>1?'<th>الإجمالي</th>':''}</tr>`;
+apps.forEach(a=>{let s=0;const cells=scopeBr.map(b=>{const v=rows.filter(r=>r.branch===b.k).reduce((x,r)=>x+(+(r.apps||{})[a]||0),0);s+=v;return b.apps.includes(a)?`<td class="num">${fmt0(v)}</td>`:'<td style="color:#C3CCD8">—</td>'}).join('');h+=`<tr><td>${a}</td>${cells}${scopeBr.length>1?`<td class="num"><b>${fmt0(s)}</b></td>`:''}</tr>`});
+h+=`</table></div></div>`;
+h+=`<div class="card"><h2>التسليمات اليومية<span class="tag">ر.س</span></h2><div class="scroll">${dailySVG(rows,scopeBr,S.month)}</div>
+${scopeBr.length>1?`<div class="legend">${scopeBr.map(b=>`<span><i style="background:${b.c}"></i>${b.n}</span>`).join('')}</div>`:''}</div>`;
+const cl=cashierStats(rows);
+h+=`<div class="card"><h2>الكاشيرات</h2><div class="tscroll"><table class="tbl"><tr><th>الكاشير</th><th>الفرع</th><th>التسليمات</th><th>الإجمالي</th><th>صافي الفرق</th><th>المراجعة</th></tr>
+${cl.map(c=>`<tr><td>${esc(c.n)}<br><small style="color:var(--mut)">${slotLabel(c.code)}</small></td><td style="color:${BM[c.b].d}">${BM[c.b].n}</td><td class="num">${c.c}</td><td class="num">${fmt0(c.t)}</td><td>${c.hd?diffBadge(r2(c.d)):'<span style="color:#C3CCD8">—</span>'}</td><td class="num">${c.rv}/${c.c}</td></tr>`).join('')}</table></div></div>`;
+return h;
+}
+function cashierStats(rows){
+const cs={};
+rows.forEach(r=>{const k=r.code||(r.branch+'|'+r.cashier);
+cs[k]=cs[k]||{code:r.code,n:r.cashier,b:r.branch,c:0,t:0,d:0,hd:false,sh:0,ov:0,rv:0,last:''};const c=cs[k];
+if(String(r.updatedAt)>=c.last){c.last=String(r.updatedAt);c.n=r.cashier}
+c.c++;c.t+=totOf(r);if(r.reviewStatus==='ok')c.rv++;
+const d=diffOf(r);if(d!=null){c.hd=true;c.d+=d;if(d<0)c.sh+=-d;else c.ov+=d}});
+return Object.values(cs).sort((a,b)=>(a.b+slotNo(a.code)).localeCompare(b.b+slotNo(b.code)));
+}
+function dailySVG(rows,scopeBr,month){
+const N=daysIn(month),bw=24,gap=12,W=N*(bw+gap)+gap,H=210,top=26,bot=30,ch=H-top-bot;
+const per=[];let max=0;
+for(let d=1;d<=N;d++){const ds=`${month}-${pad(d)}`;const v=scopeBr.map(b=>rows.filter(r=>r.date===ds&&r.branch===b.k).reduce((a,r)=>a+totOf(r),0));const s=v.reduce((a,b)=>a+b,0);per.push(v);if(s>max)max=s}
+max=max||1;let g='';
+for(let d=1;d<=N;d++){
+const x=W-gap-d*(bw+gap)+gap;let y=top+ch;let s=0;
+per[d-1].forEach((val,i)=>{if(!val)return;const hh=val/max*ch;y-=hh;s+=val;g+=`<rect x="${x}" y="${y}" width="${bw}" height="${hh}" fill="${scopeBr[i].c}" rx="2"/>`});
+if(s)g+=`<text x="${x+bw/2}" y="${y-6}" text-anchor="middle" font-size="10" font-family="Readex Pro" fill="#16233A">${fmtK(s)}</text>`;
+const wd=pd(`${month}-${pad(d)}`).getDay();
+g+=`<text x="${x+bw/2}" y="${H-12}" text-anchor="middle" font-size="11" font-family="Readex Pro" fill="${wd===5?'#9A7B12':'#6B7A90'}">${d}</text>`;
+}
+return`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block"><line x1="0" x2="${W}" y1="${top+ch}" y2="${top+ch}" stroke="#E1E7EF"/>${g}</svg>`;
+}
+function renderRep(){
+const R=S.rep,el=$('#vRep');
+const isDay=R.type==='day';
+const slots=BR.flatMap(b=>Array.from({length:SLOTS[b.k]},(_,i)=>({c:b.k+(i+1),b})));
+if(R.type==='cashier'&&!R.cashier)R.cashier=slots[0].c;
+el.innerHTML=`<div class="card">
+<span class="lbl">نوع التقرير</span>
+<div class="seg seg3"><button data-rt="day" class="${R.type==='day'?'on':''}">يومي</button><button data-rt="month" class="${R.type==='month'?'on':''}">شهري</button><button data-rt="cashier" class="${R.type==='cashier'?'on':''}">كشف كاشير</button></div>
+<div style="height:14px"></div>
+<label class="fld"><span class="lbl">${isDay?'اليوم':'الشهر'}</span>${isDay?`<input type="date" id="rD" value="${R.date}" class="num">`:`<input type="month" id="rM" value="${R.month}" class="num">`}</label>
+<div style="height:14px"></div>
+${R.type==='cashier'?`<label class="fld"><span class="lbl">الكاشير</span><select id="rC">${slots.map(x=>{const nm=knownName(x.c);return`<option value="${x.c}" ${R.cashier===x.c?'selected':''}>${x.b.n} — ${slotLabel(x.c)}${nm?' ('+esc(nm)+')':''}</option>`}).join('')}</select></label>`:
+`<span class="lbl">النطاق</span>
+<div class="chips"><button class="chip ${R.scope==='all'?'on':''}" data-rs="all">كل الفروع</button>${BR.map(b=>`<button class="chip ${R.scope===b.k?'on':''}" data-rs="${b.k}"><i style="background:${b.c}"></i>${b.n}</button>`).join('')}</div>`}
+<div style="height:16px"></div>
+<button class="btn" id="genBtn" ${R.busy?'disabled':''}>${R.busy?'جاري الإنشاء…':'إنشاء التقرير'}</button>
+</div>
+${R.pages?`<div class="card"><h2>المعاينة <span class="tag num">${R.pages.length} صفحة</span></h2>
+<div class="acts" style="margin:0 0 12px"><button class="btn gold sm" id="dlPdf">تحميل PDF</button><button class="btn ghost sm" id="dlPng">تحميل صورة</button></div>
+<div class="prev">${R.pages.map(c=>`<img src="${c.toDataURL('image/jpeg',.85)}" alt="صفحة التقرير">`).join('')}</div></div>`:''}`;
+el.querySelectorAll('[data-rt]').forEach(x=>x.onclick=()=>{R.type=x.dataset.rt;R.pages=null;renderRep()});
+el.querySelectorAll('[data-rs]').forEach(x=>x.onclick=()=>{R.scope=x.dataset.rs;R.pages=null;renderRep()});
+const d=$('#rD');if(d)d.onchange=e=>{R.date=e.target.value||R.date;R.pages=null;renderRep()};
+const m=$('#rM');if(m)m.onchange=e=>{R.month=e.target.value||R.month;R.pages=null;renderRep()};
+const c=$('#rC');if(c)c.onchange=e=>{R.cashier=e.target.value;R.pages=null};
+$('#genBtn').onclick=genReport;
+const p=$('#dlPdf');if(p)p.onclick=savePdf;
+const g=$('#dlPng');if(g)g.onclick=savePng;
+}
+async function genReport(){
+const R=S.rep;R.busy=true;renderRep();
+try{
+const month=R.type==='day'?R.date.slice(0,7):R.month;
+const all=await fetchMonth(month);
+await Promise.all(['400','600','700'].map(w=>document.fonts.load(`${w} 20px "IBM Plex Sans Arabic"`))).catch(()=>{});
+await Promise.all(['400','600'].map(w=>document.fonts.load(`${w} 20px "Readex Pro"`))).catch(()=>{});
+const scopeBr=R.scope==='all'?BR:[BM[R.scope]];
+R.pages=R.type==='day'?buildDay(all,R.date,scopeBr):R.type==='month'?buildMonth(all,month,scopeBr):buildCashier(all,month,R.cashier);
+}catch(e){toast(e.msg||'تعذّر إنشاء التقرير',1);console.error(e)}
+R.busy=false;renderRep();
+}
+function repName(ext){const R=S.rep;
+if(R.type==='cashier'){const b=BM[R.cashier.replace(/\d+$/,'')];return`كشف-كاشير-${b?b.n:''}-${slotLabel(R.cashier).replace(' ','')}-${R.month}.${ext}`}
+const sc=R.scope==='all'?'كل-الفروع':BM[R.scope].n;return`تسليم-الورديات-${R.type==='day'?'يومي-'+R.date:'شهري-'+R.month}-${sc}.${ext}`}
+function saveFile(name,blob){
+try{const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(u);a.remove()},4000);toast('تم التحميل')}catch(e){toast('تعذّر التحميل',1)}
+}
+function savePdf(){
+const pages=S.rep.pages;if(!pages||!window.jspdf)return toast('مكتبة PDF لم تُحمَّل',1);
+const doc=new jspdf.jsPDF({unit:'pt',format:'a4',compress:true});
+pages.forEach((c,i)=>{if(i)doc.addPage();doc.addImage(c.toDataURL('image/jpeg',.93),'JPEG',0,0,595.28,841.89)});
+saveFile(repName('pdf'),doc.output('blob'));
+}
+function savePng(){
+const pages=S.rep.pages;if(!pages)return;
+const H=RH*pages.length,sc=Math.min(2,15000/H);
+const c=document.createElement('canvas');c.width=Math.round(RW*sc);c.height=Math.round(H*sc);
+const x=c.getContext('2d');pages.forEach((p,i)=>x.drawImage(p,0,Math.round(i*RH*sc),Math.round(RW*sc),Math.round(RH*sc)));
+c.toBlob(b=>saveFile(repName('png'),b),'image/png');
+}
+const RW=1080,RH=1528,PM=56,SC=2,FA="'IBM Plex Sans Arabic'",FN="'Readex Pro'",CW=RW-2*PM;
+function Rep(title,sub){this.title=title;this.sub=sub;this.pages=[];this.add()}
+Rep.prototype.add=function(){
+const c=document.createElement('canvas');c.width=RW*SC;c.height=RH*SC;
+const x=c.getContext('2d');x.scale(SC,SC);x.fillStyle='#fff';x.fillRect(0,0,RW,RH);x.textBaseline='middle';
+this.pages.push(c);this.x=x;
+if(this.pages.length===1){
+T(x,'أُعد بواسطة '+AUTHOR,RW-PM,PM+6,{s:15,c:'#6B7A90',w:500});
+T(x,'تاريخ الإصدار: '+new Date().toLocaleDateString(LOC,{day:'numeric',month:'long',year:'numeric'}),PM,PM+6,{s:14,c:'#6B7A90',a:'left'});
+T(x,this.title,RW-PM,PM+58,{s:34,w:700});
+T(x,this.sub,RW-PM,PM+104,{s:18,c:'#6B7A90',w:500});
+x.fillStyle='#D4AF37';x.fillRect(PM,PM+136,CW,3);x.fillStyle='#16233A';x.fillRect(RW-PM-120,PM+136,120,3);
+this.y=PM+170;
+}else{
+T(x,this.title+' — '+this.sub,RW-PM,PM+6,{s:14,c:'#6B7A90',w:500});
+x.fillStyle='#E1E7EF';x.fillRect(PM,PM+26,CW,1.5);this.y=PM+50;
+}
+};
+Rep.prototype.need=function(h){if(this.y+h>RH-84){this.add();return true}return false};
+Rep.prototype.gap=function(h){this.y+=h};
+Rep.prototype.section=function(t,color,right){
+this.need(170);const x=this.x;
+x.fillStyle=color||'#16233A';rr(x,RW-PM-6,this.y,6,30,3);x.fill();
+T(x,t,RW-PM-18,this.y+15,{s:21,w:700});
+if(right)T(x,right,PM,this.y+15,{s:17,w:600,n:1,a:'left',c:'#16233A'});
+this.y+=48;
+};
+Rep.prototype.kpis=function(items){
+const per=4,gw=14,w=(CW-gw*(per-1))/per,h=92;
+for(let i=0;i<items.length;i+=per){
+this.need(h+14);const x=this.x;
+items.slice(i,i+per).forEach((it,j)=>{
+const X=RW-PM-(j+1)*w-j*gw;
+x.fillStyle=it.dark?'#16233A':'#F8FAFC';rr(x,X,this.y,w,h,12);x.fill();
+if(!it.dark){x.strokeStyle='#E1E7EF';x.lineWidth=1;x.stroke()}
+if(it.c){x.fillStyle=it.c;rr(x,X+w-16,this.y+18,8,8,2);x.fill()}
+T(x,it.l,X+w-(it.c?30:16),this.y+23,{s:14,c:it.dark?'#AFC0D6':'#6B7A90',w:500});
+T(x,it.v,X+w-16,this.y+60,{s:it.dark?27:24,w:600,n:1,c:it.dark?'#D4AF37':(it.vc||'#16233A')});
+});
+this.y+=h+14;
+}
+this.y+=6;
+};
+Rep.prototype.split=function(parts,total){
+this.need(80);const x=this.x;let X=RW-PM;
+x.save();rr(x,PM,this.y,CW,22,11);x.clip();x.fillStyle='#EEF2F7';x.fillRect(PM,this.y,CW,22);
+parts.forEach(p=>{if(!total||!p.v)return;const w=p.v/total*CW;x.fillStyle=p.c;x.fillRect(X-w,this.y,w,22);X-=w});x.restore();
+this.y+=40;let lx=RW-PM;
+parts.forEach(p=>{x.fillStyle=p.c;rr(x,lx-12,this.y-6,12,12,3);x.fill();
+const s=`${p.n}  ${total?Math.round(p.v/total*100):0}%`;x.font=`500 15px ${FA}`;const tw=x.measureText(s).width;
+T(x,s,lx-20,this.y,{s:15,w:500,c:'#16233A'});lx-=tw+48});
+this.y+=30;
+};
+Rep.prototype.table=function(cols,rows,o={}){
+const hh=40,rh=36;const tw=cols.reduce((a,c)=>a+c.w,0);
+const ws=cols.map(c=>c.w/tw*CW);
+const drawHead=()=>{const x=this.x;x.fillStyle='#16233A';rr(x,PM,this.y,CW,hh,8);x.fill();let X=RW-PM;
+cols.forEach((c,i)=>{const w=ws[i];T(x,c.h,c.t?X-12:X-w/2,this.y+hh/2,{s:o.fs?13:14,w:600,c:'#fff',a:c.t?'right':'center',max:w-8});X-=w});this.y+=hh};
+this.need(hh+rh*Math.min(rows.length,3)+6);drawHead();
+rows.forEach((r,ri)=>{
+if(this.need(rh+4))drawHead();
+const x=this.x,tot=r._tot;
+if(tot){x.fillStyle='#EEF2F7';x.fillRect(PM,this.y,CW,rh);x.fillStyle='#16233A';x.fillRect(PM,this.y,CW,1.5)}
+else if(ri%2){x.fillStyle='#F8FAFC';x.fillRect(PM,this.y,CW,rh)}
+if(r._mark){x.fillStyle=r._mark;x.fillRect(RW-PM-4,this.y+6,4,rh-12)}
+let X=RW-PM;
+cols.forEach((c,i)=>{const w=ws[i];let v=r[i];let col='#16233A',wt=tot?700:400;
+if(v&&typeof v==='object'){col=v.c||col;wt=v.w||wt;v=v.t}
+if(v==null)v='';
+T(x,String(v),c.t?X-12:X-w/2,this.y+rh/2,{s:o.fs||14.5,w:wt,c:col,a:c.t?'right':'center',n:!c.t,max:w-14});X-=w});
+x.fillStyle='#E1E7EF';x.fillRect(PM,this.y+rh-1,CW,1);
+this.y+=rh;
+});
+this.y+=o.after??22;
+};
+Rep.prototype.para=function(lines){
+lines.forEach(l=>{const x=this.x;x.font=`400 15px ${FA}`;const words=l.split(' ');let line='';const out=[];
+words.forEach(w=>{const t=line?line+' '+w:w;if(x.measureText(t).width>CW-30&&line){out.push(line);line=w}else line=t});if(line)out.push(line);
+out.forEach(o=>{this.need(26);T(this.x,o,RW-PM-14,this.y+12,{s:15,c:'#4A5568'});this.y+=26});this.y+=4});
+this.y+=10;
+};
+Rep.prototype.finish=function(){
+const N=this.pages.length;
+this.pages.forEach((c,i)=>{const x=c.getContext('2d');x.setTransform(SC,0,0,SC,0,0);x.textBaseline='middle';
+x.fillStyle='#E1E7EF';x.fillRect(PM,RH-58,CW,1);
+T(x,`صفحة ${i+1} من ${N}`,RW/2,RH-34,{s:13,c:'#6B7A90',a:'center'});
+T(x,'تسليم الورديات',RW-PM,RH-34,{s:13,c:'#6B7A90'});
+T(x,AUTHOR,PM,RH-34,{s:13,c:'#6B7A90',a:'left'})});
+return this.pages;
+};
+function T(x,s,X,Y,o={}){
+x.font=`${o.w||400} ${o.s||16}px ${o.n?FN+','+FA:FA}`;x.fillStyle=o.c||'#16233A';x.textAlign=o.a||'right';
+x.direction=o.n?'ltr':'rtl';
+if(o.max){while(s.length>2&&x.measureText(s).width>o.max)s=s.slice(0,-2)+'…'}
+x.fillText(s,X,Y);x.direction='rtl';
+}
+function rr(x,X,Y,w,h,r){x.beginPath();x.moveTo(X+r,Y);x.arcTo(X+w,Y,X+w,Y+h,r);x.arcTo(X+w,Y+h,X,Y+h,r);x.arcTo(X,Y+h,X,Y,r);x.arcTo(X,Y,X+w,Y,r);x.closePath()}
+const dCell=d=>d==null?{t:'—',c:'#9AA6B8'}:Math.abs(d)<0.005?{t:'مطابق',c:'#6B7A90'}:d>0?{t:'+'+fmt(d),c:'#137A50',w:600}:{t:'−'+fmt(-d),c:'#B23126',w:600};
+const netD=t=>dCell(t.short||t.over?r2(t.over-t.short):null);
+function repKpis(R,t,label){
+R.kpis([{l:label,v:fmt(t.total),dark:1},...PAY.map(p=>({l:p.n,v:fmt(t[p.k]),c:p.c})),
+{l:'التطبيقات',v:fmt(t.apps),c:APPC},{l:'عدد التسليمات',v:String(t.n)},{l:'إجمالي العجز',v:fmt(t.short),vc:t.short?'#B23126':'#16233A'},{l:'إجمالي الزيادة',v:fmt(t.over),vc:t.over?'#137A50':'#16233A'},{l:'المردود (للعلم)',v:fmt(t.ret),c:RETC}]);
+R.section('توزيع طرق الدفع');
+R.split([...PAY.map(p=>({n:p.n,v:t[p.k],c:p.c})),{n:'التطبيقات',v:t.apps,c:APPC}],t.total);
+}
+function branchSummary(R,rows,scopeBr){
+R.section('ملخص الفروع');
+const t=agg(rows);
+R.table([{h:'الفرع',w:1.25,t:1},{h:'التسليمات',w:.9},...PAY.map(p=>({h:p.n,w:1.05})),{h:'التطبيقات',w:1.15},{h:'الإجمالي',w:1.3},{h:'المردود',w:1.05},{h:'الفرق',w:1.1}],
+[...scopeBr.map(b=>{const a=agg(rows.filter(r=>r.branch===b.k));return Object.assign([{t:b.n,w:600},String(a.n),...PAY.map(p=>fmt0(a[p.k])),fmt0(a.apps),{t:fmt0(a.total),w:700},a.ret?{t:fmt0(a.ret),c:RETC}:'—',netD(a)],{_mark:b.c})}),
+Object.assign(['الإجمالي',String(t.n),...PAY.map(p=>fmt0(t[p.k])),fmt0(t.apps),fmt0(t.total),t.ret?fmt0(t.ret):'—',netD(t)],{_tot:1})]);
+}
+const rvCell=r=>r.reviewStatus==='ok'?{t:'مراجَع',c:'#137A50',w:600}:r.reviewStatus==='issue'?{t:'ملاحظة',c:'#9A6A06',w:600}:{t:'بانتظار',c:'#9AA6B8'};
+function handoverTable(R,list,byDate){
+const t=agg(list);
+R.table([{h:byDate?'التاريخ':'الكاشير',w:byDate?1.35:1.45,t:1},{h:'الوردية',w:.85},{h:'كاش',w:1},{h:'شبكة',w:1},{h:'آجل',w:.85},{h:'تحويلات',w:1},{h:'حجوزات',w:.9},{h:'تطبيقات',w:1},{h:'الإجمالي',w:1.15},{h:'الفرق',w:1},{h:'المراجعة',w:.95}],
+[...list.map(r=>[byDate?dShort(r.date):{t:r.cashier,w:600},SM[r.shift].s,fmt0(r.cash),fmt0(r.card),r.credit?fmt0(r.credit):'—',r.transfer?fmt0(r.transfer):'—',r.reserve?fmt0(r.reserve):'—',fmt0(appsTotal(r)),{t:fmt(totOf(r)),w:700},dCell(diffOf(r)),rvCell(r)]),
+Object.assign(['الإجمالي',String(list.length),fmt0(t.cash),fmt0(t.card),fmt0(t.credit),fmt0(t.transfer),fmt0(t.reserve),fmt0(t.apps),fmt(t.total),netD(t),`${list.length-t.pend}/${list.length}`],{_tot:1})],{after:12,fs:13.5});
+}
+function detailTable(R,list,byDate){
+const det=[];
+list.forEach(r=>{const who=byDate?dShort(r.date):r.cashier;
+(r.transfers||[]).forEach(x=>det.push([who,'تحويل بنكي',x.n||'—',{t:fmt(x.a),w:600}]));
+(r.reservations||[]).forEach(x=>det.push([who,'حجز',x.n||'—',{t:fmt(x.a),w:600}]));
+(r.returns||[]).forEach(x=>det.push([who,{t:'مردود',c:RETC,w:600},x.n||'—',{t:fmt(x.a),c:RETC,w:600}]))});
+if(det.length)R.table([{h:byDate?'التاريخ':'الكاشير',w:1.3,t:1},{h:'النوع',w:1,t:1},{h:'البيان',w:3,t:1},{h:'المبلغ',w:1.2}],det,{after:12});
+}
+function buildCashier(all,month,code){
+const b=BM[code.replace(/\d+$/,'')];
+const list=all.filter(r=>r.code===code).sort((x,y)=>(x.date+x.shift).localeCompare(y.date+y.shift));
+const nm=list.length?list[list.length-1].cashier:'';
+const R=new Rep('كشف تسليمات كاشير',`${nm?nm+' · ':''}${slotLabel(code)} · فرع ${b.n} · ${mLong(month)}`);
+const t=agg(list);
+R.kpis([{l:'إجمالي التسليمات',v:fmt(t.total),dark:1},{l:'عدد التسليمات',v:String(t.n)},{l:'كاش',v:fmt(t.cash),c:PAY[0].c},{l:'شبكة',v:fmt(t.card),c:PAY[1].c},
+{l:'تحويلات',v:fmt(t.transfer),c:PAY[3].c},{l:'حجوزات',v:fmt(t.reserve),c:PAY[4].c},{l:'تطبيقات',v:fmt(t.apps),c:APPC},{l:'آجل',v:fmt(t.credit),c:PAY[2].c},
+{l:'إجمالي العجز',v:fmt(t.short),vc:t.short?'#B23126':'#16233A'},{l:'إجمالي الزيادة',v:fmt(t.over),vc:t.over?'#137A50':'#16233A'},{l:'المردود (للعلم)',v:fmt(t.ret),c:RETC},{l:'المراجعة',v:`${t.n-t.pend} / ${t.n}`,vc:t.pend?'#9A6A06':'#137A50'}]);
+if(!list.length){R.para(['لا توجد تسليمات لهذا الكاشير في هذا الشهر.']);return R.finish()}
+R.section('التسليمات',b.c,fmt(t.total)+' ر.س');
+handoverTable(R,list,true);
+const apps=b.apps.filter(a=>t.appsBy[a]);
+if(apps.length){R.section('تطبيقات التوصيل',APPC);R.table([{h:'التطبيق',w:2,t:1},{h:'المبلغ',w:1.3},{h:'النسبة',w:1}],apps.map(a=>[a,fmt(t.appsBy[a]),t.apps?Math.round(t.appsBy[a]/t.apps*100)+'%':'—']))}
+if(list.some(r=>(r.transfers||[]).length||(r.reservations||[]).length||(r.returns||[]).length)){R.section('تفاصيل التحويلات والحجوزات والمردود');detailTable(R,list,true)}
+const notes=list.filter(r=>r.notes||r.reviewNote).flatMap(r=>[r.notes?`• ${dShort(r.date)} (${SM[r.shift].s}): ${r.notes}`:null,r.reviewNote?`• ملاحظة المراجعة ${dShort(r.date)}: ${r.reviewNote}`:null].filter(Boolean));
+if(notes.length){R.section('الملاحظات');R.para(notes)}
+return R.finish();
+}
+function buildDay(all,date,scopeBr){
+const rows=all.filter(r=>r.date===date&&scopeBr.some(b=>b.k===r.branch));
+const R=new Rep('تقرير تسليم الورديات — يومي',`${dLong(date)} · ${scopeBr.length>1?'كل الفروع':'فرع '+scopeBr[0].n}`);
+repKpis(R,agg(rows),'إجمالي التسليمات');
+if(scopeBr.length>1)branchSummary(R,rows,scopeBr);
+scopeBr.forEach(b=>{
+const br=rows.filter(r=>r.branch===b.k),bt=agg(br);
+R.section('فرع '+b.n,b.c,fmt(bt.total)+' ر.س');
+const list=[...br].sort((x,y)=>(x.shift+slotNo(x.code)).localeCompare(y.shift+slotNo(y.code)));
+if(!list.length){R.para(['لا توجد تسليمات لهذا الفرع في هذا اليوم.']);return}
+handoverTable(R,list,false);
+const apps=b.apps.filter(a=>bt.appsBy[a]);
+if(apps.length)R.table([{h:'تطبيق التوصيل',w:2,t:1},...apps.map(a=>({h:a,w:1.2})),{h:'الإجمالي',w:1.3}],[[{t:'المجموع',w:600},...apps.map(a=>fmt(bt.appsBy[a])),{t:fmt(bt.apps),w:700}]],{after:12});
+detailTable(R,list,false);
+const rvn=list.filter(r=>r.reviewNote).map(r=>`• ملاحظة المراجعة — ${r.cashier} (${SM[r.shift].s}): ${r.reviewNote}`);
+if(rvn.length)R.para(rvn);
+const notes=list.filter(r=>r.notes).map(r=>`• ${r.cashier} (${SM[r.shift].s}): ${r.notes}`);
+if(notes.length)R.para(notes);else R.gap(10);
+});
+return R.finish();
+}
+function buildMonth(all,month,scopeBr){
+const rows=all.filter(r=>scopeBr.some(b=>b.k===r.branch));
+const R=new Rep('تقرير تسليم الورديات — شهري',`${mLong(month)} · ${scopeBr.length>1?'كل الفروع':'فرع '+scopeBr[0].n}`);
+const t=agg(rows);
+repKpis(R,t,'إجمالي الشهر');
+if(scopeBr.length>1)branchSummary(R,rows,scopeBr);
+const apps=[...new Set(scopeBr.flatMap(b=>b.apps))];
+R.section('تطبيقات التوصيل',APPC,fmt(t.apps)+' ر.س');
+R.table([{h:'التطبيق',w:1.6,t:1},...scopeBr.map(b=>({h:b.n,w:1.2})),...(scopeBr.length>1?[{h:'الإجمالي',w:1.3}]:[]),{h:'النسبة من التطبيقات',w:1.3}],
+[...apps.map(a=>{let s=0;const c=scopeBr.map(b=>{const v=rows.filter(r=>r.branch===b.k).reduce((x,r)=>x+(+(r.apps||{})[a]||0),0);s+=v;return b.apps.includes(a)?fmt(v):'—'});
+return[a,...c,...(scopeBr.length>1?[{t:fmt(s),w:700}]:[]),t.apps?Math.round(s/t.apps*100)+'%':'0%']}),
+Object.assign(['الإجمالي',...scopeBr.map(b=>fmt(agg(rows.filter(r=>r.branch===b.k)).apps)),...(scopeBr.length>1?[fmt(t.apps)]:[]),'100%'],{_tot:1})]);
+R.section('التسليمات اليومية');
+const N=daysIn(month),drs=[];
+for(let d=1;d<=N;d++){const ds=`${month}-${pad(d)}`;const dr=rows.filter(r=>r.date===ds);if(!dr.length)continue;const a=agg(dr);
+drs.push([dShort(ds),...scopeBr.map(b=>{const v=agg(dr.filter(r=>r.branch===b.k));return v.n?fmt(v.total):{t:'—',c:'#9AA6B8'}}),...(scopeBr.length>1?[{t:fmt(a.total),w:700}]:[]),a.ret?{t:fmt(a.ret),c:RETC}:'—',netD(a)])}
+drs.push(Object.assign(['الإجمالي',...scopeBr.map(b=>fmt(agg(rows.filter(r=>r.branch===b.k)).total)),...(scopeBr.length>1?[fmt(t.total)]:[]),t.ret?fmt(t.ret):'—',netD(t)],{_tot:1}));
+R.table([{h:'اليوم',w:1.5,t:1},...scopeBr.map(b=>({h:b.n,w:1.2})),...(scopeBr.length>1?[{h:'الإجمالي',w:1.3}]:[]),{h:'المردود',w:1},{h:'الفرق',w:1}],drs);
+const cl=cashierStats(rows);
+if(cl.length){R.section('الكاشيرات');
+R.table([{h:'الكاشير',w:1.6,t:1},{h:'الفرع',w:1.1,t:1},{h:'التسليمات',w:.9},{h:'الإجمالي',w:1.3},{h:'العجز',w:1},{h:'الزيادة',w:1},{h:'صافي الفرق',w:1.15},{h:'المراجعة',w:.95}],
+cl.map(c=>Object.assign([`${c.n} · ${slotLabel(c.code)}`,{t:BM[c.b].n,c:BM[c.b].d,w:600},String(c.c),fmt(c.t),c.sh?{t:fmt(c.sh),c:'#B23126'}:'—',c.ov?{t:fmt(c.ov),c:'#137A50'}:'—',c.hd?dCell(r2(c.d)):{t:'—',c:'#9AA6B8'},`${c.rv}/${c.c}`],{_mark:BM[c.b].c})));}
+return R.finish();
+}
+function setTab(t){
+S.tab=t;
+document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+$('#vDash').classList.toggle('hide',t!=='dash');$('#vRep').classList.toggle('hide',t!=='rep');
+if(t==='dash')renderDash();if(t==='rep')renderRep();
+window.scrollTo(0,0);
+}
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>setTab(b.dataset.t));
+(async function boot(){
+const {data:{session}}=await SBC.auth.getSession();
+if(!session){(window.top||window).location.href=new URL('../',location.href).href;return}
+try{const p=await SBC.from('profiles').select('role,active').eq('id',session.user.id).maybeSingle();S.writer=!!(p.data&&p.data.active&&['owner','admin'].includes(p.data.role))}catch(e){S.writer=false}
+if(S.writer){try{const c=await SBC.rpc('handover_codes');S.codes=c.data||[]}catch(e){}}
+S.ready=true;setTab('dash');loadMonth(S.date.slice(0,7),true);
+setInterval(()=>{if(document.visibilityState==='visible'&&S.tab==='dash')loadMonth(S.subMonth,true)},120000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.tab==='dash'&&S.lastLoad&&Date.now()-S.lastLoad>60000)loadMonth(S.subMonth,true)});
+})();
+</script>
+</body>
+</html>
