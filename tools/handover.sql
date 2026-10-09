@@ -54,6 +54,12 @@ create index if not exists handovers_month_idx on public.handovers (month, branc
 alter table public.handovers enable row level security;
 revoke all on public.handovers from anon, authenticated;   -- كل الوصول عبر الدوال تحت
 
+-- الفواتير (تنجمع مع اليومية) — والحجوزات تبقى خارج الإجمالي
+alter table public.handovers add column if not exists invoice  numeric not null default 0;
+alter table public.handovers add column if not exists invoices jsonb   not null default '[]';
+update public.handovers h set total = round(h.cash + h.card + h.credit + h.transfer + h.invoice
+  + coalesce((select sum(value::numeric) from jsonb_each_text(h.apps)), 0), 2);
+
 -- محاولات الرمز الخاطئ (حماية من التخمين)
 create table if not exists public.handover_fails (ip text not null, at timestamptz not null default now());
 create index if not exists handover_fails_idx on public.handover_fails (ip, at);
@@ -81,7 +87,7 @@ declare
   v_cashier text := left(btrim(coalesce(p->>'cashier', '')), 60);
   v_allowed text[];
   v_apps    jsonb := '{}';
-  v_tr jsonb; v_rs jsonb; v_rt jsonb;
+  v_tr jsonb; v_rs jsonb; v_rt jsonb; v_iv jsonb; v_invoice numeric;
   v_cash numeric; v_card numeric; v_credit numeric; v_transfer numeric; v_reserve numeric; v_ret numeric; v_total numeric; v_sys numeric;
   v_hid text; k text;
 begin
@@ -121,24 +127,28 @@ begin
   select coalesce(jsonb_agg(jsonb_build_object('a', round((x->>'a')::numeric, 2), 'n', left(btrim(coalesce(x->>'n','')), 120))), '[]')
     into v_rt from (select x from jsonb_array_elements(case when jsonb_typeof(p->'returns') = 'array' then p->'returns' else '[]' end) x limit 60) s
     where coalesce((x->>'a')::numeric, 0) > 0;
+  select coalesce(jsonb_agg(jsonb_build_object('a', round((x->>'a')::numeric, 2), 'n', left(btrim(coalesce(x->>'n','')), 120))), '[]')
+    into v_iv from (select x from jsonb_array_elements(case when jsonb_typeof(p->'invoices') = 'array' then p->'invoices' else '[]' end) x limit 60) s
+    where coalesce((x->>'a')::numeric, 0) > 0;
+  select coalesce(sum((x->>'a')::numeric), 0) into v_invoice  from jsonb_array_elements(v_iv) x;
   select coalesce(sum((x->>'a')::numeric), 0) into v_transfer from jsonb_array_elements(v_tr) x;
   select coalesce(sum((x->>'a')::numeric), 0) into v_reserve  from jsonb_array_elements(v_rs) x;
   select coalesce(sum((x->>'a')::numeric), 0) into v_ret      from jsonb_array_elements(v_rt) x;
-  v_total := round(v_cash + v_card + v_credit + v_transfer + v_reserve
+  v_total := round(v_cash + v_card + v_credit + v_transfer + v_invoice
                    + coalesce((select sum(value::numeric) from jsonb_each_text(v_apps)), 0), 2);
-  if v_total <= 0 and v_ret <= 0 then return jsonb_build_object('ok', false, 'error', 'empty', 'message', 'ما فيه أي مبلغ'); end if;
+  if v_total <= 0 and v_ret <= 0 and v_reserve <= 0 then return jsonb_build_object('ok', false, 'error', 'empty', 'message', 'ما فيه أي مبلغ'); end if;
   v_sys := case when p->>'system' is null or p->>'system' = '' then null else greatest((p->>'system')::numeric, 0) end;
 
   v_hid := v_date::text || '_' || v_branch || '_' || v_shift || '_' || v_code;
   insert into handovers as h (hid, date, month, branch, shift, code, cashier, cash, card, credit, transfer, reserve, returns_total, total, system,
-                              apps, transfers, reservations, returns, notes)
+                              apps, transfers, reservations, returns, notes, invoice, invoices)
   values (v_hid, v_date, to_char(v_date, 'YYYY-MM'), v_branch, v_shift, v_code, v_cashier, v_cash, v_card, v_credit, v_transfer, v_reserve, v_ret, v_total, v_sys,
-          v_apps, v_tr, v_rs, v_rt, left(coalesce(p->>'notes', ''), 500))
+          v_apps, v_tr, v_rs, v_rt, left(coalesce(p->>'notes', ''), 500), v_invoice, v_iv)
   on conflict (hid) do update set
     cashier = excluded.cashier, cash = excluded.cash, card = excluded.card, credit = excluded.credit, transfer = excluded.transfer,
     reserve = excluded.reserve, returns_total = excluded.returns_total, total = excluded.total, system = excluded.system,
     apps = excluded.apps, transfers = excluded.transfers, reservations = excluded.reservations, returns = excluded.returns,
-    notes = excluded.notes, submitted_at = now(),
+    notes = excluded.notes, invoice = excluded.invoice, invoices = excluded.invoices, submitted_at = now(),
     review_status = '', review_note = '', reviewed_at = null, reviewed_by = '';
   return jsonb_build_object('ok', true, 'hid', v_hid);
 exception when invalid_text_representation or numeric_value_out_of_range then
@@ -196,4 +206,4 @@ grant execute on function public.handover_delete(text) to authenticated;
 grant execute on function public.handover_codes() to authenticated;
 grant execute on function public.handover_can(text) to authenticated;
 
-select 'تم تفعيل تسليم الورديات ✓' as result;
+select 'تم تفعيل تسليم الورديات (مع الفواتير) ✓' as result;

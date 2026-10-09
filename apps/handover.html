@@ -32,7 +32,8 @@ const BR=[
 const BM=Object.fromEntries(BR.map(b=>[b.k,b]));
 const SH=[{k:'am',n:'الوردية الصباحية',s:'صباحية'},{k:'pm',n:'الوردية المسائية',s:'مسائية'}];
 const SM=Object.fromEntries(SH.map(s=>[s.k,s]));
-const PAY=[{k:'cash',n:'كاش',c:'#0F766E'},{k:'card',n:'شبكة',c:'#334E9E'},{k:'credit',n:'آجل',c:'#B45309'},{k:'transfer',n:'تحويلات',c:'#0891B2',list:1},{k:'reserve',n:'حجوزات',c:'#7C3AED',list:1}];
+const PAY=[{k:'cash',n:'كاش',c:'#0F766E'},{k:'card',n:'شبكة',c:'#334E9E'},{k:'credit',n:'آجل',c:'#B45309'},{k:'transfer',n:'تحويلات',c:'#0891B2',list:1},{k:'invoice',n:'فواتير',c:'#4D7C0F',list:1}];
+const RESC='#7C3AED';
 const RETC='#64748B',APPC='#BE185D',AUTHOR='Ameer Alarifi';
 const SLOTS={az:5,sh:3,pc:3};
 const CASHIER_URL=new URL('../handover/',location.href).href;
@@ -61,7 +62,7 @@ const mLong=m=>pd(m+'-01').toLocaleDateString(LOC,{month:'long',year:'numeric'})
 const daysIn=m=>{const[y,mo]=m.split('-').map(Number);return new Date(y,mo,0).getDate()};
 const tm=s=>{try{return new Date(s).toLocaleTimeString(LOC,{hour:'numeric',minute:'2-digit'})}catch(e){return''}};
 const appsTotal=r=>Object.values(r.apps||{}).reduce((a,b)=>a+(+b||0),0);
-const totOf=r=>r2((+r.cash||0)+(+r.card||0)+(+r.credit||0)+(+r.transfer||0)+(+r.reserve||0)+appsTotal(r));
+const totOf=r=>r2((+r.cash||0)+(+r.card||0)+(+r.credit||0)+(+r.transfer||0)+(+r.invoice||0)+appsTotal(r));
 const diffOf=r=>(r.system==null||r.system==='')?null:r2(totOf(r)-(+r.system));
 const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
@@ -73,16 +74,17 @@ function detailHTML(r){
 const li=a=>(a||[]).map(x=>`<div class="kv sub"><span>${esc(x.n)||'—'}</span><span class="num">${fmt(x.a)}</span></div>`).join('');
 return `${PAY.filter(p=>!p.list).map(p=>`<div class="kv"><span>${p.n}</span><b class="num">${fmt(r[p.k])}</b></div>`).join('')}
 ${r.transfer?`<div class="kv"><span>التحويلات البنكية (${(r.transfers||[]).length})</span><b class="num">${fmt(r.transfer)}</b></div>${li(r.transfers)}`:''}
-${r.reserve?`<div class="kv"><span>الحجوزات (${(r.reservations||[]).length})</span><b class="num">${fmt(r.reserve)}</b></div>${li(r.reservations)}`:''}
+${r.invoice?`<div class="kv"><span>الفواتير (${(r.invoices||[]).length})</span><b class="num">${fmt(r.invoice)}</b></div>${li(r.invoices)}`:''}
 ${Object.entries(r.apps||{}).map(([a,v])=>`<div class="kv"><span>${esc(a)}</span><b class="num">${fmt(v)}</b></div>`).join('')}
 <div class="kv t"><span style="color:var(--ink)">الإجمالي</span><b class="num">${fmt(totOf(r))}</b></div>
 ${r.system!=null?`<div class="kv"><span>إجمالي النظام</span><b class="num">${fmt(r.system)}</b></div><div class="kv"><span>الفرق</span>${diffBadge(diffOf(r))}</div>`:''}
+${r.reserve?`<div class="kv" style="margin-top:6px"><span>الحجوزات — خارج اليومية (${(r.reservations||[]).length})</span><b class="num" style="color:${RESC}">${fmt(r.reserve)}</b></div>${li(r.reservations)}`:''}
 ${r.returnsTotal?`<div class="kv" style="margin-top:6px"><span>المردود (${(r.returns||[]).length})</span><b class="num" style="color:${RETC}">${fmt(r.returnsTotal)}</b></div>${li(r.returns)}`:''}
 ${r.notes?`<div class="note">${esc(r.notes)}</div>`:''}`;
 }
 const pj=(v,d)=>{try{return typeof v==='string'?(v?JSON.parse(v):d):(v||d)}catch(e){return d}};
-function normRow(x){const apps=pj(x.apps,{}),transfers=pj(x.transfers,[]),reservations=pj(x.reservations,[]),returns=pj(x.returns,[]);
-return{id:x.hid,date:x.date,month:x.month,branch:x.branch,shift:x.shift,code:x.code||'',cashier:x.cashier||'',reviewStatus:x.review_status||'',reviewNote:x.review_note||'',reviewedAt:x.reviewed_at||'',reviewedBy:x.reviewed_by||'',cash:+x.cash||0,card:+x.card||0,credit:+x.credit||0,apps,transfers,reservations,returns,transfer:+x.transfer||0,reserve:+x.reserve||0,returnsTotal:+x.returns_total||0,
+function normRow(x){const apps=pj(x.apps,{}),transfers=pj(x.transfers,[]),reservations=pj(x.reservations,[]),returns=pj(x.returns,[]),invoices=pj(x.invoices,[]);
+return{id:x.hid,date:x.date,month:x.month,branch:x.branch,shift:x.shift,code:x.code||'',cashier:x.cashier||'',reviewStatus:x.review_status||'',reviewNote:x.review_note||'',reviewedAt:x.reviewed_at||'',reviewedBy:x.reviewed_by||'',cash:+x.cash||0,card:+x.card||0,credit:+x.credit||0,apps,transfers,reservations,returns,invoices,invoice:+x.invoice||0,transfer:+x.transfer||0,reserve:+x.reserve||0,returnsTotal:+x.returns_total||0,
 system:(x.system===null||x.system===undefined||x.system==='')?null:+x.system,notes:x.notes||'',createdAt:x.submitted_at,updatedAt:x.submitted_at}}
 async function fetchMonth(month){const {data,error}=await SBC.rpc('handover_list',{p_month:month});if(error){const e=new Error(error.message);e.msg='تعذّر تحميل البيانات — تأكد من الإنترنت';throw e}return(data||[]).map(normRow)}
 async function markReview(id,status,note){
@@ -112,8 +114,8 @@ S.loaded=true;S.lastLoad=new Date();
 if(S.tab==='dash')renderDash();
 }
 function agg(rows){
-const t={cash:0,card:0,credit:0,transfer:0,reserve:0,ret:0,apps:0,total:0,n:rows.length,short:0,over:0,appsBy:{},pend:0,issue:0};
-rows.forEach(r=>{t.ret+=+r.returnsTotal||0;if(!r.reviewStatus)t.pend++;if(r.reviewStatus==='issue')t.issue++;PAY.forEach(p=>t[p.k]+=+r[p.k]||0);t.apps+=appsTotal(r);t.total+=totOf(r);
+const t={cash:0,card:0,credit:0,transfer:0,invoice:0,reserve:0,ret:0,apps:0,total:0,n:rows.length,short:0,over:0,appsBy:{},pend:0,issue:0};
+rows.forEach(r=>{t.ret+=+r.returnsTotal||0;t.reserve+=+r.reserve||0;if(!r.reviewStatus)t.pend++;if(r.reviewStatus==='issue')t.issue++;PAY.forEach(p=>t[p.k]+=+r[p.k]||0);t.apps+=appsTotal(r);t.total+=totOf(r);
 Object.entries(r.apps||{}).forEach(([k,v])=>t.appsBy[k]=(t.appsBy[k]||0)+(+v||0));
 const d=diffOf(r);if(d!=null){if(d<0)t.short+=-d;else t.over+=d}});
 return t;
@@ -161,6 +163,7 @@ return `<div class="kpis">
 <div class="kpi big"><small>إجمالي التسليمات · ${t.n} تسليم</small><b class="num">${fmt(t.total)}</b></div>
 ${PAY.map(p=>`<div class="kpi"><small><i style="background:${p.c}"></i>${p.n}</small><b class="num">${fmt(t[p.k])}</b><span class="pc num">${pc(t[p.k])}</span></div>`).join('')}
 <div class="kpi"><small><i style="background:${APPC}"></i>التطبيقات</small><b class="num">${fmt(t.apps)}</b><span class="pc num">${pc(t.apps)}</span></div>
+<div class="kpi"><small><i style="background:${RESC}"></i>الحجوزات</small><b class="num" style="color:${RESC}">${fmt(t.reserve)}</b><span class="pc">خارج اليومية</span></div>
 <div class="kpi"><small><i style="background:${RETC}"></i>المردود</small><b class="num" style="color:${RETC}">${fmt(t.ret)}</b><span class="pc">للعلم</span></div>
 <div class="kpi"><small><i style="background:#C98A0C"></i>بانتظار المراجعة</small><b class="num" style="color:${t.pend?'#9A6A06':'#16233A'}">${t.pend} من ${t.n}</b><span class="pc">${t.issue?t.issue+' عليها ملاحظة':'—'}</span></div>
 </div>
@@ -417,7 +420,7 @@ const dCell=d=>d==null?{t:'—',c:'#9AA6B8'}:Math.abs(d)<0.005?{t:'مطابق',c
 const netD=t=>dCell(t.short||t.over?r2(t.over-t.short):null);
 function repKpis(R,t,label){
 R.kpis([{l:label,v:fmt(t.total),dark:1},...PAY.map(p=>({l:p.n,v:fmt(t[p.k]),c:p.c})),
-{l:'التطبيقات',v:fmt(t.apps),c:APPC},{l:'عدد التسليمات',v:String(t.n)},{l:'إجمالي العجز',v:fmt(t.short),vc:t.short?'#B23126':'#16233A'},{l:'إجمالي الزيادة',v:fmt(t.over),vc:t.over?'#137A50':'#16233A'},{l:'المردود (للعلم)',v:fmt(t.ret),c:RETC}]);
+{l:'التطبيقات',v:fmt(t.apps),c:APPC},{l:'عدد التسليمات',v:String(t.n)},{l:'إجمالي العجز',v:fmt(t.short),vc:t.short?'#B23126':'#16233A'},{l:'إجمالي الزيادة',v:fmt(t.over),vc:t.over?'#137A50':'#16233A'},{l:'المردود (للعلم)',v:fmt(t.ret),c:RETC},{l:'الحجوزات (خارج اليومية)',v:fmt(t.reserve),c:RESC}]);
 R.section('توزيع طرق الدفع');
 R.split([...PAY.map(p=>({n:p.n,v:t[p.k],c:p.c})),{n:'التطبيقات',v:t.apps,c:APPC}],t.total);
 }
@@ -431,15 +434,17 @@ Object.assign(['الإجمالي',String(t.n),...PAY.map(p=>fmt0(t[p.k])),fmt0(t
 const rvCell=r=>r.reviewStatus==='ok'?{t:'مراجَع',c:'#137A50',w:600}:r.reviewStatus==='issue'?{t:'ملاحظة',c:'#9A6A06',w:600}:{t:'بانتظار',c:'#9AA6B8'};
 function handoverTable(R,list,byDate){
 const t=agg(list);
-R.table([{h:byDate?'التاريخ':'الكاشير',w:byDate?1.35:1.45,t:1},{h:'الوردية',w:.85},{h:'كاش',w:1},{h:'شبكة',w:1},{h:'آجل',w:.85},{h:'تحويلات',w:1},{h:'حجوزات',w:.9},{h:'تطبيقات',w:1},{h:'الإجمالي',w:1.15},{h:'الفرق',w:1},{h:'المراجعة',w:.95}],
-[...list.map(r=>[byDate?dShort(r.date):{t:r.cashier,w:600},SM[r.shift].s,fmt0(r.cash),fmt0(r.card),r.credit?fmt0(r.credit):'—',r.transfer?fmt0(r.transfer):'—',r.reserve?fmt0(r.reserve):'—',fmt0(appsTotal(r)),{t:fmt(totOf(r)),w:700},dCell(diffOf(r)),rvCell(r)]),
-Object.assign(['الإجمالي',String(list.length),fmt0(t.cash),fmt0(t.card),fmt0(t.credit),fmt0(t.transfer),fmt0(t.reserve),fmt0(t.apps),fmt(t.total),netD(t),`${list.length-t.pend}/${list.length}`],{_tot:1})],{after:12,fs:13.5});
+R.table([{h:byDate?'التاريخ':'الكاشير',w:byDate?1.35:1.45,t:1},{h:'الوردية',w:.85},{h:'كاش',w:1},{h:'شبكة',w:1},{h:'آجل',w:.8},{h:'تحويلات',w:.95},{h:'فواتير',w:.9},{h:'تطبيقات',w:.95},{h:'الإجمالي',w:1.15},{h:'حجوزات*',w:.9},{h:'الفرق',w:.95},{h:'المراجعة',w:.9}],
+[...list.map(r=>[byDate?dShort(r.date):{t:r.cashier,w:600},SM[r.shift].s,fmt0(r.cash),fmt0(r.card),r.credit?fmt0(r.credit):'—',r.transfer?fmt0(r.transfer):'—',r.invoice?fmt0(r.invoice):'—',fmt0(appsTotal(r)),{t:fmt(totOf(r)),w:700},r.reserve?{t:fmt0(r.reserve),c:RESC}:'—',dCell(diffOf(r)),rvCell(r)]),
+Object.assign(['الإجمالي',String(list.length),fmt0(t.cash),fmt0(t.card),fmt0(t.credit),fmt0(t.transfer),fmt0(t.invoice),fmt0(t.apps),fmt(t.total),fmt0(t.reserve),netD(t),`${list.length-t.pend}/${list.length}`],{_tot:1})],{after:4,fs:13});
+if(t.reserve)R.para(['* الحجوزات مبالغ مستلمة لكنها لا تُجمع مع إجمالي اليومية.']);else R.gap(8);
 }
 function detailTable(R,list,byDate){
 const det=[];
 list.forEach(r=>{const who=byDate?dShort(r.date):r.cashier;
 (r.transfers||[]).forEach(x=>det.push([who,'تحويل بنكي',x.n||'—',{t:fmt(x.a),w:600}]));
-(r.reservations||[]).forEach(x=>det.push([who,'حجز',x.n||'—',{t:fmt(x.a),w:600}]));
+(r.invoices||[]).forEach(x=>det.push([who,'فاتورة',x.n||'—',{t:fmt(x.a),w:600}]));
+(r.reservations||[]).forEach(x=>det.push([who,{t:'حجز (خارج اليومية)',c:RESC,w:600},x.n||'—',{t:fmt(x.a),c:RESC,w:600}]));
 (r.returns||[]).forEach(x=>det.push([who,{t:'مردود',c:RETC,w:600},x.n||'—',{t:fmt(x.a),c:RETC,w:600}]))});
 if(det.length)R.table([{h:byDate?'التاريخ':'الكاشير',w:1.3,t:1},{h:'النوع',w:1,t:1},{h:'البيان',w:3,t:1},{h:'المبلغ',w:1.2}],det,{after:12});
 }
@@ -450,14 +455,14 @@ const nm=list.length?list[list.length-1].cashier:'';
 const R=new Rep('كشف تسليمات كاشير',`${nm?nm+' · ':''}${slotLabel(code)} · فرع ${b.n} · ${mLong(month)}`);
 const t=agg(list);
 R.kpis([{l:'إجمالي التسليمات',v:fmt(t.total),dark:1},{l:'عدد التسليمات',v:String(t.n)},{l:'كاش',v:fmt(t.cash),c:PAY[0].c},{l:'شبكة',v:fmt(t.card),c:PAY[1].c},
-{l:'تحويلات',v:fmt(t.transfer),c:PAY[3].c},{l:'حجوزات',v:fmt(t.reserve),c:PAY[4].c},{l:'تطبيقات',v:fmt(t.apps),c:APPC},{l:'آجل',v:fmt(t.credit),c:PAY[2].c},
-{l:'إجمالي العجز',v:fmt(t.short),vc:t.short?'#B23126':'#16233A'},{l:'إجمالي الزيادة',v:fmt(t.over),vc:t.over?'#137A50':'#16233A'},{l:'المردود (للعلم)',v:fmt(t.ret),c:RETC},{l:'المراجعة',v:`${t.n-t.pend} / ${t.n}`,vc:t.pend?'#9A6A06':'#137A50'}]);
+{l:'تحويلات',v:fmt(t.transfer),c:PAY[3].c},{l:'فواتير',v:fmt(t.invoice),c:PAY[4].c},{l:'تطبيقات',v:fmt(t.apps),c:APPC},{l:'آجل',v:fmt(t.credit),c:PAY[2].c},
+{l:'إجمالي العجز',v:fmt(t.short),vc:t.short?'#B23126':'#16233A'},{l:'إجمالي الزيادة',v:fmt(t.over),vc:t.over?'#137A50':'#16233A'},{l:'المردود (للعلم)',v:fmt(t.ret),c:RETC},{l:'المراجعة',v:`${t.n-t.pend} / ${t.n}`,vc:t.pend?'#9A6A06':'#137A50'},{l:'الحجوزات (خارج اليومية)',v:fmt(t.reserve),c:RESC}]);
 if(!list.length){R.para(['لا توجد تسليمات لهذا الكاشير في هذا الشهر.']);return R.finish()}
 R.section('التسليمات',b.c,fmt(t.total)+' ر.س');
 handoverTable(R,list,true);
 const apps=b.apps.filter(a=>t.appsBy[a]);
 if(apps.length){R.section('تطبيقات التوصيل',APPC);R.table([{h:'التطبيق',w:2,t:1},{h:'المبلغ',w:1.3},{h:'النسبة',w:1}],apps.map(a=>[a,fmt(t.appsBy[a]),t.apps?Math.round(t.appsBy[a]/t.apps*100)+'%':'—']))}
-if(list.some(r=>(r.transfers||[]).length||(r.reservations||[]).length||(r.returns||[]).length)){R.section('تفاصيل التحويلات والحجوزات والمردود');detailTable(R,list,true)}
+if(list.some(r=>(r.transfers||[]).length||(r.invoices||[]).length||(r.reservations||[]).length||(r.returns||[]).length)){R.section('تفاصيل التحويلات والفواتير والحجوزات والمردود');detailTable(R,list,true)}
 const notes=list.filter(r=>r.notes||r.reviewNote).flatMap(r=>[r.notes?`• ${dShort(r.date)} (${SM[r.shift].s}): ${r.notes}`:null,r.reviewNote?`• ملاحظة المراجعة ${dShort(r.date)}: ${r.reviewNote}`:null].filter(Boolean));
 if(notes.length){R.section('الملاحظات');R.para(notes)}
 return R.finish();

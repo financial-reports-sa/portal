@@ -43,7 +43,7 @@ const SH=[{k:'am',n:'الوردية الصباحية'},{k:'pm',n:'الوردية
 const SM=Object.fromEntries(SH.map(s=>[s.k,s]));
 const PAY=[{k:'cash',n:'كاش',c:'#0F766E'},{k:'card',n:'شبكة',c:'#334E9E'},{k:'credit',n:'آجل',c:'#B45309'}];
 const APPC='#BE185D';
-const LISTS=[{k:'transfers',t:'التحويلات البنكية',add:'إضافة تحويل',ph:'اسم المحوِّل / رقم العملية',c:'#0891B2'},{k:'reservations',t:'الحجوزات',add:'إضافة حجز',ph:'اسم العميل / نوع الحجز',c:'#7C3AED'},{k:'returns',t:'المردود',add:'إضافة مردود',ph:'سبب المردود',c:'#64748B'}];
+const LISTS=[{k:'transfers',t:'التحويلات البنكية',add:'إضافة تحويل',ph:'اسم المحوِّل / رقم العملية',c:'#0891B2'},{k:'reservations',t:'الحجوزات',add:'إضافة حجز',ph:'اسم العميل / نوع الحجز',c:'#7C3AED'},{k:'returns',t:'المردود',add:'إضافة مردود',ph:'سبب المردود',c:'#64748B'},{k:'invoices',t:'الفواتير',add:'إضافة فاتورة',ph:'رقم الفاتورة / اسم العميل',c:'#4D7C0F'}];
 const $=s=>document.querySelector(s);
 const SB=(window.supabase&&window.PORTAL_CONFIG)?window.supabase.createClient(window.PORTAL_CONFIG.url,window.PORTAL_CONFIG.key,{auth:{persistSession:false,autoRefreshToken:false}}):null;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -58,7 +58,7 @@ const bizDate=()=>{const d=new Date();if(d.getHours()<6)d.setDate(d.getDate()-1)
 const dShort=s=>pd(s).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn',{weekday:'long',day:'numeric',month:'long'});
 const appsTotal=r=>Object.values(r.apps||{}).reduce((a,b)=>a+(+b||0),0);
 const listSum=a=>r2((a||[]).reduce((s,x)=>s+(+x.a||0),0));
-const totOf=r=>r2((+r.cash||0)+(+r.card||0)+(+r.credit||0)+(+r.transfer||0)+(+r.reserve||0)+appsTotal(r));
+const totOf=r=>r2((+r.cash||0)+(+r.card||0)+(+r.credit||0)+(+r.transfer||0)+(+r.invoice||0)+appsTotal(r));
 const diffOf=r=>r.system==null?null:r2(totOf(r)-r.system);
 const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
@@ -66,18 +66,19 @@ function diffBadge(d){if(d==null)return'';if(Math.abs(d)<0.005)return`<span clas
 function toast(msg,err){const t=document.createElement('div');t.className='toast'+(err?' err':'');t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),err?4200:2400)}
 function ask(title,body,ok){return new Promise(res=>{const m=document.createElement('div');m.className='modal';m.innerHTML=`<div class="sheet"><h3>${title}</h3><div>${body}</div><div class="acts"><button class="btn ghost" data-a="0">رجوع</button><button class="btn" data-a="1">${ok}</button></div></div>`;m.addEventListener('click',e=>{const a=e.target.closest('[data-a]');if(a||e.target===m){m.remove();res(a?.dataset.a==='1')}});document.body.appendChild(m)})}
 const h=new Date().getHours();
-const S={done:null,f:{branch:lsGet('ho_branch')||'',shift:(h>=6&&h<16)?'am':'',date:bizDate(),cashier:lsGet('ho_cashier')||'',pin:lsGet('ho_pin')||'',cash:'',card:'',credit:'',apps:{},transfers:[],reservations:[],returns:[],system:'',notes:''}};
-function listCard(L){const items=S.f[L.k];return`<div class="card"><h2><i class="dot" style="width:8px;height:8px;border-radius:50%;background:${L.c};display:inline-block"></i>${L.t}${L.k==='returns'?'<span class="tag">للعلم — لا يُخصم</span>':''}</h2>${items.map((it,i)=>`<div class="li"><input class="la num" data-l="${L.k}" data-i="${i}" data-f="a" inputmode="decimal" placeholder="المبلغ" value="${esc(it.a)}"><input class="ln" data-l="${L.k}" data-i="${i}" data-f="n" placeholder="${L.ph}" value="${esc(it.n)}"><button class="lx" data-lx="${L.k}" data-i="${i}">×</button></div>`).join('')}<button class="ladd" data-ladd="${L.k}">+ ${L.add}</button>${items.length?`<div class="sum"><span>المجموع (${items.length})</span><b class="num" id="ls_${L.k}">0.00</b></div>`:''}</div>`}
+const S={done:null,f:{branch:lsGet('ho_branch')||'',shift:(h>=6&&h<16)?'am':'',date:bizDate(),cashier:lsGet('ho_cashier')||'',pin:lsGet('ho_pin')||'',cash:'',card:'',credit:'',apps:{},transfers:[],reservations:[],returns:[],invoices:[],system:'',notes:''}};
+function listCard(L){const items=S.f[L.k];return`<div class="card"><h2><i class="dot" style="width:8px;height:8px;border-radius:50%;background:${L.c};display:inline-block"></i>${L.t}${L.k==='returns'?'<span class="tag">للعلم — لا يُخصم</span>':L.k==='reservations'?'<span class="tag">لا يُجمع مع اليومية</span>':''}</h2>${items.map((it,i)=>`<div class="li"><input class="la num" data-l="${L.k}" data-i="${i}" data-f="a" inputmode="decimal" placeholder="المبلغ" value="${esc(it.a)}"><input class="ln" data-l="${L.k}" data-i="${i}" data-f="n" placeholder="${L.ph}" value="${esc(it.n)}"><button class="lx" data-lx="${L.k}" data-i="${i}">×</button></div>`).join('')}<button class="ladd" data-ladd="${L.k}">+ ${L.add}</button>${items.length?`<div class="sum"><span>المجموع (${items.length})</span><b class="num" id="ls_${L.k}">0.00</b></div>`:''}</div>`}
 const cleanList=a=>(a||[]).map(x=>({a:pn(x.a),n:String(x.n||'').trim()})).filter(x=>x.a>0);
 function amtRow(id,label,color,val){return`<label class="amt"><i class="dot" style="background:${color}"></i><span>${label}</span><input id="${id}" inputmode="decimal" placeholder="0" value="${esc(val)}" autocomplete="off"><em>ر.س</em></label>`}
 function detailHTML(r){
 const li=a=>(a||[]).map(x=>`<div class="kv sub"><span>${esc(x.n)||'—'}</span><span class="num">${fmt(x.a)}</span></div>`).join('');
 return `${PAY.map(p=>`<div class="kv"><span>${p.n}</span><b class="num">${fmt(r[p.k])}</b></div>`).join('')}
 ${r.transfer?`<div class="kv"><span>التحويلات البنكية</span><b class="num">${fmt(r.transfer)}</b></div>${li(r.transfers)}`:''}
-${r.reserve?`<div class="kv"><span>الحجوزات</span><b class="num">${fmt(r.reserve)}</b></div>${li(r.reservations)}`:''}
+${r.invoice?`<div class="kv"><span>الفواتير</span><b class="num">${fmt(r.invoice)}</b></div>${li(r.invoices)}`:''}
 ${Object.entries(r.apps||{}).map(([a,v])=>`<div class="kv"><span>${esc(a)}</span><b class="num">${fmt(v)}</b></div>`).join('')}
 <div class="kv t"><span style="color:var(--ink)">الإجمالي</span><b class="num">${fmt(totOf(r))}</b></div>
 ${r.system!=null?`<div class="kv"><span>إجمالي النظام</span><b class="num">${fmt(r.system)}</b></div><div class="kv"><span>الفرق</span>${diffBadge(diffOf(r))}</div>`:''}
+${r.reserve?`<div class="kv" style="margin-top:6px"><span>الحجوزات (خارج اليومية)</span><b class="num">${fmt(r.reserve)}</b></div>${li(r.reservations)}`:''}
 ${r.returnsTotal?`<div class="kv" style="margin-top:6px"><span>المردود</span><b class="num">${fmt(r.returnsTotal)}</b></div>${li(r.returns)}`:''}
 ${r.notes?`<div class="note">${esc(r.notes)}</div>`:''}`;
 }
@@ -90,7 +91,7 @@ el.innerHTML=`<div class="card done"><div class="ok"><svg width="34" height="34"
 <h2>تم تسليم الوردية</h2><p style="color:var(--mut);font-size:14px">فرع ${b.n} · ${SM[r.shift].n} · ${dShort(r.date)}</p>
 <div style="text-align:right;margin-top:16px">${detailHTML(r)}</div>
 <div class="acts" style="margin-top:18px"><button class="btn" id="newBtn">تسليم جديد</button></div></div>`;
-$('#newBtn').onclick=()=>{S.done=null;Object.assign(f,{cash:'',card:'',credit:'',apps:{},transfers:[],reservations:[],returns:[],system:'',notes:'',date:bizDate()});$('#bar').classList.remove('hide');render()};
+$('#newBtn').onclick=()=>{S.done=null;Object.assign(f,{cash:'',card:'',credit:'',apps:{},transfers:[],reservations:[],returns:[],invoices:[],system:'',notes:'',date:bizDate()});$('#bar').classList.remove('hide');render()};
 return;
 }
 const b=BM[f.branch];
@@ -111,13 +112,13 @@ el.innerHTML=`
 <p class="hint">الرمز خاص فيك، لا تعطيه أحد. الوردية اللي تسكّر بعد منتصف الليل تُسجَّل بتاريخ يومها.</p>
 </div>
 <div class="card"><h2>المدفوعات في الفرع</h2>${PAY.map(p=>amtRow('p_'+p.k,p.n,p.c,f[p.k])).join('')}</div>
-${listCard(LISTS[0])}${listCard(LISTS[1])}
+${listCard(LISTS[0])}${listCard(LISTS[3])}
 <div class="card">
 <h2>تطبيقات التوصيل ${b?'':'<span class="tag">اختر الفرع أولاً</span>'}</h2>
 ${b?b.apps.map((a,i)=>amtRow('a_'+i,a,APPC,f.apps[a]??'')).join(''):`<div class="empty" style="padding:12px">تظهر التطبيقات حسب الفرع</div>`}
 ${b?`<div class="sum"><span>مجموع التطبيقات</span><b class="num" id="appsSum">0.00</b></div>`:''}
 </div>
-${listCard(LISTS[2])}
+${listCard(LISTS[1])}${listCard(LISTS[2])}
 <div class="card">
 <h2>المطابقة <span class="tag">اختياري</span></h2>
 ${amtRow('fSystem','إجمالي النظام','#6B7A90',f.system)}
@@ -142,8 +143,8 @@ calc();
 function rec(){
 const f=S.f,b=BM[f.branch],apps={};
 if(b)b.apps.forEach(a=>{const v=pn(f.apps[a]);if(v)apps[a]=v});
-const r={date:f.date,branch:f.branch,shift:f.shift,cashier:f.cashier.trim(),pin:toEn(f.pin),cash:pn(f.cash),card:pn(f.card),credit:pn(f.credit),apps,transfers:cleanList(f.transfers),reservations:cleanList(f.reservations),returns:cleanList(f.returns),system:String(f.system).trim()===''?null:pn(f.system),notes:f.notes.trim()};
-r.transfer=listSum(r.transfers);r.reserve=listSum(r.reservations);r.returnsTotal=listSum(r.returns);
+const r={date:f.date,branch:f.branch,shift:f.shift,cashier:f.cashier.trim(),pin:toEn(f.pin),cash:pn(f.cash),card:pn(f.card),credit:pn(f.credit),apps,transfers:cleanList(f.transfers),reservations:cleanList(f.reservations),returns:cleanList(f.returns),invoices:cleanList(f.invoices),system:String(f.system).trim()===''?null:pn(f.system),notes:f.notes.trim()};
+r.transfer=listSum(r.transfers);r.reserve=listSum(r.reservations);r.returnsTotal=listSum(r.returns);r.invoice=listSum(r.invoices);
 r.total=totOf(r);return r;
 }
 function calc(){
@@ -159,7 +160,7 @@ if(!f.branch)return toast('اختر الفرع',1);
 if(!f.shift)return toast('اختر الوردية',1);
 if(!r.cashier){$('#fCashier').classList.add('err-in');return toast('اكتب اسم الكاشير',1)}
 if(!r.pin){$('#fPin').classList.add('err-in');return toast('اكتب رمزك الشخصي',1)}
-if(r.total<=0&&!r.returnsTotal)return toast('ما فيه أي مبلغ مدخل',1);
+if(r.total<=0&&!r.returnsTotal&&!r.reserve)return toast('ما فيه أي مبلغ مدخل',1);
 if(!await ask('تأكيد التسليم',`<p>فرع ${BM[r.branch].n} · ${SM[r.shift].n} · ${dShort(r.date)} · ${esc(r.cashier)}</p>${detailHTML(r)}`,'تسليم'))return;
 const btn=$('#submitBtn');btn.disabled=true;btn.textContent='جاري الإرسال…';
 try{
