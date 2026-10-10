@@ -324,13 +324,14 @@ const SECTIONS=[
   {id:'chicken',name:'أسعار المشتريات',page:'prices'},
   {id:'treasury',name:'خزينة الأرصدة',app:'treasury'},
   {id:'loans',name:'التمويلات'},
+  {id:'fleet',name:'أسطول السيارات'},
   {id:'handover',name:'تسليم الورديات',app:'handover'},
   {id:'employees',name:'الموظفين',app:'employees'},
   {id:'users',name:'المستخدمين والصلاحيات',admin:true},
   {id:'data',name:'إدخال البيانات',admin:true}
 ];
-const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','handover','employees'];
-const APP_VER='28';
+const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees'];
+const APP_VER='29';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name]));
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -727,6 +728,132 @@ document.addEventListener('click',async e=>{
   }catch(err){ b.disabled=false; toast('تعذّر: '+err.message); }
 });
 
+
+// ----- أسطول السيارات -----
+const FL_ENT={wafra:{id:'wafra',name:'وفرة المدينة',color:'#C2603A'}};
+const flEnt=k=>FL_ENT[k]||brById(k);
+const FL_USE=['توصيل','نقل وتوريد','سيارة إدارة','دباب توصيل','أخرى'];
+const FL_COND=['ممتازة','جيدة','متوسطة','تحتاج صيانة'];
+const FL_OWN=['ملك','تمويل','إيجار'];
+const FL_STATUS=['في الخدمة','خارج الخدمة','مباعة'];
+const flEnts=()=>{const b=st.branches.map(x=>x.id).filter(x=>['az','sh','pc'].includes(x));return isAdmin()?[...b,'wafra']:b;};
+const flDays=d=>d?Math.round((new Date(d+'T12:00:00')-new Date(todayIso()+'T12:00:00'))/864e5):null;
+function flAlerts(v){const a=[];[['regExp','الاستمارة'],['insExp','التأمين']].forEach(([k,n])=>{const d=flDays(v[k]);if(d==null)return;if(d<0)a.push({bad:true,t:n+' منتهية منذ '+(-d)+' يوم'});else if(d<=30)a.push({bad:false,t:n+' تنتهي بعد '+d+' يوم'});});if(v.cond==='تحتاج صيانة')a.push({bad:true,t:'تحتاج صيانة'});return a;}
+function flImg(file,max,q){return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=rej;fr.onload=()=>{const im=new Image();im.onerror=rej;im.onload=()=>{const k=Math.min(1,max/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',q));};im.src=fr.result;};fr.readAsDataURL(file);});}
+function flForm(v,id){
+  v=v||{};const ents=flEnts();const opt=(arr,cur)=>arr.map(x=>`<option ${x===cur?'selected':''}>${x}</option>`).join('');
+  const f=(k,l,t='text',x='')=>`<div class="field"><label for="fl_${k}">${l}</label><input class="inp" id="fl_${k}" name="${k}" type="${t}" value="${esc(v[k]==null?'':v[k])}" ${x}></div>`;
+  return `<div class="card" id="flFormCard"><h3>${id?'تعديل سيارة':'إضافة سيارة'} <small>الحقول المعلّمة * مطلوبة</small></h3>
+  <form id="fleetForm" data-id="${esc(id||'')}" autocomplete="off" style="display:flex;flex-direction:column;gap:10px">
+    <div class="field"><label>صور السيارة (حتى 3: أمام، جنب، العداد)</label>
+      <label class="btn ghost" style="display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer">📷 التقط أو اختر صور<input type="file" id="flImgs" accept="image/*" multiple hidden></label>
+      <div id="flPrev" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">${v.thumb?`<img src="${v.thumb}" style="width:84px;height:64px;object-fit:cover;border-radius:10px;border:1px solid var(--line)"><span class="muted" style="font-size:11.5px;align-self:center">الصور الحالية تبقى إذا ما اخترت صور جديدة</span>`:''}</div></div>
+    <div class="row">
+      <div class="field"><label for="fl_br">الجهة *</label><select class="inp" id="fl_br" name="br" required>${ents.map(k=>`<option value="${k}" ${v.br===k?'selected':''}>${esc(flEnt(k).name)}</option>`).join('')}</select></div>
+      <div class="field"><label for="fl_status">الوضع</label><select class="inp" id="fl_status" name="status">${opt(FL_STATUS,v.status||'في الخدمة')}</select></div></div>
+    <div class="row">${f('make','الماركة *','text','required placeholder="تويوتا"')}${f('model','الموديل *','text','required placeholder="هايلكس"')}</div>
+    <div class="row">${f('year','سنة الصنع *','number','required min="1980" max="2035" inputmode="numeric"')}${f('plate','رقم اللوحة *','text','required placeholder="أ ب ج 1234"')}</div>
+    <div class="row">${f('color','اللون')}<div class="field"><label for="fl_use">الاستخدام</label><select class="inp" id="fl_use" name="use">${opt(FL_USE,v.use||'توصيل')}</select></div></div>
+    <div class="row">${f('km','قراءة العداد (كم)','number','inputmode="numeric" min="0"')}<div class="field"><label for="fl_cond">حالة السيارة</label><select class="inp" id="fl_cond" name="cond">${opt(FL_COND,v.cond||'جيدة')}</select></div></div>
+    <div class="row">${f('driver','السائق / المسؤول')}<div class="field"><label for="fl_own">الملكية</label><select class="inp" id="fl_own" name="own">${opt(FL_OWN,v.own||'ملك')}</select></div></div>
+    <div class="row">${f('regExp','انتهاء الاستمارة','date')}${f('insExp','انتهاء التأمين','date')}</div>
+    <div class="row">${f('value','القيمة السوقية التقديرية (ر.س) *','number','required min="0" step="100" inputmode="numeric"')}${f('vin','رقم الهيكل (اختياري)','text','dir="ltr"')}</div>
+    <div class="field"><label for="fl_notes">ملاحظات</label><textarea class="inp" id="fl_notes" name="notes" rows="2">${esc(v.notes||'')}</textarea></div>
+    <div class="err" id="flErr"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="submit" id="flSave">حفظ السيارة</button><button class="btn ghost" type="button" data-fcancel="1">إلغاء</button>${id&&isAdmin()?`<button class="btn ghost" type="button" data-fdel="${esc(id)}" style="color:var(--down);margin-inline-start:auto">حذف</button>`:''}</div>
+  </form></div>`;
+}
+V.fleet=async()=>{
+  const docs=await appList('fleet','vehicles');
+  const all=docs.map(d=>({...d.data,id:d.id})).sort((a,b)=>(+b.value||0)-(+a.value||0));
+  const ents=flEnts(); const canAdd=ents.length>0;
+  const fe=st.flF||'all', fs=st.flS||'active';
+  const inEnt=v=>fe==='all'||v.br===fe;
+  const act=all.filter(v=>(v.status||'في الخدمة')!=='مباعة');
+  const vis=all.filter(v=>inEnt(v)&&(fs==='all'||(fs==='active'?(v.status||'في الخدمة')==='في الخدمة':(v.status||'في الخدمة')!=='في الخدمة')));
+  let h='';
+  if(st.flEdit) h+=flForm(st.flEdit==='new'?{br:fe!=='all'?fe:ents[0]}:all.find(v=>v.id===st.flEdit),st.flEdit==='new'?null:st.flEdit);
+  else if(canAdd) h+=`<button class="btn" data-fadd="1" style="display:flex;align-items:center;justify-content:center;gap:8px">＋ إضافة سيارة</button>`;
+  if(!all.length) return h+`<div class="card empty">ما فيه سيارات مسجلة بعد${canAdd?' — اضغط «إضافة سيارة» وصوّر السيارة وسجّل بياناتها.':''}</div>`;
+  // لوحة
+  const scope=act.filter(inEnt), tv=sum(scope.map(v=>+v.value||0));
+  const byE={};act.forEach(v=>{(byE[v.br]=byE[v.br]||{n:0,v:0}).n++;byE[v.br].v+=+v.value||0;});
+  const tAll=sum(Object.values(byE).map(x=>x.v))||1;
+  h+=`<div class="card" style="background:linear-gradient(140deg,#1E5A3E,#143F2A);color:#fff;border:0">
+    <div style="font-size:12.5px;opacity:.8">القيمة السوقية التقديرية للأسطول${fe!=='all'?' · '+esc(flEnt(fe).name):''}</div>
+    <div class="num" style="font-size:27px;font-weight:700;color:#F6E7B0">${fmt(tv)} <small style="font-size:12px;color:#fff;opacity:.8">ر.س</small></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;border-top:1px solid rgba(255,255,255,.15);padding-top:10px;text-align:center">
+      <div><div style="font-size:11px;opacity:.75">سيارات</div><b class="num" style="font-size:15px">${scope.length}</b></div>
+      <div><div style="font-size:11px;opacity:.75">متوسط القيمة</div><b class="num" style="font-size:15px">${fmt(scope.length?tv/scope.length:0)}</b></div>
+      <div><div style="font-size:11px;opacity:.75">تحتاج انتباه</div><b class="num" style="font-size:15px;color:${scope.some(v=>flAlerts(v).length)?'#FFB4A8':'#fff'}">${scope.filter(v=>flAlerts(v).length).length}</b></div></div></div>`;
+  if(Object.keys(byE).length>1) h+=`<div class="card"><h3>حسب الجهة</h3><div style="display:flex;height:12px;border-radius:99px;overflow:hidden;margin:4px 0 10px">${Object.entries(byE).sort((a,b)=>b[1].v-a[1].v).map(([k,x])=>`<i style="width:${(x.v/tAll*100).toFixed(1)}%;background:${flEnt(k).color}"></i>`).join('')}</div>
+    ${Object.entries(byE).sort((a,b)=>b[1].v-a[1].v).map(([k,x])=>`<div class="bar-row" style="padding:6px 0;border-bottom:1px solid var(--line)"><span><i class="dot" style="background:${flEnt(k).color}"></i> ${esc(flEnt(k).name)} <span class="muted" style="font-size:12px">· ${x.n} سيارة</span></span><span><b class="num">${fmt(x.v)}</b> <span class="muted" style="font-size:11px">${pct(x.v/tAll,0)}</span></span></div>`).join('')}</div>`;
+  const al=scope.flatMap(v=>flAlerts(v).map(a=>({v,a})));
+  if(al.length) h+=`<div class="note bad"><b class="down">تنبيهات</b><div style="font-size:12.5px;margin-top:4px;display:flex;flex-direction:column;gap:3px">${al.map(o=>`<div class="bar-row" style="gap:6px"><span>${esc(o.v.make+' '+o.v.model)} · <span dir="auto">${esc(o.v.plate||'')}</span></span><span class="${o.a.bad?'down':'flat'}">${esc(o.a.t)}</span></div>`).join('')}</div></div>`;
+  // فلاتر
+  const eKeys=[...new Set(all.map(v=>v.br))];
+  h+=`<div class="chips">${eKeys.length>1?[['all','كل الجهات']].concat(eKeys.map(k=>[k,flEnt(k).name])).map(([k,n])=>`<button data-ff="${k}" aria-pressed="${fe===k}">${k!=='all'?`<i class="dot" style="background:${flEnt(k).color}"></i>`:''}${esc(n)}</button>`).join(''):''}</div>
+    <div class="chips">${[['active','في الخدمة'],['out','خارج الخدمة / مباعة'],['all','الكل']].map(([k,n])=>`<button data-fs="${k}" aria-pressed="${fs===k}">${n}</button>`).join('')}</div>`;
+  // البطاقات
+  h+=vis.length?`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px">${vis.map(v=>{const a=flAlerts(v),e=flEnt(v.br),stt=v.status||'في الخدمة';
+    return `<button class="card" data-fopen="${esc(v.id)}" style="padding:0;text-align:start;cursor:pointer;font:inherit;color:inherit;overflow:hidden;display:flex;flex-direction:column">
+      <div style="position:relative;aspect-ratio:4/3;background:var(--chip);display:grid;place-items:center">${v.thumb?`<img src="${v.thumb}" alt="" style="width:100%;height:100%;object-fit:cover">`:'<span style="font-size:34px;opacity:.4">🚗</span>'}
+        <span class="tag" style="position:absolute;top:6px;inset-inline-start:6px;background:rgba(255,255,255,.92);font-size:10.5px"><i class="dot" style="background:${e.color}"></i>${esc(e.name)}</span>
+        ${a.length?`<span style="position:absolute;top:6px;inset-inline-end:6px;background:${a.some(x=>x.bad)?'var(--down)':'var(--warn)'};color:#fff;border-radius:99px;font-size:10.5px;padding:1px 7px">!</span>`:''}
+        ${stt!=='في الخدمة'?`<span class="tag" style="position:absolute;bottom:6px;inset-inline-start:6px;background:rgba(0,0,0,.6);color:#fff;font-size:10.5px">${stt}</span>`:''}</div>
+      <div style="padding:9px 10px 10px"><b style="font-size:13.5px">${esc(v.make)} ${esc(v.model)}</b> <span class="muted" style="font-size:12px">${esc(v.year||'')}</span>
+        <div class="muted" style="font-size:11.5px" dir="auto">${esc(v.plate||'')}</div>
+        <div class="num" style="font-weight:700;color:var(--green-dk);margin-top:3px">${fmt(v.value)} <span class="muted" style="font-size:10.5px;font-weight:400">ر.س</span></div></div></button>`;}).join('')}</div>`:'<div class="card empty">لا توجد سيارات بهذا الفلتر</div>';
+  // تفاصيل السيارة المختارة
+  const sel=st.flOpen&&all.find(v=>v.id===st.flOpen);
+  if(sel){const e=flEnt(sel.br),a=flAlerts(sel),can=isAdmin()||(sel.br!=='wafra'&&ents.includes(sel.br));
+    const rows=[['الجهة',esc(e.name)],['الوضع',esc(sel.status||'في الخدمة')],['الماركة والموديل',esc(sel.make+' '+sel.model+' '+(sel.year||''))],['رقم اللوحة',`<span dir="auto">${esc(sel.plate||'')}</span>`],['اللون',esc(sel.color||'—')],['الاستخدام',esc(sel.use||'—')],['قراءة العداد',sel.km?fmt(sel.km)+' كم':'—'],['حالة السيارة',esc(sel.cond||'—')],['السائق / المسؤول',esc(sel.driver||'—')],['الملكية',esc(sel.own||'—')],['انتهاء الاستمارة',sel.regExp?dLbl(sel.regExp):'—'],['انتهاء التأمين',sel.insExp?dLbl(sel.insExp):'—'],['رقم الهيكل',sel.vin?`<span dir="ltr">${esc(sel.vin)}</span>`:'—'],['القيمة السوقية التقديرية',`<b>${fmt(sel.value)}</b> ر.س`],['آخر تحديث',(sel.updatedBy?esc(sel.updatedBy)+' · ':'')+(sel.updatedAt?dLbl(String(sel.updatedAt).slice(0,10)):'')]];
+    h+=`<div class="card" id="flDetail" style="border-top:4px solid ${e.color}"><div class="bar-row"><h3 style="margin:0">${esc(sel.make)} ${esc(sel.model)} ${esc(sel.year||'')}</h3><button class="icb" data-fclose="1" aria-label="إغلاق">✕</button></div>
+      <div id="flPhotos" data-id="${esc(sel.id)}" style="display:flex;gap:8px;overflow-x:auto;margin:10px 0">${sel.thumb?`<img src="${sel.thumb}" style="height:150px;border-radius:12px">`:'<span class="muted">ما فيه صور</span>'}</div>
+      ${a.length?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">${a.map(x=>`<span class="tag" style="background:${x.bad?'rgba(208,69,58,.12)':'rgba(201,138,12,.15)'};color:${x.bad?'var(--down)':'var(--warn)'};font-weight:600">${esc(x.t)}</span>`).join('')}</div>`:''}
+      <table><tbody>${rows.map(([k,v])=>`<tr><td class="muted">${k}</td><td class="n" style="white-space:normal">${v}</td></tr>`).join('')}</tbody></table>
+      ${sel.notes?`<div style="font-size:13px;margin-top:8px"><span class="muted">ملاحظات:</span> ${esc(sel.notes)}</div>`:''}
+      ${can?`<button class="btn ghost" data-fedit="${esc(sel.id)}" style="margin-top:10px;width:100%">تعديل البيانات أو الصور</button>`:''}</div>`;}
+  return h;
+};
+async function flLoadPhotos(){const box=document.getElementById('flPhotos');if(!box)return;const r=await sb.rpc('fleet_photos',{p_id:box.dataset.id});if(r.error||!Array.isArray(r.data)||!r.data.length)return;box.innerHTML=r.data.map(src=>`<img src="${src}" style="height:190px;border-radius:12px;flex:none">`).join('');}
+let flNewImgs=null;
+document.addEventListener('click',async e=>{
+  const t=e.target.closest('[data-fadd],[data-fcancel],[data-fopen],[data-fclose],[data-fedit],[data-fdel],[data-ff],[data-fs]'); if(!t||!$('#view').contains(t)) return;
+  const d=t.dataset;
+  if(d.fadd){st.flEdit='new';flNewImgs=null;await render();$('#flFormCard')&&$('#flFormCard').scrollIntoView({behavior:'smooth'});return;}
+  if(d.fcancel){st.flEdit=null;flNewImgs=null;render();return;}
+  if(d.ff){st.flF=d.ff;render();return;}
+  if(d.fs){st.flS=d.fs;render();return;}
+  if(d.fopen){st.flOpen=d.fopen;await render();const el=$('#flDetail');if(el)el.scrollIntoView({behavior:'smooth'});flLoadPhotos();return;}
+  if(d.fclose){st.flOpen=null;render();return;}
+  if(d.fedit){st.flEdit=d.fedit;flNewImgs=null;await render();window.scrollTo({top:0,behavior:'smooth'});return;}
+  if(d.fdel){if(!confirm('حذف السيارة نهائياً؟'))return;const r=await sb.rpc('fleet_delete',{p_id:d.fdel});if(r.error){toast('تعذّر: '+r.error.message);return;}st.flEdit=null;st.flOpen=null;delete st.cache['fleet/vehicles'];toast('تم الحذف');render();}
+});
+document.addEventListener('change',async e=>{
+  if(e.target.id!=='flImgs') return; const files=[...e.target.files].slice(0,3); if(!files.length) return;
+  const pv=$('#flPrev'); pv.innerHTML='<span class="muted">جارِ تجهيز الصور…</span>';
+  try{ flNewImgs=await Promise.all(files.map(f=>flImg(f,1100,.72))); const th=await flImg(files[0],320,.62); flNewImgs.thumb=th;
+    pv.innerHTML=flNewImgs.map(src=>`<img src="${src}" style="width:84px;height:64px;object-fit:cover;border-radius:10px;border:1px solid var(--line)">`).join('');
+  }catch(err){ flNewImgs=null; pv.innerHTML='<span class="err">تعذّر قراءة الصورة</span>'; }
+});
+document.addEventListener('submit',async e=>{
+  if(e.target.id!=='fleetForm') return; e.preventDefault();
+  const f=e.target, fd=new FormData(f), v={}; fd.forEach((x,k)=>{v[k]=String(x).trim();});
+  ['year','km','value'].forEach(k=>{v[k]=v[k]===''?null:+v[k];});
+  const id=f.dataset.id||('v'+Date.now().toString(36)+Math.random().toString(36).slice(2,7));
+  const old=(await appList('fleet','vehicles')).find(x=>x.id===id);
+  if(old&&old.data){ if(old.data.thumb) v.thumb=old.data.thumb; if(old.data.nimg) v.nimg=old.data.nimg; }
+  if(flNewImgs){ v.thumb=flNewImgs.thumb; v.nimg=flNewImgs.length; }
+  if(!old&&!flNewImgs){ $('#flErr').textContent='صوّر السيارة أولاً (صورة واحدة على الأقل)'; return; }
+  v.valueDate=todayIso();
+  const b=$('#flSave'); b.disabled=true; b.textContent='جارِ الحفظ…'; $('#flErr').textContent='';
+  const r=await sb.rpc('fleet_save',{p_id:id,p_data:v,p_imgs:flNewImgs?[...flNewImgs]:null});
+  b.disabled=false; b.textContent='حفظ السيارة';
+  if(r.error){ $('#flErr').textContent=/fleet_save|function|schema cache/i.test(r.error.message)?'الميزة تحتاج تشغيل ملف fleet.sql في Supabase أولاً':r.error.message; return; }
+  st.flEdit=null; flNewImgs=null; st.flOpen=id; delete st.cache['fleet/vehicles']; toast('تم حفظ السيارة ✓'); await render(); flLoadPhotos();
+});
+
 // ----- embedded apps & report pages -----
 function appView(sec){ return async()=>`<iframe class="appframe" src="apps/${sec.app}.html?v=${APP_VER}" title="${esc(sec.name)}"></iframe>`; }
 function pageView(sec){
@@ -858,7 +985,7 @@ async function render(){
   try{ v.innerHTML=await V[st.tab](); v.querySelectorAll('.sc-end').forEach(s=>s.scrollLeft=s.scrollWidth); if(sec.app) fitApp(); if(sec.page) mountPage(sec); }
   catch(err){ console.error(err); v.innerHTML=`<div class="card"><div class="err">تعذّر تحميل البيانات: ${esc(err.message||err)}</div><button class="btn ghost sm" onclick="location.reload()">إعادة المحاولة</button></div>`; }
 }
-document.addEventListener('visibilitychange',()=>{ if(document.visibilityState!=='visible'||!st.profile) return; const sec=SECTIONS.find(s=>s.id===st.tab)||{}; st.cache={}; if(!sec.app&&st.tab!=='data') render(); });
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState!=='visible'||!st.profile) return; if(st.tab==='fleet'&&st.flEdit) return; const sec=SECTIONS.find(s=>s.id===st.tab)||{}; st.cache={}; if(!sec.app&&st.tab!=='data') render(); });
 sb.auth.onAuthStateChange((ev)=>{ if(ev==='SIGNED_OUT'){ $('#app').hidden=true; $('#login').hidden=false; } });
 boot();
 })();
