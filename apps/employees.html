@@ -42,6 +42,12 @@ button{cursor:pointer;border:0;background:0 0}
 .bhead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
 .bhead h3{font-size:14.5px;display:flex;align-items:center;gap:8px}
 .bhead h3 i{width:10px;height:10px;border-radius:50%}
+.kpi[data-go],.cmp td[data-go]{cursor:pointer}
+.kpi[data-go]:active,.mini [data-go]:active{transform:scale(.98)}
+.cmp td[data-go] b{border-bottom:1px dashed currentColor}
+.setsum{display:flex;gap:8px;margin:-4px 0 10px;flex-wrap:wrap}
+.setsum span{background:var(--soft);border-radius:999px;padding:4px 10px;font-size:12px;color:var(--mut)}
+.setsum b{color:var(--ink);font-family:"Readex Pro"}
 .sbar{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--soft2);margin:6px 0 8px}
 .sbar i{display:block;height:100%;transform-origin:right;animation:grow .8s ease-out}
 .sbar i+i{border-inline-start:2px solid #fff}
@@ -184,7 +190,7 @@ const idOf=r=>r.id_type&&IDT[r.id_type]?r.id_type:(r.has_iqama||r.iqama?'residen
 const DED_R=['تأخير','غياب','مخالفة بلدية','مخالفة نظافة','تلف أو كسر','عجز كاشير','سلفة','أخرى'];
 const HC={ok:{t:'سارية',c:'#1FA16B'},soon:{t:'تنتهي قريباً',c:'#E0A526'},exp:{t:'منتهية',c:'#D0453A'},none:{t:'بدون شهادة',c:'#B9BDB5'}};
 const IDC={resident:'#2F67AE',visitor:'#8A6BD1',citizen:'#1F5E43',none:'#B9BDB5'};
-const DF={hc_ok:'الشهادات السارية',hc_soon:'شهادات تنتهي خلال 30 يوم',hc_exp:'الشهادات المنتهية',hc_none:'بدون شهادة صحية',id_resident:'هوية مقيم',id_visitor:'هوية زائر',id_citizen:'هوية وطنية',id_none:'بدون هوية',ded:'عليهم خصم هذا الشهر'};
+const DF={hc_ok:'الشهادات السارية',hc_valid:'الشهادات السارية',hc_soon:'شهادات تنتهي خلال 30 يوم',hc_exp:'الشهادات المنتهية',hc_none:'بدون شهادة صحية',id_resident:'هوية مقيم',id_visitor:'هوية زائر',id_citizen:'هوية وطنية',id_none:'بدون هوية',ded:'عليهم خصم هذا الشهر'};
 const REASONS=['استقالة','إنهاء من الشركة','انتهاء العقد','انقطاع عن العمل','نقل كفالة','خروج نهائي','أخرى'];
 const FLD={name:'الاسم',branch:'الفرع',job:'المسمى',nationality:'الجنسية',phone:'الجوال',iqama:'رقم الهوية',id_type:'نوع الهوية',has_health:'يوجد شهادة صحية',health_no:'رقم الشهادة الصحية',health_exp:'انتهاء الشهادة الصحية',start_date:'تاريخ المباشرة',salary:'الراتب',status:'الحالة',left_date:'تاريخ انتهاء الخدمة',end_reason:'سبب الانتهاء',notes:'ملاحظات'};
 const $=s=>document.querySelector(s);
@@ -235,7 +241,7 @@ async function showPhoto(r){const m=document.createElement('div');m.className='m
 function hcOf(r){if(!(r.has_health||r.health_exp))return'none';const s=docState(r.health_exp);if(!s)return'ok';return s.n<0?'exp':s.n<=30?'soon':'ok'}
 const dedOf=(id,m)=>S.ded.filter(d=>d.emp_id===id&&(!m||String(d.date).slice(0,7)===m));
 const dsum=a=>Math.round(a.reduce((x,d)=>x+(+d.amount||0),0)*100)/100;
-const dfMatch=(r,k)=>!k?true:k.startsWith('hc_')?hcOf(r)===k.slice(3):k.startsWith('id_')?idOf(r)===k.slice(3):k==='ded'?dedOf(r.id,curMonth()).length>0:true;
+const dfMatch=(r,k)=>!k?true:k==='hc_valid'?['ok','soon'].includes(hcOf(r)):k.startsWith('hc_')?hcOf(r)===k.slice(3):k.startsWith('id_')?idOf(r)===k.slice(3):k==='ded'?dedOf(r.id,curMonth()).length>0:true;
 function docState(d){
   if(!d)return null;const n=daysBetween(today(),d);
   if(n<0)return{cl:'p-bad',t:'منتهية',n};
@@ -266,11 +272,11 @@ function renderDash(){
   const vac=on.filter(r=>r.status==='vacation');
   let h=branchChips();
   h+=`<div class="kpis">
-    <div class="kpi big"><small>إجمالي الرواتب الشهرية${S.f==='all'&&S.branches.length>1?' · كل الفروع':' · '+esc(brById(S.f==='all'?(S.branches[0]||{}).id:S.f).name)}</small><b class="num">${fmt(sal)} <span style="font-size:13px">ر.س</span></b><span class="s">${on.length} موظف على الكشف${vac.length?' · منهم '+vac.length+' بإجازة':''}</span></div>
-    <div class="kpi"><small>على رأس العمل</small><b class="num">${on.length-vac.length}</b><span class="s">${vac.length?vac.length+' بإجازة':'لا يوجد إجازات'}</span></div>
-    <div class="kpi"><small>متوسط الراتب</small><b class="num">${on.length?fmt(Math.round(sal/on.length)):'—'}</b><span class="s">ر.س</span></div>
-    <div class="kpi"><small>مباشرين هذا الشهر</small><b class="num" style="color:var(--up)">${newM.length}</b><span class="s">${esc(mLong(m))}</span></div>
-    <div class="kpi"><small>انتهت خدماتهم هذا الشهر</small><b class="num" style="color:${leftM.length?'var(--down)':'inherit'}">${leftM.length}</b><span class="s">${esc(mLong(m))}</span></div>
+    <div class="kpi big" data-go="*|sal"><small>إجمالي الرواتب الشهرية${S.f==='all'&&S.branches.length>1?' · كل الفروع':' · '+esc(brById(S.f==='all'?(S.branches[0]||{}).id:S.f).name)}</small><b class="num">${fmt(sal)} <span style="font-size:13px">ر.س</span></b><span class="s">${on.length} موظف على الكشف${vac.length?' · منهم '+vac.length+' بإجازة':''}</span></div>
+    <div class="kpi" data-go="*|on"><small>على رأس العمل</small><b class="num">${on.length-vac.length}</b><span class="s">${vac.length?vac.length+' بإجازة':'لا يوجد إجازات'}</span></div>
+    <div class="kpi" data-go="*|sal"><small>متوسط الراتب</small><b class="num">${on.length?fmt(Math.round(sal/on.length)):'—'}</b><span class="s">ر.س</span></div>
+    <div class="kpi" data-go="*|new"><small>مباشرين هذا الشهر</small><b class="num" style="color:var(--up)">${newM.length}</b><span class="s">${esc(mLong(m))}</span></div>
+    <div class="kpi" data-go="*|left"><small>انتهت خدماتهم هذا الشهر</small><b class="num" style="color:${leftM.length?'var(--down)':'inherit'}">${leftM.length}</b><span class="s">${esc(mLong(m))}</span></div>
   </div>`;
   const noPh=S.phOK?on.filter(r=>!S.th[r.id]):[];
   if(noPh.length)h+=`<div class="card"><h2>موظفين بدون صورة<span class="tag">${noPh.length}</span></h2><div style="display:flex;flex-wrap:wrap;gap:6px">${noPh.slice(0,24).map(r=>`<button class="chip" data-open="${r.id}">${esc(r.name)}</button>`).join('')}</div><div class="hint" style="margin-top:6px">افتح الموظف ← «تعديل» ← أرفق صورته.</div></div>`;
@@ -283,7 +289,7 @@ function renderDash(){
   if(S.branches.length>1&&S.f==='all'){
     h+=`<div class="card"><h2>مقارنة الفروع<span class="tag">اضغط أي رقم للتفاصيل</span></h2><div class="tscroll"><table class="tbl cmp"><tr><th>الفرع</th><th>الموظفين</th><th>سارية</th><th>منتهية</th><th>بدون شهادة</th>${S.dedOK?'<th>خصومات الشهر</th>':''}</tr>
     ${S.branches.map(b=>{const br=on.filter(r=>r.branch===b.id),x=stat(br),dd=dsum(S.ded.filter(d=>d.branch===b.id&&String(d.date).slice(0,7)===cm));
-      return `<tr><td><span style="color:${b.color}">●</span> ${esc(b.name)}</td><td><b>${br.length}</b></td><td class="ok" data-go="${b.id}|hc_ok"><b>${x.hc.ok+x.hc.soon}</b></td><td class="${x.hc.exp?'bad':''}" data-go="${b.id}|hc_exp"><b>${x.hc.exp}</b></td><td class="${x.hc.none?'warn':''}" data-go="${b.id}|hc_none"><b>${x.hc.none}</b></td>${S.dedOK?`<td data-go="${b.id}|ded"><b>${dd?fmt(dd):'—'}</b></td>`:''}</tr>`}).join('')}
+      return `<tr><td><span style="color:${b.color}">●</span> ${esc(b.name)}</td><td data-go="${b.id}|all"><b>${br.length}</b></td><td class="ok" data-go="${b.id}|hc_valid"><b>${x.hc.ok+x.hc.soon}</b></td><td class="${x.hc.exp?'bad':''}" data-go="${b.id}|hc_exp"><b>${x.hc.exp}</b></td><td class="${x.hc.none?'warn':''}" data-go="${b.id}|hc_none"><b>${x.hc.none}</b></td>${S.dedOK?`<td data-go="${b.id}|ded"><b>${dd?fmt(dd):'—'}</b></td>`:''}</tr>`}).join('')}
     </table></div></div>`;
   }
   scopeBr().forEach(b=>{
@@ -291,8 +297,8 @@ function renderDash(){
     const jobs={};br.forEach(r=>{const j=r.job||'بدون مسمى';jobs[j]=(jobs[j]||0)+1});
     const js=Object.entries(jobs).sort((a,b)=>b[1]-a[1]);const mx=js.length?js[0][1]:1;
     const x=stat(br);const bd=S.ded.filter(d=>d.branch===b.id&&String(d.date).slice(0,7)===cm);
-    h+=`<div class="card bcard" style="border-top-color:${b.color}"><div class="bhead"><h3><i style="background:${b.color}"></i>${esc(b.name)}</h3><span class="pill p-mut num">${br.length} موظف</span></div>
-    <div class="mini"><div><small>الرواتب</small><b class="num">${fmt(s)}</b></div><div data-go="${b.id}|ded" style="cursor:pointer"><small>خصومات الشهر</small><b class="num" style="color:${bd.length?'var(--down)':'inherit'}">${bd.length?fmt(dsum(bd)):'—'}</b></div><div><small>جدد الشهر</small><b class="num">${newM.filter(r=>r.branch===b.id).length}</b></div></div>
+    h+=`<div class="card bcard" style="border-top-color:${b.color}"><div class="bhead"><h3><i style="background:${b.color}"></i>${esc(b.name)}</h3><span class="pill p-mut num" data-go="${b.id}|all" style="cursor:pointer">${br.length} موظف ‹</span></div>
+    <div class="mini"><div data-go="${b.id}|sal" style="cursor:pointer"><small>الرواتب</small><b class="num">${fmt(s)}</b></div><div data-go="${b.id}|ded" style="cursor:pointer"><small>خصومات الشهر</small><b class="num" style="color:${bd.length?'var(--down)':'inherit'}">${bd.length?fmt(dsum(bd)):'—'}</b></div><div data-go="${b.id}|new" style="cursor:pointer"><small>جدد الشهر</small><b class="num">${newM.filter(r=>r.branch===b.id).length}</b></div></div>
     ${br.length?`<div class="sec">الشهادات الصحية<span>${x.hc.exp+x.hc.none?`${x.hc.exp+x.hc.none} يحتاج متابعة`:'كلها سليمة ✓'}</span></div>
     ${sbar(['ok','soon','exp','none'].map(k=>[HC[k].c,x.hc[k]]))}
     ${tiles(b.id,['ok','soon','exp','none'].map(k=>['hc_'+k,HC[k].t,HC[k].c,x.hc[k]]))}
@@ -425,6 +431,40 @@ function openDed(r){
     m.remove();toast(`تم تسجيل خصم ${fmt(amt)} ر.س على ${r.name}`);await load();openDetail(r.id);
   });
   document.body.appendChild(m);setTimeout(()=>m.querySelector('#dA').focus(),60);
+}
+function showSet(b,k){
+  const cm=curMonth(),sc=b==='*'?(r=>inScope(r)):b==='all'?(()=>true):(r=>r.branch===b);
+  const all=S.rows.filter(sc),on=all.filter(isOn);
+  const bn=b==='*'?(S.f==='all'?(S.branches.length>1?'كل الفروع':((S.branches[0]||{}).name||'')):brById(S.f).name):b==='all'?'كل الفروع':brById(b).name;
+  const T={sal:'الرواتب',all:'الموظفين',on:'على رأس العمل',vac:'بإجازة',new:'مباشرين هذا الشهر',left:'انتهت خدماتهم هذا الشهر',ded:'خصومات الشهر',hc_ok:'شهادات صحية سارية',hc_valid:'شهادات صحية سارية',hc_soon:'شهادات تنتهي خلال 30 يوم',hc_exp:'شهادات صحية منتهية',hc_none:'بدون شهادة صحية',id_resident:'هوية مقيم',id_visitor:'هوية زائر',id_citizen:'هوية وطنية (مواطن)',id_none:'بدون هوية'};
+  let rows,body='',sum='';
+  const multi=S.branches.length>1&&(b==='all'||(b==='*'&&S.f==='all'));
+  const sub=r=>`${esc(r.job||'—')}${multi?' · '+esc(brById(r.branch).name):''}`;
+  const line=(r,right,small)=>`<button class="emp" data-pick="${r.id}">${avOf(r,brById(r.branch))}<span class="nm"><b>${esc(r.name)}</b><small>${small||sub(r)}</small></span><span class="v">${right}</span></button>`;
+  if(k==='ded'){
+    const ds=S.ded.filter(d=>String(d.date).slice(0,7)===cm&&(b==='*'?(S.f==='all'||d.branch===S.f):b==='all'||d.branch===b)).sort((x,y)=>String(y.date).localeCompare(String(x.date)));
+    const emp=id=>S.rows.find(r=>r.id===id)||{id,name:'—',branch:''};
+    sum=`<div class="setsum"><span>عدد الخصومات <b>${ds.length}</b></span><span>الإجمالي <b>${fmt(dsum(ds))}</b> ر.س</span><span>الموظفين <b>${new Set(ds.map(d=>d.emp_id)).size}</b></span></div>`;
+    body=ds.map(d=>{const r=emp(d.emp_id);return line(r,`<b class="num" style="color:var(--down)">−${fmt(d.amount)}</b>${d.has_photo?'<small class="hint">📷 صورة</small>':''}`,`${esc(d.reason)} · ${dShort(String(d.date))}${d.notes?' · '+esc(d.notes):''}`)}).join('');
+    rows=ds;
+  }else{
+    rows=k==='all'||k==='sal'?on:k==='on'?on.filter(r=>r.status==='active'):k==='vac'?on.filter(r=>r.status==='vacation'):k==='new'?all.filter(r=>r.start_date&&r.start_date.slice(0,7)===cm):k==='left'?all.filter(r=>r.status==='left'&&r.left_date&&r.left_date.slice(0,7)===cm):on.filter(r=>dfMatch(r,k));
+    if(k==='sal'||k==='all'||k==='on'||k==='vac'){rows.sort((x,y)=>(+y.salary||0)-(+x.salary||0));const t=rows.reduce((x,r)=>x+(+r.salary||0),0);
+      sum=`<div class="setsum"><span>العدد <b>${rows.length}</b></span><span>الرواتب <b>${fmt(t)}</b> ر.س</span>${rows.length?`<span>المتوسط <b>${fmt(Math.round(t/rows.length))}</b></span>`:''}</div>`;
+      body=rows.map(r=>line(r,`<b class="num">${fmt(r.salary)}</b>${r.status==='vacation'?'<span class="pill p-vac">إجازة</span>':''}`)).join('');}
+    else if(k==='new'){body=rows.map(r=>line(r,`<b class="num">${fmt(r.salary)}</b><small class="hint">${dShort(r.start_date)}</small>`)).join('');sum=`<div class="setsum"><span>العدد <b>${rows.length}</b></span></div>`}
+    else if(k==='left'){body=rows.map(r=>line(r,`<span class="pill p-bad">${esc(r.end_reason||'منتهية')}</span><small class="hint" style="display:block">${dShort(r.left_date)}</small>`)).join('');sum=`<div class="setsum"><span>العدد <b>${rows.length}</b></span></div>`}
+    else if(k.startsWith('hc_')){rows.sort((x,y)=>String(x.health_exp||'9').localeCompare(String(y.health_exp||'9')));
+      body=rows.map(r=>{const st=docState(r.health_exp);return line(r,k==='hc_none'?'<span class="pill p-mut">لا يوجد</span>':`<span class="pill ${st?st.cl:'p-ok'}">${st?st.t:'سارية'}</span><small class="hint" style="display:block">${dShort(r.health_exp)}</small>`,k==='hc_none'?sub(r):`${sub(r)} · رقم ${esc(r.health_no||'—')}`)}).join('');
+      sum=`<div class="setsum"><span>العدد <b>${rows.length}</b></span>${k==='hc_exp'||k==='hc_none'?'<span>اضغط على الموظف لتحديث شهادته</span>':''}</div>`}
+    else if(k.startsWith('id_')){body=rows.map(r=>line(r,k==='id_none'?'<span class="pill p-mut">لا يوجد</span>':`<b class="num" style="font-size:12.5px">${esc(r.iqama||'—')}</b>`,`${sub(r)}${r.nationality?' · '+esc(r.nationality):''}`)).join('');sum=`<div class="setsum"><span>العدد <b>${rows.length}</b></span></div>`}
+  }
+  const m=document.createElement('div');m.className='modal';
+  m.innerHTML=`<div class="sheet"><h3>${T[k]||''} <span class="hint" style="font-size:13px">· ${esc(bn)}</span></h3>${sum}
+  ${rows.length?`<div>${body}</div>`:'<div class="empty">ما فيه أحد</div>'}
+  <div class="acts"><button class="btn ghost" data-a="0">إغلاق</button></div></div>`;
+  m.addEventListener('click',e=>{const pk=e.target.closest('[data-pick]');if(pk){m.remove();openDetail(pk.dataset.pick);return}if(e.target===m||e.target.closest('[data-a="0"]'))m.remove()});
+  document.body.appendChild(m);
 }
 function svc(a,b){if(!a||!b)return'—';const d=daysBetween(a,b)+1;const y=Math.floor(d/365),mo=Math.floor((d%365)/30);return (y?y+' سنة ':'')+(mo?(y?'و':'')+mo+' شهر':'')||d+' يوم'}
 function openEnd(r){
@@ -647,7 +687,7 @@ $('#fab').onclick=()=>openForm(null);
 document.addEventListener('click',e=>{
   const f=e.target.closest('[data-f]');if(f){S.f=f.dataset.f;render();return}
   const s=e.target.closest('[data-st]');if(s){S.stf=s.dataset.st;S.df='';render();return}
-  const g=e.target.closest('[data-go]');if(g&&!e.target.closest('.modal')){const[b,k]=g.dataset.go.split('|');if(S.branches.length>1)S.f=b;S.df=k;S.stf='active';setTab('list');return}
+  const g=e.target.closest('[data-go]');if(g&&!e.target.closest('.modal')){const[b,k]=g.dataset.go.split('|');showSet(b,k);return}
   const dfx=e.target.closest('[data-df]');if(dfx){S.df='';render();return}
   const o=e.target.closest('[data-open]');if(o&&!e.target.closest('.modal')){openDetail(o.dataset.open);return}
   if(e.target.closest('#xGo'))doExport();
