@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#143F2A">
-<title>My Reports · منصة الإدارة الموحّدة</title>
-<link rel="manifest" href="manifest.json?v=4">
-<link rel="icon" href="icon.svg?v=3" type="image/svg+xml">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
+<title>MyHub · منصة الإدارة الموحّدة</title>
+<link rel="manifest" href="manifest.json?v=5">
+<link rel="icon" href="icon.svg?v=4" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=4">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="My Reports">
+<meta name="apple-mobile-web-app-title" content="MyHub">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@500;600;700&family=Montserrat:wght@400;600&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
@@ -167,6 +167,28 @@ body.appmode footer{display:none}
   .note{font-size:12px}
   .tag{font-size:11px}
 }
+
+/* header actions + bottom nav */
+.who{display:flex;align-items:center;gap:8px}
+.hbtn{position:relative;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--card);display:grid;place-items:center;cursor:pointer;color:var(--green-dk);flex:none;box-shadow:0 2px 8px rgba(20,24,20,.06)}
+.hbtn .bd{position:absolute;top:-4px;inset-inline-end:-4px;background:var(--down);color:#fff;border-radius:99px;font-size:10px;font-weight:700;min-width:18px;height:18px;padding:0 5px;display:grid;place-items:center;border:2px solid var(--bg)}
+.avb{width:40px;height:40px;border-radius:50%;border:0;background:linear-gradient(135deg,#F3E2A6,#D4AF37);color:#3E2F05;font-family:var(--f-disp);font-weight:700;font-size:16px;cursor:pointer;flex:none;box-shadow:0 3px 10px rgba(154,123,18,.25)}
+.npanel{position:absolute;inset-inline-end:0;top:48px;z-index:41;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 14px 34px rgba(20,24,20,.18);width:min(330px,calc(100vw - 28px));max-height:70vh;overflow:auto;padding:12px}
+.npanel h4{margin:0 0 8px;font-family:var(--f-disp);font-size:15px}
+.nitem{display:flex;gap:10px;align-items:flex-start;padding:9px 6px;border-bottom:1px solid var(--line);width:100%;background:none;border-inline:0;border-top:0;text-align:start;font:inherit;color:inherit;cursor:pointer}
+.nitem:last-child{border-bottom:0}
+.nitem .ic{flex:none;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;font-size:14px}
+.nitem .tx{font-size:12.5px;line-height:1.6}
+.nitem .tx small{display:block;color:var(--muted);font-size:11px}
+.bnav{position:fixed;bottom:0;inset-inline:0;z-index:35;display:flex;justify-content:space-around;align-items:stretch;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));box-shadow:0 -6px 18px rgba(20,24,20,.06)}
+.bnav button{flex:1;max-width:110px;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 2px;border-radius:14px;color:#7A7F78;font:inherit;font-size:10.5px;font-weight:600;cursor:pointer}
+.bnav button svg{width:23px;height:23px}
+.bnav button[aria-pressed="true"]{color:var(--green-dk)}
+.bnav button[aria-pressed="true"] .bi{background:rgba(30,90,62,.1)}
+.bnav .bi{width:46px;height:30px;border-radius:99px;display:grid;place-items:center;transition:background .2s}
+body.hasnav .wrap{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+body.hasnav .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+.tabs:empty{display:none}
 /* splash */
 #splash{position:fixed;inset:0;z-index:100;display:grid;place-items:center;overflow:hidden;cursor:pointer;color:#fff;
   background:radial-gradient(130% 95% at 50% 38%,#3C7550 0%,#2A5638 42%,#14301F 78%,#0D2216 100%);transition:opacity .7s ease,visibility .7s}
@@ -188,7 +210,8 @@ body.appmode footer{display:none}
 #splash .sp-ping{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(246,231,176,.55);opacity:0;animation:spPing 1.2s 2.85s cubic-bezier(.2,.7,.3,1) forwards}
 #splash .sp-glow{position:absolute;inset:16px;border-radius:50%;background:radial-gradient(circle,rgba(233,207,122,.26),transparent 70%);opacity:0;animation:spPulse 2.6s 1.2s ease-in-out infinite}
 #splash .sp-mark{position:relative;width:74px;height:74px;border-radius:22px;background:linear-gradient(145deg,rgba(255,255,255,.15),rgba(255,255,255,.03));border:1px solid rgba(233,207,122,.45);
-  display:grid;place-items:end center;padding:16px 14px;box-shadow:0 18px 40px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.22);backdrop-filter:blur(6px);animation:spPop .8s .1s cubic-bezier(.2,.9,.25,1.15) both}
+  display:grid;place-items:center;padding:0;box-shadow:0 18px 40px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.22);backdrop-filter:blur(6px);animation:spPop .8s .1s cubic-bezier(.2,.9,.25,1.15) both}
+#splash .sp-g4{display:grid;grid-template-columns:1fr 1fr;gap:6px;width:40px;height:40px;direction:ltr}#splash .sp-g4 i{display:block;border-radius:6px;background:linear-gradient(#FFF4CC,#C9A227);transform:scale(0);animation:spG4 .55s cubic-bezier(.2,.9,.3,1.3) forwards}#splash .sp-g4 i:nth-child(1){animation-delay:.6s}#splash .sp-g4 i:nth-child(2){background:none;border:2.5px solid #E9CF7A;animation-delay:.75s}#splash .sp-g4 i:nth-child(3){animation-delay:.9s}#splash .sp-g4 i:nth-child(4){animation-delay:1.05s;box-shadow:0 0 12px rgba(246,231,176,.5)}
 #splash .sp-bars{display:flex;align-items:flex-end;gap:6px;height:40px;direction:ltr}
 #splash .sp-bars i{display:block;width:9px;border-radius:3px 3px 1.5px 1.5px;background:linear-gradient(#F6E7B0,#C9A227);transform-origin:bottom;animation:spBar .8s cubic-bezier(.2,.8,.2,1) both}
 #splash .sp-bars i:nth-child(1){height:40%;animation-delay:.7s}#splash .sp-bars i:nth-child(2){height:68%;animation-delay:.85s}#splash .sp-bars i:nth-child(3){height:100%;animation-delay:1s;background:linear-gradient(#FFF7DC,#E9CF7A);box-shadow:0 0 12px rgba(246,231,176,.5)}
@@ -230,12 +253,25 @@ body.appmode footer{display:none}
 @keyframes spTrack{0%{opacity:0;letter-spacing:.9em;padding-inline-start:.9em;filter:blur(8px)}100%{opacity:1;letter-spacing:.38em;padding-inline-start:.38em;filter:none}}
 @keyframes spGleam{to{background-position:0 0}}
 @keyframes spHair{to{width:54px}}
+@keyframes spG4{to{transform:scale(1)}}
 @keyframes spGem{to{transform:rotate(45deg) scale(1)}}
 @keyframes spOutA{to{opacity:0;transform:translateY(-14px);filter:blur(6px)}}
 @keyframes spWipe{to{clip-path:inset(0 0 0 0)}}
 @keyframes spRise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @keyframes spFill{to{width:100%}}
 @keyframes spFade{to{opacity:1}}
+
+#splash.quick .sp-a{display:none}
+#splash.quick .sp-ring .r2{animation-duration:.9s;animation-delay:0s}
+#splash.quick .sp-mark{animation-delay:0s}
+#splash.quick .sp-g4 i:nth-child(1){animation-delay:.15s}#splash.quick .sp-g4 i:nth-child(2){animation-delay:.25s}#splash.quick .sp-g4 i:nth-child(3){animation-delay:.35s}#splash.quick .sp-g4 i:nth-child(4){animation-delay:.45s}
+#splash.quick .sp-orbit{animation-delay:.6s,.6s}
+#splash.quick .sp-ping,#splash.quick .sp-sweep{animation-delay:.5s}
+#splash.quick .sp-ar{animation-duration:.8s;animation-delay:.35s}
+#splash.quick .sp-b .sp-orn s{animation-delay:.8s}#splash.quick .sp-b .sp-orn em{animation-delay:.75s}
+#splash.quick .sp-grp{animation-delay:.9s}
+#splash.quick .sp-load{animation-delay:.9s}#splash.quick .sp-bar b{animation-duration:1s;animation-delay:1s}
+#splash.quick .sp-skip{display:none}
 @media (prefers-reduced-motion:reduce){#splash *{animation-duration:.01s!important;animation-delay:0s!important}}
 </style>
 </head>
@@ -249,13 +285,13 @@ body.appmode footer{display:none}
       <svg class="sp-ring" viewBox="0 0 132 132"><defs><linearGradient id="spg" x1="0" x2="1"><stop offset="0" stop-color="#C9A227"/><stop offset="1" stop-color="#FFF7DC"/></linearGradient></defs><circle class="r1" cx="66" cy="66" r="62"/><circle class="r2" cx="66" cy="66" r="62"/></svg>
       <div class="sp-orbit"></div><div class="sp-ping"></div>
       <div class="sp-glow"></div>
-      <div class="sp-mark"><div class="sp-bars"><i></i><i></i><i></i></div></div>
+      <div class="sp-mark"><div class="sp-g4"><i></i><i></i><i></i><i></i></div></div>
     </div>
     <div class="sp-stage">
       <div class="sp-a">
-        <div class="sp-word">My Reports</div>
+        <div class="sp-word">My Hub</div>
         <div class="sp-orn"><s></s><em></em><s></s></div>
-        <div class="sp-tag">Business Intelligence</div>
+        <div class="sp-tag">Unified Management</div>
       </div>
       <div class="sp-b">
         <div class="sp-ar">منصة الإدارة الموحّدة</div>
@@ -267,9 +303,9 @@ body.appmode footer{display:none}
   </div>
   <div class="sp-skip">اضغط للمتابعة</div>
 </div>
-<script>(function(){var s=document.getElementById('splash');var seen=false;try{seen=sessionStorage.getItem('splash')==='1';sessionStorage.setItem('splash','1');}catch(e){}
+<script>(function(){var s=document.getElementById('splash');var seen=false,ever=false;try{seen=sessionStorage.getItem('splash')==='1';sessionStorage.setItem('splash','1');ever=localStorage.getItem('splashFull')==='1';localStorage.setItem('splashFull','1');}catch(e){}
 function hide(){if(!s||s.classList.contains('out'))return;s.classList.add('out');setTimeout(function(){s&&s.remove();},800);}
-if(seen){s.remove();return;}s.addEventListener('click',hide);setTimeout(hide,5600);})();</script>
+if(seen){s.remove();return;}if(ever)s.classList.add('quick');s.addEventListener('click',hide);setTimeout(hide,ever?2300:5600);})();</script>
 
 <!-- ============ LOGIN ============ -->
 <section id="login" hidden>
@@ -293,13 +329,14 @@ if(seen){s.remove();return;}s.addEventListener('click',hide);setTimeout(hide,560
   <div class="wrap">
     <div class="top">
       <div class="brand"><div><h1 style="font-size:17px;line-height:1.2">منصة الإدارة الموحّدة</h1><div style="font-size:12px;color:var(--gold-ink);font-weight:600">تطوير بواسطة أمير العريفي</div></div></div>
-      <div class="who"><button class="mybtn" id="av" type="button" aria-haspopup="true" aria-expanded="false" aria-label="الحساب" dir="ltr">My Reports</button>
+      <div class="who"><button class="hbtn" id="bell" type="button" aria-label="التنبيهات" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="bd" id="bellN" hidden></span></button><div class="npanel" id="npanel" hidden></div><button class="avb" id="av" type="button" aria-haspopup="true" aria-expanded="false" aria-label="الحساب">؟</button>
         <div class="umenu" id="umenu" hidden><div><b id="uname"></b><div class="muted" style="font-size:12px" id="urole"></div></div><div class="scope" id="scope"></div><button class="btn ghost sm" id="logout" style="width:100%">تسجيل الخروج</button></div></div>
     </div>
     <nav class="tabs" id="tabs" aria-label="الأقسام"></nav>
     <main id="view" style="display:flex;flex-direction:column;gap:16px;min-width:0"></main>
     <footer>تطوير بواسطة أمير العريفي</footer>
   </div>
+  <nav class="bnav" id="bnav" aria-label="التنقل الرئيسي"></nav>
 </div>
 <div class="toast hide" id="toast"></div>
 
@@ -330,8 +367,17 @@ const SECTIONS=[
   {id:'users',name:'المستخدمين والصلاحيات',admin:true},
   {id:'data',name:'إدخال البيانات',admin:true}
 ];
+const NAV_ICONS={
+  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
+  rep:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>',
+  ops:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg>',
+  fin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/><path d="M6.5 15h4"/></svg>',
+  more:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>'};
+const GROUPS=[{id:'home',name:'الرئيسية',secs:['home']},{id:'rep',name:'التقارير',secs:['sales','daily','channels','income','wh','chicken']},{id:'ops',name:'العمليات',secs:['handover','employees','fleet']},{id:'fin',name:'المالية',secs:['treasury','loans']},{id:'more',name:'الإدارة',secs:['users','data']}];
+const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
+const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees'];
-const APP_VER='34';
+const APP_VER='35';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name]));
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -380,7 +426,7 @@ $('#loginForm').onsubmit=async e=>{
   boot();
 };
 $('#logout').onclick=async()=>{await sb.auth.signOut(); location.reload();};
-$('#av').onclick=e=>{e.stopPropagation();const m=$('#umenu');m.hidden=!m.hidden;$('#av').setAttribute('aria-expanded',String(!m.hidden));};
+$('#av').onclick=e=>{e.stopPropagation();$('#npanel').hidden=true;const m=$('#umenu');m.hidden=!m.hidden;$('#av').setAttribute('aria-expanded',String(!m.hidden));};
 document.addEventListener('click',e=>{const m=$('#umenu');if(m&&!m.hidden&&!e.target.closest('.who'))m.hidden=true;});
 
 async function boot(){
@@ -407,9 +453,18 @@ function renderShell(){
   $('#uname').textContent=p.full_name||p.username;
   $('#urole').textContent=ROLE_NAME[p.role]+' · '+p.username;
   $('#scope').innerHTML=st.branches.length?'<span class="muted">يظهر لك:</span>'+st.branches.map(dotTag).join(''):'<span class="muted">لا توجد فروع مسموحة</span>';
-  $('#tabs').innerHTML=SECTIONS.filter(s=>s.admin?isAdmin():allowed(s.id)).map(s=>`<button data-t="${s.id}" aria-pressed="${st.tab===s.id}">${s.name}</button>`).join('');
+  $('#av').textContent=((p.full_name||p.username||'?').trim().replace(/^(مدير|فرع)\s+/,'').charAt(0)||'؟');
+  if(!canSee(st.tab)) st.tab='home';
+  const g=groupOf(st.tab); st.lastIn=st.lastIn||{}; st.lastIn[g]=st.tab;
+  const gs=GROUPS.filter(x=>x.secs.some(canSee));
+  $('#bnav').innerHTML=gs.map(x=>`<button data-g="${x.id}" aria-pressed="${x.id===g}"><span class="bi">${NAV_ICONS[x.id]}</span>${x.name}</button>`).join('');
+  document.body.classList.add('hasnav');
+  const subs=(GROUPS.find(x=>x.id===g)||{secs:[]}).secs.filter(canSee);
+  $('#tabs').innerHTML=subs.length>1?SECTIONS.filter(s=>subs.includes(s.id)).map(s=>`<button data-t="${s.id}" aria-pressed="${st.tab===s.id}">${s.name}</button>`).join(''):'';
+  loadAlerts();
   render();
 }
+$('#bnav').onclick=e=>{const b=e.target.closest('[data-g]');if(!b)return;const G=GROUPS.find(x=>x.id===b.dataset.g);const last=st.lastIn&&st.lastIn[G.id];st.tab=last&&canSee(last)?last:G.secs.find(canSee);try{localStorage.setItem('tab',st.tab);}catch(e){} window.scrollTo({top:0});renderShell();};
 $('#tabs').onclick=e=>{const b=e.target.closest('[data-t]');if(!b)return;st.tab=b.dataset.t;try{localStorage.setItem('tab',st.tab);}catch(e){} renderShell();};
 document.addEventListener('click',e=>{const b=e.target.closest('#view [data-t]');if(!b)return;st.tab=b.dataset.t;try{localStorage.setItem('tab',st.tab);}catch(e){} window.scrollTo({top:0});renderShell();const tb=document.querySelector('#tabs [aria-pressed="true"]');if(tb)tb.scrollIntoView({inline:'center',block:'nearest'});});
 
@@ -895,6 +950,36 @@ document.addEventListener('submit',async e=>{
   st.flEdit=null; flNewImgs=null; st.flOpen=id; delete st.cache['fleet/vehicles']; toast('تم حفظ السيارة ✓'); await render(); flLoadPhotos();
 });
 
+
+// ----- مركز التنبيهات -----
+let ALERTS=[];
+async function loadAlerts(){
+  if(st._alertsAt&&Date.now()-st._alertsAt<120000){paintBell();return;} st._alertsAt=Date.now();
+  const out=[]; const td=todayIso(); const dd=d=>Math.round((new Date(d+'T12:00:00')-new Date(td+'T12:00:00'))/864e5);
+  try{ if(canSee('loans')){ (await appList('loans','contracts')).forEach(d=>{const L=d.data||{};(L.sched||[]).forEach(x=>{if(x.unpaid&&x.date<=td)out.push({ic:'💳',bad:true,t:`قسط لم يُخصم: ${L.name}`,s:`${fmt(x.inst,2)} · ${dLbl(x.date)}`,go:'loans'});});
+      const nx=(L.sched||[]).find(x=>x.date>td&&!x.paid); if(nx&&dd(nx.date)<=3) out.push({ic:'⏰',t:`قسط خلال ${dd(nx.date)} يوم: ${L.name}`,s:`${fmt(nx.inst,2)} · ${dLbl(nx.date)}`,go:'loans'});}); } }catch(e){}
+  try{ if(canSee('fleet')){ (await appList('fleet','vehicles')).forEach(d=>{const v=d.data||{};if((v.status||'في الخدمة')==='مباعة')return;flAlerts(v).forEach(a=>out.push({ic:'🚗',bad:a.bad,t:`${v.make} ${v.model} · ${v.plate||''}`,s:a.t,go:'fleet'}));}); } }catch(e){}
+  try{ if(canSee('employees')){ const r=await sb.from('employees').select('name,branch,health_exp,status').neq('status','left'); (r.data||[]).forEach(x=>{if(!x.health_exp)return;const n=dd(x.health_exp);if(n<=30)out.push({ic:'🪪',bad:n<0,t:`الشهادة الصحية: ${x.name}`,s:(n<0?`منتهية منذ ${-n} يوم`:`تنتهي بعد ${n} يوم`)+' · '+brById(x.branch).name,go:'employees'});}); } }catch(e){}
+  try{ if(canSee('wh')){ const D=(await loadDaily()).filter(r=>r.ratio!=null); const ms=[...new Set(D.map(r=>r.day.slice(0,7)))].sort(); const m=ms[ms.length-1];
+      if(m){ st.branches.forEach(b=>{const L=D.filter(r=>r.branch_id===b.id&&r.day.startsWith(m)).sort((a,c)=>a.day<c.day?-1:1); if(L.length<3)return; const last=L[L.length-1]; const avg=L.reduce((t,r)=>t+ +r.ratio,0)/L.length; if(+last.ratio>=avg+0.02) out.push({ic:'📦',bad:true,t:`تكلفة المستودع مرتفعة: ${b.name}`,s:`${pct(+last.ratio)} يوم ${+last.day.slice(8)} مقابل متوسط ${pct(avg)}`,go:'wh'});}); } } }catch(e){}
+  ALERTS=out.sort((a,b)=>(b.bad?1:0)-(a.bad?1:0)); paintBell();
+}
+function paintBell(){
+  const b=$('#bell'),n=$('#bellN'); if(!b) return; b.hidden=false;
+  const bad=ALERTS.length; n.hidden=!bad; n.textContent=bad>9?'9+':String(bad);
+  const pn=$('#npanel'); if(!pn.hidden) pn.innerHTML=npanelHtml();
+}
+function npanelHtml(){
+  if(!ALERTS.length) return `<h4>التنبيهات</h4><div class="muted" style="font-size:13px;padding:14px 4px;text-align:center">✅ ما فيه تنبيهات — كل شي تمام</div>`;
+  return `<h4>التنبيهات <span class="muted" style="font-size:12px;font-weight:400">· ${ALERTS.length}</span></h4>`+ALERTS.map(a=>`<button class="nitem" data-ngo="${a.go}"><span class="ic" style="background:${a.bad?'rgba(208,69,58,.12)':'var(--gold-soft)'}">${a.ic}</span><span class="tx"><b>${esc(a.t)}</b><small class="${a.bad?'down':''}">${esc(a.s)}</small></span></button>`).join('');
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('#bell'); const pn=$('#npanel'); if(!pn) return;
+  if(b){ e.stopPropagation(); $('#umenu').hidden=true; pn.hidden=!pn.hidden; if(!pn.hidden) pn.innerHTML=npanelHtml(); return; }
+  const g=e.target.closest('[data-ngo]'); if(g){ pn.hidden=true; st.tab=g.dataset.ngo; try{localStorage.setItem('tab',st.tab);}catch(_){} window.scrollTo({top:0}); renderShell(); return; }
+  if(!pn.hidden&&!e.target.closest('#npanel')) pn.hidden=true;
+});
+
 // ----- embedded apps & report pages -----
 function appView(sec){ return async()=>`<iframe class="appframe" src="apps/${sec.app}.html?v=${APP_VER}" title="${esc(sec.name)}"></iframe>`; }
 function pageView(sec){
@@ -917,7 +1002,7 @@ function mountPage(sec){
   let h=r.data.html||''; h=/<\/body>/i.test(h)?h.replace(/<\/body>/i,inj+'</body>'):h+inj;
   f.srcdoc=h;
 }
-function fitApp(){ const f=document.querySelector('.appframe'); if(f) f.style.height=Math.max(420,window.innerHeight-(f.getBoundingClientRect().top+window.scrollY)-6)+'px'; }
+function fitApp(){ const f=document.querySelector('.appframe'); if(f){const nv=$('#bnav');const nh=nv&&nv.offsetHeight?nv.offsetHeight:0; f.style.height=Math.max(420,window.innerHeight-(f.getBoundingClientRect().top+window.scrollY)-6-nh)+'px';} }
 window.addEventListener('resize',fitApp);
 document.addEventListener('change',e=>{ if(e.target.id==='pgsel'){ st.page[e.target.dataset.sec]=e.target.value; mountPage(SECTIONS.find(s=>s.id===e.target.dataset.sec)); } });
 document.addEventListener('click',e=>{
@@ -1026,7 +1111,7 @@ async function render(){
   try{ v.innerHTML=await V[st.tab](); v.querySelectorAll('.sc-end').forEach(s=>s.scrollLeft=s.scrollWidth); if(sec.app) fitApp(); if(sec.page) mountPage(sec); }
   catch(err){ console.error(err); v.innerHTML=`<div class="card"><div class="err">تعذّر تحميل البيانات: ${esc(err.message||err)}</div><button class="btn ghost sm" onclick="location.reload()">إعادة المحاولة</button></div>`; }
 }
-document.addEventListener('visibilitychange',()=>{ if(document.visibilityState!=='visible'||!st.profile) return; if(st.tab==='fleet'&&st.flEdit) return; const sec=SECTIONS.find(s=>s.id===st.tab)||{}; st.cache={}; if(!sec.app&&st.tab!=='data') render(); });
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState!=='visible'||!st.profile) return; if(st.tab==='fleet'&&st.flEdit) return; const sec=SECTIONS.find(s=>s.id===st.tab)||{}; st.cache={}; st._alertsAt=0; loadAlerts(); if(!sec.app&&st.tab!=='data') render(); });
 sb.auth.onAuthStateChange((ev)=>{ if(ev==='SIGNED_OUT'){ $('#app').hidden=true; $('#login').hidden=false; } });
 boot();
 })();
