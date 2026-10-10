@@ -274,7 +274,7 @@ if(seen){s.remove();return;}s.addEventListener('click',hide);setTimeout(hide,560
 <!-- ============ LOGIN ============ -->
 <section id="login" hidden>
   <div class="card login-card">
-    <div class="brand"><div><h1 style="font-size:22px">بوابة التقارير</h1><div style="font-size:13px;color:var(--gold-ink);font-weight:600">إعداد أمير العريفي</div></div></div>
+    <div class="brand"><div><h1 style="font-size:22px">بوابة التقارير</h1><div style="font-size:13px;color:var(--gold-ink);font-weight:600">تطوير بواسطة أمير العريفي</div></div></div>
     <form id="loginForm" class="login-card" style="gap:10px" novalidate>
       <div class="field"><label for="lu">اسم المستخدم</label><input class="inp" id="lu" autocomplete="username" dir="ltr" autocapitalize="none" spellcheck="false"></div>
       <div class="field"><label for="lp">كلمة المرور</label><input class="inp" id="lp" type="password" autocomplete="current-password" dir="ltr"></div>
@@ -292,13 +292,13 @@ if(seen){s.remove();return;}s.addEventListener('click',hide);setTimeout(hide,560
 <div id="app" hidden>
   <div class="wrap">
     <div class="top">
-      <div class="brand"><div><h1 style="font-size:19px;line-height:1.2">بوابة التقارير</h1><div style="font-size:12px;color:var(--gold-ink);font-weight:600">إعداد أمير العريفي</div></div></div>
+      <div class="brand"><div><h1 style="font-size:19px;line-height:1.2">بوابة التقارير</h1><div style="font-size:12px;color:var(--gold-ink);font-weight:600">تطوير بواسطة أمير العريفي</div></div></div>
       <div class="who"><button class="mybtn" id="av" type="button" aria-haspopup="true" aria-expanded="false" aria-label="الحساب" dir="ltr">My Reports</button>
         <div class="umenu" id="umenu" hidden><div><b id="uname"></b><div class="muted" style="font-size:12px" id="urole"></div></div><div class="scope" id="scope"></div><button class="btn ghost sm" id="logout" style="width:100%">تسجيل الخروج</button></div></div>
     </div>
     <nav class="tabs" id="tabs" aria-label="الأقسام"></nav>
     <main id="view" style="display:flex;flex-direction:column;gap:16px;min-width:0"></main>
-    <footer>إعداد أمير العريفي</footer>
+    <footer>تطوير بواسطة أمير العريفي</footer>
   </div>
 </div>
 <div class="toast hide" id="toast"></div>
@@ -331,7 +331,7 @@ const SECTIONS=[
   {id:'data',name:'إدخال البيانات',admin:true}
 ];
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees'];
-const APP_VER='31';
+const APP_VER='32';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name]));
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
