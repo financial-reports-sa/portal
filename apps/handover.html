@@ -63,7 +63,7 @@ const daysIn=m=>{const[y,mo]=m.split('-').map(Number);return new Date(y,mo,0).ge
 const tm=s=>{try{return new Date(s).toLocaleTimeString(LOC,{hour:'numeric',minute:'2-digit'})}catch(e){return''}};
 const appsTotal=r=>Object.values(r.apps||{}).reduce((a,b)=>a+(+b||0),0);
 const totOf=r=>r2((+r.cash||0)+(+r.card||0)+(+r.credit||0)+(+r.transfer||0)+(+r.invoice||0)+appsTotal(r));
-const diffOf=r=>(r.system==null||r.system==='')?null:r2(totOf(r)-(+r.system));
+const diffOf=r=>r.adj!=null?r2(+r.adj):(r.system==null||r.system==='')?null:r2(totOf(r)-(+r.system));
 const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 function diffBadge(d){if(d==null)return'';if(Math.abs(d)<0.005)return`<span class="diff eq">مطابق</span>`;return d>0?`<span class="diff up">زيادة <span class="num">${fmt(d)}</span></span>`:`<span class="diff down">عجز <span class="num">${fmt(-d)}</span></span>`}
@@ -77,7 +77,7 @@ ${r.transfer?`<div class="kv"><span>التحويلات البنكية (${(r.tran
 ${r.invoice?`<div class="kv"><span>الفواتير (${(r.invoices||[]).length})</span><b class="num">${fmt(r.invoice)}</b></div>${li(r.invoices)}`:''}
 ${Object.entries(r.apps||{}).map(([a,v])=>`<div class="kv"><span>${esc(a)}</span><b class="num">${fmt(v)}</b></div>`).join('')}
 <div class="kv t"><span style="color:var(--ink)">الإجمالي</span><b class="num">${fmt(totOf(r))}</b></div>
-${r.system!=null?`<div class="kv"><span>إجمالي النظام</span><b class="num">${fmt(r.system)}</b></div><div class="kv"><span>الفرق</span>${diffBadge(diffOf(r))}</div>`:''}
+${r.system!=null?`<div class="kv"><span>إجمالي النظام (من الكاشير)</span><b class="num">${fmt(r.system)}</b></div>`:''}${r.adj!=null?`<div class="kv" style="margin-top:4px"><span><b style="color:var(--ink)">مطابقة المحاسب</b>${r.adjBy?' · '+esc(r.adjBy):''}</span>${diffBadge(r.adj)}</div>`:r.system!=null?`<div class="kv"><span>الفرق</span>${diffBadge(diffOf(r))}</div>`:''}
 ${r.reserve?`<div class="kv" style="margin-top:6px"><span>الحجوزات — خارج اليومية (${(r.reservations||[]).length})</span><b class="num" style="color:${RESC}">${fmt(r.reserve)}</b></div>${li(r.reservations)}`:''}
 ${r.returnsTotal?`<div class="kv" style="margin-top:6px"><span>المردود (${(r.returns||[]).length})</span><b class="num" style="color:${RETC}">${fmt(r.returnsTotal)}</b></div>${li(r.returns)}`:''}
 ${r.notes?`<div class="note">${esc(r.notes)}</div>`:''}`;
@@ -85,7 +85,7 @@ ${r.notes?`<div class="note">${esc(r.notes)}</div>`:''}`;
 const pj=(v,d)=>{try{return typeof v==='string'?(v?JSON.parse(v):d):(v||d)}catch(e){return d}};
 function normRow(x){const apps=pj(x.apps,{}),transfers=pj(x.transfers,[]),reservations=pj(x.reservations,[]),returns=pj(x.returns,[]),invoices=pj(x.invoices,[]);
 return{id:x.hid,date:x.date,month:x.month,branch:x.branch,shift:x.shift,code:x.code||'',cashier:x.cashier||'',reviewStatus:x.review_status||'',reviewNote:x.review_note||'',reviewedAt:x.reviewed_at||'',reviewedBy:x.reviewed_by||'',cash:+x.cash||0,card:+x.card||0,credit:+x.credit||0,apps,transfers,reservations,returns,invoices,invoice:+x.invoice||0,transfer:+x.transfer||0,reserve:+x.reserve||0,returnsTotal:+x.returns_total||0,
-system:(x.system===null||x.system===undefined||x.system==='')?null:+x.system,notes:x.notes||'',createdAt:x.submitted_at,updatedAt:x.submitted_at}}
+system:(x.system===null||x.system===undefined||x.system==='')?null:+x.system,adj:(x.adj===null||x.adj===undefined||x.adj==='')?null:+x.adj,adjBy:x.adj_by||'',notes:x.notes||'',createdAt:x.submitted_at,updatedAt:x.submitted_at}}
 async function fetchMonth(month){const {data,error}=await SBC.rpc('handover_list',{p_month:month});if(error){const e=new Error(error.message);e.msg='تعذّر تحميل البيانات — تأكد من الإنترنت';throw e}return(data||[]).map(normRow)}
 async function markReview(id,status,note){
 const r=S.rows.find(x=>x.id===id);if(!r)return;
@@ -114,10 +114,10 @@ S.loaded=true;S.lastLoad=new Date();
 if(S.tab==='dash')renderDash();
 }
 function agg(rows){
-const t={cash:0,card:0,credit:0,transfer:0,invoice:0,reserve:0,ret:0,apps:0,total:0,n:rows.length,short:0,over:0,appsBy:{},pend:0,issue:0};
+const t={cash:0,card:0,credit:0,transfer:0,invoice:0,reserve:0,ret:0,apps:0,total:0,n:rows.length,short:0,shortN:0,over:0,appsBy:{},pend:0,issue:0};
 rows.forEach(r=>{t.ret+=+r.returnsTotal||0;t.reserve+=+r.reserve||0;if(!r.reviewStatus)t.pend++;if(r.reviewStatus==='issue')t.issue++;PAY.forEach(p=>t[p.k]+=+r[p.k]||0);t.apps+=appsTotal(r);t.total+=totOf(r);
 Object.entries(r.apps||{}).forEach(([k,v])=>t.appsBy[k]=(t.appsBy[k]||0)+(+v||0));
-const d=diffOf(r);if(d!=null){if(d<0)t.short+=-d;else t.over+=d}});
+const d=diffOf(r);if(d!=null){if(d<0){t.short+=-d;t.shortN++}else t.over+=d}});
 return t;
 }
 function renderDash(){
@@ -156,6 +156,7 @@ const pb=$('#pendBtn');if(pb)pb.onclick=()=>{S.onlyPending=!S.onlyPending;render
 el.querySelectorAll('[data-rv]').forEach(x=>x.onclick=async()=>{const[id,st]=x.dataset.rv.split('|');let note='';
 if(st==='issue'){const r=S.rows.find(z=>z.id===id);note=await askNote(r&&r.reviewNote);if(note===null)return}
 markReview(id,st,note)});
+el.querySelectorAll('[data-adj]').forEach(x=>x.onclick=()=>askAdj(x.dataset.adj));
 const sc=el.querySelector('.scroll');if(sc)sc.scrollLeft=sc.scrollWidth;
 }
 function kpiBlock(t){
@@ -166,6 +167,7 @@ ${PAY.map(p=>`<div class="kpi"><small><i style="background:${p.c}"></i>${p.n}</s
 <div class="kpi"><small><i style="background:${APPC}"></i>التطبيقات</small><b class="num">${fmt(t.apps)}</b><span class="pc num">${pc(t.apps)}</span></div>
 <div class="kpi"><small><i style="background:${RESC}"></i>الحجوزات</small><b class="num" style="color:${RESC}">${fmt(t.reserve)}</b><span class="pc">خارج اليومية</span></div>
 <div class="kpi"><small><i style="background:${RETC}"></i>المردود</small><b class="num" style="color:${RETC}">${fmt(t.ret)}</b><span class="pc">للعلم</span></div>
+<div class="kpi"><small><i style="background:#B23126"></i>العجوزات</small><b class="num" style="color:${t.short?'#B23126':'#16233A'}">${fmt(t.short)}</b><span class="pc">${t.shortN?t.shortN+' تسليم عليه عجز':'لا يوجد'}${t.over?' · زيادة '+fmt(t.over):''}</span></div>
 <div class="kpi"><small><i style="background:#C98A0C"></i>بانتظار المراجعة</small><b class="num" style="color:${t.pend?'#9A6A06':'#16233A'}">${t.pend} من ${t.n}</b><span class="pc">${t.issue?t.issue+' عليها ملاحظة':'—'}</span></div>
 </div>
 <div class="card"><h2>توزيع طرق الدفع</h2>
@@ -182,7 +184,7 @@ let br=day.filter(r=>r.branch===b.k);const bt=agg(br);
 br=br.sort((x,y)=>(x.shift+slotNo(x.code)).localeCompare(y.shift+slotNo(y.code)));
 const shown=S.onlyPending?br.filter(r=>!r.reviewStatus):br;
 h+=`<div class="card bcard" style="border-top-color:${b.c}"><div class="bhead"><h3><span class="badge" style="background:${b.c}">${b.n[0]==='ا'?b.n[2]:b.n[0]}</span>فرع ${b.n}</h3><b class="num">${fmt(bt.total)}</b></div>
-<div class="bsub">${bt.n} تسليم من ${SLOTS[b.k]} كاشير${bt.pend?` · <span style="color:#9A6A06">${bt.pend} بانتظار المراجعة</span>`:bt.n?' · <span style="color:#137A50">كلها مراجَعة</span>':''}</div>`;
+<div class="bsub">${bt.n} تسليم من ${SLOTS[b.k]} كاشير${bt.pend?` · <span style="color:#9A6A06">${bt.pend} بانتظار المراجعة</span>`:bt.n?' · <span style="color:#137A50">كلها مراجَعة</span>':''}${bt.short?` · <span style="color:#B23126">عجز ${fmt(bt.short)}</span>`:''}</div>`;
 if(!br.length)h+=`<div class="shift miss"><div class="h"><div class="nm"><small>ما فيه تسليمات لهذا اليوم</small></div></div></div>`;
 else if(!shown.length)h+=`<div class="shift miss"><div class="h"><div class="nm"><small>كل التسليمات مراجَعة</small></div></div></div>`;
 shown.forEach(r=>{const op=S.open[r.id],rv=rvOf(r);
@@ -242,11 +244,43 @@ ${r.reviewStatus?`<div class="hint">${esc(r.reviewedBy||'')} · ${r.reviewedAt?n
 ${r.reviewNote?`<div class="note">${esc(r.reviewNote)}</div>`:''}
 <div class="acts">
 ${r.reviewStatus!=='ok'?`<button class="btn sm okb" data-rv="${r.id}|ok">✓ تمت المراجعة</button>`:''}
+<button class="btn sm" style="background:#fbebea;color:#b23126" data-adj="${r.id}">${r.adj!=null?'تعديل العجز/الزيادة':'تسجيل عجز / زيادة'}</button>
 <button class="btn sm ghost" data-rv="${r.id}|issue">${r.reviewStatus==='issue'?'تعديل الملاحظة':'عليه ملاحظة'}</button>
 ${r.reviewStatus?`<button class="btn sm ghost" data-rv="${r.id}|">إلغاء</button>`:''}
 </div>
 ${S.writer?`<div class="adm"><span>إدارة (للأدمن)</span><button class="btn sm ghost" data-edit="${r.id}">✎ تعديل</button><button class="btn sm del" data-del="${r.id}">🗑 حذف</button></div>`:''}
 </div>`;
+}
+function askAdj(id){
+const r=S.rows.find(x=>x.id===id);if(!r)return;
+let kind=r.adj==null?'short':r.adj<0?'short':r.adj>0?'over':'eq',amt=r.adj?Math.abs(r.adj):'';
+const m=document.createElement('div');m.className='modal';document.body.appendChild(m);
+const draw=()=>{m.innerHTML=`<div class="sheet"><h3>مطابقة تسليم ${esc(r.cashier)}</h3><p class="hint" style="margin-bottom:10px">${dShort(r.date)} · ${slotLabel(r.code)} · إجمالي التسليم <b class="num">${fmt(totOf(r))}</b></p>
+<div class="seg seg3"><button data-k="short" class="${kind==='short'?'on':''}" style="${kind==='short'?'color:#b23126':''}">عجز</button><button data-k="over" class="${kind==='over'?'on':''}" style="${kind==='over'?'color:#137a50':''}">زيادة</button><button data-k="eq" class="${kind==='eq'?'on':''}">مطابق</button></div>
+${kind!=='eq'?`<label class="fld" style="margin-top:12px"><span class="lbl">مبلغ ${kind==='short'?'العجز':'الزيادة'} (ر.س)</span><input id="adjAmt" class="num" inputmode="decimal" style="direction:ltr;text-align:right;font-size:18px" value="${esc(amt)}" placeholder="0"></label>`:''}
+<label class="fld" style="margin-top:12px"><span class="lbl">ملاحظة ${kind==='eq'?'(اختياري)':''}</span><textarea id="adjNote" placeholder="مثل: الكاش ناقص بعد العد، تحويل ما وصل…">${esc(r.reviewNote||'')}</textarea></label>
+<p class="hint">${kind==='eq'?'يتعلّم التسليم «تمت المراجعة».':'يتسجّل على الكاشير ويظهر له في صفحته، ويدخل في التقارير.'}</p>
+<div class="acts">${r.adj!=null?'<button class="btn ghost" data-a="clr" style="color:#b23126">حذف القيد</button>':''}<button class="btn ghost" data-a="0">رجوع</button><button class="btn" data-a="1">حفظ</button></div></div>`;
+const ai=m.querySelector('#adjAmt');if(ai){ai.oninput=e=>amt=e.target.value;setTimeout(()=>ai.focus(),50)}};
+draw();
+m.addEventListener('click',async e=>{const k=e.target.closest('[data-k]');if(k){const n=m.querySelector('#adjNote');if(n)r._n=n.value;kind=k.dataset.k;draw();if(r._n!=null)m.querySelector('#adjNote').value=r._n;return}
+const a=e.target.closest('[data-a]');if(!a&&e.target!==m)return;
+if(!a||a.dataset.a==='0'){m.remove();return}
+const note=(m.querySelector('#adjNote').value||'').trim();delete r._n;
+let v=null;
+if(a.dataset.a==='1'){if(kind==='eq')v=0;else{const x=parseFloat(String(amt).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/٫/g,'.').replace(/[^\d.]/g,''));if(!(x>0)){toast('اكتب المبلغ',1);return}v=kind==='short'?-x:x}}
+else if(!await askYes('حذف قيد العجز/الزيادة؟','بيرجع التسليم بدون نتيجة مطابقة.','حذف'))return;
+m.remove();saveAdj(id,v,v===null?r.reviewNote:(note||(v<0?'عجز '+fmt(-v):v>0?'زيادة '+fmt(v):'')));
+});
+}
+async function saveAdj(id,v,note){
+const r=S.rows.find(x=>x.id===id);if(!r)return;
+try{const {data,error}=await SBC.rpc('handover_adj',{p_hid:id,p_amount:v,p_note:note||''});
+if(error||!data||!data.ok){toast((data&&data.message)||'تعذّر الحفظ — شغّل ملف SQL الأخير أو تأكد من الإنترنت',1);return}
+const i=S.rows.indexOf(r);
+S.rows[i]=v===null?{...r,adj:null,adjBy:''}:{...r,adj:v,adjBy:data.who||'',reviewStatus:v===0?'ok':'issue',reviewNote:note||'',reviewedAt:new Date().toISOString(),reviewedBy:data.who||''};
+toast(v===null?'تم حذف القيد':v<0?'تم تسجيل العجز على الكاشير':v>0?'تم تسجيل الزيادة':'تم — مطابق');renderDash();
+}catch(e){toast('تعذّر الحفظ — تأكد من الإنترنت',1)}
 }
 function askNote(cur){
 return new Promise(res=>{
@@ -272,8 +306,8 @@ h+=`</table></div></div>`;
 h+=`<div class="card"><h2>التسليمات اليومية<span class="tag">ر.س</span></h2><div class="scroll">${dailySVG(rows,scopeBr,S.month)}</div>
 ${scopeBr.length>1?`<div class="legend">${scopeBr.map(b=>`<span><i style="background:${b.c}"></i>${b.n}</span>`).join('')}</div>`:''}</div>`;
 const cl=cashierStats(rows);
-h+=`<div class="card"><h2>الكاشيرات</h2><div class="tscroll"><table class="tbl"><tr><th>الكاشير</th><th>الفرع</th><th>التسليمات</th><th>الإجمالي</th><th>صافي الفرق</th><th>المراجعة</th></tr>
-${cl.map(c=>`<tr><td>${esc(c.n)}<br><small style="color:var(--mut)">${slotLabel(c.code)}</small></td><td style="color:${BM[c.b].d}">${BM[c.b].n}</td><td class="num">${c.c}</td><td class="num">${fmt0(c.t)}</td><td>${c.hd?diffBadge(r2(c.d)):'<span style="color:#C3CCD8">—</span>'}</td><td class="num">${c.rv}/${c.c}</td></tr>`).join('')}</table></div></div>`;
+h+=`<div class="card"><h2>الكاشيرات</h2><div class="tscroll"><table class="tbl"><tr><th>الكاشير</th><th>الفرع</th><th>التسليمات</th><th>الإجمالي</th><th>العجز</th><th>الزيادة</th><th>المراجعة</th></tr>
+${cl.map(c=>`<tr><td>${esc(c.n)}<br><small style="color:var(--mut)">${slotLabel(c.code)}</small></td><td style="color:${BM[c.b].d}">${BM[c.b].n}</td><td class="num">${c.c}</td><td class="num">${fmt0(c.t)}</td><td class="num" style="color:${c.sh?'#B23126':'#C3CCD8'};font-weight:${c.sh?700:400}">${c.sh?fmt(c.sh):'—'}</td><td class="num" style="color:${c.ov?'#137A50':'#C3CCD8'}">${c.ov?fmt(c.ov):'—'}</td><td class="num">${c.rv}/${c.c}</td></tr>`).join('')}</table></div></div>`;
 return h;
 }
 function cashierStats(rows){
@@ -550,6 +584,10 @@ const cl=cashierStats(rows);
 if(cl.length){R.section('الكاشيرات');
 R.table([{h:'الكاشير',w:1.6,t:1},{h:'الفرع',w:1.1,t:1},{h:'التسليمات',w:.9},{h:'الإجمالي',w:1.3},{h:'العجز',w:1},{h:'الزيادة',w:1},{h:'صافي الفرق',w:1.15},{h:'المراجعة',w:.95}],
 cl.map(c=>Object.assign([`${c.n} · ${slotLabel(c.code)}`,{t:BM[c.b].n,c:BM[c.b].d,w:600},String(c.c),fmt(c.t),c.sh?{t:fmt(c.sh),c:'#B23126'}:'—',c.ov?{t:fmt(c.ov),c:'#137A50'}:'—',c.hd?dCell(r2(c.d)):{t:'—',c:'#9AA6B8'},`${c.rv}/${c.c}`],{_mark:BM[c.b].c})));}
+const sl=rows.filter(r=>{const d=diffOf(r);return d!=null&&Math.abs(d)>=0.005}).sort((x,y)=>(x.date+x.branch+slotNo(x.code)).localeCompare(y.date+y.branch+slotNo(y.code)));
+if(sl.length){R.section('تفاصيل العجز والزيادة','#B23126',(t.short?'عجز '+fmt(t.short):'')+(t.short&&t.over?' · ':'')+(t.over?'زيادة '+fmt(t.over):''));
+R.table([{h:'التاريخ',w:1.2,t:1},{h:'الكاشير',w:1.5,t:1},{h:'الفرع',w:1,t:1},{h:'العجز',w:1},{h:'الزيادة',w:1},{h:'الملاحظة',w:3,t:1}],
+sl.map(r=>{const d=diffOf(r);return Object.assign([dShort(r.date),{t:r.cashier,w:600},{t:BM[r.branch].n,c:BM[r.branch].d},d<0?{t:fmt(-d),c:'#B23126',w:700}:'—',d>0?{t:fmt(d),c:'#137A50',w:700}:'—',r.reviewNote||'—'],{_mark:BM[r.branch].c})}),{after:12});}
 return R.finish();
 }
 function setTab(t){
