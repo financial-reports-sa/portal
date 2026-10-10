@@ -323,13 +323,14 @@ const SECTIONS=[
   {id:'wh',name:'نسبة تكلفة المستودعات'},
   {id:'chicken',name:'أسعار المشتريات',page:'prices'},
   {id:'treasury',name:'خزينة الأرصدة',app:'treasury'},
+  {id:'loans',name:'التمويلات'},
   {id:'handover',name:'تسليم الورديات',app:'handover'},
   {id:'employees',name:'الموظفين',app:'employees'},
   {id:'users',name:'المستخدمين والصلاحيات',admin:true},
   {id:'data',name:'إدخال البيانات',admin:true}
 ];
-const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','handover','employees'];
-const APP_VER='22';
+const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','handover','employees'];
+const APP_VER='23';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name]));
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -428,14 +429,14 @@ document.addEventListener('click',e=>{
 });
 
 // ================= charts =================
-function stackBars(labels,series,{h=230,label=true}={}){
+function stackBars(labels,series,{h=230,label=true,fv=fk}={}){
   const n=labels.length,U=Math.max(30,Math.min(64,700/n)),pl=46,pr=10,pt=22,pb=28,W=pl+pr+n*U,H=h;
   const tot=labels.map((_,i)=>sum(series.map(s=>s.vals[i]||0)));
   const mx=Math.max(1,...tot)*1.12,y=v=>H-pb-(v/mx)*(H-pt-pb),bw=U*.62;
   let g='';for(let t=0;t<=4;t++){const v=mx/4*t;g+=`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${pl-5}" y="${y(v)+4}" font-size="10" fill="var(--muted)" text-anchor="end">${fk(v)}</text>`;}
   labels.forEach((l,i)=>{const x=pl+i*U+(U-bw)/2;let base=0;
     series.forEach(s=>{const v=s.vals[i]||0;if(!v)return;g+=`<rect x="${x}" y="${y(base+v)}" width="${bw}" height="${y(base)-y(base+v)}" fill="${s.color}"><title>${esc(s.name)} · ${esc(l)}: ${fmt(v)}</title></rect>`;base+=v;});
-    if(label&&tot[i]) g+=`<text x="${x+bw/2}" y="${y(tot[i])-5}" font-size="10" fill="var(--fg)" text-anchor="middle">${fk(tot[i])}</text>`;
+    if(label&&tot[i]) g+=`<text x="${x+bw/2}" y="${y(tot[i])-5}" font-size="10" fill="var(--fg)" text-anchor="middle">${fv(tot[i])}</text>`;
     g+=`<text x="${x+bw/2}" y="${H-9}" font-size="10.5" fill="var(--muted)" text-anchor="middle">${esc(l)}</text>`;});
   return `<div class="scroller sc-end" style="direction:ltr"><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img">${g}</svg></div>`;
 }
@@ -580,6 +581,81 @@ V.wh=async()=>{
     <tr class="total"><td>متوسط الأشهر الفعلية</td>${brs.map(b=>`<td class="n">${pct(avgOf(b),2)}</td>`).join('')}</tr></tbody></table></div><div class="muted" style="font-size:12px;margin-top:6px">الأخضر أقل من متوسط الفرع، والأحمر أعلى منه بنقطة أو أكثر.</div></div>`;
   return h;
 };
+
+
+// ----- التمويلات -----
+const LOAN_COLORS=['#1E5A3E','#C9A227','#3C6FB0','#8E5BB5','#C2603A','#2A8BA8'];
+const ENTITY_NAME={shaden:'مطاعم الشادن',wafra:'وفرة المدينة',fleet:'أسطول المركبات'};
+const dLbl=d=>{const [y,m,dd]=d.split('-');return +dd+' '+MONTHS[+m-1]+' '+y;};
+function loanCalc(L,today){
+  const S=L.sched||[],paid=S.filter(x=>x.paid),un=S.filter(x=>!x.paid);
+  const over=un.filter(x=>x.date<today),next=un.find(x=>x.date>=today)||null;
+  return {S,paid,un,over,next,N:S.length,rem:sum(un.map(x=>x.inst)),remPrin:L.noSplit?null:sum(un.map(x=>x.prin)),remProf:L.noSplit?null:sum(un.map(x=>x.prof)),
+    paidAmt:sum(paid.map(x=>x.inst)),end:S.length?S[S.length-1].date:'',total:sum(S.map(x=>x.inst))};
+}
+V.loans=async()=>{
+  const docs=await appList('loans','contracts');
+  if(!docs.length) return `<div class="card empty">لا توجد تمويلات بعد — ارفع ملف «ترحيل-التمويلات» من تبويب «إدخال البيانات».</div>`;
+  const today=todayIso(),mNow=today.slice(0,7),W=isAdmin();
+  const LS=docs.map((d,i)=>({...d.data,id:d.id,color:LOAN_COLORS[i%LOAN_COLORS.length]})).sort((a,b)=>(a.start||'')<(b.start||'')?-1:1);
+  const C=Object.fromEntries(LS.map(L=>[L.id,loanCalc(L,today)]));
+  const ent=st.loanF||'all'; const ents=[...new Set(LS.map(L=>L.entity))];
+  const vis=LS.filter(L=>ent==='all'||L.entity===ent);
+  const rem=sum(vis.map(L=>C[L.id].rem)), remP=sum(vis.filter(L=>!L.noSplit).map(L=>C[L.id].remPrin)), remR=sum(vis.filter(L=>!L.noSplit).map(L=>C[L.id].remProf));
+  const thisM=vis.flatMap(L=>C[L.id].S.filter(x=>x.date.slice(0,7)===mNow).map(x=>({L,x})));
+  const over=vis.flatMap(L=>C[L.id].over.map(x=>({L,x})));
+  const nexts=vis.map(L=>C[L.id].next&&{L,x:C[L.id].next}).filter(Boolean).sort((a,b)=>a.x.date<b.x.date?-1:1);
+  let h=`<div class="chips">${[['all','كل التمويلات']].concat(ents.map(e=>[e,ENTITY_NAME[e]||e])).map(([k,n])=>`<button data-lf="${k}" aria-pressed="${ent===k}">${esc(n)}</button>`).join('')}</div>`;
+  if(over.length){const byL={};over.forEach(o=>{(byL[o.L.id]=byL[o.L.id]||{L:o.L,n:0,v:0}).n++;byL[o.L.id].v+=o.x.inst;});
+    h+=`<div class="note bad"><b class="down">${over.length} أقساط متأخرة بقيمة ${fmt(sum(over.map(o=>o.x.inst)),2)}</b><div style="font-size:12px;margin-top:4px;display:flex;flex-direction:column;gap:2px">${Object.values(byL).map(o=>`<div class="bar-row" style="gap:6px"><span><i class="dot" style="background:${o.L.color}"></i> ${esc(o.L.name)}</span><span class="num">${o.n} قسط · ${fmt(o.v,2)}</span></div>`).join('')}</div>${W?'<div class="muted" style="font-size:12px;margin-top:4px">إذا انسددت، علّمها «مسدد» من جدول السداد في بطاقة التمويل.</div>':''}</div>`;}
+  h+=`<div class="kpis">${kpi('إجمالي المتبقي',fmt(rem,2)+' <small style="font-size:13px" class="muted">ر.س</small>',`<span class="muted">أصل ${fmt(remP)} · ربح ${fmt(remR)}${vis.some(L=>L.noSplit)?' (بدون الأسطول)':''}</span>`)}
+    ${kpi('أقساط '+monLbl(mNow),fmt(sum(thisM.map(o=>o.x.inst)),2),`<span class="muted">${thisM.length} قسط · ${thisM.filter(o=>o.x.paid).length} مسدد</span>`)}
+    ${kpi('القسط القادم',nexts[0]?fmt(nexts[0].x.inst,2):'—',nexts[0]?`<span class="muted">${dLbl(nexts[0].x.date)} · ${esc(nexts[0].L.name.split(' — ')[0])}</span>`:'')}
+    ${kpi('أصل التمويلات',fmt(sum(vis.map(L=>L.amount))),`<span class="muted">${vis.length} تمويل · المسدد ${fmt(sum(vis.map(L=>C[L.id].paidAmt)))}</span>`)}</div>`;
+  // توزيع القسط الشهري
+  const share={};vis.forEach(L=>{const x=C[L.id].next||C[L.id].over[0];if(!x)return;const sp=L.split&&Object.keys(L.split).length?L.split:{[L.entity]:1};const tot=sum(Object.values(sp));for(const k in sp) share[k]=(share[k]||0)+x.inst*sp[k]/tot;});
+  const shName=k=>k==='az'||k==='sh'?brById(k).name:(ENTITY_NAME[k]||k);
+  h+=`<div class="card"><h3>القسط الشهري حسب الجهة <small>القسط الجاري لكل تمويل</small></h3><table><tbody>${Object.entries(share).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<tr><td>${esc(shName(k))}</td><td class="n"><b>${fmt(v,2)}</b></td></tr>`).join('')}<tr class="total"><td>الإجمالي الشهري</td><td class="n">${fmt(sum(Object.values(share)),2)}</td></tr></tbody></table><div class="muted" style="font-size:12px;margin-top:6px">تمويلات الشادن موزّعة مناصفة بين العزيزية وشوران حسب جداول السداد.</div></div>`;
+  // الالتزامات القادمة 12 شهر
+  const ms=[];{let [y,m]=mNow.split('-').map(Number);for(let i=0;i<12;i++){ms.push(y+'-'+String(m).padStart(2,'0'));m++;if(m>12){m=1;y++;}}}
+  h+=`<div class="card"><h3>الأقساط خلال 12 شهر</h3>${stackBars(ms.map(monShort),vis.map(L=>({name:L.name,color:L.color,vals:ms.map(m=>sum(C[L.id].S.filter(x=>x.date.slice(0,7)===m&&!x.paid).map(x=>x.inst)))})),{h:230,fv:v=>fmt(v)})}${legend(vis.map(L=>({name:L.name.split(' — ')[0]+' '+(L.name.split(' — ')[1]||''),color:L.color})))}</div>`;
+  // الرصيد المتبقي بنهاية كل سنة
+  const yrs=[...new Set(vis.flatMap(L=>C[L.id].S.map(x=>x.date.slice(0,4))))].sort();
+  h+=`<div class="card"><h3>المتبقي بنهاية كل سنة</h3>${lineChart(yrs,[{name:'المتبقي',color:'#1E5A3E',vals:yrs.map(y=>sum(vis.map(L=>sum(C[L.id].S.filter(x=>x.date.slice(0,4)>y&&(x.date>=today||!x.paid)).map(x=>x.inst)))))}],{h:190,fmtv:v=>fmt(v)})}</div>`;
+  // بطاقات التمويلات
+  vis.forEach(L=>{const c=C[L.id],pr=c.N?c.paid.length/c.N:0;
+    const sp=L.split&&Object.keys(L.split).length?Object.keys(L.split).map(k=>brById(k).name).join(' + '):(ENTITY_NAME[L.entity]||'');
+    h+=`<div class="card" style="border-top:4px solid ${L.color}"><h3>${esc(L.name)} <small>${esc(L.bank)}</small></h3>
+      <div class="muted" style="font-size:12px;margin-top:-6px;margin-bottom:10px" dir="ltr">${esc(L.contract)}</div>
+      <div class="bar-row"><span><b class="num" style="font-size:20px">${fmt(c.rem,2)}</b> <span class="muted">متبقي من ${fmt(c.total,2)}</span></span>${c.over.length?`<span class="tag" style="background:rgba(208,69,58,.12);color:var(--down);font-weight:700">${c.over.length} متأخر</span>`:c.un.length?'<span class="tag" style="color:var(--up)">منتظم</span>':'<span class="tag" style="color:var(--up)">مسدد بالكامل</span>'}</div>
+      <div class="meter" style="margin:8px 0 4px"><i style="width:${(pr*100).toFixed(1)}%;--c:${L.color}"></i></div>
+      <div class="muted" style="font-size:12px">${c.paid.length} من ${c.N} قسط مسدد (${pct(pr,0)}) · ينتهي ${c.end?dLbl(c.end):'—'}</div>
+      <table style="margin-top:10px"><tbody>${[['العميل',esc(L.client||'')],['الجهة',esc(sp)],['مبلغ التمويل',fmt(L.amount,2)],['القسط الشهري',fmt(L.inst,2)],['إجمالي الربح',fmt(L.profit,2)],['معدل الربح',pct(L.rate,2)+(L.apr?` <span class="muted">(سنوي ${pct(L.apr,2)})</span>`:'')],['المدة',L.months+' شهر'],['تاريخ العقد',L.start?dLbl(L.start):'—'],L.fees?['الرسوم',fmt(L.fees,2)]:null,['القسط القادم',c.next?dLbl(c.next.date)+' · '+fmt(c.next.inst,2):'—'],L.noSplit?null:['الأصل المتبقي',fmt(c.remPrin,2)],L.noSplit?null:['الربح المتبقي',fmt(c.remProf,2)]].filter(Boolean).map(([k,v])=>`<tr><td class="muted">${k}</td><td class="n" style="white-space:normal">${v}</td></tr>`).join('')}
+      </tbody></table>${L.note?`<div class="muted" style="font-size:12px;margin-top:6px">${esc(L.note)}</div>`:''}
+      <details style="margin-top:10px"><summary style="cursor:pointer;font-weight:600">جدول السداد (${c.N} قسط)</summary>
+      <div class="scroller" style="margin-top:8px"><table><thead><tr><th>#</th><th>التاريخ</th><th class="n">القسط</th>${L.noSplit?'':'<th class="n">الأصل</th><th class="n">الربح</th>'}${L.split&&Object.keys(L.split).length?Object.keys(L.split).map(k=>`<th class="n">${esc(brById(k).name)}</th>`).join(''):''}<th>الحالة</th></tr></thead><tbody>
+      ${c.S.map(x=>{const late=!x.paid&&x.date<today,cur=!x.paid&&c.next&&c.next.n===x.n;
+        const stt=x.paid?'<span class="up">مسدد</span>':late?'<span class="down"><b>متأخر</b></span>':cur?'<span class="flat"><b>القادم</b></span>':'<span class="muted">قادم</span>';
+        return `<tr${cur?' style="background:var(--gold-soft)"':''}><td>${x.n}</td><td>${dLbl(x.date)}</td><td class="n">${fmt(x.inst,2)}</td>${L.noSplit?'':`<td class="n">${fmt(x.prin,2)}</td><td class="n">${fmt(x.prof,2)}</td>`}${L.split&&Object.keys(L.split).length?Object.entries(L.split).map(([k,r])=>`<td class="n">${fmt(x.inst*r,2)}</td>`).join(''):''}<td>${W?`<button class="tg" data-lp="${esc(L.id)}|${x.n}" aria-pressed="${!!x.paid}" style="padding:2px 8px">${x.paid?'مسدد ✓':late?'متأخر':'غير مسدد'}</button>`:stt}</td></tr>`;}).join('')}
+      <tr class="total"><td colspan="2">الإجمالي</td><td class="n">${fmt(c.total,2)}</td>${L.noSplit?'':`<td class="n">${fmt(sum(c.S.map(x=>x.prin)),2)}</td><td class="n">${fmt(sum(c.S.map(x=>x.prof)),2)}</td>`}${L.split&&Object.keys(L.split).length?Object.entries(L.split).map(([k,r])=>`<td class="n">${fmt(c.total*r,2)}</td>`).join(''):''}<td></td></tr></tbody></table></div></details></div>`;});
+  return h;
+};
+document.addEventListener('click',async e=>{
+  const f=e.target.closest('[data-lf]'); if(f){st.loanF=f.dataset.lf;render();return;}
+  const b=e.target.closest('[data-lp]'); if(!b||b.disabled) return;
+  const [id,n]=b.dataset.lp.split('|'); b.disabled=true;
+  try{
+    const r=await sb.from('app_docs').select('data').eq('app','loans').eq('coll','contracts').eq('id',id).maybeSingle();
+    if(r.error||!r.data) throw new Error(r.error?r.error.message:'غير موجود');
+    const d=r.data.data,x=(d.sched||[]).find(s=>s.n===+n); if(!x) throw new Error('القسط غير موجود');
+    x.paid=!x.paid; if(x.paid) x.paidOn=todayIso(); else delete x.paidOn;
+    const u=await sb.from('app_docs').update({data:d,updated_at:new Date().toISOString()}).eq('app','loans').eq('coll','contracts').eq('id',id);
+    if(u.error) throw new Error(u.error.message);
+    const open=[...document.querySelectorAll('#view details')].map(el=>el.open);
+    delete st.cache['loans/contracts']; toast(x.paid?'تم تعليم القسط مسدد':'تم إلغاء السداد'); await render();
+    document.querySelectorAll('#view details').forEach((el,i)=>{if(open[i]) el.open=true;});
+  }catch(err){ b.disabled=false; toast('تعذّر: '+err.message); }
+});
 
 // ----- embedded apps & report pages -----
 function appView(sec){ return async()=>`<iframe class="appframe" src="apps/${sec.app}.html?v=${APP_VER}" title="${esc(sec.name)}"></iframe>`; }
