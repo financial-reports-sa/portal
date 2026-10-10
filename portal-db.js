@@ -18,7 +18,46 @@
   async function fetchColl(coll) {
     var r = await sb.rpc('app_list', { p_app: APP, p_coll: coll });
     if (r.error) throw err('unavailable', r.error.message);
-    return r.data || [];
+    var rows = r.data || [];
+    if (APP === 'income' && coll === 'stmts') { try { rows = await liveEstimates(rows); } catch (e) { console.warn(e); } }
+    return rows;
+  }
+
+  // قائمة الشهر الجاري التقديرية: تُحدَّث تلقائياً من الإيراد والتكلفة اليومية (wh_daily)
+  // الإيراد (411) والتكلفة (311) فعلية لكل الأيام المسجلة، والمصروفات تُحسب بنفس المتوسط اليومي لعدد الأيام.
+  async function liveEstimates(rows) {
+    var est = rows.filter(function (r) { return r.data && r.data.est && r.data.month && r.data.br; });
+    if (!est.length) return rows;
+    var w = await sb.rpc('app_list', { p_app: 'wh', p_coll: 'daily' });
+    if (w.error || !w.data || !w.data.length) return rows;
+    var agg = {};
+    w.data.forEach(function (x) {
+      var d = x.data || {}; if (!d.br || !d.date || d.rev == null) return;
+      var k = d.br + '_' + String(d.date).slice(0, 7), a = agg[k] || (agg[k] = { rev: 0, cogs: 0, days: {}, last: '' });
+      a.rev += +d.rev || 0; a.cogs += +d.cogs || 0; a.days[d.date] = 1; if (d.date > a.last) a.last = d.date;
+    });
+    return rows.map(function (r) {
+      var s = r.data; if (!s || !s.est) return r;
+      var a = agg[s.br + '_' + s.month]; if (!a) return r;
+      var nd = Object.keys(a.days).length, od = +s.estDays || nd;
+      if (!nd || !(a.rev > 0)) return r;
+      var c = JSON.parse(JSON.stringify(s));
+      var sum = function (g) { return (g.a || []).reduce(function (t, x) { return t + (+x.v || 0); }, 0); };
+      var scale = function (g, target) {
+        var t = sum(g);
+        if (t) g.a.forEach(function (x) { x.v = Math.round((+x.v || 0) * target / t * 100) / 100; });
+        else if (g.a && g.a.length) g.a[0].v = Math.round(target * 100) / 100;
+      };
+      (c.groups || []).forEach(function (g) {
+        if (g.cat === 'rev') scale(g, a.rev);
+        else if (g.cat === 'cogs') scale(g, a.cogs);
+        else if (od && nd !== od) g.a.forEach(function (x) { x.v = Math.round((+x.v || 0) * nd / od * 100) / 100; });
+      });
+      var last = a.last.slice(8, 10);
+      c.estDays = nd;
+      c.file = 'تقدير ' + (c.file && c.file.indexOf('تقدير') === 0 ? c.file.split(' ')[1] : '') + ' (01–' + last + ') — إيرادات وتكلفة فعلية من جروث حتى ' + a.last + '، مصروفات بمتوسط الأشهر السابقة محسوبة لـ ' + nd + ' يوم';
+      return { id: r.id, data: c };
+    });
   }
 
   async function refresh(coll, quiet) {
