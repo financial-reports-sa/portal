@@ -331,7 +331,7 @@ const SECTIONS=[
   {id:'data',name:'إدخال البيانات',admin:true}
 ];
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees'];
-const APP_VER='29';
+const APP_VER='30';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name]));
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -411,6 +411,7 @@ function renderShell(){
   render();
 }
 $('#tabs').onclick=e=>{const b=e.target.closest('[data-t]');if(!b)return;st.tab=b.dataset.t;try{localStorage.setItem('tab',st.tab);}catch(e){} renderShell();};
+document.addEventListener('click',e=>{const b=e.target.closest('#view [data-t]');if(!b)return;st.tab=b.dataset.t;try{localStorage.setItem('tab',st.tab);}catch(e){} window.scrollTo({top:0});renderShell();const tb=document.querySelector('#tabs [aria-pressed="true"]');if(tb)tb.scrollIntoView({inline:'center',block:'nearest'});});
 
 // ================= filters =================
 function branchChips(){
@@ -487,53 +488,93 @@ function aggTotals(list){ const t={rev:0,cogs:0,opex:0,groups:{},est:false}; lis
 // ================= views =================
 const V={};
 
+function spark(vals,{w=120,h=34,col='#E9CF7A',fill=true,sw=1.8}={}){
+  const v=vals.map(x=>+x||0); if(v.length<2) return '';
+  const mx=Math.max(...v),mn=Math.min(...v),r=mx-mn||1,X=i=>(i/(v.length-1))*(w-4)+2,Y=x=>h-3-((x-mn)/r)*(h-8);
+  let d=`M${X(0)},${Y(v[0])}`;for(let i=1;i<v.length;i++){const cx=(X(i-1)+X(i))/2;d+=` C${cx},${Y(v[i-1])} ${cx},${Y(v[i])} ${X(i)},${Y(v[i])}`;}
+  const gid='sg'+Math.random().toString(36).slice(2,7);
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="direction:ltr;display:block"><defs><linearGradient id="${gid}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".35"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>${fill?`<path d="${d} L${X(v.length-1)},${h} L${X(0)},${h} Z" fill="url(#${gid})"/>`:''}<path d="${d}" fill="none" stroke="${col}" stroke-width="${sw}" stroke-linecap="round"/><circle cx="${X(v.length-1)}" cy="${Y(v[v.length-1])}" r="2.8" fill="${col}"/></svg>`;
+}
+const DAYN=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+const SC_ICON={sales:'📈',daily:'🧾',channels:'🛵',income:'📊',wh:'📦',chicken:'🍗',treasury:'🏦',loans:'💳',fleet:'🚗',handover:'🔁',employees:'👥',users:'🔐',data:'⬆️'};
 V.home=async()=>{
-  const bs=selBranches(); let h=branchChips();
-  const parts=[];
+  const bs=selBranches(); const now=new Date(), hr=now.getHours();
+  const fn_=(st.profile&&(st.profile.full_name||st.profile.username)||'').trim(); const nm=/^(مدير|فرع|حساب)/.test(fn_)?fn_:fn_.split(' ')[0];
+  const dateTxt=`${DAYN[now.getDay()]} ${now.getDate()} ${MONTHS[now.getMonth()]} ${now.getFullYear()}`;
+  let h='', tiles=[], ins=[];
+  let S=[],months=[],m=null,pm=null,cur=[],lastDay=0,tot=0,prevSame=0,dayKeys=[],dayTot=[];
   if(allowed('sales')){
-    const S=(await loadSales()).filter(r=>bs.includes(r.branch_id));
-    const months=[...new Set(S.map(r=>r.day.slice(0,7)))].sort();
-    if(months.length){
-      const m=months[months.length-1], pm=months[months.length-2];
-      const cur=S.filter(r=>r.day.startsWith(m)); const lastDay=Math.max(...cur.map(r=>+r.day.slice(8)));
-      const tot=sum(cur.map(r=>r.amount)); const prevSame=pm?sum(S.filter(r=>r.day.startsWith(pm)&&+r.day.slice(8)<=lastDay).map(r=>r.amount)):0;
-      parts.push(kpi('مبيعات '+monLbl(m)+' <small>شامل الضريبة</small>',fmt(tot)+' <small class="muted">ر.س</small>',(prevSame?delta(tot,prevSame,'عن نفس الفترة من '+monShort(pm)):'')+`<span class="muted"> · حتى يوم ${lastDay} · قبل الضريبة ${fmt(tot/(1+VAT))}</span>`));
-      parts.push(kpi('متوسط المبيعات اليومي',fmt(tot/lastDay),'<span class="muted">'+lastDay+' يوم</span>'));
-      h+=`<div class="kpis">${parts.join('')}__MORE__</div>`;
-      h+=`<div class="branch-cards">`+bs.map(b=>{const B=brById(b),v=sum(cur.filter(r=>r.branch_id===b).map(r=>r.amount)),pv=pm?sum(S.filter(r=>r.branch_id===b&&r.day.startsWith(pm)&&+r.day.slice(8)<=lastDay).map(r=>r.amount)):0;
-        return `<div class="card bc" style="--c:${B.color}"><div class="head"><b>${esc(B.name)}</b><span class="tag">${pct(tot?v/tot:0)}</span></div><div class="num" style="font-size:22px;font-weight:700">${fmt(v)}</div><div class="meter"><i style="width:${tot?v/tot*100:0}%"></i></div><div style="font-size:12px">${delta(v,pv,'عن '+monShort(pm||m))}</div></div>`;}).join('')+`</div>`;
-      // الأشهر السابقة من قوائم الدخل (الإيرادات + الضريبة) للأشهر اللي ما فيها مبيعات يومية
-      const I=allowed('income')?(await loadIncome()).filter(r=>bs.includes(r.branch_id)):[];
-      const revOf=r=>sum((r.groups||[]).filter(g=>g.cat==='rev').flatMap(g=>(g.a||[]).map(a=>a.v)));
-      const allM=[...new Set(months.concat(I.map(r=>r.month)))].sort().filter(m=>m<=months[months.length-1]);
-      const ms=allM.slice(-12); const fromStmt={};
-      const mval=(b,mm)=>{ const rows=S.filter(r=>r.branch_id===b&&r.day.startsWith(mm)); if(rows.length) return sum(rows.map(r=>r.amount));
-        const st_=I.find(r=>r.branch_id===b&&r.month===mm); if(st_){ fromStmt[mm]=1; return revOf(st_)*(1+VAT); } return 0; };
-      const ser=bs.map(b=>({name:brById(b).name,color:brById(b).color,vals:ms.map(mm=>mval(b,mm))}));
-      const yTot=sum(ser.flatMap(x=>x.vals));
-      h+=`<div class="card"><h3>المبيعات الشهرية <small>${ms.length} شهر · الإجمالي ${fmt(yTot)}</small></h3>${stackBars(ms.map(monShort),ser)}${bs.length>1?legend(bs.map(brById)):''}${Object.keys(fromStmt).length?'<div class="muted" style="font-size:11.5px;margin-top:6px">الأشهر قبل '+monShort(months[0])+' من إيرادات قوائم الدخل شاملة الضريبة، وما بعدها من المبيعات اليومية.</div>':''}</div>`;
+    S=(await loadSales()).filter(r=>bs.includes(r.branch_id));
+    months=[...new Set(S.map(r=>r.day.slice(0,7)))].sort();
+    if(months.length){ m=months[months.length-1]; pm=months[months.length-2];
+      cur=S.filter(r=>r.day.startsWith(m)); lastDay=Math.max(...cur.map(r=>+r.day.slice(8)));
+      tot=sum(cur.map(r=>r.amount)); prevSame=pm?sum(S.filter(r=>r.day.startsWith(pm)&&+r.day.slice(8)<=lastDay).map(r=>r.amount)):0;
+      dayKeys=[...new Set(cur.map(r=>r.day))].sort(); dayTot=dayKeys.map(d=>sum(cur.filter(r=>r.day===d).map(r=>r.amount)));
     }
   }
-  let more='';
-  if(allowed('income')){
-    const I=(await loadIncome()).filter(r=>bs.includes(r.branch_id)&&!r.is_estimate);
-    const ms=[...new Set(I.map(r=>r.month))].sort(); if(ms.length){const m=ms[ms.length-1];const t=aggTotals(I.filter(r=>r.month===m));
-      more+=kpi('صافي الربح · '+monLbl(m),`<span class="${t.net>=0?'up':'down'}">${fmt(t.net)}</span>`,'<span class="muted">هامش</span> '+pct(t.rev?t.net/t.rev:null));}
+  // ===== البطاقة الترحيبية =====
+  const dPct=prevSame?tot/prevSame-1:null;
+  h+=`<div class="card" style="background:radial-gradient(120% 140% at 100% 0%,#2A6B49 0%,#1E5A3E 45%,#123A27 100%);color:#fff;border:0;overflow:hidden;position:relative;padding:18px">
+    <div style="position:absolute;inset-inline-start:-40px;top:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(233,207,122,.18),transparent 70%)"></div>
+    <div class="bar-row" style="position:relative"><div><div style="font-size:13px;opacity:.75">${dateTxt}</div><div style="font-family:var(--f-disp);font-size:19px;font-weight:600">${hr<12?'صباح الخير':'مساء الخير'}${nm?'، '+esc(nm):''} 👋</div></div>
+      ${st.branches.length>1?`<span class="tag" style="background:rgba(255,255,255,.12);color:#fff">${st.f==='all'?'كل الفروع':esc(brById(st.f).name)}</span>`:''}</div>
+    ${m?`<div style="position:relative;margin-top:14px;display:flex;align-items:flex-end;justify-content:space-between;gap:10px">
+      <div><div style="font-size:12.5px;opacity:.8">مبيعات ${monLbl(m)} حتى يوم ${lastDay}</div>
+        <div class="num" style="font-size:30px;font-weight:700;color:#F6E7B0;line-height:1.2">${fmt(tot)} <small style="font-size:12px;color:#fff;opacity:.8">ر.س</small></div>
+        ${dPct!=null?`<div style="font-size:12.5px;margin-top:2px"><span style="color:${dPct>=0?'#8EE3B5':'#FFB4A8'};font-weight:700">${dPct>=0?'▲':'▼'} ${pct(Math.abs(dPct))}</span> <span style="opacity:.75">عن نفس الفترة من ${monShort(pm)}</span></div>`:''}</div>
+      <div style="flex:none">${spark(dayTot,{w:118,h:52})}</div></div>`:`<div style="margin-top:12px;opacity:.85">أهلاً بك في بوابة التقارير</div>`}</div>`;
+  // ===== المربعات =====
+  const tile=(ic,l,v,sub,go)=>`<button class="card" ${go?`data-t="${go}"`:''} style="padding:12px;text-align:start;font:inherit;color:inherit;${go?'cursor:pointer':''}"><div class="bar-row" style="gap:6px"><span class="muted" style="font-size:11.5px">${l}</span><span style="font-size:15px">${ic}</span></div><div class="num" style="font-size:19px;font-weight:700;margin-top:3px">${v}</div>${sub?`<div style="font-size:11px;margin-top:2px">${sub}</div>`:''}</button>`;
+  if(m){
+    const yd=dayKeys[dayKeys.length-1], yv=dayTot[dayTot.length-1];
+    const wk=new Date(yd+'T12:00:00'); wk.setDate(wk.getDate()-7); const wkKey=wk.toISOString().slice(0,10);
+    const wkv=sum(S.filter(r=>r.day===wkKey).map(r=>r.amount));
+    tiles.push(tile('📅','آخر يوم · '+DAYN[new Date(yd+'T12:00:00').getDay()],fmt(yv),wkv?delta(yv,wkv,'عن الأسبوع الماضي'):'<span class="muted">'+dLbl(yd)+'</span>','daily'));
+    const avg=tot/lastDay, dim=daysIn(m);
+    tiles.push(tile('📈','المتوقع لنهاية الشهر',fmt(avg*dim),`<span class="muted">متوسط يومي ${fmt(avg)}</span>`,'sales'));
+    const best=dayKeys[dayTot.indexOf(Math.max(...dayTot))];
+    ins.push(['🏆',`أعلى يوم مبيعات هذا الشهر: <b>${DAYN[new Date(best+'T12:00:00').getDay()]} ${+best.slice(8)} ${monShort(m)}</b> بـ ${fmt(Math.max(...dayTot))}.`]);
   }
-  if(allowed('wh')){
-    const R=(await loadRatio()).filter(r=>bs.includes(r.branch_id)&&r.ratio!=null);
-    const DD=(await loadDaily()).filter(r=>bs.includes(r.branch_id)&&r.ratio!=null); const dm={};
-    DD.forEach(r=>{const k=r.branch_id+'|'+r.day.slice(0,7);(dm[k]=dm[k]||[]).push(r);});
-    Object.entries(dm).forEach(([k,list])=>{const [b,m]=k.split('|');const money=list.some(x=>x.rev!=null);const ratio=money?sum(list.map(x=>x.cogs))/(sum(list.map(x=>x.rev))||1):sum(list.map(x=>+x.ratio))/list.length;
-      const i=R.findIndex(x=>x.branch_id===b&&x.month===m); const row={branch_id:b,month:m,ratio,is_estimate:false}; if(i>=0) R[i]=row; else R.push(row);});
-    const ms=[...new Set(R.map(r=>r.month))].sort(); if(ms.length){const m=ms[ms.length-1];const rs=R.filter(r=>r.month===m);const avg=sum(rs.map(r=>+r.ratio))/rs.length;
-      more+=kpi('نسبة تكلفة المستودعات · '+monLbl(m),pct(avg),rs.some(r=>r.is_estimate)?'<span class="tag est">تقديري</span>':'<span class="muted">من الإيرادات</span>');}
+  if(allowed('income')){ const I=(await loadIncome()).filter(r=>bs.includes(r.branch_id)&&!r.is_estimate); const ms=[...new Set(I.map(r=>r.month))].sort();
+    if(ms.length){const mm=ms[ms.length-1];const t=aggTotals(I.filter(r=>r.month===mm));tiles.push(tile('💼','صافي الربح · '+monShort(mm),`<span class="${t.net>=0?'up':'down'}">${fmt(t.net)}</span>`,`<span class="muted">هامش ${pct(t.rev?t.net/t.rev:null)}</span>`,'income'));}}
+  if(allowed('wh')){ try{ const DD=(await loadDaily()).filter(r=>bs.includes(r.branch_id)&&r.ratio!=null); const ms=[...new Set(DD.map(r=>r.day.slice(0,7)))].sort();
+    if(ms.length){const mm=ms[ms.length-1];const L=DD.filter(r=>r.day.startsWith(mm));const money=L.some(x=>x.rev!=null);const ratio=money?sum(L.map(x=>x.cogs))/(sum(L.map(x=>x.rev))||1):sum(L.map(x=>+x.ratio))/L.length;
+      tiles.push(tile('📦','تكلفة المستودعات · '+monShort(mm),pct(ratio),'<span class="muted">من الإيرادات</span>','wh'));}}catch(e){} }
+  if(allowed('loans')){ try{ const D=await appList('loans','contracts'); const td=todayIso(); let nx=null;
+    D.forEach(d=>{const L=d.data||{};(L.sched||[]).forEach(x=>{if(x.date>td&&!x.paid&&(!nx||x.date<nx.date))nx={...x,name:L.name};});});
+    if(nx){const dd=Math.round((new Date(nx.date+'T12:00:00')-new Date(td+'T12:00:00'))/864e5);ins.push(['💳',`القسط التالي <b>${fmt(nx.inst,2)}</b> بعد ${dd} يوم (${dLbl(nx.date)}) — ${esc(nx.name)}.`]);} }catch(e){} }
+  if(allowed('fleet')){ try{ const D=await appList('fleet','vehicles'); const A=D.map(d=>d.data||{}).filter(v=>(v.status||'في الخدمة')!=='مباعة'&&(bs.includes(v.br)||(st.f==='all'&&v.br==='wafra')));
+    if(A.length){ tiles.push(tile('🚗','أسطول السيارات',fmt(sum(A.map(v=>+v.value||0))),`<span class="muted">${A.length} سيارة · قيمة تقديرية</span>`,'fleet'));
+      const al=A.filter(v=>flAlerts(v).length).length; if(al) ins.push(['⚠️',`<b>${al}</b> سيارة تحتاج انتباه (استمارة أو تأمين أو صيانة).`]); } }catch(e){} }
+  if(tiles.length) h+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${tiles.join('')}</div>`;
+  // ===== أداء الفروع =====
+  if(m&&bs.length>1){
+    h+=`<div class="card"><h3>أداء الفروع <small>${monLbl(m)}</small></h3><div style="display:flex;flex-direction:column;gap:12px">${bs.map(b=>{const B=brById(b),rows=cur.filter(r=>r.branch_id===b),v=sum(rows.map(r=>r.amount)),pv=pm?sum(S.filter(r=>r.branch_id===b&&r.day.startsWith(pm)&&+r.day.slice(8)<=lastDay).map(r=>r.amount)):0;
+      return `<div style="display:flex;align-items:center;gap:10px"><div style="flex:1;min-width:0"><div class="bar-row" style="gap:6px"><b style="font-size:14px"><i class="dot" style="background:${B.color}"></i> ${esc(B.name)}</b><b class="num">${fmt(v)}</b></div>
+        <div class="meter" style="margin:5px 0 3px"><i style="width:${tot?v/tot*100:0}%;--c:${B.color};background:${B.color}"></i></div>
+        <div class="bar-row" style="font-size:11.5px"><span class="muted">${pct(tot?v/tot:0)} من المبيعات</span><span>${pv?delta(v,pv,''):''}</span></div></div>
+        <div style="flex:none">${spark(dayKeys.map(d=>sum(rows.filter(r=>r.day===d).map(r=>r.amount))),{w:70,h:34,col:B.color,fill:false,sw:1.6})}</div></div>`;}).join('')}</div></div>`;
+    const gr=bs.map(b=>{const v=sum(cur.filter(r=>r.branch_id===b).map(r=>r.amount)),pv=pm?sum(S.filter(r=>r.branch_id===b&&r.day.startsWith(pm)&&+r.day.slice(8)<=lastDay).map(r=>r.amount)):0;return {b,g:pv?v/pv-1:null};}).filter(x=>x.g!=null).sort((a,b)=>b.g-a.g);
+    if(gr.length>1) ins.unshift(['🚀',`الأعلى نمواً: <b>${esc(brById(gr[0].b).name)}</b> (${gr[0].g>=0?'+':''}${pct(gr[0].g)}) — والأقل: ${esc(brById(gr[gr.length-1].b).name)} (${gr[gr.length-1].g>=0?'+':''}${pct(gr[gr.length-1].g)}).`]);
   }
-  if(h.includes('__MORE__')) h=h.replace('__MORE__',more); else if(more) h+=`<div class="kpis">${more}</div>`;
-  if(!parts.length&&!more) h+=`<div class="card empty">لا توجد تقارير متاحة لحسابك بعد</div>`;
+  // ===== رؤى =====
+  if(ins.length) h+=`<div class="card"><h3>نظرة سريعة</h3><div style="display:flex;flex-direction:column;gap:10px">${ins.map(([i,t])=>`<div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.7"><span style="flex:none;width:30px;height:30px;border-radius:10px;background:var(--gold-soft);display:grid;place-items:center;font-size:15px">${i}</span><div>${t}</div></div>`).join('')}</div></div>`;
+  // ===== المبيعات اليومية للشهر =====
+  if(m&&dayKeys.length>1) h+=`<div class="card"><h3>المبيعات اليومية <small>${monLbl(m)}</small></h3>${stackBars(dayKeys.map(d=>String(+d.slice(8))),bs.map(b=>({name:brById(b).name,color:brById(b).color,vals:dayKeys.map(d=>sum(cur.filter(r=>r.branch_id===b&&r.day===d).map(r=>r.amount)))})),{h:200,fv:v=>fmt(v)})}${bs.length>1?legend(bs.map(brById)):''}</div>`;
+  // ===== المبيعات الشهرية =====
+  if(m){ const I=allowed('income')?(await loadIncome()).filter(r=>bs.includes(r.branch_id)):[];
+    const revOf=r=>sum((r.groups||[]).filter(g=>g.cat==='rev').flatMap(g=>(g.a||[]).map(a=>a.v)));
+    const allM=[...new Set(months.concat(I.map(r=>r.month)))].sort().filter(x=>x<=m); const ms=allM.slice(-12); const fromStmt={};
+    const mval=(b,mm)=>{const rows=S.filter(r=>r.branch_id===b&&r.day.startsWith(mm)); if(rows.length) return sum(rows.map(r=>r.amount)); const q_=I.find(r=>r.branch_id===b&&r.month===mm); if(q_){fromStmt[mm]=1;return revOf(q_)*(1+VAT);} return 0;};
+    const ser=bs.map(b=>({name:brById(b).name,color:brById(b).color,vals:ms.map(mm=>mval(b,mm))}));
+    h+=`<div class="card"><h3>المبيعات الشهرية <small>${ms.length} شهر · ${fmt(sum(ser.flatMap(x=>x.vals)))}</small></h3>${stackBars(ms.map(monShort),ser,{fv:v=>fmt(v)})}${bs.length>1?legend(bs.map(brById)):''}${Object.keys(fromStmt).length?'<div class="muted" style="font-size:11.5px;margin-top:6px">الأشهر قبل '+monShort(months[0])+' من إيرادات قوائم الدخل شاملة الضريبة.</div>':''}</div>`; }
+  // ===== اختصارات =====
+  const sc=SECTIONS.filter(x=>x.id!=='home'&&(x.admin?isAdmin():allowed(x.id)));
+  if(sc.length) h+=`<div class="card"><h3>الأقسام</h3><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">${sc.map(x=>`<button data-t="${x.id}" style="border:1px solid var(--line);background:var(--bg);border-radius:14px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;font:inherit;color:inherit"><span style="font-size:20px">${SC_ICON[x.id]||'📄'}</span><span style="font-size:10.5px;line-height:1.3;text-align:center">${esc(x.name)}</span></button>`).join('')}</div></div>`;
+  h=(st.branches.length>1?`<div class="bar-row">${branchChips()}</div>`:'')+h;
+  if(!m&&!tiles.length) h+=`<div class="card empty">لا توجد تقارير متاحة لحسابك بعد</div>`;
   return h;
 };
-
 async function whDaily(bs){
   const D=(await loadDaily()).filter(r=>bs.includes(r.branch_id)&&r.ratio!=null);
   if(!D.length) return `<div class="card"><h3>نسبة المستودعات اليومية</h3><div class="empty">تبدأ الأرقام اليومية من أول تحديث ليلي لقوائم الدخل</div></div>`;
