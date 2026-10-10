@@ -377,7 +377,7 @@ const GROUPS=[{id:'home',name:'الرئيسية',secs:['home']},{id:'rep',name:'
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees'];
-const APP_VER='35';
+const APP_VER='36';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name]));
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -953,30 +953,36 @@ document.addEventListener('submit',async e=>{
 
 // ----- مركز التنبيهات -----
 let ALERTS=[];
+const seenKey=()=>'nseen_'+(st.user&&st.user.id||'');
+function seenGet(){try{return JSON.parse(localStorage.getItem(seenKey())||'[]');}catch(e){return [];}}
+function seenAdd(keys){try{const a=seenGet();keys.forEach(k=>{if(!a.includes(k))a.push(k);});localStorage.setItem(seenKey(),JSON.stringify(a.slice(-400)));}catch(e){}}
+const liveAlerts=()=>{const sn=seenGet();return ALERTS.filter(a=>!a.k||!sn.includes(a.k));};
 async function loadAlerts(){
   if(st._alertsAt&&Date.now()-st._alertsAt<120000){paintBell();return;} st._alertsAt=Date.now();
   const out=[]; const td=todayIso(); const dd=d=>Math.round((new Date(d+'T12:00:00')-new Date(td+'T12:00:00'))/864e5);
-  try{ if(canSee('loans')){ (await appList('loans','contracts')).forEach(d=>{const L=d.data||{};(L.sched||[]).forEach(x=>{if(x.unpaid&&x.date<=td)out.push({ic:'💳',bad:true,t:`قسط لم يُخصم: ${L.name}`,s:`${fmt(x.inst,2)} · ${dLbl(x.date)}`,go:'loans'});});
-      const nx=(L.sched||[]).find(x=>x.date>td&&!x.paid); if(nx&&dd(nx.date)<=3) out.push({ic:'⏰',t:`قسط خلال ${dd(nx.date)} يوم: ${L.name}`,s:`${fmt(nx.inst,2)} · ${dLbl(nx.date)}`,go:'loans'});}); } }catch(e){}
-  try{ if(canSee('fleet')){ (await appList('fleet','vehicles')).forEach(d=>{const v=d.data||{};if((v.status||'في الخدمة')==='مباعة')return;flAlerts(v).forEach(a=>out.push({ic:'🚗',bad:a.bad,t:`${v.make} ${v.model} · ${v.plate||''}`,s:a.t,go:'fleet'}));}); } }catch(e){}
-  try{ if(canSee('employees')){ const r=await sb.from('employees').select('name,branch,health_exp,status').neq('status','left'); (r.data||[]).forEach(x=>{if(!x.health_exp)return;const n=dd(x.health_exp);if(n<=30)out.push({ic:'🪪',bad:n<0,t:`الشهادة الصحية: ${x.name}`,s:(n<0?`منتهية منذ ${-n} يوم`:`تنتهي بعد ${n} يوم`)+' · '+brById(x.branch).name,go:'employees'});}); } }catch(e){}
+  try{ if(canSee('loans')){ (await appList('loans','contracts')).forEach(d=>{const L=d.data||{};(L.sched||[]).forEach(x=>{if(x.unpaid&&x.date<=td)out.push({k:'ln:'+d.id+':'+x.n,ic:'💳',bad:true,t:`قسط لم يُخصم: ${L.name}`,s:`${fmt(x.inst,2)} · ${dLbl(x.date)}`,go:'loans'});});
+      const nx=(L.sched||[]).find(x=>x.date>td&&!x.paid); if(nx&&dd(nx.date)<=3) out.push({k:'lx:'+d.id+':'+nx.n,ic:'⏰',t:`قسط خلال ${dd(nx.date)} يوم: ${L.name}`,s:`${fmt(nx.inst,2)} · ${dLbl(nx.date)}`,go:'loans'});}); } }catch(e){}
+  try{ if(canSee('fleet')){ (await appList('fleet','vehicles')).forEach(d=>{const v=d.data||{};if((v.status||'في الخدمة')==='مباعة')return;flAlerts(v).forEach(a=>out.push({k:'fl:'+d.id+':'+a.t.replace(/\d+/g,''),ic:'🚗',bad:a.bad,t:`${v.make} ${v.model} · ${v.plate||''}`,s:a.t,go:'fleet'}));}); } }catch(e){}
+  try{ if(canSee('employees')){ const r=await sb.from('employees').select('id,name,branch,health_exp,status').neq('status','left'); (r.data||[]).forEach(x=>{if(!x.health_exp)return;const n=dd(x.health_exp);if(n<=30)out.push({k:'hc:'+x.id+':'+x.health_exp+':'+(n<0?'x':'s'),ic:'🪪',bad:n<0,t:`الشهادة الصحية: ${x.name}`,s:(n<0?`منتهية منذ ${-n} يوم`:`تنتهي بعد ${n} يوم`)+' · '+brById(x.branch).name,go:'employees'});}); } }catch(e){}
   try{ if(canSee('wh')){ const D=(await loadDaily()).filter(r=>r.ratio!=null); const ms=[...new Set(D.map(r=>r.day.slice(0,7)))].sort(); const m=ms[ms.length-1];
-      if(m){ st.branches.forEach(b=>{const L=D.filter(r=>r.branch_id===b.id&&r.day.startsWith(m)).sort((a,c)=>a.day<c.day?-1:1); if(L.length<3)return; const last=L[L.length-1]; const avg=L.reduce((t,r)=>t+ +r.ratio,0)/L.length; if(+last.ratio>=avg+0.02) out.push({ic:'📦',bad:true,t:`تكلفة المستودع مرتفعة: ${b.name}`,s:`${pct(+last.ratio)} يوم ${+last.day.slice(8)} مقابل متوسط ${pct(avg)}`,go:'wh'});}); } } }catch(e){}
+      if(m){ st.branches.forEach(b=>{const L=D.filter(r=>r.branch_id===b.id&&r.day.startsWith(m)).sort((a,c)=>a.day<c.day?-1:1); if(L.length<3)return; const last=L[L.length-1]; const avg=L.reduce((t,r)=>t+ +r.ratio,0)/L.length; if(+last.ratio>=avg+0.02) out.push({k:'wh:'+b.id+':'+last.day,ic:'📦',bad:true,t:`تكلفة المستودع مرتفعة: ${b.name}`,s:`${pct(+last.ratio)} يوم ${+last.day.slice(8)} مقابل متوسط ${pct(avg)}`,go:'wh'});}); } } }catch(e){}
   ALERTS=out.sort((a,b)=>(b.bad?1:0)-(a.bad?1:0)); paintBell();
 }
 function paintBell(){
   const b=$('#bell'),n=$('#bellN'); if(!b) return; b.hidden=false;
-  const bad=ALERTS.length; n.hidden=!bad; n.textContent=bad>9?'9+':String(bad);
+  const bad=liveAlerts().length; n.hidden=!bad; n.textContent=bad>9?'9+':String(bad);
   const pn=$('#npanel'); if(!pn.hidden) pn.innerHTML=npanelHtml();
 }
 function npanelHtml(){
-  if(!ALERTS.length) return `<h4>التنبيهات</h4><div class="muted" style="font-size:13px;padding:14px 4px;text-align:center">✅ ما فيه تنبيهات — كل شي تمام</div>`;
-  return `<h4>التنبيهات <span class="muted" style="font-size:12px;font-weight:400">· ${ALERTS.length}</span></h4>`+ALERTS.map(a=>`<button class="nitem" data-ngo="${a.go}"><span class="ic" style="background:${a.bad?'rgba(208,69,58,.12)':'var(--gold-soft)'}">${a.ic}</span><span class="tx"><b>${esc(a.t)}</b><small class="${a.bad?'down':''}">${esc(a.s)}</small></span></button>`).join('');
+  const L=liveAlerts();
+  if(!L.length) return `<h4>التنبيهات</h4><div class="muted" style="font-size:13px;padding:14px 4px;text-align:center">✅ ما فيه تنبيهات جديدة</div>`;
+  return `<div class="bar-row" style="margin-bottom:6px"><h4 style="margin:0">التنبيهات <span class="muted" style="font-size:12px;font-weight:400">· ${L.length}</span></h4><button class="btn ghost sm" data-nall="1" style="min-height:28px;padding:3px 10px;font-size:11.5px">تعليم الكل كمقروء</button></div>`+L.map(a=>`<button class="nitem" data-ngo="${a.go}" data-nk="${esc(a.k||'')}"><span class="ic" style="background:${a.bad?'rgba(208,69,58,.12)':'var(--gold-soft)'}">${a.ic}</span><span class="tx"><b>${esc(a.t)}</b><small class="${a.bad?'down':''}">${esc(a.s)}</small></span></button>`).join('');
 }
 document.addEventListener('click',e=>{
   const b=e.target.closest('#bell'); const pn=$('#npanel'); if(!pn) return;
   if(b){ e.stopPropagation(); $('#umenu').hidden=true; pn.hidden=!pn.hidden; if(!pn.hidden) pn.innerHTML=npanelHtml(); return; }
-  const g=e.target.closest('[data-ngo]'); if(g){ pn.hidden=true; st.tab=g.dataset.ngo; try{localStorage.setItem('tab',st.tab);}catch(_){} window.scrollTo({top:0}); renderShell(); return; }
+  const al=e.target.closest('[data-nall]'); if(al){ e.stopPropagation(); seenAdd(liveAlerts().map(x=>x.k).filter(Boolean)); pn.innerHTML=npanelHtml(); paintBell(); return; }
+  const g=e.target.closest('[data-ngo]'); if(g){ if(g.dataset.nk) seenAdd([g.dataset.nk]); paintBell(); pn.hidden=true; st.tab=g.dataset.ngo; try{localStorage.setItem('tab',st.tab);}catch(_){} window.scrollTo({top:0}); renderShell(); return; }
   if(!pn.hidden&&!e.target.closest('#npanel')) pn.hidden=true;
 });
 
