@@ -330,7 +330,7 @@ const SECTIONS=[
   {id:'data',name:'إدخال البيانات',admin:true}
 ];
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','handover','employees'];
-const APP_VER='23';
+const APP_VER='24';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name]));
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -605,17 +605,17 @@ V.loans=async()=>{
   const thisM=vis.flatMap(L=>C[L.id].S.filter(x=>x.date.slice(0,7)===mNow).map(x=>({L,x})));
   const over=vis.flatMap(L=>C[L.id].over.map(x=>({L,x})));
   const nexts=vis.map(L=>C[L.id].next&&{L,x:C[L.id].next}).filter(Boolean).sort((a,b)=>a.x.date<b.x.date?-1:1);
+  let notes='';
   let h=`<div class="chips">${[['all','كل التمويلات']].concat(ents.map(e=>[e,ENTITY_NAME[e]||e])).map(([k,n])=>`<button data-lf="${k}" aria-pressed="${ent===k}">${esc(n)}</button>`).join('')}</div>`;
-  if(over.length){const byL={};over.forEach(o=>{(byL[o.L.id]=byL[o.L.id]||{L:o.L,n:0,v:0}).n++;byL[o.L.id].v+=o.x.inst;});
-    h+=`<div class="note bad"><b class="down">${over.length} أقساط متأخرة بقيمة ${fmt(sum(over.map(o=>o.x.inst)),2)}</b><div style="font-size:12px;margin-top:4px;display:flex;flex-direction:column;gap:2px">${Object.values(byL).map(o=>`<div class="bar-row" style="gap:6px"><span><i class="dot" style="background:${o.L.color}"></i> ${esc(o.L.name)}</span><span class="num">${o.n} قسط · ${fmt(o.v,2)}</span></div>`).join('')}</div>${W?'<div class="muted" style="font-size:12px;margin-top:4px">إذا انسددت، علّمها «مسدد» من جدول السداد في بطاقة التمويل.</div>':''}</div>`;}
   h+=`<div class="kpis">${kpi('إجمالي المتبقي',fmt(rem,2)+' <small style="font-size:13px" class="muted">ر.س</small>',`<span class="muted">أصل ${fmt(remP)} · ربح ${fmt(remR)}${vis.some(L=>L.noSplit)?' (بدون الأسطول)':''}</span>`)}
     ${kpi('أقساط '+monLbl(mNow),fmt(sum(thisM.map(o=>o.x.inst)),2),`<span class="muted">${thisM.length} قسط · ${thisM.filter(o=>o.x.paid).length} مسدد</span>`)}
     ${kpi('القسط القادم',nexts[0]?fmt(nexts[0].x.inst,2):'—',nexts[0]?`<span class="muted">${dLbl(nexts[0].x.date)} · ${esc(nexts[0].L.name.split(' — ')[0])}</span>`:'')}
+    ${kpi('الأقساط المتأخرة',over.length?`<span class="down">${fmt(sum(over.map(o=>o.x.inst)),2)}</span>`:'<span class="up">لا يوجد</span>',over.length?`<span class="down">${over.length} قسط — التفاصيل في الملاحظات تحت</span>`:'<span class="muted">كل الأقساط المستحقة مسددة</span>')}
     ${kpi('أصل التمويلات',fmt(sum(vis.map(L=>L.amount))),`<span class="muted">${vis.length} تمويل · المسدد ${fmt(sum(vis.map(L=>C[L.id].paidAmt)))}</span>`)}</div>`;
   // توزيع القسط الشهري
   const share={};vis.forEach(L=>{const x=C[L.id].next||C[L.id].over[0];if(!x)return;const sp=L.split&&Object.keys(L.split).length?L.split:{[L.entity]:1};const tot=sum(Object.values(sp));for(const k in sp) share[k]=(share[k]||0)+x.inst*sp[k]/tot;});
   const shName=k=>k==='az'||k==='sh'?brById(k).name:(ENTITY_NAME[k]||k);
-  h+=`<div class="card"><h3>القسط الشهري حسب الجهة <small>القسط الجاري لكل تمويل</small></h3><table><tbody>${Object.entries(share).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<tr><td>${esc(shName(k))}</td><td class="n"><b>${fmt(v,2)}</b></td></tr>`).join('')}<tr class="total"><td>الإجمالي الشهري</td><td class="n">${fmt(sum(Object.values(share)),2)}</td></tr></tbody></table><div class="muted" style="font-size:12px;margin-top:6px">تمويلات الشادن موزّعة مناصفة بين العزيزية وشوران حسب جداول السداد.</div></div>`;
+  h+=`<div class="card"><h3>القسط الشهري حسب الجهة <small>القسط الجاري لكل تمويل</small></h3><table><tbody>${Object.entries(share).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<tr><td>${esc(shName(k))}</td><td class="n"><b>${fmt(v,2)}</b></td></tr>`).join('')}<tr class="total"><td>الإجمالي الشهري</td><td class="n">${fmt(sum(Object.values(share)),2)}</td></tr></tbody></table></div>`;
   // الالتزامات القادمة 12 شهر
   const ms=[];{let [y,m]=mNow.split('-').map(Number);for(let i=0;i<12;i++){ms.push(y+'-'+String(m).padStart(2,'0'));m++;if(m>12){m=1;y++;}}}
   h+=`<div class="card"><h3>الأقساط خلال 12 شهر</h3>${stackBars(ms.map(monShort),vis.map(L=>({name:L.name,color:L.color,vals:ms.map(m=>sum(C[L.id].S.filter(x=>x.date.slice(0,7)===m&&!x.paid).map(x=>x.inst)))})),{h:230,fv:v=>fmt(v)})}${legend(vis.map(L=>({name:L.name.split(' — ')[0]+' '+(L.name.split(' — ')[1]||''),color:L.color})))}</div>`;
@@ -631,13 +631,23 @@ V.loans=async()=>{
       <div class="meter" style="margin:8px 0 4px"><i style="width:${(pr*100).toFixed(1)}%;--c:${L.color}"></i></div>
       <div class="muted" style="font-size:12px">${c.paid.length} من ${c.N} قسط مسدد (${pct(pr,0)}) · ينتهي ${c.end?dLbl(c.end):'—'}</div>
       <table style="margin-top:10px"><tbody>${[['العميل',esc(L.client||'')],['الجهة',esc(sp)],['مبلغ التمويل',fmt(L.amount,2)],['القسط الشهري',fmt(L.inst,2)],['إجمالي الربح',fmt(L.profit,2)],['معدل الربح',pct(L.rate,2)+(L.apr?` <span class="muted">(سنوي ${pct(L.apr,2)})</span>`:'')],['المدة',L.months+' شهر'],['تاريخ العقد',L.start?dLbl(L.start):'—'],L.fees?['الرسوم',fmt(L.fees,2)]:null,['القسط القادم',c.next?dLbl(c.next.date)+' · '+fmt(c.next.inst,2):'—'],L.noSplit?null:['الأصل المتبقي',fmt(c.remPrin,2)],L.noSplit?null:['الربح المتبقي',fmt(c.remProf,2)]].filter(Boolean).map(([k,v])=>`<tr><td class="muted">${k}</td><td class="n" style="white-space:normal">${v}</td></tr>`).join('')}
-      </tbody></table>${L.note?`<div class="muted" style="font-size:12px;margin-top:6px">${esc(L.note)}</div>`:''}
+      </tbody></table>
       <details style="margin-top:10px"><summary style="cursor:pointer;font-weight:600">جدول السداد (${c.N} قسط)</summary>
-      <div class="scroller" style="margin-top:8px"><table><thead><tr><th>#</th><th>التاريخ</th><th class="n">القسط</th>${L.noSplit?'':'<th class="n">الأصل</th><th class="n">الربح</th>'}${L.split&&Object.keys(L.split).length?Object.keys(L.split).map(k=>`<th class="n">${esc(brById(k).name)}</th>`).join(''):''}<th>الحالة</th></tr></thead><tbody>
-      ${c.S.map(x=>{const late=!x.paid&&x.date<today,cur=!x.paid&&c.next&&c.next.n===x.n;
-        const stt=x.paid?'<span class="up">مسدد</span>':late?'<span class="down"><b>متأخر</b></span>':cur?'<span class="flat"><b>القادم</b></span>':'<span class="muted">قادم</span>';
-        return `<tr${cur?' style="background:var(--gold-soft)"':''}><td>${x.n}</td><td>${dLbl(x.date)}</td><td class="n">${fmt(x.inst,2)}</td>${L.noSplit?'':`<td class="n">${fmt(x.prin,2)}</td><td class="n">${fmt(x.prof,2)}</td>`}${L.split&&Object.keys(L.split).length?Object.entries(L.split).map(([k,r])=>`<td class="n">${fmt(x.inst*r,2)}</td>`).join(''):''}<td>${W?`<button class="tg" data-lp="${esc(L.id)}|${x.n}" aria-pressed="${!!x.paid}" style="padding:2px 8px">${x.paid?'مسدد ✓':late?'متأخر':'غير مسدد'}</button>`:stt}</td></tr>`;}).join('')}
-      <tr class="total"><td colspan="2">الإجمالي</td><td class="n">${fmt(c.total,2)}</td>${L.noSplit?'':`<td class="n">${fmt(sum(c.S.map(x=>x.prin)),2)}</td><td class="n">${fmt(sum(c.S.map(x=>x.prof)),2)}</td>`}${L.split&&Object.keys(L.split).length?Object.entries(L.split).map(([k,r])=>`<td class="n">${fmt(c.total*r,2)}</td>`).join(''):''}<td></td></tr></tbody></table></div></details></div>`;});
+      <div class="scroller" style="margin-top:8px"><table><thead><tr><th>#</th><th>التاريخ</th><th>الحالة</th><th class="n">القسط</th>${L.noSplit?'':'<th class="n">الأصل</th><th class="n">الربح</th>'}${L.split&&Object.keys(L.split).length?Object.keys(L.split).map(k=>`<th class="n">${esc(brById(k).name)}</th>`).join(''):''}</tr></thead><tbody>
+      ${(()=>{const sp=L.split&&Object.keys(L.split).length?Object.entries(L.split):[];
+        const row=x=>{const late=!x.paid&&x.date<today,cur=!x.paid&&c.next&&c.next.n===x.n;
+          const pill=x.paid?`<span class="tag" style="background:rgba(31,161,107,.12);color:var(--up);font-weight:700">مسدد</span>`:late?`<span class="tag" style="background:rgba(208,69,58,.12);color:var(--down);font-weight:700">متأخر</span>`:cur?`<span class="tag" style="background:var(--gold-soft);color:var(--gold-ink);font-weight:700">القادم</span>`:`<span class="tag">غير مسدد</span>`;
+          const act=W?` <button class="btn ghost sm" data-lp="${esc(L.id)}|${x.n}" style="min-height:26px;padding:2px 8px;font-size:11px">${x.paid?'إلغاء':'سدّد ✓'}</button>`:'';
+          return `<tr${cur?' style="background:var(--gold-soft)"':x.paid?' style="opacity:.75"':''}><td>${x.n}</td><td style="white-space:nowrap">${dLbl(x.date)}${x.paid&&x.paidOn?`<div class="muted" style="font-size:10.5px">سُدّد ${dLbl(x.paidOn)}</div>`:''}</td><td style="white-space:nowrap">${pill}${act}</td><td class="n">${fmt(x.inst,2)}</td>${L.noSplit?'':`<td class="n">${fmt(x.prin,2)}</td><td class="n">${fmt(x.prof,2)}</td>`}${sp.map(([k,r])=>`<td class="n">${fmt(x.inst*r,2)}</td>`).join('')}</tr>`;};
+        const cols=3+(L.noSplit?0:2)+sp.length+1;
+        return c.un.map(row).join('')+(c.paid.length?`<tr class="sub"><td colspan="${cols}">الأقساط المسددة (${c.paid.length}) — ${fmt(c.paidAmt,2)}</td></tr>`+c.paid.map(row).join(''):'');})()}
+      <tr class="total"><td colspan="3">الإجمالي</td><td class="n">${fmt(c.total,2)}</td>${L.noSplit?'':`<td class="n">${fmt(sum(c.S.map(x=>x.prin)),2)}</td><td class="n">${fmt(sum(c.S.map(x=>x.prof)),2)}</td>`}${L.split&&Object.keys(L.split).length?Object.entries(L.split).map(([k,r])=>`<td class="n">${fmt(c.total*r,2)}</td>`).join(''):''}</tr></tbody></table></div></details></div>`;});
+  if(over.length){const byL={};over.forEach(o=>{(byL[o.L.id]=byL[o.L.id]||{L:o.L,n:0,v:0}).n++;byL[o.L.id].v+=o.x.inst;});
+    notes+=`<div class="note bad"><b class="down">${over.length} أقساط متأخرة بقيمة ${fmt(sum(over.map(o=>o.x.inst)),2)}</b><div style="font-size:12px;margin-top:4px;display:flex;flex-direction:column;gap:2px">${Object.values(byL).map(o=>`<div class="bar-row" style="gap:6px"><span><i class="dot" style="background:${o.L.color}"></i> ${esc(o.L.name)}</span><span class="num">${o.n} قسط · ${fmt(o.v,2)}</span></div>`).join('')}</div>${W?'<div class="muted" style="font-size:12px;margin-top:4px">إذا انسددت، علّمها «مسدد» من جدول السداد في بطاقة التمويل.</div>':''}</div>`;}
+  const lnotes=vis.filter(L=>L.note).map(L=>`<li><b>${esc(L.name)}:</b> ${esc(L.note)}</li>`);
+  if(vis.some(L=>L.split&&Object.keys(L.split).length)) lnotes.unshift('<li>تمويلات الشادن موزّعة مناصفة بين العزيزية وشوران حسب جداول السداد.</li>');
+  if(W) lnotes.push('<li>لتعليم قسط مسدد اضغط «سدّد ✓» في جدول السداد؛ ينتقل القسط لقائمة المسددة أسفل الجدول.</li>');
+  h+=`<div class="card"><h3>الملاحظات</h3>${notes}${lnotes.length?`<ul style="margin:8px 0 0;padding-inline-start:18px;font-size:13px;display:flex;flex-direction:column;gap:6px">${lnotes.join('')}</ul>`:''}</div>`;
   return h;
 };
 document.addEventListener('click',async e=>{
