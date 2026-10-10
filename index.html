@@ -330,7 +330,7 @@ const SECTIONS=[
   {id:'data',name:'إدخال البيانات',admin:true}
 ];
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','handover','employees'];
-const APP_VER='27';
+const APP_VER='28';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name]));
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -607,21 +607,78 @@ V.loans=async()=>{
   const nexts=vis.map(L=>C[L.id].next&&{L,x:C[L.id].next}).filter(Boolean).sort((a,b)=>a.x.date<b.x.date?-1:1);
   let notes='';
   let h=`<div class="chips">${[['all','كل التمويلات']].concat(ents.map(e=>[e,ENTITY_NAME[e]||e])).map(([k,n])=>`<button data-lf="${k}" aria-pressed="${ent===k}">${esc(n)}</button>`).join('')}</div>`;
-  h+=`<div class="kpis">${kpi('إجمالي المتبقي',fmt(rem,2)+' <small style="font-size:13px" class="muted">ر.س</small>',`<span class="muted">أصل ${fmt(remP)} · ربح ${fmt(remR)}${vis.some(L=>L.noSplit)?' (بدون الأسطول)':''}</span>`)}
-    ${kpi('أقساط '+monLbl(mNow),fmt(sum(thisM.map(o=>o.x.inst)),2),`<span class="muted">${thisM.length} قسط · ${thisM.filter(o=>o.x.paid).length} مسدد</span>`)}
-    ${kpi('القسط التالي',nexts[0]?fmt(nexts[0].x.inst,2):'—',nexts[0]?`<span class="muted">${dLbl(nexts[0].x.date)} · ${esc(nexts[0].L.name.split(' — ')[0])}</span>`:'')}
-    ${kpi('أقساط لم تُخصم',over.length?`<span class="down">${fmt(sum(over.map(o=>o.x.inst)),2)}</span>`:'<span class="up">لا يوجد</span>',over.length?`<span class="down">${over.length} قسط — التفاصيل في الملاحظات تحت</span>`:'<span class="muted">كل الأقساط المستحقة مخصومة</span>')}
-    ${kpi('أصل التمويلات',fmt(sum(vis.map(L=>L.amount))),`<span class="muted">${vis.length} تمويل · المسدد ${fmt(sum(vis.map(L=>C[L.id].paidAmt)))}</span>`)}</div>`;
-  // توزيع القسط الشهري
-  const share={};vis.forEach(L=>{const x=C[L.id].next||C[L.id].over[0];if(!x)return;const sp=L.split&&Object.keys(L.split).length?L.split:{[L.entity]:1};const tot=sum(Object.values(sp));for(const k in sp) share[k]=(share[k]||0)+x.inst*sp[k]/tot;});
+  // ===== لوحة التحكم الذكية =====
+  const allInst=sum(vis.map(L=>C[L.id].total)), paidAll=sum(vis.map(L=>C[L.id].paidAmt)), prog=allInst?paidAll/allInst:0;
+  const paidProf=sum(vis.filter(L=>!L.noSplit).map(L=>sum(C[L.id].paid.map(x=>x.prof))));
+  const active=vis.filter(L=>C[L.id].un.length);
+  const curMonthly=sum(active.map(L=>{const x=C[L.id].next||C[L.id].over[0];return x?x.inst:0;}));
+  const nx=nexts[0], days=nx?Math.round((new Date(nx.x.date+'T12:00:00')-new Date(today+'T12:00:00'))/864e5):null;
+  const ring=(p,col,sz=92,sw=9)=>{const r=(sz-sw)/2,c=2*Math.PI*r;return `<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}" style="transform:rotate(-90deg);flex:none"><circle cx="${sz/2}" cy="${sz/2}" r="${r}" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="${sw}"/><circle cx="${sz/2}" cy="${sz/2}" r="${r}" fill="none" stroke="${col}" stroke-width="${sw}" stroke-linecap="round" stroke-dasharray="${(c*p).toFixed(1)} ${c.toFixed(1)}"/></svg>`;};
+  // البطاقة الرئيسية
+  h+=`<div class="card" style="background:linear-gradient(140deg,#1E5A3E,#143F2A);color:#fff;border:0;position:relative">
+    <div style="display:flex;align-items:center;gap:14px">
+      <div style="position:relative;display:grid;place-items:center">${ring(prog,'#E9CF7A')}<div style="position:absolute;text-align:center;line-height:1.1"><b style="font-size:19px;font-family:var(--f-disp)">${pct(prog,0)}</b><div style="font-size:10px;opacity:.75">مسدد</div></div></div>
+      <div style="min-width:0"><div style="font-size:12.5px;opacity:.8">إجمالي المتبقي على التمويلات</div>
+        <div class="num" style="font-size:26px;font-weight:700;color:#F6E7B0;line-height:1.25">${fmt(rem,2)} <small style="font-size:12px;opacity:.8;color:#fff">ر.س</small></div>
+        <div style="font-size:12px;opacity:.8">سُدّد ${fmt(paidAll)} من ${fmt(allInst)}</div></div></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;border-top:1px solid rgba(255,255,255,.15);padding-top:12px;text-align:center">
+      <div><div style="font-size:11px;opacity:.75">الأصل المتبقي</div><b class="num" style="font-size:14.5px">${fmt(remP)}</b></div>
+      <div><div style="font-size:11px;opacity:.75">الربح المتبقي</div><b class="num" style="font-size:14.5px">${fmt(remR)}</b></div>
+      <div><div style="font-size:11px;opacity:.75">تمويلات نشطة</div><b class="num" style="font-size:14.5px">${active.length}</b></div></div>
+    ${vis.some(L=>L.noSplit)?'<div style="font-size:10.5px;opacity:.6;margin-top:6px">الأصل والربح بدون تمويل الأسطول</div>':''}</div>`;
+  // القسط التالي + المربعات
+  const tile=(l,v,sub,cls='')=>`<div class="card" style="padding:12px"><div class="muted" style="font-size:11.5px">${l}</div><div class="num ${cls}" style="font-size:18px;font-weight:700;margin-top:2px">${v}</div>${sub?`<div class="muted" style="font-size:11px;margin-top:2px">${sub}</div>`:''}</div>`;
+  if(nx) h+=`<div class="card" style="display:flex;align-items:center;gap:14px;border-inline-start:4px solid ${nx.L.color}">
+    <div style="flex:none;width:64px;height:64px;border-radius:16px;background:var(--gold-soft);display:grid;place-items:center;text-align:center;line-height:1.05"><div><b style="font-size:22px;color:var(--gold-ink);font-family:var(--f-disp)">${days}</b><div style="font-size:10px;color:var(--gold-ink)">${days===1?'يوم':'يوم'}</div></div></div>
+    <div style="min-width:0;flex:1"><div class="muted" style="font-size:12px">القسط التالي · ${dLbl(nx.x.date)}</div><div class="num" style="font-size:21px;font-weight:700">${fmt(nx.x.inst,2)}</div><div style="font-size:12px">${esc(nx.L.name)}</div>
+    ${nexts.length>1?`<div class="muted" style="font-size:11px;margin-top:4px">بعده: ${nexts.slice(1,3).map(o=>`${dLbl(o.x.date).replace(/ \d{4}$/,'')} · ${fmt(o.x.inst)}`).join(' — ')}</div>`:''}</div></div>`;
+  let salesPct=null;
+  try{ if(ent!=='wafra'){ const S=await loadSales(); const end=new Date(today+'T12:00:00'),st30=new Date(end-30*864e5).toISOString().slice(0,10);
+    const s30=sum(S.filter(r=>r.day>=st30&&r.day<today&&(r.branch_id==='az'||r.branch_id==='sh')).map(r=>r.amount));
+    const shM=sum(active.filter(L=>L.entity==='shaden').map(L=>{const x=C[L.id].next||C[L.id].over[0];return x?x.inst:0;}));
+    if(s30>0&&shM>0) salesPct={p:shM/s30,s:s30,m:shM}; } }catch(e){}
+  h+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    ${tile('القسط الشهري الحالي',fmt(curMonthly,2),active.length+' تمويل')}
+    ${tile('أقساط '+monLbl(mNow),fmt(sum(thisM.map(o=>o.x.inst)),2),`${thisM.filter(o=>o.x.paid).length} من ${thisM.length} مسدد`)}
+    ${tile('أقساط لم تُخصم',over.length?fmt(sum(over.map(o=>o.x.inst)),2):'لا يوجد',over.length?over.length+' قسط':'كل المستحق مخصوم',over.length?'down':'up')}
+    ${salesPct?tile('الأقساط من مبيعات الشادن',pct(salesPct.p),'آخر 30 يوم: '+fmt(salesPct.s),salesPct.p>0.15?'down':salesPct.p>0.1?'flat':'up'):tile('أصل التمويلات',fmt(sum(vis.map(L=>L.amount))),vis.length+' تمويل')}
+  </div>`;
+  // رؤى ذكية
+  const ins=[];
+  const ends=active.map(L=>({L,end:C[L.id].end,inst:L.inst})).sort((a,b)=>a.end<b.end?-1:1);
+  if(ends[0]) ins.push(['⏳',`أقرب تمويل ينتهي: <b>${esc(ends[0].L.name)}</b> في ${dLbl(ends[0].end)} — بعدها ينخفض القسط الشهري ${fmt(ends[0].inst)} إلى <b>${fmt(curMonthly-ends[0].inst)}</b>.`]);
+  if(ends.length>1) ins.push(['🏁',`آخر تمويل ينتهي في <b>${dLbl(ends[ends.length-1].end)}</b> (${esc(ends[ends.length-1].L.name)}).`]);
+  if(salesPct) ins.push(['📊',`أقساط الشادن ${fmt(salesPct.m)} شهرياً تعادل <b>${pct(salesPct.p)}</b> من مبيعات العزيزية وشوران آخر 30 يوم.`]);
+  ins.push(['💰',`سددت حتى الآن <b>${fmt(paidAll)}</b> (${pct(prog,0)} من إجمالي الأقساط)${paidProf?`، منها ربح ${fmt(paidProf)}`:''}.`]);
+  const totProf=sum(vis.filter(L=>!L.noSplit).map(L=>sum(C[L.id].S.map(x=>x.prof)))), totPrin=sum(vis.filter(L=>!L.noSplit).map(L=>L.amount));
+  if(totPrin) ins.push(['📌',`تكلفة التمويل: كل 1,000 ريال أصل عليها <b>${fmt(totProf/totPrin*1000)}</b> ريال ربح على كامل المدة.`]);
+  h+=`<div class="card"><h3>رؤى سريعة</h3><div style="display:flex;flex-direction:column;gap:10px">${ins.map(([i,t])=>`<div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.7"><span style="flex:none;width:28px;height:28px;border-radius:9px;background:var(--chip);display:grid;place-items:center;font-size:14px">${i}</span><div>${t}</div></div>`).join('')}</div></div>`;
+  // القسط الشهري حسب الجهة
+  const share={};active.forEach(L=>{const x=C[L.id].next||C[L.id].over[0];if(!x)return;const sp=L.split&&Object.keys(L.split).length?L.split:{[L.entity]:1};const tot=sum(Object.values(sp));for(const k in sp) share[k]=(share[k]||0)+x.inst*sp[k]/tot;});
   const shName=k=>k==='az'||k==='sh'?brById(k).name:(ENTITY_NAME[k]||k);
-  h+=`<div class="card"><h3>القسط الشهري حسب الجهة <small>القسط الجاري لكل تمويل</small></h3><table><tbody>${Object.entries(share).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<tr><td>${esc(shName(k))}</td><td class="n"><b>${fmt(v,2)}</b></td></tr>`).join('')}<tr class="total"><td>الإجمالي الشهري</td><td class="n">${fmt(sum(Object.values(share)),2)}</td></tr></tbody></table></div>`;
-  // الالتزامات القادمة 12 شهر
+  const shCol=k=>k==='az'||k==='sh'?brById(k).color:k==='wafra'?'#C2603A':'#888';
+  const shT=sum(Object.values(share))||1;
+  h+=`<div class="card"><h3>القسط الشهري حسب الجهة</h3><div style="display:flex;height:12px;border-radius:99px;overflow:hidden;margin:4px 0 10px">${Object.entries(share).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<i style="width:${(v/shT*100).toFixed(1)}%;background:${shCol(k)}"></i>`).join('')}</div>
+    ${Object.entries(share).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="bar-row" style="padding:5px 0;border-bottom:1px solid var(--line)"><span><i class="dot" style="background:${shCol(k)}"></i> ${esc(shName(k))}</span><span><b class="num">${fmt(v,2)}</b> <span class="muted" style="font-size:11px">${pct(v/shT,0)}</span></span></div>`).join('')}
+    <div class="bar-row" style="padding-top:8px"><b>الإجمالي الشهري</b><b class="num">${fmt(shT,2)}</b></div></div>`;
+  // مسار التمويلات (من البداية للنهاية)
+  const t0=Math.min(...vis.map(L=>+new Date((L.sched[0]||{}).date+'T12:00:00'))), t1=Math.max(...vis.map(L=>+new Date(C[L.id].end+'T12:00:00'))), tn=+new Date(today+'T12:00:00');
+  const posx=t=>((t-t0)/(t1-t0)*100).toFixed(2);
+  h+=`<div class="card"><h3>مسار التمويلات <small>${(new Date(t0)).getFullYear()} – ${(new Date(t1)).getFullYear()}</small></h3><div style="position:relative;padding-top:4px">
+    ${vis.map(L=>{const c=C[L.id],s0=+new Date((L.sched[0]||{}).date+'T12:00:00'),e0=+new Date(c.end+'T12:00:00'),pr=c.N?c.paid.length/c.N:0;
+      return `<div style="margin-bottom:12px"><div class="bar-row" style="font-size:12px;margin-bottom:3px"><span>${esc(L.name)}</span><span class="muted">${c.N-c.paid.length} قسط متبقي</span></div>
+      <div style="position:relative;height:10px;background:var(--chip);border-radius:99px;direction:ltr"><div style="position:absolute;left:${posx(s0)}%;width:${(posx(e0)-posx(s0)).toFixed(2)}%;top:0;bottom:0;border-radius:99px;background:${L.color}33"><div style="height:100%;width:${(pr*100).toFixed(1)}%;background:${L.color};border-radius:99px"></div></div></div></div>`;}).join('')}
+    <div style="position:absolute;top:0;bottom:12px;left:${posx(tn)}%;border-left:1.5px dashed var(--down);direction:ltr" title="اليوم"></div>
+    <div style="display:flex;justify-content:space-between;direction:ltr;font-size:10.5px;color:var(--muted)">${[...new Set([0,1,2,3,4].map(i=>(new Date(t0+(t1-t0)*i/4)).getFullYear()))].map(y=>`<span>${y}</span>`).join('')}</div>
+    <div class="muted" style="font-size:11px;margin-top:4px">الجزء الملوّن الغامق = المسدد · الخط الأحمر المتقطع = اليوم</div></div></div>`;
+  // القسط الشهري عبر الزمن
+  const allMs=[...new Set(vis.flatMap(L=>C[L.id].S.map(x=>x.date.slice(0,7))))].filter(m=>m>=mNow).sort();
+  const mTot=m=>sum(vis.map(L=>sum(C[L.id].S.filter(x=>x.date.slice(0,7)===m).map(x=>x.inst))));
+  const pts=[];allMs.forEach((m,i)=>{const v=Math.round(mTot(m));if(!pts.length||Math.abs(pts[pts.length-1].v-v)>1||i===allMs.length-1)pts.push({m,v});});
+  if(pts.length>1) h+=`<div class="card"><h3>القسط الشهري عبر الزمن <small>نقاط التغيّر فقط</small></h3>${lineChart(pts.map(p=>monShort(p.m)+' '+p.m.slice(0,4)),[{name:'القسط الشهري',color:'#C9A227',vals:pts.map(p=>p.v)}],{h:200,fmtv:v=>fmt(v)})}</div>`;
+  // الأقساط خلال 12 شهر
   const ms=[];{let [y,m]=mNow.split('-').map(Number);for(let i=0;i<12;i++){ms.push(y+'-'+String(m).padStart(2,'0'));m++;if(m>12){m=1;y++;}}}
-  h+=`<div class="card"><h3>الأقساط خلال 12 شهر</h3>${stackBars(ms.map(monShort),vis.map(L=>({name:L.name,color:L.color,vals:ms.map(m=>sum(C[L.id].S.filter(x=>x.date.slice(0,7)===m&&!x.paid).map(x=>x.inst)))})),{h:230,fv:v=>fmt(v)})}${legend(vis.map(L=>({name:L.name.split(' — ')[0]+' '+(L.name.split(' — ')[1]||''),color:L.color})))}</div>`;
-  // الرصيد المتبقي بنهاية كل سنة
-  const yrs=[...new Set(vis.flatMap(L=>C[L.id].S.map(x=>x.date.slice(0,4))))].sort();
-  h+=`<div class="card"><h3>المتبقي بنهاية كل سنة</h3>${lineChart(yrs,[{name:'المتبقي',color:'#1E5A3E',vals:yrs.map(y=>sum(vis.map(L=>sum(C[L.id].S.filter(x=>x.date.slice(0,4)>y&&(x.date>=today||!x.paid)).map(x=>x.inst)))))}],{h:190,fmtv:v=>fmt(v)})}</div>`;
+  h+=`<div class="card"><h3>الأقساط خلال 12 شهر</h3>${stackBars(ms.map(monShort),vis.map(L=>({name:L.name,color:L.color,vals:ms.map(m=>sum(C[L.id].S.filter(x=>x.date.slice(0,7)===m).map(x=>x.inst)))})),{h:220,fv:v=>fmt(v)})}${legend(vis.map(L=>({name:L.name,color:L.color})))}</div>`;
   // بطاقات التمويلات
   vis.forEach(L=>{const c=C[L.id],pr=c.N?c.paid.length/c.N:0;
     const sp=L.split&&Object.keys(L.split).length?Object.keys(L.split).map(k=>brById(k).name).join(' + '):(ENTITY_NAME[L.entity]||'');
