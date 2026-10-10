@@ -330,7 +330,7 @@ const SECTIONS=[
   {id:'data',name:'إدخال البيانات',admin:true}
 ];
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','handover','employees'];
-const APP_VER='25';
+const APP_VER='26';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name]));
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -609,7 +609,7 @@ V.loans=async()=>{
   let h=`<div class="chips">${[['all','كل التمويلات']].concat(ents.map(e=>[e,ENTITY_NAME[e]||e])).map(([k,n])=>`<button data-lf="${k}" aria-pressed="${ent===k}">${esc(n)}</button>`).join('')}</div>`;
   h+=`<div class="kpis">${kpi('إجمالي المتبقي',fmt(rem,2)+' <small style="font-size:13px" class="muted">ر.س</small>',`<span class="muted">أصل ${fmt(remP)} · ربح ${fmt(remR)}${vis.some(L=>L.noSplit)?' (بدون الأسطول)':''}</span>`)}
     ${kpi('أقساط '+monLbl(mNow),fmt(sum(thisM.map(o=>o.x.inst)),2),`<span class="muted">${thisM.length} قسط · ${thisM.filter(o=>o.x.paid).length} مسدد</span>`)}
-    ${kpi('القسط القادم',nexts[0]?fmt(nexts[0].x.inst,2):'—',nexts[0]?`<span class="muted">${dLbl(nexts[0].x.date)} · ${esc(nexts[0].L.name.split(' — ')[0])}</span>`:'')}
+    ${kpi('القسط التالي',nexts[0]?fmt(nexts[0].x.inst,2):'—',nexts[0]?`<span class="muted">${dLbl(nexts[0].x.date)} · ${esc(nexts[0].L.name.split(' — ')[0])}</span>`:'')}
     ${kpi('أقساط لم تُخصم',over.length?`<span class="down">${fmt(sum(over.map(o=>o.x.inst)),2)}</span>`:'<span class="up">لا يوجد</span>',over.length?`<span class="down">${over.length} قسط — التفاصيل في الملاحظات تحت</span>`:'<span class="muted">كل الأقساط المستحقة مخصومة</span>')}
     ${kpi('أصل التمويلات',fmt(sum(vis.map(L=>L.amount))),`<span class="muted">${vis.length} تمويل · المسدد ${fmt(sum(vis.map(L=>C[L.id].paidAmt)))}</span>`)}</div>`;
   // توزيع القسط الشهري
@@ -630,14 +630,14 @@ V.loans=async()=>{
       <div class="bar-row"><span><b class="num" style="font-size:20px">${fmt(c.rem,2)}</b> <span class="muted">متبقي من ${fmt(c.total,2)}</span></span>${c.over.length?`<span class="tag" style="background:rgba(208,69,58,.12);color:var(--down);font-weight:700">${c.over.length} متأخر</span>`:c.un.length?'<span class="tag" style="color:var(--up)">منتظم</span>':'<span class="tag" style="color:var(--up)">مسدد بالكامل</span>'}</div>
       <div class="meter" style="margin:8px 0 4px"><i style="width:${(pr*100).toFixed(1)}%;--c:${L.color}"></i></div>
       <div class="muted" style="font-size:12px">${c.paid.length} من ${c.N} قسط مسدد (${pct(pr,0)}) · ينتهي ${c.end?dLbl(c.end):'—'}</div>
-      <table style="margin-top:10px"><tbody>${[['العميل',esc(L.client||'')],['الجهة',esc(sp)],['مبلغ التمويل',fmt(L.amount,2)],['القسط الشهري',fmt(L.inst,2)],['إجمالي الربح',fmt(L.profit,2)],['معدل الربح',pct(L.rate,2)+(L.apr?` <span class="muted">(سنوي ${pct(L.apr,2)})</span>`:'')],['المدة',L.months+' شهر'],['تاريخ العقد',L.start?dLbl(L.start):'—'],L.fees?['الرسوم',fmt(L.fees,2)]:null,['القسط القادم',c.next?dLbl(c.next.date)+' · '+fmt(c.next.inst,2):'—'],L.noSplit?null:['الأصل المتبقي',fmt(c.remPrin,2)],L.noSplit?null:['الربح المتبقي',fmt(c.remProf,2)]].filter(Boolean).map(([k,v])=>`<tr><td class="muted">${k}</td><td class="n" style="white-space:normal">${v}</td></tr>`).join('')}
+      <table style="margin-top:10px"><tbody>${[['العميل',esc(L.client||'')],['الجهة',esc(sp)],['مبلغ التمويل',fmt(L.amount,2)],['القسط الشهري',fmt(L.inst,2)],['إجمالي الربح',fmt(L.profit,2)],['معدل الربح',pct(L.rate,2)+(L.apr?` <span class="muted">(سنوي ${pct(L.apr,2)})</span>`:'')],['المدة',L.months+' شهر'],['تاريخ العقد',L.start?dLbl(L.start):'—'],L.fees?['الرسوم',fmt(L.fees,2)]:null,['القسط التالي',c.next?dLbl(c.next.date)+' · '+fmt(c.next.inst,2):'—'],L.noSplit?null:['الأصل المتبقي',fmt(c.remPrin,2)],L.noSplit?null:['الربح المتبقي',fmt(c.remProf,2)]].filter(Boolean).map(([k,v])=>`<tr><td class="muted">${k}</td><td class="n" style="white-space:normal">${v}</td></tr>`).join('')}
       </tbody></table>
       <details style="margin-top:10px"><summary style="cursor:pointer;font-weight:600">جدول السداد (${c.N} قسط)</summary>
       <div class="scroller" style="margin-top:8px"><table><thead><tr><th>#</th><th>التاريخ</th><th>الحالة</th><th class="n">القسط</th>${L.noSplit?'':'<th class="n">الأصل</th><th class="n">الربح</th>'}${L.split&&Object.keys(L.split).length?Object.keys(L.split).map(k=>`<th class="n">${esc(brById(k).name)}</th>`).join(''):''}</tr></thead><tbody>
       ${(()=>{const sp=L.split&&Object.keys(L.split).length?Object.entries(L.split):[];
         const row=x=>{const late=!x.paid&&x.date<today,cur=!x.paid&&c.next&&c.next.n===x.n;
-          const pill=x.paid?`<span class="tag" style="background:rgba(31,161,107,.12);color:var(--up);font-weight:700">مسدد</span>`:late?`<span class="tag" style="background:rgba(208,69,58,.12);color:var(--down);font-weight:700">لم يُخصم</span>`:cur?`<span class="tag" style="background:var(--gold-soft);color:var(--gold-ink);font-weight:700">القادم</span>`:`<span class="tag">غير مسدد</span>`;
-          const act=W?` <button class="btn ghost sm" data-lp="${esc(L.id)}|${x.n}" style="min-height:26px;padding:2px 8px;font-size:11px">${x.due?(x.paid?'لم يُخصم':'تم الخصم'):(x.paid?'إلغاء':'سداد مبكر')}</button>`:'';
+          const pill=x.paid?`<span class="tag" style="background:rgba(31,161,107,.12);color:var(--up);font-weight:700">تم سداد القسط</span>`:late?`<span class="tag" style="background:rgba(208,69,58,.12);color:var(--down);font-weight:700">لم يُخصم</span>`:cur?`<span class="tag" style="background:var(--gold-soft);color:var(--gold-ink);font-weight:700">القسط التالي</span>`:`<span class="tag">قادم</span>`;
+          const act=W&&x.due?` <button class="btn ghost sm" data-lp="${esc(L.id)}|${x.n}" style="min-height:24px;padding:1px 7px;font-size:10.5px;opacity:.8">${x.paid?'لم يُخصم؟':'تم الخصم'}</button>`:'';
           return `<tr${cur?' style="background:var(--gold-soft)"':x.paid?' style="opacity:.75"':''}><td>${x.n}</td><td style="white-space:nowrap">${dLbl(x.date)}${x.paid&&x.paidOn&&!x.auto?`<div class="muted" style="font-size:10.5px">سُدّد ${dLbl(x.paidOn)}</div>`:''}</td><td style="white-space:nowrap">${pill}${act}</td><td class="n">${fmt(x.inst,2)}</td>${L.noSplit?'':`<td class="n">${fmt(x.prin,2)}</td><td class="n">${fmt(x.prof,2)}</td>`}${sp.map(([k,r])=>`<td class="n">${fmt(x.inst*r,2)}</td>`).join('')}</tr>`;};
         const cols=3+(L.noSplit?0:2)+sp.length+1;
         return c.un.map(row).join('')+(c.paid.length?`<tr class="sub"><td colspan="${cols}">الأقساط المسددة (${c.paid.length}) — ${fmt(c.paidAmt,2)}</td></tr>`+c.paid.map(row).join(''):'');})()}
@@ -647,7 +647,7 @@ V.loans=async()=>{
   const lnotes=vis.filter(L=>L.note).map(L=>`<li><b>${esc(L.name)}:</b> ${esc(L.note)}</li>`);
   if(vis.some(L=>L.split&&Object.keys(L.split).length)) lnotes.unshift('<li>تمويلات الشادن موزّعة مناصفة بين العزيزية وشوران حسب جداول السداد.</li>');
   lnotes.unshift('<li>أي قسط يحل تاريخه يُسجَّل مسدداً تلقائياً (البنك يخصمه في نفس التاريخ كل شهر) وينتقل لقائمة المسددة أسفل الجدول.</li>');
-  if(W) lnotes.push('<li>إذا البنك ما خصم قسطاً، اضغط «لم يُخصم» عنده في جدول السداد فيظهر متأخراً هنا، وارجعه بـ«تم الخصم» بعد السداد.</li>');
+  if(W) lnotes.push('<li>إذا البنك ما خصم قسطاً، اضغط «لم يُخصم؟» عنده في قائمة الأقساط المسددة فيظهر هنا، وارجعه بـ«تم الخصم» بعد السداد.</li>');
   h+=`<div class="card"><h3>الملاحظات</h3>${notes}${lnotes.length?`<ul style="margin:8px 0 0;padding-inline-start:18px;font-size:13px;display:flex;flex-direction:column;gap:6px">${lnotes.join('')}</ul>`:''}</div>`;
   return h;
 };
