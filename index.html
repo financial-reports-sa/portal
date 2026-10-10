@@ -152,7 +152,7 @@ body.appmode footer{display:none}
 @media (max-width:760px){
   body{font-size:13.5px}
   .wrap{padding-inline:14px;padding-block:12px 40px;gap:12px}
-  .brand h1{font-size:18px!important;line-height:1.25!important}
+  .brand h1{font-size:16px!important;line-height:1.25!important}
   .brand h1+div{font-size:11.5px!important}
   .mybtn{font-size:12px;padding:6px 12px}
   .tabs{gap:5px}
@@ -207,7 +207,7 @@ body.appmode footer{display:none}
 #splash .sp-tag{font-family:"Montserrat",sans-serif;font-weight:400;font-size:9.5px;letter-spacing:.42em;padding-inline-start:.42em;text-transform:uppercase;direction:ltr;color:rgba(232,238,220,.6);opacity:0;animation:spRise .7s 1.9s ease-out forwards}
 /* المرحلة الثانية: منصة الإدارة الموحّدة */
 #splash .sp-b{gap:12px}
-#splash .sp-ar{font-family:"Readex Pro",var(--f-disp);font-weight:600;font-size:26px;white-space:nowrap;line-height:1.3;
+#splash .sp-ar{font-family:"Readex Pro",var(--f-disp);font-weight:600;font-size:23px;white-space:nowrap;line-height:1.3;
   background:linear-gradient(180deg,#FFFDF3 0%,#F3E3A8 60%,#D9B850 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
   clip-path:inset(0 0 0 100%);filter:drop-shadow(0 4px 18px rgba(0,0,0,.25));animation:spWipe 1s 3.2s cubic-bezier(.65,0,.25,1) forwards}
 #splash .sp-b .sp-orn s{animation:spHair .8s 3.75s cubic-bezier(.6,.05,.25,1) forwards}
@@ -274,7 +274,7 @@ if(seen){s.remove();return;}s.addEventListener('click',hide);setTimeout(hide,560
 <!-- ============ LOGIN ============ -->
 <section id="login" hidden>
   <div class="card login-card">
-    <div class="brand"><div><h1 style="font-size:22px">منصة الإدارة الموحّدة</h1><div style="font-size:13px;color:var(--gold-ink);font-weight:600">تطوير بواسطة أمير العريفي</div></div></div>
+    <div class="brand"><div><h1 style="font-size:19px">منصة الإدارة الموحّدة</h1><div style="font-size:13px;color:var(--gold-ink);font-weight:600">تطوير بواسطة أمير العريفي</div></div></div>
     <form id="loginForm" class="login-card" style="gap:10px" novalidate>
       <div class="field"><label for="lu">اسم المستخدم</label><input class="inp" id="lu" autocomplete="username" dir="ltr" autocapitalize="none" spellcheck="false"></div>
       <div class="field"><label for="lp">كلمة المرور</label><input class="inp" id="lp" type="password" autocomplete="current-password" dir="ltr"></div>
@@ -292,7 +292,7 @@ if(seen){s.remove();return;}s.addEventListener('click',hide);setTimeout(hide,560
 <div id="app" hidden>
   <div class="wrap">
     <div class="top">
-      <div class="brand"><div><h1 style="font-size:19px;line-height:1.2">منصة الإدارة الموحّدة</h1><div style="font-size:12px;color:var(--gold-ink);font-weight:600">تطوير بواسطة أمير العريفي</div></div></div>
+      <div class="brand"><div><h1 style="font-size:17px;line-height:1.2">منصة الإدارة الموحّدة</h1><div style="font-size:12px;color:var(--gold-ink);font-weight:600">تطوير بواسطة أمير العريفي</div></div></div>
       <div class="who"><button class="mybtn" id="av" type="button" aria-haspopup="true" aria-expanded="false" aria-label="الحساب" dir="ltr">My Reports</button>
         <div class="umenu" id="umenu" hidden><div><b id="uname"></b><div class="muted" style="font-size:12px" id="urole"></div></div><div class="scope" id="scope"></div><button class="btn ghost sm" id="logout" style="width:100%">تسجيل الخروج</button></div></div>
     </div>
@@ -331,7 +331,7 @@ const SECTIONS=[
   {id:'data',name:'إدخال البيانات',admin:true}
 ];
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees'];
-const APP_VER='33';
+const APP_VER='34';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name]));
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
