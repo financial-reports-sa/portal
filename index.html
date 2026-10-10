@@ -627,7 +627,8 @@ V.users=async()=>{
     <div class="muted" style="font-size:12px">بعد الإنشاء حدّد فروعه وأقسامه من القائمة تحت. المستخدم الجديد لا يرى أي شيء حتى تعطيه صلاحية.</div><div class="err" id="nue"></div></div>`;
   h+=P.data.map(u=>{const m=canManage(u),adminLike=u.role!=='user';
     return `<div class="card ucard"><div class="uhead"><div><b>${esc(u.full_name||u.username)}</b> <span class="role ${u.role}">${ROLE_NAME[u.role]}</span> ${u.active?'':'<span class="tag" style="color:var(--down)">موقوف</span>'}<div class="muted" style="font-size:12px" dir="ltr">${esc(u.username)}</div></div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px">${isOwner()&&['admin','user'].includes(u.role)?`<button class="btn ghost sm" data-role="${u.id}" data-to="${u.role==='admin'?'user':'admin'}">${u.role==='admin'?'تحويل لمستخدم':'ترقية لآدمن'}</button>`:''}${m?`<button class="btn ghost sm" data-pwt="${u.id}">تغيير كلمة المرور</button><button class="btn ghost sm" data-act="${u.id}" data-to="${u.active?0:1}">${u.active?'إيقاف':'تفعيل'}</button>`:''}</div></div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">${isOwner()&&['admin','user'].includes(u.role)?`<button class="btn ghost sm" data-role="${u.id}" data-to="${u.role==='admin'?'user':'admin'}">${u.role==='admin'?'تحويل لمستخدم':'ترقية لآدمن'}</button>`:''}${(m||u.id===st.user.id||(isOwner()&&u.role==='sync'))?`<button class="btn ghost sm" data-nmt="${u.id}">تعديل الاسم</button>`:''}${m?`<button class="btn ghost sm" data-pwt="${u.id}">تغيير كلمة المرور</button><button class="btn ghost sm" data-act="${u.id}" data-to="${u.active?0:1}">${u.active?'إيقاف':'تفعيل'}</button>`:''}</div></div>
+      <form class="row nmf" data-uid="${u.id}" hidden autocomplete="off"><div class="field"><label for="nm_${u.id}">الاسم الظاهر</label><input class="inp" id="nm_${u.id}" required maxlength="60" value="${esc(u.full_name||'')}" placeholder="مثال: مدير فرع العزيزية"></div><div class="field" style="justify-content:flex-end;flex:none"><button class="btn sm" type="submit">حفظ</button></div></form>
       ${m?`<form class="row pwf" data-uid="${u.id}" hidden autocomplete="off"><div class="field"><label for="pw_${u.id}">كلمة المرور الجديدة لـ ${esc(u.full_name||u.username)}</label><input class="inp" id="pw_${u.id}" dir="ltr" minlength="8" required autocomplete="new-password"></div><div class="field" style="justify-content:flex-end;flex:none"><button class="btn sm" type="submit">حفظ</button></div></form>`:''}
       ${adminLike?`<div class="muted" style="font-size:13px">${u.role==='owner'?'المالك يرى كل شيء، ولا يمكن تعديل حسابه.':u.role==='sync'?'حساب المهام التلقائية: يكتب أرقام التقارير فقط، ولا يدير المستخدمين.':'الآدمن يرى كل الفروع والأقسام، ويدير المستخدمين.'}</div>`:
       `<div><div class="muted" style="font-size:12px;margin-bottom:4px">الفروع</div><div class="tgrid">${st.branches.map(b=>{const on=ub.some(x=>x.user_id===u.id&&x.branch_id===b.id);return `<button class="tg" data-tb="${u.id}" data-k="b:${b.id}" aria-pressed="${on}" ${m?'':'disabled'}><i class="dot" style="background:${b.color}"></i>${esc(b.name)}</button>`;}).join('')}</div></div>
@@ -645,11 +646,25 @@ document.addEventListener('click',async e=>{
     const r=on?await sb.from(tbl).delete().eq('user_id',uid).eq(col,id):await sb.from(tbl).insert({user_id:uid,[col]:id});
     t.disabled=false; if(r.error){toast('تعذّر الحفظ: '+r.error.message);return;}
     t.setAttribute('aria-pressed',String(!on)); toast('تم الحفظ'); return;}
+  const nt=e.target.closest('[data-nmt]'); if(nt){const f=document.querySelector(`.nmf[data-uid="${nt.dataset.nmt}"]`); if(f){f.hidden=!f.hidden; if(!f.hidden){const i=f.querySelector('input');i.focus();i.select();}} return;}
   const pt=e.target.closest('[data-pwt]'); if(pt){const f=document.querySelector(`.pwf[data-uid="${pt.dataset.pwt}"]`); if(f){f.hidden=!f.hidden; if(!f.hidden) f.querySelector('input').focus();} return;}
   const a=e.target.closest('[data-act]'); if(a){const {error}=await sb.from('profiles').update({active:a.dataset.to==='1'}).eq('id',a.dataset.act);if(error){toast('تعذّر: '+error.message);return;}render();return;}
   const r=e.target.closest('[data-role]'); if(r){const {error}=await sb.from('profiles').update({role:r.dataset.to}).eq('id',r.dataset.role);if(error){toast('تعذّر: '+error.message);return;}render();}
 });
 document.addEventListener('submit',async e=>{
+  if(e.target.classList.contains('nmf')){ e.preventDefault();
+    const f=e.target,uid=f.dataset.uid,name=f.querySelector('input').value.trim(),b=f.querySelector('button');
+    if(!name){toast('اكتب الاسم');return;}
+    b.disabled=true;
+    let r=await sb.rpc('set_full_name',{p_uid:uid,p_name:name});
+    if(r.error&&/set_full_name|function/i.test(r.error.message)){ // قبل تثبيت الدالة: التحديث المباشر يعمل لحسابات المستخدمين والآدمن
+      const u=await sb.from('profiles').update({full_name:name}).eq('id',uid).select('id');
+      r=u.error?u:(u.data&&u.data.length?{error:null}:{error:{message:'هذا الحساب يحتاج تشغيل ملف names.sql مرة واحدة في Supabase'}});
+    }
+    b.disabled=false;
+    if(r.error){toast('تعذّر: '+r.error.message);return;}
+    if(uid===st.user.id&&st.profile){ st.profile.full_name=name; $('#uname').textContent=name; }
+    toast('تم تعديل الاسم'); render(); return; }
   if(e.target.id==='nuf'){ e.preventDefault();
     const name=$('#nun').value.trim(),u=$('#nuu').value.trim().toLowerCase(),p=$('#nup').value;
     if(!/^[a-z0-9._-]{3,30}$/.test(u)){$('#nue').textContent='اسم المستخدم بالإنجليزي (حروف وأرقام فقط، 3 أحرف على الأقل)';return;}
