@@ -330,7 +330,7 @@ const SECTIONS=[
   {id:'data',name:'إدخال البيانات',admin:true}
 ];
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','handover','employees'];
-const APP_VER='26';
+const APP_VER='27';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name]));
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -597,7 +597,7 @@ V.loans=async()=>{
   const docs=await appList('loans','contracts');
   if(!docs.length) return `<div class="card empty">لا توجد تمويلات بعد — ارفع ملف «ترحيل-التمويلات» من تبويب «إدخال البيانات».</div>`;
   const today=todayIso(),mNow=today.slice(0,7),W=isAdmin();
-  const LS=docs.map((d,i)=>({...d.data,id:d.id,color:LOAN_COLORS[i%LOAN_COLORS.length]})).sort((a,b)=>(a.start||'')<(b.start||'')?-1:1);
+  const LS=docs.map((d,i)=>({...d.data,entity:d.data.entity==='fleet'?'wafra':d.data.entity,id:d.id,color:LOAN_COLORS[i%LOAN_COLORS.length]})).sort((a,b)=>(a.start||'')<(b.start||'')?-1:1);
   const C=Object.fromEntries(LS.map(L=>[L.id,loanCalc(L,today)]));
   const ent=st.loanF||'all'; const ents=[...new Set(LS.map(L=>L.entity))];
   const vis=LS.filter(L=>ent==='all'||L.entity===ent);
