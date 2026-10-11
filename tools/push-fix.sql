@@ -1,6 +1,8 @@
 -- تحديث إشعارات الجوال: القاعدة ترسل للدالة المفاتيح والأجهزة مباشرة (يشغَّل بعد push.sql)
 alter table public.push_config add column if not exists gen_req bigint;
 alter table public.push_config add column if not exists gen_at timestamptz;
+alter table public.push_config add column if not exists fn_url text;
+update public.push_config set fn_url = 'https://olsqykputyhigalzmlbs.supabase.co/functions/v1/smart-task', gen_req = null where id = 1;
 
 -- المفتاح العام للتسجيل (يولَّد تلقائياً أول مرة عن طريق الدالة)
 create or replace function public.push_key() returns text
@@ -18,7 +20,7 @@ begin
     end if;
     if not found and c.gen_at > now() - interval '1 minute' then return null; end if;
   end if;
-  update push_config set gen_req = net.http_get('https://olsqykputyhigalzmlbs.supabase.co/functions/v1/push?gen=1'), gen_at = now() where id = 1;
+  update push_config set gen_req = net.http_get(c.fn_url || '?gen=1'), gen_at = now() where id = 1;
   return null;
 end $$;
 
@@ -33,7 +35,7 @@ begin
     from push_subs where user_id = any(p_users);
   if s is null then return; end if;
   perform net.http_post(
-    url := 'https://olsqykputyhigalzmlbs.supabase.co/functions/v1/push',
+    url := c.fn_url,
     headers := jsonb_build_object('Content-Type', 'application/json'),
     body := jsonb_build_object('vapid', jsonb_build_object('pub', c.public_key, 'priv', c.private_key), 'subs', s,
             'payload', jsonb_build_object('title', p_title, 'body', p_body, 'url', p_url, 'tag', p_tag)),
