@@ -273,6 +273,34 @@ body.hasnav .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 #splash.quick .sp-load{animation-delay:.9s}#splash.quick .sp-bar b{animation-duration:1s;animation-delay:1s}
 #splash.quick .sp-skip{display:none}
 @media (prefers-reduced-motion:reduce){#splash *{animation-duration:.01s!important;animation-delay:0s!important}}
+.afm{padding:0;overflow:hidden}
+.afm-hd{background:linear-gradient(135deg,#1E5A3E,#123A27);color:#fff;padding:16px 18px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.afm-hd h3{color:#fff;font-size:17px}.afm-hd small{display:block;font-size:11.5px;opacity:.75;margin-top:2px}
+.afm-code{font-family:var(--f-disp);font-size:10.5px;letter-spacing:.6px;border:1px solid rgba(233,207,122,.5);color:#F6E7B0;border-radius:6px;padding:3px 7px;white-space:nowrap}
+.afm-bd{padding:16px 18px;display:flex;flex-direction:column;gap:16px}
+.afm-sec{display:flex;flex-direction:column;gap:8px}
+.afm-t{font-family:var(--f-disp);font-size:12px;font-weight:700;color:var(--gold-ink);letter-spacing:.3px;display:flex;align-items:center;gap:8px}
+.afm-t:before{content:attr(data-n);width:20px;height:20px;border-radius:6px;background:var(--gold-soft);color:var(--gold-ink);display:grid;place-items:center;font-size:11px}
+.afm-t:after{content:"";flex:1;height:1px;background:var(--line)}
+.afm-kv{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.afm-kv div{background:var(--card);padding:8px 10px}.afm-kv span{display:block;font-size:11px;color:var(--muted)}.afm-kv b{font-size:13.5px}
+.afm-amt{position:relative}.afm-amt input{font-size:24px;font-weight:700;text-align:center;padding-inline:54px;min-height:56px}
+.afm-amt i{position:absolute;inset-inline-end:14px;top:50%;transform:translateY(-50%);font-style:normal;color:var(--muted);font-size:13px}
+.afm-chips{display:flex;gap:6px}.afm-chips button{flex:1;border:1px solid var(--line);background:var(--card);border-radius:9px;padding:7px 4px;font:600 12.5px var(--f-disp);color:var(--fg);cursor:pointer}
+.afm-chips button:active{background:var(--gold-soft)}
+.afm-seg{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}.afm-seg label{position:relative}
+.afm-seg input{position:absolute;opacity:0;pointer-events:none}
+.afm-seg span{display:block;text-align:center;border:1px solid var(--line);border-radius:9px;padding:8px 0 6px;font:700 15px var(--f-disp);cursor:pointer;background:var(--card)}
+.afm-seg span small{display:block;font:400 10px var(--f-body,inherit);color:var(--muted)}
+.afm-seg input:checked+span{background:#1E5A3E;border-color:#1E5A3E;color:#fff}.afm-seg input:checked+span small{color:#cfe0d6}
+.afm-sum{background:var(--gold-soft);border:1px solid #EAD9A0;border-radius:12px;padding:12px}
+.afm-sum .bar-row b{font-size:18px}
+.afm-sch{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.afm-sch span{background:#fff;border:1px solid #EAD9A0;border-radius:8px;padding:4px 8px;font-size:11.5px}
+.afm-ack{display:flex;gap:10px;align-items:flex-start;font-size:12.5px;line-height:1.7;background:var(--chip);border-radius:10px;padding:10px 12px;cursor:pointer}
+.afm-ack input{width:18px;height:18px;margin-top:3px;accent-color:#1E5A3E;flex:none}
+.afm-ft{display:flex;gap:8px;border-top:1px solid var(--line);padding:12px 18px;background:var(--bg)}
+.afm-ft .btn:first-child{flex:1}
+.advref{font-family:var(--f-disp);font-size:10.5px;color:var(--muted);letter-spacing:.4px}
 </style>
 </head>
 <body>
@@ -379,7 +407,7 @@ const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'rep',n
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees'];
-const APP_VER='44';
+const APP_VER='45';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name]));
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -1001,15 +1029,87 @@ function advCalc(a){ const mo=+a.amount/a.months; if(a.status!=='approved'||!a.s
 const advPill=a=>{const x=ADV_ST[a.status]||{t:a.status,c:''};const bg={up:'rgba(31,161,107,.12)',down:'rgba(208,69,58,.12)',flat:'var(--gold-soft)',muted:'var(--chip)'}[x.c]||'var(--chip)';const fg={up:'var(--up)',down:'var(--down)',flat:'var(--gold-ink)',muted:'var(--muted)'}[x.c]||'inherit';return `<span class="tag" style="background:${bg};color:${fg};font-weight:700">${x.t}</span>`;};
 function advSteps(a){const s=[['الطلب',a.requested_by,a.created_at,true],['مدير الفرع',a.mgr_by,a.mgr_at,!!a.mgr_at],['الاعتماد',a.own_by,a.own_at,!!a.own_at]];
   return `<div style="display:flex;gap:6px;margin-top:8px">${s.map(([n,b,t,ok])=>`<div style="flex:1;text-align:center;font-size:10.5px"><div style="height:4px;border-radius:99px;background:${ok?(a.status==='rejected'&&t===(a.own_at||a.mgr_at)?'var(--down)':'var(--up)'):'var(--chip)'};margin-bottom:4px"></div><b>${n}</b>${b?`<div class="muted">${esc(b)}</div>`:''}</div>`).join('')}</div>`;}
-function advForm(emps,maxSal){
-  return `<div class="card" id="advFormCard"><h3>طلب سلفة</h3><form id="advForm" style="display:flex;flex-direction:column;gap:10px" autocomplete="off">
-    ${emps?`<div class="field"><label for="adv_emp">الموظف</label><select class="inp" id="adv_emp" name="emp" required><option value="">اختر</option>${emps.map(e=>`<option value="${e.id}" data-sal="${+e.salary||0}">${esc(e.name)} · ${esc(brById(e.branch).name)}</option>`).join('')}</select></div>`:''}
-    <div class="row"><div class="field"><label for="adv_amt">المبلغ (ر.س)</label><input class="inp num" id="adv_amt" name="amount" type="number" inputmode="decimal" min="1" step="1" required ${maxSal?`max="${maxSal}"`:''}></div>
-    <div class="field"><label for="adv_mo">السداد على</label><select class="inp" id="adv_mo" name="months">${[1,2,3,4,5,6].map(n=>`<option value="${n}">${n===1?'شهر واحد':n===2?'شهرين':n+' أشهر'}</option>`).join('')}</select></div></div>
-    <div class="muted" id="advCalc" style="font-size:12.5px">${maxSal?`الحد الأعلى راتب شهر: ${fmt(maxSal)} ر.س`:''}</div>
-    <div class="field"><label for="adv_rs">السبب</label><textarea class="inp" id="adv_rs" name="reason" rows="2" placeholder="مثل: ظرف عائلي، إيجار…"></textarea></div>
-    <div class="err" id="advErr"></div>
-    <div style="display:flex;gap:8px"><button class="btn" type="submit" id="advSend">إرسال الطلب</button><button class="btn ghost" type="button" data-advx="1">إلغاء</button></div></form></div>`;
+const advRef=a=>'ADV-'+String(a.created_at||'').slice(2,7).replace('-','')+'-'+String(a.id).replace(/-/g,'').slice(0,5).toUpperCase();
+const advEnt=b=>({az:'مطاعم الشادن',sh:'مطاعم الشادن',pc:'بروست الباتشينو'})[b]||brById(b).name;
+const nextMon=(k,i=1)=>{const [y,m]=k.split('-').map(Number);const t=y*12+m-1+i;return Math.floor(t/12)+'-'+String(t%12+1).padStart(2,'0');};
+const moTxt=n=>n===1?'شهر واحد':n===2?'شهرين':n+' أشهر';
+function tafqit(n){n=Math.round(+n||0);if(!n)return 'صفر';
+  const u=['','واحد','اثنان','ثلاثة','أربعة','خمسة','ستة','سبعة','ثمانية','تسعة','عشرة','أحد عشر','اثنا عشر','ثلاثة عشر','أربعة عشر','خمسة عشر','ستة عشر','سبعة عشر','ثمانية عشر','تسعة عشر'];
+  const t=['','','عشرون','ثلاثون','أربعون','خمسون','ستون','سبعون','ثمانون','تسعون'];
+  const h=['','مائة','مائتان','ثلاثمائة','أربعمائة','خمسمائة','ستمائة','سبعمائة','ثمانمائة','تسعمائة'];
+  const b999=x=>{const p=[];if(x>=100){p.push(h[Math.floor(x/100)]);x%=100;}if(x){if(x<20)p.push(u[x]);else{const o=x%10;p.push(o?u[o]+' و'+t[Math.floor(x/10)]:t[Math.floor(x/10)]);}}return p.join(' و');};
+  const th=Math.floor(n/1000),r=n%1000,p=[];
+  if(th){p.push(th===1?'ألف':th===2?'ألفان':th<=10?b999(th)+' آلاف':b999(th)+' ألف');}
+  if(r)p.push(b999(r));return p.join(' و');}
+const ADV_RS=['ظروف عائلية','علاج ومصاريف طبية','إيجار وسكن','رسوم دراسية','سفر وإجازة','أخرى'];
+function advForm(emps,maxSal,me){
+  const nm=nextMon(curMon());
+  return `<div class="card afm" id="advFormCard"><div class="afm-hd"><div><h3>نموذج طلب سلفة على الراتب</h3><small>Salary Advance Request · ${dLbl(todayIso())}</small></div><span class="afm-code">HR-ADV-01</span></div>
+  <form id="advForm" autocomplete="off"><div class="afm-bd">
+    <div class="afm-sec"><div class="afm-t" data-n="1">بيانات الموظف</div>
+    ${emps?`<select class="inp" id="adv_emp" name="emp" required><option value="">اختر الموظف</option>${emps.map(e=>`<option value="${e.id}" data-sal="${+e.salary||0}">${esc(e.name)} · ${esc(brById(e.branch).name)}</option>`).join('')}</select>`
+      :`<div class="afm-kv"><div><span>الاسم</span><b>${esc(me.name)}</b></div><div><span>المسمى الوظيفي</span><b>${esc(me.job||'—')}</b></div><div><span>الفرع</span><b>${esc(me.branch_name||'—')}</b></div><div><span>الراتب الشهري</span><b class="num">${fmt(me.salary)} ر.س</b></div></div>`}</div>
+    <div class="afm-sec"><div class="afm-t" data-n="2">مبلغ السلفة</div>
+      <div class="afm-amt"><input class="inp num" id="adv_amt" name="amount" type="number" inputmode="numeric" min="1" step="1" placeholder="0" required ${maxSal?`max="${maxSal}"`:''}><i>ر.س</i></div>
+      <div class="afm-chips">${[25,50,75,100].map(p=>`<button type="button" data-advp="${p}">${p===100?'راتب كامل':p+'٪'}</button>`).join('')}</div>
+      <div class="muted" id="advMax" style="font-size:11.5px">${maxSal?`الحد الأعلى: راتب شهر واحد (${fmt(maxSal)} ر.س)`:'الحد الأعلى: راتب شهر واحد'}</div></div>
+    <div class="afm-sec"><div class="afm-t" data-n="3">مدة السداد</div>
+      <div class="afm-seg">${[1,2,3,4,5,6].map(n=>`<label><input type="radio" name="months" value="${n}" ${n===1?'checked':''}><span>${n}<small>${n===1?'شهر':n===2?'شهرين':'أشهر'}</small></span></label>`).join('')}</div>
+      <div class="afm-sum" id="advCalc"><div class="muted" style="font-size:12px">اكتب المبلغ ليظهر جدول الخصم</div></div></div>
+    <div class="afm-sec"><div class="afm-t" data-n="4">سبب الطلب</div>
+      <select class="inp" name="rcat" required><option value="">اختر السبب</option>${ADV_RS.map(r=>`<option>${r}</option>`).join('')}</select>
+      <textarea class="inp" id="adv_rs" name="reason" rows="2" placeholder="تفاصيل إضافية (اختياري)"></textarea></div>
+    <div class="afm-sec"><div class="afm-t" data-n="5">الإقرار</div>
+      <label class="afm-ack"><input type="checkbox" name="ack" required><span>${emps?'أقر بأن الموظف اطّلع على الطلب ووافق على':'أقر بأن هذا المبلغ سلفة على راتبي، وأوافق على'} خصمه من الراتب حسب الجدول الموضح، وفي حال انتهاء الخدمة قبل اكتمال السداد يُخصم المتبقي من المستحقات النهائية.</span></label></div>
+    <div class="err" id="advErr"></div></div>
+    <div class="afm-ft"><button class="btn" type="submit" id="advSend">تقديم الطلب</button><button class="btn ghost" type="button" data-advx="1">إلغاء</button></div></form>
+    <input type="hidden" id="advNm" value="${nm}"></div>`;
+}
+function advDoc(a,e){
+  e=e||{}; const c=advCalc(a), ent=advEnt(a.branch), mo=+a.amount/a.months, start=a.start_month||nextMon(String(a.created_at).slice(0,7));
+  const st=a.status, stamp=st==='approved'?['معتمد','#1E5A3E']:st==='rejected'?['مرفوض','#B3261E']:st==='cancelled'?['ملغى','#777']:['قيد الاعتماد','#9A7B12'];
+  const dt=x=>x?new Date(x).toLocaleString('ar-SA-u-ca-gregory-nu-latn',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+  const sch=Array.from({length:a.months},(_,i)=>{const k=nextMon(start,i);const paid=st==='approved'&&i<c.done;return `<tr><td>${i+1}</td><td>${monLbl(k)}</td><td class="n">${fmt(mo,2)}</td><td>${st!=='approved'?'—':paid?'مخصوم':'مستحق'}</td></tr>`;}).join('');
+  const sign=(t,n,d,ok)=>`<div class="sg"><div class="sgt">${t}</div><div class="sgn">${ok?esc(n||''):''}</div><div class="sgl">${ok?'✓ موافقة إلكترونية · '+dt(d):'—'}</div></div>`;
+  return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${advRef(a)}</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Readex+Pro:wght@600;700&display=swap" rel="stylesheet"><style>
+@page{size:A4;margin:14mm}*{box-sizing:border-box}body{margin:0;font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif;color:#1b241e;font-size:12.5px;background:#fff}
+.pg{max-width:780px;margin:0 auto;padding:22px}.hd{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #1E5A3E;padding-bottom:12px}
+.co b{font-family:"Readex Pro";font-size:20px;color:#143F2A;display:block}.co span{color:#6b706a;font-size:11.5px}
+.ttl{text-align:center;margin:18px 0 6px}.ttl h1{font-family:"Readex Pro";font-size:19px;margin:0;color:#143F2A}.ttl div{font-size:11px;color:#6b706a;letter-spacing:.5px}
+.meta{display:flex;flex-wrap:wrap;gap:4px 12px;justify-content:space-between;font-size:11.5px;color:#444;margin:10px 0 14px;border:1px solid #e3e3dc;border-radius:8px;padding:8px 12px;background:#fafaf6}
+h2{font-family:"Readex Pro";font-size:13px;color:#9A7B12;margin:16px 0 6px;border-bottom:1px solid #eee;padding-bottom:4px}
+table{width:100%;border-collapse:collapse}td,th{border:1px solid #dcdcd4;padding:7px 9px;text-align:right}th{background:#F3F6F4;color:#143F2A;font-weight:600;width:22%}
+.sch th{width:auto;text-align:center}.sch td{text-align:center}.n{font-variant-numeric:tabular-nums}
+.amt{font-family:"Readex Pro";font-size:17px;color:#143F2A}.words{font-size:11.5px;color:#555}
+.ack{border:1px dashed #c9b25e;background:#FDF9EC;border-radius:8px;padding:10px 12px;line-height:1.8;font-size:12px}
+.sgs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px}.sg{border:1px solid #dcdcd4;border-radius:8px;padding:10px;text-align:center;min-height:86px}
+.sgt{font-weight:700;color:#143F2A;font-size:12px}.sgn{font-family:"Readex Pro";margin:8px 0 4px;min-height:18px}.sgl{font-size:10px;color:#1E5A3E}
+.stamp{border:3px solid ${stamp[1]};color:${stamp[1]};font-family:"Readex Pro";font-weight:700;font-size:16px;padding:6px 14px;border-radius:10px;transform:rotate(-8deg);display:inline-block}
+.ft{margin-top:22px;border-top:1px solid #e3e3dc;padding-top:8px;display:flex;justify-content:space-between;font-size:10px;color:#888}
+.bar{position:sticky;top:0;background:#143F2A;padding:10px;display:flex;gap:8px;justify-content:center}.bar button{font:600 14px "IBM Plex Sans Arabic",Tahoma;border:0;border-radius:9px;padding:9px 18px;cursor:pointer}
+.bar .p{background:#D4AF37;color:#3E2F05}.bar .c{background:rgba(255,255,255,.15);color:#fff}@media print{.bar{display:none}.pg{padding:0}}
+</style></head><body><div class="bar"><button class="p" onclick="print()">طباعة / حفظ PDF</button><button class="c" onclick="parent.postMessage('advdoc-close','*')">إغلاق</button></div><div class="pg">
+<div class="hd"><div class="co"><b>${esc(ent)}</b><span>إدارة الموارد البشرية والشؤون المالية</span></div><div class="stamp">${stamp[0]}</div></div>
+<div class="ttl"><h1>نموذج طلب سلفة على الراتب</h1><div>SALARY ADVANCE REQUEST FORM · HR-ADV-01</div></div>
+<div class="meta"><span>رقم الطلب: <b dir="ltr" style="white-space:nowrap">${advRef(a)}</b></span><span>تاريخ التقديم: <b>${dt(a.created_at)}</b></span></div>
+<h2>أولاً: بيانات الموظف</h2><table><tr><th>الاسم</th><td>${esc(a.emp_name||e.name||'')}</td><th>المسمى الوظيفي</th><td>${esc(e.job||'—')}</td></tr>
+<tr><th>الفرع</th><td>${esc(brById(a.branch).name)}</td><th>الراتب الشهري</th><td class="n">${e.salary!=null?fmt(e.salary)+' ر.س':'—'}</td></tr></table>
+<h2>ثانياً: تفاصيل السلفة</h2><table><tr><th>مبلغ السلفة</th><td colspan="3"><span class="amt n">${fmt(a.amount)} ر.س</span><div class="words">فقط ${tafqit(a.amount)} ريال سعودي لا غير</div></td></tr>
+<tr><th>مدة السداد</th><td>${moTxt(+a.months)}</td><th>القسط الشهري</th><td class="n">${fmt(mo,2)} ر.س</td></tr>
+<tr><th>سبب الطلب</th><td colspan="3">${esc(a.reason||'—')}</td></tr></table>
+<h2>ثالثاً: جدول الخصم من الراتب</h2><table class="sch"><tr><th>القسط</th><th>راتب شهر</th><th>المبلغ (ر.س)</th><th>الحالة</th></tr>${sch}
+<tr><th colspan="2">الإجمالي</th><th class="n">${fmt(a.amount)}</th><th>${st==='approved'?'المتبقي '+fmt(c.rem):''}</th></tr></table>
+<h2>رابعاً: إقرار الموظف</h2><div class="ack">أقر أنا الموظف المذكور أعلاه بأن المبلغ الموضح سلفة على راتبي، وأوافق على خصمه من راتبي الشهري وفق الجدول أعلاه، وفي حال انتهاء خدمتي لأي سبب قبل اكتمال السداد يحق للشركة خصم المبلغ المتبقي من مستحقاتي النهائية.</div>
+<h2>خامساً: الاعتمادات</h2><div class="sgs">${sign('مقدّم الطلب',a.requested_by||a.emp_name,a.created_at,true)}${sign('مدير الفرع',a.mgr_by,a.mgr_at,!!a.mgr_at)}${sign('الاعتماد النهائي',a.own_by,a.own_at,!!a.own_at)}</div>
+${a.mgr_note||a.own_note?`<div style="margin-top:8px;font-size:11.5px;color:#555">ملاحظات: ${esc([a.mgr_note,a.own_note].filter(Boolean).join(' — '))}</div>`:''}
+<div class="ft"><span>مستند إلكتروني صادر من منصة الإدارة الموحّدة · unifiedplatform.app</span><span>${advRef(a)}</span></div></div></body></html>`;
+}
+function openAdvDoc(a,e){
+  const m=document.createElement('div'); m.style.cssText='position:fixed;inset:0;z-index:90;background:#fff';
+  m.innerHTML='<iframe style="border:0;width:100%;height:100%" title="نموذج السلفة"></iframe>'; document.body.appendChild(m);
+  m.querySelector('iframe').srcdoc=advDoc(a,e);
+  const cl=ev=>{if(ev.data==='advdoc-close'){m.remove();window.removeEventListener('message',cl);}}; window.addEventListener('message',cl);
 }
 V.me=async()=>{
   const [m,A]=await Promise.all([sb.rpc('my_emp'),sb.from('advances').select('*').order('created_at',{ascending:false})]);
@@ -1025,18 +1125,20 @@ V.me=async()=>{
       <div><div style="font-size:11px;opacity:.75">مدة الخدمة</div><b style="font-size:14px">${sv>=12?Math.floor(sv/12)+' سنة'+(sv%12?' و'+(sv%12)+' شهر':''):sv+' شهر'}</b></div>
       <div><div style="font-size:11px;opacity:.75">السلف المتبقية</div><b class="num" style="font-size:15px">${fmt(rem)}</b></div></div></div>`;
   if(e.has_health&&e.health_exp){const d=flDays(e.health_exp); if(d!=null&&d<=30) h+=`<div class="note bad">🪪 شهادتك الصحية ${d<0?'منتهية منذ '+(-d)+' يوم':'تنتهي بعد '+d+' يوم'} (${dLbl(e.health_exp)}) — جدّدها وبلّغ مديرك.</div>`;}
-  if(st.advNew) h+=advForm(null,+e.salary||0);
+  st._advMe=e; st._advList=adv;
+  if(st.advNew) h+=advForm(null,+e.salary||0,e);
   else if(!pend) h+=`<button class="btn" data-advn="1" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:14px">💵 طلب سلفة جديدة</button>`;
-  else h+=`<div class="card" style="border-inline-start:4px solid var(--gold)"><div class="bar-row"><b>طلبك الحالي · ${fmt(pend.amount)} ر.س</b>${advPill(pend)}</div><div class="muted" style="font-size:12px;margin-top:4px">يُسدد على ${pend.months} ${pend.months>2?'أشهر':pend.months===2?'شهرين':'شهر'} · ${fmt(+pend.amount/pend.months)} شهرياً</div>${advSteps(pend)}<button class="btn ghost sm" data-advc="${pend.id}" style="margin-top:10px">إلغاء الطلب</button></div>`;
-  if(act.length) h+=`<div class="card"><h3>سلفي القائمة <small>يُخصم ${fmt(mo)} شهرياً</small></h3>${act.map(a=>{const c=advCalc(a);return `<div style="padding:8px 0;border-bottom:1px solid var(--line)"><div class="bar-row"><b class="num">${fmt(a.amount)} ر.س</b><span class="muted" style="font-size:12px">${c.done} من ${a.months} قسط</span></div><div class="meter" style="margin:6px 0"><i style="width:${(c.done/a.months*100).toFixed(0)}%;background:var(--green)"></i></div><div class="bar-row" style="font-size:12px"><span class="muted">يبدأ الخصم من راتب ${monLbl(a.start_month)}</span><span>متبقي <b class="num">${fmt(c.rem)}</b></span></div></div>`;}).join('')}</div>`;
+  else h+=`<div class="card" style="border-inline-start:4px solid var(--gold)"><div class="advref">${advRef(pend)}</div><div class="bar-row"><b>طلبك الحالي · ${fmt(pend.amount)} ر.س</b>${advPill(pend)}</div><div class="muted" style="font-size:12px;margin-top:4px">يُسدد على ${pend.months} ${pend.months>2?'أشهر':pend.months===2?'شهرين':'شهر'} · ${fmt(+pend.amount/pend.months)} شهرياً</div>${advSteps(pend)}<div style="display:flex;gap:8px;margin-top:10px"><button class="btn ghost sm" data-advdoc="${pend.id}">📄 عرض النموذج</button><button class="btn ghost sm" data-advc="${pend.id}">إلغاء الطلب</button></div></div>`;
+  if(act.length) h+=`<div class="card"><h3>سلفي القائمة <small>يُخصم ${fmt(mo)} شهرياً</small></h3>${act.map(a=>{const c=advCalc(a);return `<div style="padding:8px 0;border-bottom:1px solid var(--line)"><div class="bar-row"><b class="num">${fmt(a.amount)} ر.س</b><span class="muted" style="font-size:12px">${c.done} من ${a.months} قسط</span></div><div class="meter" style="margin:6px 0"><i style="width:${(c.done/a.months*100).toFixed(0)}%;background:var(--green)"></i></div><div class="bar-row" style="font-size:12px"><span class="muted">يبدأ الخصم من راتب ${monLbl(a.start_month)}</span><span>متبقي <b class="num">${fmt(c.rem)}</b></span></div><button class="btn ghost sm" data-advdoc="${a.id}" style="margin-top:6px">📄 النموذج</button></div>`;}).join('')}</div>`;
   const past=adv.filter(a=>a!==pend&&!act.includes(a));
-  if(past.length) h+=`<div class="card"><h3>سجل الطلبات</h3>${past.map(a=>`<div class="bar-row" style="padding:8px 0;border-bottom:1px solid var(--line)"><span><b class="num">${fmt(a.amount)}</b> <span class="muted" style="font-size:12px">· ${dLbl(String(a.created_at).slice(0,10))}</span>${a.own_note||a.mgr_note?`<div class="muted" style="font-size:11.5px">${esc(a.own_note||a.mgr_note)}</div>`:''}</span>${advPill(a)}</div>`).join('')}</div>`;
+  if(past.length) h+=`<div class="card"><h3>سجل الطلبات</h3>${past.map(a=>`<div class="bar-row" style="padding:8px 0;border-bottom:1px solid var(--line)" data-advdoc="${a.id}"><span><span class="advref">${advRef(a)}</span><br><b class="num">${fmt(a.amount)}</b> <span class="muted" style="font-size:12px">· ${dLbl(String(a.created_at).slice(0,10))}</span>${a.own_note||a.mgr_note?`<div class="muted" style="font-size:11.5px">${esc(a.own_note||a.mgr_note)}</div>`:''}</span>${advPill(a)}</div>`).join('')}</div>`;
   h+=`<div class="muted" style="font-size:12px;text-align:center">الطلب يمر على مدير الفرع ثم الاعتماد النهائي، ويوصلك إشعار بالنتيجة.</div>`;
   return h;
 };
 V.advances=async()=>{
   const [A,E,AC]=await Promise.all([sb.from('advances').select('*').order('created_at',{ascending:false}).limit(300),sb.from('employees').select('id,name,branch,salary,phone,status,job').neq('status','left').order('name'),sb.from('emp_accounts').select('emp_id,phone')]);
   if(A.error&&/relation|schema cache|does not exist/i.test(A.error.message)) return `<div class="card empty">ميزة السلف تحتاج تشغيل ملف advances.sql في Supabase أولاً</div>`;
+  st._advList=A.data||[]; st._advEmps=E.data||[];
   const adv=A.data||[], emps=E.data||[], acc=Object.fromEntries((AC.data||[]).map(x=>[x.emp_id,x.phone]));
   const fb=st.advF||'all'; const inB=x=>fb==='all'||x.branch===fb;
   const mine=adv.filter(a=>inB(a)&&(a.status==='pending_mgr'||(isAdmin()&&a.status==='pending_owner')));
@@ -1050,14 +1152,14 @@ V.advances=async()=>{
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;border-top:1px solid rgba(255,255,255,.15);padding-top:10px;text-align:center"><div><div style="font-size:11px;opacity:.75">موظفين عليهم سلف</div><b class="num">${new Set(act.map(a=>a.emp_id)).size}</b></div><div><div style="font-size:11px;opacity:.75">خصم شهري</div><b class="num">${fmt(mo)}</b></div><div><div style="font-size:11px;opacity:.75">بانتظارك</div><b class="num" style="color:${mine.length?'#FFB4A8':'#fff'}">${mine.length}</b></div></div></div>`;
   h+=`<div class="muted" style="font-size:12px;margin:-4px 2px 4px">طلب السلفة يكون من الموظف نفسه من حسابه في التطبيق — فعّل له حساب من القائمة تحت.</div>`;
   if(mine.length) h+=`<div class="card"><h3>بانتظار موافقتك</h3>${mine.map(a=>{const e=emps.find(x=>x.id===a.emp_id)||{};const prev=adv.filter(x=>x.emp_id===a.emp_id&&x.status==='approved'&&advCalc(x).rem>0);
-    return `<div style="padding:10px 0;border-bottom:1px solid var(--line)"><div class="bar-row"><b>${esc(a.emp_name)}</b>${advPill(a)}</div>
+    return `<div style="padding:10px 0;border-bottom:1px solid var(--line)"><div class="advref">${advRef(a)}</div><div class="bar-row"><b>${esc(a.emp_name)}</b>${advPill(a)}</div>
       <div style="font-size:13px;margin-top:4px"><b class="num">${fmt(a.amount)} ر.س</b> على ${a.months} ${a.months>2?'أشهر':a.months===2?'شهرين':'شهر'} · ${fmt(+a.amount/a.months)} شهرياً</div>
       <div class="muted" style="font-size:12px">${esc(brById(a.branch).name)} · الراتب ${fmt(e.salary)}${AD&&prev.length?` · <span class="down">عليه سلفة قائمة ${fmt(prev.reduce((t,x)=>t+advCalc(x).rem,0))}</span>`:''}</div>
       ${a.reason?`<div style="font-size:12.5px;margin-top:4px">«${esc(a.reason)}»</div>`:''}${a.mgr_by&&a.status==='pending_owner'?`<div class="muted" style="font-size:11.5px">وافق ${esc(a.mgr_by)}${a.mgr_note?' — '+esc(a.mgr_note):''}</div>`:''}
-      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">${a.status==='pending_owner'||isAdmin()?`<select class="inp" data-advs="${a.id}" style="width:auto;min-height:34px;padding:4px 8px;font-size:12.5px">${[0,1,2].map(i=>{const [cy,cm]=curMon().split('-').map(Number);const t=cy*12+cm-1+i;const k=Math.floor(t/12)+'-'+String(t%12+1).padStart(2,'0');return `<option value="${k}" ${i===1?'selected':''}>الخصم من ${monLbl(k)}</option>`;}).join('')}</select>`:''}<button class="btn sm" data-advok="${a.id}">موافقة ✓</button><button class="btn ghost sm" data-advno="${a.id}" style="color:var(--down)">رفض</button></div></div>`;}).join('')}</div>`;
-  if(AD&&act.length) h+=`<div class="card"><h3>السلف القائمة</h3>${act.map(a=>{const c=advCalc(a);return `<div style="padding:8px 0;border-bottom:1px solid var(--line)"><div class="bar-row"><b>${esc(a.emp_name)}</b><b class="num">${fmt(c.rem)}</b></div><div class="meter" style="margin:5px 0"><i style="width:${(c.done/a.months*100).toFixed(0)}%;background:${brById(a.branch).color}"></i></div><div class="bar-row muted" style="font-size:11.5px"><span>${esc(brById(a.branch).name)} · ${fmt(a.amount)} على ${a.months} أشهر</span><span>${fmt(c.mo)} شهرياً من ${monLbl(a.start_month)}</span></div></div>`;}).join('')}</div>`;
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">${a.status==='pending_owner'||isAdmin()?`<select class="inp" data-advs="${a.id}" style="width:auto;min-height:34px;padding:4px 8px;font-size:12.5px">${[0,1,2].map(i=>{const [cy,cm]=curMon().split('-').map(Number);const t=cy*12+cm-1+i;const k=Math.floor(t/12)+'-'+String(t%12+1).padStart(2,'0');return `<option value="${k}" ${i===1?'selected':''}>الخصم من ${monLbl(k)}</option>`;}).join('')}</select>`:''}<button class="btn sm" data-advok="${a.id}">موافقة ✓</button><button class="btn ghost sm" data-advno="${a.id}" style="color:var(--down)">رفض</button><button class="btn ghost sm" data-advdoc="${a.id}">📄 النموذج</button></div></div>`;}).join('')}</div>`;
+  if(AD&&act.length) h+=`<div class="card"><h3>السلف القائمة</h3>${act.map(a=>{const c=advCalc(a);return `<div style="padding:8px 0;border-bottom:1px solid var(--line);cursor:pointer" data-advdoc="${a.id}"><div class="bar-row"><b>${esc(a.emp_name)}</b><b class="num">${fmt(c.rem)}</b></div><div class="meter" style="margin:5px 0"><i style="width:${(c.done/a.months*100).toFixed(0)}%;background:${brById(a.branch).color}"></i></div><div class="bar-row muted" style="font-size:11.5px"><span>${esc(brById(a.branch).name)} · ${fmt(a.amount)} على ${a.months} أشهر</span><span>${fmt(c.mo)} شهرياً من ${monLbl(a.start_month)}</span></div></div>`;}).join('')}</div>`;
   const hist=adv.filter(a=>inB(a)&&!mine.includes(a)&&!act.includes(a)).slice(0,30);
-  if(AD&&hist.length) h+=`<div class="card"><h3>آخر الطلبات</h3>${hist.map(a=>`<div class="bar-row" style="padding:7px 0;border-bottom:1px solid var(--line)"><span><b>${esc(a.emp_name)}</b> <span class="num">${fmt(a.amount)}</span> <span class="muted" style="font-size:11.5px">· ${dLbl(String(a.created_at).slice(0,10))}</span></span>${advPill(a)}</div>`).join('')}</div>`;
+  if(AD&&hist.length) h+=`<div class="card"><h3>آخر الطلبات</h3>${hist.map(a=>`<div class="bar-row" style="padding:7px 0;border-bottom:1px solid var(--line);cursor:pointer" data-advdoc="${a.id}"><span><b>${esc(a.emp_name)}</b> <span class="num">${fmt(a.amount)}</span> <span class="muted" style="font-size:11.5px">· ${dLbl(String(a.created_at).slice(0,10))}</span></span>${advPill(a)}</div>`).join('')}</div>`;
   // دخول الموظفين
   const list=emps.filter(inB);
   h+=`<div class="card"><h3>دخول الموظفين للتطبيق <small>${Object.keys(acc).length} حساب</small></h3><div class="muted" style="font-size:12px;margin-bottom:8px">الموظف يدخل برقم جواله ورمز من 6 أرقام، ويشوف بياناته وسلفه ويطلب سلفة.</div>
@@ -1075,7 +1177,9 @@ function shareCred(name,phone,pin){
   document.body.appendChild(m);
 }
 document.addEventListener('click',async e=>{
-  const t=e.target.closest('[data-advn],[data-advx],[data-advc],[data-advf],[data-advok],[data-advno],[data-eanew],[data-eapin],[data-eadel]'); if(!t||!$('#view').contains(t)) return; const d=t.dataset;
+  const t=e.target.closest('[data-advdoc],[data-advp],[data-advn],[data-advx],[data-advc],[data-advf],[data-advok],[data-advno],[data-eanew],[data-eapin],[data-eadel]'); if(!t||!$('#view').contains(t)) return; const d=t.dataset;
+  if(d.advdoc){const a=(st._advList||[]).find(x=>String(x.id)===d.advdoc);if(!a)return;const em=st._advMe&&!st._advEmps?st._advMe:(st._advEmps||[]).find(x=>x.id===a.emp_id);openAdvDoc(a,em);return;}
+  if(d.advp){const f=$('#advForm');const sel=f.emp;const sal=sel?(sel.selectedOptions[0]?+sel.selectedOptions[0].dataset.sal||0:0):(+f.amount.max||0);if(!sal){toast('اختر الموظف أولاً');return;}f.amount.value=Math.floor(sal*(+d.advp)/100);f.dispatchEvent(new Event('input',{bubbles:true}));return;}
   if(d.advn){st.advNew=true;await render();const f=$('#advFormCard');if(f)f.scrollIntoView({behavior:'smooth'});return;}
   if(d.advx){st.advNew=false;render();return;}
   if(d.advf){st.advF=d.advf;render();return;}
@@ -1087,15 +1191,18 @@ document.addEventListener('click',async e=>{
   if(d.eapin){if(!confirm('إنشاء رمز جديد للموظف؟ الرمز القديم يتوقف.'))return;const pin=genPin();const r=await sb.rpc('emp_set_pin',{p_emp:d.eapin,p_pin:pin});if(r.error){toast('تعذّر: '+r.error.message);return;}const row=t.closest('.bar-row');shareCred(row.querySelector('b').textContent,(row.querySelector('[dir=ltr]')||{}).textContent||'',pin);return;}
   if(d.eadel){if(!confirm('حذف حساب دخول الموظف؟ بياناته وسلفه تبقى.'))return;const r=await sb.rpc('emp_account_delete',{p_emp:d.eadel});if(r.error){toast('تعذّر: '+r.error.message);return;}toast('تم حذف الحساب');render();}
 });
-document.addEventListener('input',e=>{ if(!e.target.closest||!e.target.closest('#advForm')) return; const f=$('#advForm'); const amt=+f.amount.value||0, mo=+f.months.value||1; const sel=f.emp; const sal=sel&&sel.selectedOptions[0]?+sel.selectedOptions[0].dataset.sal||0:(+f.amount.max||0);
-  $('#advCalc').innerHTML=(amt?`القسط الشهري: <b>${fmt(amt/mo)}</b> ر.س`:'')+(sal?` <span class="${amt>sal?'down':'muted'}">· الحد الأعلى راتب شهر: ${fmt(sal)}</span>`:''); });
+document.addEventListener('input',e=>{ if(!e.target.closest||!e.target.closest('#advForm')) return; const f=$('#advForm'); const amt=+f.amount.value||0, mo=+f.months.value||1; const sel=f.emp; const sal=sel?(sel.selectedOptions[0]?+sel.selectedOptions[0].dataset.sal||0:0):(+f.amount.max||0);
+  if(sel){f.amount.max=sal||'';$('#advMax').textContent=sal?`الحد الأعلى: راتب شهر واحد (${fmt(sal)} ر.س)`:'الحد الأعلى: راتب شهر واحد';}
+  const over=sal&&amt>sal, nm=$('#advNm').value;
+  $('#advCalc').innerHTML=!amt?'<div class="muted" style="font-size:12px">اكتب المبلغ ليظهر جدول الخصم</div>':over?`<div class="down" style="font-size:12.5px">المبلغ أعلى من الحد المسموح (${fmt(sal)} ر.س)</div>`:
+    `<div class="bar-row"><span style="font-size:12.5px">القسط الشهري</span><b class="num">${fmt(amt/mo,amt%mo?2:0)} <small style="font-size:12px">ر.س</small></b></div><div class="muted" style="font-size:11.5px">يبدأ الخصم المتوقع من راتب ${monLbl(nm)} — يحدده المعتمد عند الموافقة</div><div class="afm-sch">${Array.from({length:mo},(_,i)=>`<span>${monLbl(nextMon(nm,i))}</span>`).join('')}</div>`; });
 document.addEventListener('change',e=>{ const f=e.target.closest&&e.target.closest('#advForm'); if(f) f.dispatchEvent(new Event('input',{bubbles:true})); });
 document.addEventListener('submit',async e=>{
-  if(e.target.id!=='advForm') return; e.preventDefault(); const f=e.target; const amt=+f.amount.value, mo=+f.months.value, rs=f.reason.value.trim(), emp=f.emp?f.emp.value:null;
-  if(f.emp&&!emp){$('#advErr').textContent='اختر الموظف';return;} if(!amt||amt<=0){$('#advErr').textContent='اكتب المبلغ';return;}
+  if(e.target.id!=='advForm') return; e.preventDefault(); const f=e.target; const amt=+f.amount.value, mo=+f.months.value, rs=[f.rcat.value,f.reason.value.trim()].filter(Boolean).join(' — '), emp=f.emp?f.emp.value:null;
+  if(f.emp&&!emp){$('#advErr').textContent='اختر الموظف';return;} if(!amt||amt<=0){$('#advErr').textContent='اكتب المبلغ';return;} if(f.amount.max&&amt>+f.amount.max){$('#advErr').textContent='المبلغ أعلى من الحد المسموح';return;} if(!f.rcat.value){$('#advErr').textContent='اختر سبب الطلب';return;} if(!f.ack.checked){$('#advErr').textContent='يلزم الموافقة على الإقرار';return;}
   const b=$('#advSend'); b.disabled=true; b.textContent='جارِ الإرسال…';
   const r=await sb.rpc('adv_request',{p_amount:amt,p_months:mo,p_reason:rs,p_emp:emp||null});
-  b.disabled=false; b.textContent='إرسال الطلب';
+  b.disabled=false; b.textContent='تقديم الطلب';
   if(r.error){$('#advErr').textContent=/function|schema cache/i.test(r.error.message)?'الميزة تحتاج تشغيل ملف advances.sql أولاً':r.error.message;return;}
   st.advNew=false; st._alertsAt=0; toast(emp?'تم تسجيل السلفة ✓':'تم إرسال طلبك ✓ — يوصلك إشعار بالنتيجة'); render();
 });
