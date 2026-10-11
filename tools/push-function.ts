@@ -3,7 +3,13 @@
 import webpush from "npm:web-push@3.6.7";
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 
-const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
+function serverKey(): string {
+  const e = Deno.env;
+  let k = e.get("SUPABASE_SERVICE_ROLE_KEY") || e.get("SUPABASE_SECRET_KEY") || "";
+  if (!k) { try { const o = JSON.parse(e.get("SUPABASE_SECRET_KEYS") || "{}"); k = o.default || Object.values(o)[0] as string || ""; } catch (_) { /* */ } }
+  return k;
+}
+const sb = createClient(Deno.env.get("SUPABASE_URL")!, serverKey(), {
   auth: { persistSession: false },
 });
 const cors = {
