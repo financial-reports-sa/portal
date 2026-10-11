@@ -324,6 +324,17 @@ body.hasnav .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 .pushbox{display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#FBF5E1,#F6ECC8);border:1px solid #EAD9A0;border-radius:14px;padding:10px 12px;font-size:12px;color:#5E4B12;margin-bottom:8px}.pushbox b{font-size:13.5px;color:#3E2F05;display:block}
 .pclose{border:0;background:none;font-size:20px;color:#9A7B12;cursor:pointer;padding:0 4px}.pushok{font-size:12px;color:var(--up);background:rgba(31,161,107,.08);border-radius:10px;padding:7px 10px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
 .lnk{border:0;background:none;color:var(--green);font-weight:700;text-decoration:underline;cursor:pointer;font:inherit}
+.mt[data-mtopen]{cursor:pointer}.mt[data-mtopen]:active{background:var(--bg)}
+#mtdet{position:fixed;inset:0;z-index:70;background:var(--bg);display:flex;flex-direction:column}
+.mtd-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--card);border-bottom:1px solid var(--line);font-family:var(--f-disp)}
+.mtd-bar .icb{font-size:24px;width:36px;height:36px}
+.mtd-body{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:12px;max-width:760px;width:100%;margin:0 auto}
+.mtd-body>*{flex:none}.mtd-txt{font-size:14px;line-height:1.8;margin-top:8px;background:var(--bg);border-radius:10px;padding:10px 12px}
+.mtd-ph{display:grid;grid-template-columns:1fr 1fr;gap:10px}.mtd-ph figure{margin:0}.mtd-ph img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;cursor:zoom-in;border:1px solid var(--line)}.mtd-ph figcaption{font-size:11.5px;color:var(--muted);text-align:center;margin-top:4px}
+.mtd-ph:has(figure:only-child){grid-template-columns:1fr}.mtd-ph figure:only-child img{aspect-ratio:auto;max-height:420px}
+.mtd-kv{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}.mtd-kv div{background:var(--card);padding:8px 10px}.mtd-kv span{display:block;font-size:11px;color:var(--muted)}.mtd-kv b{font-size:13px}
+.mtd-log{list-style:none;margin:0;padding:0}.mtd-log li{display:flex;gap:10px;padding:8px 0;position:relative}.mtd-log li i{flex:none;width:10px;height:10px;border-radius:50%;background:var(--green);margin-top:6px}.mtd-log li:not(:last-child):after{content:"";position:absolute;right:4px;top:20px;bottom:-4px;width:2px;background:var(--line)}
+.mtd-act{display:flex;flex-wrap:wrap;gap:8px;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:var(--card);border-top:1px solid var(--line);justify-content:center}
 </style>
 </head>
 <body>
@@ -431,7 +442,7 @@ const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'rep',n
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup'];
-const APP_VER='49';
+const APP_VER='50';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -1325,7 +1336,7 @@ function mtRow(m,R){
   if(R==='admin') more+=`<button class="btn ghost sm" data-mtdel="${m.id}" style="color:var(--down)">حذف</button>`;
   const dc=['closed','done'].includes(m.status)?(mtInSla(m)?'ok':'x'):!work?'':late?'x':h>sla*.7?'w':'';
   const dl=['closed','done'].includes(m.status)?'مدة الإنجاز':!work?'':late?'متأخر':'منذ الرفع';
-  return `<div class="mt"><div class="mt-top"><div class="mt-ic">${mtIc(m.category)}</div><div style="flex:1;min-width:0">
+  return `<div class="mt" data-mtopen="${m.id}"><div class="mt-top"><div class="mt-ic">${mtIc(m.category)}</div><div style="flex:1;min-width:0">
     <div class="advref">${mtRef(m)} · ${esc(m.category)} · <span style="color:${m.priority==='urgent'?'var(--down)':m.priority==='high'?'var(--warn)':'inherit'}">${(MT_PR[m.priority]||MT_PR.normal)[0]}</span></div>
     <b style="font-size:14.5px">${esc(m.title)}</b>
     <div class="mt-m">${esc(brById(m.branch).name)} · ${esc(m.requested_by||'')} · ${dLbl(String(m.created_at).slice(0,10))}</div>
@@ -1371,6 +1382,34 @@ V.maint=async()=>{
   h+=`<div class="muted" style="font-size:12px;text-align:center;line-height:1.8">دورة الطلب: رفع ← مراجعة وإسناد ← تنفيذ ← إنجاز ← تأكيد الفرع<br>مهلة الإنجاز: عاجل 24 ساعة · عالي 3 أيام · عادي 7 أيام</div>`;
   return h;
 };
+
+function mtDetail(m){
+  const R=mtRole(), work=mtWork(m), h=mtHrs(m), sla=mtSla(m), late=mtLate(m);
+  const dt=x=>x?new Date(x).toLocaleString('ar-SA-u-ca-gregory-nu-latn',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'—';
+  const row=(k,v)=>v?`<div><span>${k}</span><b>${v}</b></div>`:'';
+  const card=mtRow(m,R); const tmp=document.createElement('div'); tmp.innerHTML=card;
+  const acts=[...tmp.querySelectorAll('.mt-a')].map(x=>x.innerHTML).join('').replace(/data-mtph="[^"]*"/,'hidden');
+  const lg=(m.log||[]).slice().reverse().map(x=>`<li><i></i><div><b>${MT_ACT[x.a]||x.a}</b> <span class="muted">· ${esc(x.by||'')}</span><div class="muted" style="font-size:11.5px">${dt(x.t)}</div>${x.as?`<div style="font-size:12.5px">المنفّذ: ${esc(x.as)}</div>`:''}${x.n?`<div style="font-size:12.5px">«${esc(x.n)}»</div>`:''}${x.rt?`<div style="color:var(--gold-ink)">${'★'.repeat(x.rt)}</div>`:''}</div></li>`).join('');
+  const w=document.createElement('div'); w.id='mtdet'; document.body.style.overflow='hidden';
+  w.innerHTML=`<div class="mtd-bar"><button class="icb" data-mtclose="1" aria-label="رجوع">›</button><b>${mtRef(m)}</b><span style="width:36px"></span></div>
+  <div class="mtd-body">
+    <div class="card" style="gap:6px"><div class="mt-top"><div class="mt-ic">${mtIc(m.category)}</div><div style="flex:1;min-width:0"><div class="advref">${esc(m.category)} · <span style="color:${m.priority==='urgent'?'var(--down)':m.priority==='high'?'var(--warn)':'inherit'}">${(MT_PR[m.priority]||MT_PR.normal)[0]}</span></div><b style="font-size:17px;line-height:1.5">${esc(m.title)}</b><div style="margin-top:6px">${mtPill(m.status)}</div></div></div>
+      ${mtSteps(m)}
+      ${m.details?`<div class="mtd-txt">${esc(m.details)}</div>`:'<div class="muted" style="font-size:12.5px;margin-top:6px">لا توجد تفاصيل إضافية</div>'}</div>
+    <div class="card"><h3 style="font-size:14px">الصور</h3><div id="mtdph" class="mtd-ph"><div class="muted" style="font-size:12.5px">${m.has_photo?'جارِ تحميل الصور…':'📷 لم يُرفق صورة مع هذا الطلب'}</div></div></div>
+    <div class="card"><h3 style="font-size:14px">بيانات الطلب</h3><div class="mtd-kv">
+      ${row('الفرع',esc(brById(m.branch).name))}${row('مقدّم الطلب',esc(m.requested_by||''))}${row('تاريخ الرفع',dt(m.created_at))}
+      ${row(['done','closed'].includes(m.status)?'مدة الإنجاز':'مضى على الطلب',hrsTxt(h))}${row('مهلة الإنجاز',work?(late?`<span class="down">تجاوز بـ ${hrsTxt(h-sla)}</span>`:`متبقي ${hrsTxt(sla-h)}`):(m.done_at?(mtInSla(m)?'<span class="up">ضمن المهلة</span>':'<span class="down">تجاوز المهلة</span>'):''))}
+      ${row('المنفّذ',esc(m.assignee||''))}${row('الموعد المتوقع',m.due_date?dLbl(m.due_date):'')}${row('بدء التنفيذ',m.started_at?dt(m.started_at):'')}
+      ${row('تاريخ الإنجاز',m.done_at?dt(m.done_at):'')}${row('التكلفة',m.cost?fmt(m.cost)+' ر.س':'')}${row('تقييم الفرع',m.rating?'★'.repeat(m.rating)+'☆'.repeat(5-m.rating):'')}
+    </div>${m.hold_reason&&m.status==='hold'?`<div class="mt-n h">⏸ سبب التعليق: ${esc(m.hold_reason)}</div>`:''}${m.reject_reason?`<div class="mt-n" style="background:rgba(208,69,58,.08)">✕ ${m.status==='rejected'?'سبب الرفض':'سبب رفض الإنجاز'}: ${esc(m.reject_reason)}</div>`:''}${m.sup_note?`<div class="mt-n d">تقرير الإنجاز: ${esc(m.sup_note)}</div>`:''}</div>
+    ${lg?`<div class="card"><h3 style="font-size:14px">سجل الإجراءات</h3><ul class="mtd-log">${lg}</ul></div>`:''}
+  </div>${acts?`<div class="mtd-act">${acts}</div>`:''}`;
+  document.body.appendChild(w);
+  if(m.has_photo) sb.rpc('maint_photos',{p_id:m.id}).then(r=>{const p=r.data||{};const el=$('#mtdph');if(!el)return;const ims=[[p.photo,'صورة المشكلة'],[p.done_photo,'بعد الإصلاح']].filter(x=>x[0]);
+    el.innerHTML=ims.length?ims.map(([s,l])=>`<figure><img src="${s}" alt="${l}" data-mtzoom="1"><figcaption>${l}</figcaption></figure>`).join(''):'<div class="muted" style="font-size:12.5px">📷 لم يُرفق صورة مع هذا الطلب</div>';});
+  w.addEventListener('click',ev=>{const z=ev.target.closest('[data-mtzoom]');if(!z)return;const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:95;background:rgba(0,0,0,.92);display:grid;place-items:center;padding:12px';o.innerHTML=`<img src="${z.src}" style="max-width:100%;max-height:92vh;border-radius:10px">`;o.onclick=()=>o.remove();document.body.appendChild(o);});
+}
 function mtDoc(m){
   const dt=x=>x?new Date(x).toLocaleString('ar-SA-u-ca-gregory-nu-latn',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
   const pr=MT_PR[m.priority]||MT_PR.normal, stx=(MT_ST[m.status]||[m.status])[0];
@@ -1411,7 +1450,10 @@ function mtAsk(title,fields,sub){return new Promise(res=>{const m=document.creat
   f.addEventListener('submit',async e=>{e.preventDefault();const o={};for(const x of fields){const el=f.elements[x.name];o[x.name]=x.type==='file'?(el.files[0]?await flImg(el.files[0],1100,.72):null):el.value.trim();}m.remove();res(o);});
   document.body.appendChild(m);setTimeout(()=>{const i=f.querySelector('input:not([type=file]):not([type=hidden]),textarea');if(i)i.focus();},50);});}
 document.addEventListener('click',async e=>{
-  const t=e.target.closest('[data-mtn],[data-mtx],[data-mtb],[data-mtt],[data-mtst],[data-mtph],[data-mtdel],[data-mtdoc]'); if(!t||!$('#view').contains(t)) return; const d=t.dataset;
+  const t=e.target.closest('[data-mtn],[data-mtx],[data-mtb],[data-mtt],[data-mtst],[data-mtph],[data-mtdel],[data-mtdoc],[data-mtopen],[data-mtclose]'); if(!t||!($('#view').contains(t)||t.closest('#mtdet'))) return; const d=t.dataset;
+  if(d.mtclose){const w=$('#mtdet');if(w)w.remove();document.body.style.overflow='';return;}
+  if(d.mtopen){const m=(st._mtList||[]).find(x=>String(x.id)===d.mtopen);if(m)mtDetail(m);return;}
+  if(t.closest('#mtdet')&&(d.mtst||d.mtdel)){const w=$('#mtdet');if(w)w.remove();document.body.style.overflow='';}
   if(d.mtn){st.mtNew=true;await render();const f=$('#mtFormCard');if(f)f.scrollIntoView({behavior:'smooth'});return;}
   if(d.mtx){st.mtNew=false;render();return;}
   if(d.mtb){st.mtB=d.mtb;render();return;}
