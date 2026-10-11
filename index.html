@@ -301,6 +301,19 @@ body.hasnav .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 .afm-ft{display:flex;gap:8px;border-top:1px solid var(--line);padding:12px 18px;background:var(--bg)}
 .afm-ft .btn:first-child{flex:1}
 .advref{font-family:var(--f-disp);font-size:10.5px;color:var(--muted);letter-spacing:.4px}
+.mt{padding:12px 0;border-bottom:1px solid var(--line)}.mt:last-child{border:0}
+.mt-top{display:flex;gap:10px;align-items:flex-start}.mt-ic{flex:none;width:40px;height:40px;border-radius:11px;background:var(--gold-soft);display:grid;place-items:center;font-size:20px}
+.mt-d{flex:none;text-align:center;min-width:62px;max-width:76px;border-radius:10px;padding:5px 6px;background:var(--chip)}.mt-d b{display:block;font-family:var(--f-disp);font-size:19px;line-height:1.1}.mt-d small{font-size:10px;color:var(--muted)}
+.mt-d.w{background:#FDF3DC}.mt-d.w b{color:var(--warn)}.mt-d.x{background:rgba(208,69,58,.1)}.mt-d.x b{color:var(--down)}.mt-d.ok{background:rgba(31,161,107,.1)}.mt-d.ok b{color:var(--up)}
+.mt-m{font-size:11.5px;color:var(--muted);margin-top:2px}.mt-n{font-size:12.5px;margin-top:6px;padding:7px 10px;border-radius:8px;background:var(--chip)}
+.mt-n.h{background:#FDF3DC;color:#7A5A06}.mt-n.d{background:rgba(31,161,107,.08)}
+.mt-a{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.urg{background:rgba(208,69,58,.12);color:var(--down);font-weight:700}
+.cats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.cats label input{position:absolute;opacity:0;pointer-events:none}.cats label{position:relative}
+.cats span{display:block;text-align:center;border:1px solid var(--line);border-radius:10px;padding:8px 2px;font-size:11.5px;cursor:pointer;background:var(--card)}.cats span i{display:block;font-style:normal;font-size:20px}
+.cats input:checked+span{border-color:#1E5A3E;background:#EAF3EE;font-weight:700}
+.mt-st{display:flex;gap:4px;margin-top:10px}.mt-st div{flex:1;text-align:center;font-size:9.5px;color:var(--muted)}.mt-st i{display:block;height:4px;border-radius:99px;background:var(--chip);margin-bottom:3px}
+.mt-st .ok i{background:var(--up)}.mt-st .ok{color:var(--fg)}.mt-st .cur i{background:#2F67B0}.mt-st .cur{color:#2F67B0;font-weight:700}.mt-st .h i{background:var(--warn)}.mt-st .h{color:#9A6A00;font-weight:700}.mt-st .x i{background:var(--down)}.mt-st .x{color:var(--down);font-weight:700}
+.stars{display:flex;gap:4px;direction:ltr;justify-content:flex-end}.stars button{border:0;background:none;font-size:30px;color:#D9D9D2;cursor:pointer;padding:0 2px}.stars button.on{color:#D4AF37}
 </style>
 </head>
 <body>
@@ -390,6 +403,7 @@ const SECTIONS=[
   {id:'treasury',name:'خزينة الأرصدة',app:'treasury'},
   {id:'loans',name:'التمويلات'},
   {id:'fleet',name:'أسطول السيارات'},
+  {id:'maint',name:'الصيانة'},
   {id:'advances',name:'السلف',perm:'employees'},
   {id:'me',name:'بوابتي'},
   {id:'handover',name:'تسليم الورديات',app:'handover'},
@@ -403,12 +417,12 @@ const NAV_ICONS={
   ops:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg>',
   fin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/><path d="M6.5 15h4"/></svg>',
   more:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>'};
-const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'rep',name:'التقارير',secs:['sales','daily','channels','income','wh','chicken']},{id:'ops',name:'العمليات',secs:['handover','employees','advances','fleet']},{id:'fin',name:'المالية',secs:['treasury','loans']},{id:'more',name:'الإدارة',secs:['users','data']}];
+const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'rep',name:'التقارير',secs:['sales','daily','channels','income','wh','chicken']},{id:'ops',name:'العمليات',secs:['handover','maint','employees','advances','fleet']},{id:'fin',name:'المالية',secs:['treasury','loans']},{id:'more',name:'الإدارة',secs:['users','data']}];
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
-const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees'];
-const APP_VER='45';
-const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name]));
+const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup'];
+const APP_VER='46';
+const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 const CH={ajl:'آجل عملاء',shaden:'تطبيق الشادن',meals:'وجبات',family:'قسم العائلات',keeta:'تطبيق كيتا',hs:'تطبيق هانقرستيشن',dlv:'توصيل',tkl:'سفري / محلي',ninja:'تطبيق نينجا',bonat:'تطبيق بونات',awail:'عوائل',sfr:'سفري',mhl:'محلي'};
@@ -434,7 +448,7 @@ const st={user:null,profile:null,branches:[],myBranches:[],mySections:[],tab:'ho
 const isAdmin=()=>st.profile&&['owner','admin'].includes(st.profile.role);
 const isOwner=()=>st.profile&&st.profile.role==='owner';
 const isEmp=()=>st.profile&&st.profile.role==='employee';
-const allowed=id=>{ if(isEmp()) return id==='me'; if(id==='me') return false; if(isAdmin()||id==='home') return true; if(id==='daily') return st.mySections.includes('sales')&&st.allBranches; const x=SECTIONS.find(q=>q.id===id); return st.mySections.includes(x&&x.perm?x.perm:id); };
+const allowed=id=>{ if(isEmp()) return id==='me'; if(id==='me') return false; if(isAdmin()||id==='home') return true; if(id==='daily') return st.mySections.includes('sales')&&st.allBranches; if(id==='maint') return st.mySections.includes('maint')||st.mySections.includes('maint_sup'); const x=SECTIONS.find(q=>q.id===id); return st.mySections.includes(x&&x.perm?x.perm:id); };
 const brById=id=>st.branches.find(b=>b.id===id)||{id,name:id,color:'#888'};
 const selBranches=()=>st.f==='all'?st.branches.map(b=>b.id):[st.f];
 
@@ -582,7 +596,7 @@ function spark(vals,{w=120,h=34,col='#E9CF7A',fill=true,sw=1.8}={}){
   return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="direction:ltr;display:block"><defs><linearGradient id="${gid}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".35"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>${fill?`<path d="${d} L${X(v.length-1)},${h} L${X(0)},${h} Z" fill="url(#${gid})"/>`:''}<path d="${d}" fill="none" stroke="${col}" stroke-width="${sw}" stroke-linecap="round"/><circle cx="${X(v.length-1)}" cy="${Y(v[v.length-1])}" r="2.8" fill="${col}"/></svg>`;
 }
 const DAYN=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
-const SC_ICON={sales:'📈',daily:'🧾',channels:'🛵',income:'📊',wh:'📦',chicken:'🍗',treasury:'🏦',loans:'💳',fleet:'🚗',advances:'💵',handover:'🔁',employees:'👥',users:'🔐',data:'⬆️'};
+const SC_ICON={sales:'📈',daily:'🧾',channels:'🛵',income:'📊',wh:'📦',chicken:'🍗',treasury:'🏦',loans:'💳',fleet:'🚗',maint:'🛠️',advances:'💵',handover:'🔁',employees:'👥',users:'🔐',data:'⬆️'};
 V.home=async()=>{
   const bs=selBranches(); const now=new Date(), hr=now.getHours();
   const fn_=(st.profile&&(st.profile.full_name||st.profile.username)||'').trim(); const nm=/^(مدير|فرع|حساب)/.test(fn_)?fn_:fn_.split(' ')[0];
@@ -999,6 +1013,11 @@ async function loadAlerts(){
       if(m){ st.branches.forEach(b=>{const L=D.filter(r=>r.branch_id===b.id&&r.day.startsWith(m)).sort((a,c)=>a.day<c.day?-1:1); if(L.length<3)return; const last=L[L.length-1]; const avg=L.reduce((t,r)=>t+ +r.ratio,0)/L.length; if(+last.ratio>=avg+0.02) out.push({k:'wh:'+b.id+':'+last.day,ic:'📦',bad:true,t:`تكلفة المستودع مرتفعة: ${b.name}`,s:`${pct(+last.ratio)} يوم ${+last.day.slice(8)} مقابل متوسط ${pct(avg)}`,go:'wh'});}); } } }catch(e){}
   try{ if(canSee('advances')){ const r=await sb.from('advances').select('id,emp_name,amount,status,branch').in('status',isAdmin()?['pending_mgr','pending_owner']:['pending_mgr']); (r.data||[]).forEach(a=>out.push({k:'adv:'+a.id+':'+a.status,ic:'💵',bad:true,t:`طلب سلفة بانتظار موافقتك: ${a.emp_name}`,s:`${fmt(a.amount)} ر.س · ${brById(a.branch).name}`,go:'advances'})); } }catch(e){}
   try{ if(isEmp()){ const r=await sb.from('advances').select('id,amount,status').in('status',['approved','rejected']).order('created_at',{ascending:false}).limit(5); (r.data||[]).forEach(a=>out.push({k:'myadv:'+a.id+':'+a.status,ic:a.status==='approved'?'✅':'❌',bad:a.status!=='approved',t:a.status==='approved'?'تمت الموافقة على سلفتك':'تم رفض طلب السلفة',s:fmt(a.amount)+' ر.س',go:'me'})); } }catch(e){}
+  try{ if(canSee('maint')){ const R=mtRole(); const r=await sb.from('maint_requests').select('id,no,branch,title,status,priority,created_at,done_at,reject_reason').in('status',['new','assigned','progress','hold','done','rejected']).order('created_at',{ascending:false}).limit(300); (r.data||[]).forEach(m=>{
+      if(R!=='mgr'&&m.status==='new') out.push({k:'mt:'+m.id+':new',ic:'🛠️',bad:m.priority==='urgent',t:`طلب صيانة${m.priority==='urgent'?' عاجل':''} بانتظار المراجعة: ${m.title}`,s:brById(m.branch).name+' · '+mtRef(m),go:'maint'});
+      if(mtLate(m)) out.push({k:'mtl:'+m.id+':'+mtDays(m),ic:'⏱',bad:true,t:`أمر عمل تجاوز المهلة: ${m.title}`,s:brById(m.branch).name+' · منذ '+hrsTxt(mtHrs(m))+' · '+(MT_ST[m.status]||[''])[0],go:'maint'});
+      if(R!=='sup'&&m.status==='done') out.push({k:'mtd:'+m.id+':'+m.done_at,ic:'✅',t:`صيانة منجزة بانتظار تأكيدك: ${m.title}`,s:brById(m.branch).name+' · '+mtRef(m),go:'maint'});
+      if(R==='mgr'&&m.status==='rejected') out.push({k:'mtr:'+m.id,ic:'✕',t:`رُفض طلب الصيانة: ${m.title}`,s:m.reject_reason||'',go:'maint'});}); } }catch(e){}
   ALERTS=out.sort((a,b)=>(b.bad?1:0)-(a.bad?1:0)); paintBell();
 }
 function paintBell(){
@@ -1205,6 +1224,175 @@ document.addEventListener('submit',async e=>{
   b.disabled=false; b.textContent='تقديم الطلب';
   if(r.error){$('#advErr').textContent=/function|schema cache/i.test(r.error.message)?'الميزة تحتاج تشغيل ملف advances.sql أولاً':r.error.message;return;}
   st.advNew=false; st._alertsAt=0; toast(emp?'تم تسجيل السلفة ✓':'تم إرسال طلبك ✓ — يوصلك إشعار بالنتيجة'); render();
+});
+
+
+// ----- الصيانة (أوامر العمل) -----
+const MT_CAT=[['كهرباء','💡'],['سباكة','🚿'],['تكييف وتبريد','❄️'],['معدات المطبخ','🍳'],['نجارة وأبواب','🚪'],['دهان وبناء','🧱'],['نظافة ومكافحة','🧽'],['أخرى','🔧']];
+const mtIc=c=>(MT_CAT.find(x=>x[0]===c)||['','🔧'])[1];
+const MT_PR={urgent:['عاجل',24,'يوقف العمل · 24 ساعة'],high:['عالي',72,'يؤثر على العمل · 3 أيام'],normal:['عادي',168,'غير مؤثر · 7 أيام']};
+const MT_ST={new:['بانتظار المراجعة','var(--gold-soft)','var(--gold-ink)'],assigned:['مُسند للتنفيذ','rgba(91,143,208,.14)','#2F67B0'],progress:['قيد التنفيذ','rgba(91,143,208,.14)','#2F67B0'],hold:['معلّق','#FDF3DC','#9A6A00'],done:['بانتظار تأكيد الفرع','rgba(31,161,107,.12)','var(--up)'],closed:['مغلق','rgba(31,161,107,.12)','var(--up)'],rejected:['مرفوض','rgba(208,69,58,.1)','var(--down)'],cancelled:['ملغى','var(--chip)','var(--muted)']};
+const MT_ACT={new:'رفع الطلب',assigned:'قبول وإسناد',progress:'بدء/استئناف التنفيذ',hold:'تعليق',done:'إنجاز',closed:'تأكيد الاستلام وإغلاق',rejected:'رفض',cancelled:'إلغاء'};
+const mtPill=s=>{const x=MT_ST[s]||[s,'var(--chip)','inherit'];return `<span class="tag" style="background:${x[1]};color:${x[2]};font-weight:700">${x[0]}</span>`;};
+const mtRole=()=>isAdmin()?'admin':st.mySections.includes('maint_sup')?'sup':'mgr';
+const mtRef=m=>'WO-'+String(m.no||0).padStart(5,'0');
+const mtWork=m=>['new','assigned','progress','hold'].includes(m.status);
+const mtHrs=m=>{const a=new Date(m.created_at),b=m.done_at?new Date(m.done_at):new Date();return Math.max(0,(b-a)/36e5);};
+const mtDays=m=>Math.floor(mtHrs(m)/24);
+const mtSla=m=>(MT_PR[m.priority]||MT_PR.normal)[1];
+const mtLate=m=>mtWork(m)&&mtHrs(m)>mtSla(m);
+const mtInSla=m=>m.done_at&&mtHrs(m)<=mtSla(m);
+const hrsTxt=h=>h<24?Math.max(1,Math.round(h))+' ساعة':Math.round(h/24)+' يوم';
+function mtSteps(m){const S=['رفع الطلب','المراجعة والإسناد','التنفيذ','الإنجاز','تأكيد الفرع'];
+  const cur={new:1,assigned:2,progress:2,hold:2,done:4,closed:5,rejected:1,cancelled:1}[m.status]||0; const bad=['rejected','cancelled'].includes(m.status);
+  return `<div class="mt-st">${S.map((n,i)=>{const c=i<cur?'ok':i===cur?(bad?'x':m.status==='hold'?'h':'cur'):'';return `<div class="${c}"><i></i><span>${n}</span></div>`;}).join('')}</div>`;}
+function mtForm(){
+  const brs=st.branches;
+  const N=(k)=>brs.length>1?k+1:k;
+  return `<div class="card afm" id="mtFormCard"><div class="afm-hd"><div><h3>طلب صيانة جديد</h3><small>Maintenance Work Request · ${dLbl(todayIso())}</small></div><span class="afm-code">OPS-WO-01</span></div>
+  <form id="mtForm" autocomplete="off"><div class="afm-bd">
+    ${brs.length>1?`<div class="afm-sec"><div class="afm-t" data-n="1">الفرع</div><select class="inp" name="br" required><option value="">اختر الفرع</option>${brs.map(b=>`<option value="${b.id}">${esc(b.name)}</option>`).join('')}</select></div>`:`<input type="hidden" name="br" value="${brs[0]?brs[0].id:''}">`}
+    <div class="afm-sec"><div class="afm-t" data-n="${N(1)}">نوع الصيانة</div><div class="cats">${MT_CAT.map(([c,i])=>`<label><input type="radio" name="cat" value="${c}" required><span><i>${i}</i>${c}</span></label>`).join('')}</div></div>
+    <div class="afm-sec"><div class="afm-t" data-n="${N(2)}">وصف المشكلة</div><input class="inp" name="title" maxlength="120" placeholder="مثل: الثلاجة الرئيسية ما تبرد" required><textarea class="inp" name="details" rows="2" placeholder="الموقع داخل الفرع، متى بدأت المشكلة، أي تفاصيل تساعد الفني"></textarea></div>
+    <div class="afm-sec"><div class="afm-t" data-n="${N(3)}">الأولوية ومهلة الإنجاز</div><div class="afm-seg" style="grid-template-columns:repeat(3,1fr)">${['normal','high','urgent'].map(k=>`<label><input type="radio" name="pr" value="${k}" ${k==='normal'?'checked':''}><span>${MT_PR[k][0]}<small>${MT_PR[k][2]}</small></span></label>`).join('')}</div></div>
+    <div class="afm-sec"><div class="afm-t" data-n="${N(4)}">صورة المشكلة</div><input class="inp" type="file" name="ph" accept="image/*" capture="environment"><div class="muted" style="font-size:11.5px">اختياري — تساعد المشرف يجهّز القطع والفني المناسب.</div></div>
+    <div class="err" id="mtErr"></div></div>
+    <div class="afm-ft"><button class="btn" type="submit" id="mtSend">رفع الطلب</button><button class="btn ghost" type="button" data-mtx="1">إلغاء</button></div></form></div>`;
+}
+function mtRow(m,R){
+  const work=mtWork(m), late=mtLate(m), h=mtHrs(m), sla=mtSla(m);
+  const sup=R==='admin'||R==='sup', mgr=R==='mgr'||R==='admin';
+  let a='';
+  if(sup){ if(m.status==='new') a+=`<button class="btn sm" data-mtst="assigned" data-id="${m.id}">✓ قبول وإسناد</button><button class="btn ghost sm" data-mtst="rejected" data-id="${m.id}" style="color:var(--down)">رفض</button>`;
+    if(m.status==='assigned') a+=`<button class="btn ghost sm" data-mtst="progress" data-id="${m.id}">▶ بدء التنفيذ</button>`;
+    if(m.status==='hold') a+=`<button class="btn ghost sm" data-mtst="progress" data-id="${m.id}">▶ استئناف</button>`;
+    if(['assigned','progress'].includes(m.status)) a+=`<button class="btn ghost sm" data-mtst="hold" data-id="${m.id}" style="color:#9A6A00">⏸ تعليق</button>`;
+    if(['assigned','progress','hold'].includes(m.status)) a+=`<button class="btn sm" data-mtst="done" data-id="${m.id}">✓ تم الإنجاز</button>`; }
+  if(mgr&&m.status==='done') a+=`<button class="btn sm" data-mtst="closed" data-id="${m.id}">✓ تأكيد الاستلام</button><button class="btn ghost sm" data-mtst="progress" data-id="${m.id}" style="color:var(--down)">رفض الإنجاز</button>`;
+  if(R==='mgr'&&m.status==='new') a+=`<button class="btn ghost sm" data-mtst="cancelled" data-id="${m.id}" style="color:var(--down)">إلغاء الطلب</button>`;
+  let more=`<button class="btn ghost sm" data-mtdoc="${m.id}">📄 أمر العمل</button>`;
+  if(m.has_photo) more+=`<button class="btn ghost sm" data-mtph="${m.id}">📷 الصور</button>`;
+  if(R==='admin') more+=`<button class="btn ghost sm" data-mtdel="${m.id}" style="color:var(--down)">حذف</button>`;
+  const dc=['closed','done'].includes(m.status)?(mtInSla(m)?'ok':'x'):!work?'':late?'x':h>sla*.7?'w':'';
+  const dl=['closed','done'].includes(m.status)?'مدة الإنجاز':!work?'':late?'متأخر':'منذ الرفع';
+  return `<div class="mt"><div class="mt-top"><div class="mt-ic">${mtIc(m.category)}</div><div style="flex:1;min-width:0">
+    <div class="advref">${mtRef(m)} · ${esc(m.category)} · <span style="color:${m.priority==='urgent'?'var(--down)':m.priority==='high'?'var(--warn)':'inherit'}">${(MT_PR[m.priority]||MT_PR.normal)[0]}</span></div>
+    <b style="font-size:14.5px">${esc(m.title)}</b>
+    <div class="mt-m">${esc(brById(m.branch).name)} · ${esc(m.requested_by||'')} · ${dLbl(String(m.created_at).slice(0,10))}</div>
+    <div style="margin-top:5px">${mtPill(m.status)}</div></div>
+    ${dl?`<div class="mt-d ${dc}"><b class="num">${hrsTxt(h).split(' ')[0]}</b><small>${hrsTxt(h).split(' ')[1]} · ${dl}</small></div>`:''}</div>
+    ${mtSteps(m)}
+    ${m.details?`<div class="mt-m" style="font-size:12.5px;color:var(--fg);margin-top:6px">${esc(m.details)}</div>`:''}
+    ${m.assignee&&work?`<div class="mt-n">👷 المنفّذ: <b>${esc(m.assignee)}</b>${m.due_date?` · الموعد المتوقع ${dLbl(m.due_date)}`:''}${work?` · <span class="${late?'down':'muted'}">${late?'تجاوز المهلة بـ '+hrsTxt(h-sla):'متبقي على المهلة '+hrsTxt(sla-h)}</span>`:''}</div>`:work&&m.status==='new'?`<div class="mt-n"><span class="${late?'down':'muted'}">${late?'تجاوز مهلة الإنجاز بـ '+hrsTxt(h-sla):'مهلة الإنجاز: متبقي '+hrsTxt(sla-h)}</span></div>`:''}
+    ${m.status==='hold'&&m.hold_reason?`<div class="mt-n h">⏸ سبب التعليق: ${esc(m.hold_reason)}</div>`:''}
+    ${m.status==='rejected'&&m.reject_reason?`<div class="mt-n" style="background:rgba(208,69,58,.08)">✕ سبب الرفض: ${esc(m.reject_reason)}</div>`:''}
+    ${['done','closed'].includes(m.status)?`<div class="mt-n d">✓ أُنجز ${m.done_at?dLbl(String(m.done_at).slice(0,10)):''}${m.assignee?' بواسطة '+esc(m.assignee):''}${m.sup_note?' — '+esc(m.sup_note):''}${m.cost?` · التكلفة <b class="num">${fmt(m.cost)}</b> ر.س`:''}${m.status==='closed'?`<br>أكّد الاستلام ${esc(m.closed_by||'')}${m.rating?' · التقييم '+'★'.repeat(m.rating)+'☆'.repeat(5-m.rating):''}`:''}</div>`:''}
+    ${a?`<div class="mt-a">${a}</div>`:''}<div class="mt-a" style="margin-top:6px">${more}</div></div>`;
+}
+V.maint=async()=>{
+  const r=await sb.from('maint_requests').select('id,no,branch,category,title,details,priority,status,requested_by,created_at,assigned_at,assignee,due_date,started_at,done_at,closed_at,closed_by,rating,hold_reason,reject_reason,sup_note,cost,handled_by,has_photo,log').order('created_at',{ascending:false}).limit(500);
+  if(r.error&&/relation|schema cache|does not exist/i.test(r.error.message)) return `<div class="card empty">ميزة الصيانة تحتاج تشغيل ملف maint.sql في Supabase أولاً</div>`;
+  const R=mtRole(); const all=r.data||[]; st._mtList=all;
+  const fb=st.mtB||'all'; const inB=m=>fb==='all'||m.branch===fb; const L=all.filter(inB);
+  const work=L.filter(mtWork), late=work.filter(mtLate), nw=L.filter(m=>m.status==='new'), hold=L.filter(m=>m.status==='hold'), conf=L.filter(m=>m.status==='done'), closed=L.filter(m=>m.status==='closed');
+  const mon=curMon(), doneM=L.filter(m=>['done','closed'].includes(m.status)&&String(m.done_at).slice(0,7)===mon);
+  const avg=doneM.length?doneM.reduce((t,m)=>t+mtHrs(m),0)/doneM.length/24:null, slaP=doneM.length?Math.round(doneM.filter(mtInSla).length/doneM.length*100):null;
+  const rt=L.filter(m=>m.rating), rAvg=rt.length?rt.reduce((t,m)=>t+m.rating,0)/rt.length:null;
+  const brs=[...new Set(all.map(m=>m.branch))];
+  const def=R==='mgr'?(conf.length?'done':'act'):(nw.length?'new':'act'); const ft=st.mtT||def;
+  let h=brs.length>1?`<div class="chips">${[['all','كل الفروع']].concat(brs.map(b=>[b,brById(b).name])).map(([k,n])=>`<button data-mtb="${k}" aria-pressed="${fb===k}">${k!=='all'?`<i class="dot" style="background:${brById(k).color}"></i>`:''}${esc(n)}</button>`).join('')}</div>`:'';
+  h+=`<div class="card" style="background:linear-gradient(140deg,#1E5A3E,#143F2A);color:#fff;border:0"><div class="bar-row"><div><div style="font-size:12.5px;opacity:.8">أوامر العمل المفتوحة</div><div class="num" style="font-size:30px;font-weight:700;color:#F6E7B0">${work.length}</div></div>${st.mtNew?'':`<button class="mybtn" data-mtn="1">＋ طلب صيانة</button>`}</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;border-top:1px solid rgba(255,255,255,.15);padding-top:10px;text-align:center">
+      <div><div style="font-size:10.5px;opacity:.75">بانتظار المراجعة</div><b class="num">${nw.length}</b></div>
+      <div><div style="font-size:10.5px;opacity:.75">تجاوزت المهلة</div><b class="num" style="color:${late.length?'#FFB4A8':'#fff'}">${late.length}</b></div>
+      <div><div style="font-size:10.5px;opacity:.75">بانتظار تأكيد الفرع</div><b class="num">${conf.length}</b></div>
+      <div><div style="font-size:10.5px;opacity:.75">الإنجاز ضمن المهلة</div><b class="num">${slaP==null?'—':slaP+'٪'}</b></div>
+      <div><div style="font-size:10.5px;opacity:.75">متوسط مدة الإنجاز</div><b class="num">${avg==null?'—':avg.toFixed(1)}</b> <small style="font-size:10px;opacity:.7">يوم</small></div>
+      <div><div style="font-size:10.5px;opacity:.75">رضا الفروع</div><b class="num" style="color:#F6E7B0">${rAvg==null?'—':rAvg.toFixed(1)+' ★'}</b></div></div></div>`;
+  if(st.mtNew) h+=mtForm();
+  const tabs=[['act','المفتوحة',work.length+conf.length],['new','للمراجعة',nw.length],['hold','المعلّقة',hold.length],['done','بانتظار التأكيد',conf.length],['closed','المغلقة',closed.length],['all','الكل',L.length]];
+  h+=`<div class="chips">${tabs.map(([k,n,c])=>`<button data-mtt="${k}" aria-pressed="${ft===k}">${n} <span class="muted">${c}</span></button>`).join('')}</div>`;
+  const pr={urgent:0,high:1,normal:2};
+  let rows=ft==='act'?L.filter(m=>mtWork(m)||m.status==='done'):ft==='new'?nw:ft==='hold'?hold:ft==='done'?conf:ft==='closed'?closed:L;
+  if(['act','new','hold'].includes(ft)) rows=rows.slice().sort((a,b)=>(mtLate(b)-mtLate(a))||(pr[a.priority]-pr[b.priority])||(mtHrs(b)-mtHrs(a)));
+  h+=rows.length?`<div class="card">${rows.map(m=>mtRow(m,R)).join('')}</div>`:`<div class="card empty">${ft==='act'?'✅ ما فيه أوامر عمل مفتوحة':'لا توجد طلبات'}</div>`;
+  if(R!=='mgr'&&all.length&&brs.length>1){ const byB=brs.map(b=>{const x=all.filter(m=>m.branch===b);const o=x.filter(mtWork);const d=x.filter(m=>['done','closed'].includes(m.status)&&String(m.done_at).slice(0,7)===mon);return {b,o:o.length,late:o.filter(mtLate).length,cost:d.reduce((t,m)=>t+(+m.cost||0),0),n:d.length};});
+    h+=`<div class="card"><h3>أداء الصيانة حسب الفرع <small>${monLbl(mon)}</small></h3>${byB.map(x=>`<div class="bar-row" style="padding:7px 0;border-bottom:1px solid var(--line)"><span><i class="dot" style="background:${brById(x.b).color}"></i> <b>${esc(brById(x.b).name)}</b></span><span style="font-size:12.5px">مفتوحة <b class="num">${x.o}</b>${x.late?` · <span class="down">متأخرة ${x.late}</span>`:''} · منجزة ${x.n} · <b class="num">${fmt(x.cost)}</b> ر.س</span></div>`).join('')}</div>`; }
+  h+=`<div class="muted" style="font-size:12px;text-align:center;line-height:1.8">دورة الطلب: رفع ← مراجعة وإسناد ← تنفيذ ← إنجاز ← تأكيد الفرع<br>مهلة الإنجاز: عاجل 24 ساعة · عالي 3 أيام · عادي 7 أيام</div>`;
+  return h;
+};
+function mtDoc(m){
+  const dt=x=>x?new Date(x).toLocaleString('ar-SA-u-ca-gregory-nu-latn',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+  const pr=MT_PR[m.priority]||MT_PR.normal, stx=(MT_ST[m.status]||[m.status])[0];
+  const lg=(m.log||[]).map(x=>`<tr><td>${dt(x.t)}</td><td>${MT_ACT[x.a]||x.a}</td><td>${esc(x.by||'')}</td><td>${esc([x.as?'المنفّذ: '+x.as:'',x.n||'',x.rt?'التقييم '+x.rt+'/5':''].filter(Boolean).join(' — '))}</td></tr>`).join('');
+  return `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${mtRef(m)}</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Readex+Pro:wght@600;700&display=swap" rel="stylesheet"><style>
+@page{size:A4;margin:14mm}*{box-sizing:border-box}body{margin:0;font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif;color:#1b241e;font-size:12.5px;background:#fff}
+.pg{max-width:780px;margin:0 auto;padding:22px}.hd{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #1E5A3E;padding-bottom:12px}
+.co b{font-family:"Readex Pro";font-size:19px;color:#143F2A;display:block}.co span{color:#6b706a;font-size:11.5px}.no{text-align:left;font-family:"Readex Pro";color:#143F2A}.no b{font-size:18px;display:block}.no span{font-size:11px;color:#6b706a}
+.ttl{text-align:center;margin:16px 0 4px}.ttl h1{font-family:"Readex Pro";font-size:19px;margin:0;color:#143F2A}.ttl div{font-size:11px;color:#6b706a;letter-spacing:.5px}
+h2{font-family:"Readex Pro";font-size:13px;color:#9A7B12;margin:16px 0 6px;border-bottom:1px solid #eee;padding-bottom:4px}
+table{width:100%;border-collapse:collapse}td,th{border:1px solid #dcdcd4;padding:7px 9px;text-align:right;vertical-align:top}th{background:#F3F6F4;color:#143F2A;font-weight:600;width:20%}
+.lg th{width:auto}.st{display:inline-block;border:2px solid #1E5A3E;color:#1E5A3E;border-radius:8px;padding:3px 10px;font-family:"Readex Pro";font-weight:700}
+.sgs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px}.sg{border:1px solid #dcdcd4;border-radius:8px;padding:10px;text-align:center;min-height:80px}.sg b{display:block;color:#143F2A;font-size:12px}.sg div{margin-top:8px;font-family:"Readex Pro"}.sg small{display:block;font-size:10px;color:#1E5A3E;margin-top:4px}
+.ft{margin-top:22px;border-top:1px solid #e3e3dc;padding-top:8px;display:flex;justify-content:space-between;font-size:10px;color:#888}
+.bar{position:sticky;top:0;background:#143F2A;padding:10px;display:flex;gap:8px;justify-content:center}.bar button{font:600 14px "IBM Plex Sans Arabic",Tahoma;border:0;border-radius:9px;padding:9px 18px;cursor:pointer}.bar .p{background:#D4AF37;color:#3E2F05}.bar .c{background:rgba(255,255,255,.15);color:#fff}@media print{.bar{display:none}.pg{padding:0}}
+</style></head><body><div class="bar"><button class="p" onclick="print()">طباعة / حفظ PDF</button><button class="c" onclick="parent.postMessage('advdoc-close','*')">إغلاق</button></div><div class="pg">
+<div class="hd"><div class="co"><b>${esc(advEnt(m.branch))}</b><span>إدارة التشغيل والصيانة</span></div><div class="no"><b>${mtRef(m)}</b><span>أمر عمل صيانة</span></div></div>
+<div class="ttl"><h1>أمر عمل صيانة</h1><div>MAINTENANCE WORK ORDER · OPS-WO-01</div></div>
+<h2>أولاً: بيانات الطلب</h2><table><tr><th>الفرع</th><td>${esc(brById(m.branch).name)}</td><th>الحالة</th><td><span class="st">${stx}</span></td></tr>
+<tr><th>نوع الصيانة</th><td>${esc(m.category)}</td><th>الأولوية</th><td>${pr[0]} — مهلة ${pr[1]<48?'24 ساعة':pr[1]/24+' أيام'}</td></tr>
+<tr><th>وصف المشكلة</th><td colspan="3"><b>${esc(m.title)}</b>${m.details?'<br>'+esc(m.details):''}</td></tr>
+<tr><th>مقدّم الطلب</th><td>${esc(m.requested_by||'')}</td><th>تاريخ الرفع</th><td>${dt(m.created_at)}</td></tr></table>
+<h2>ثانياً: الإسناد والتنفيذ</h2><table><tr><th>المنفّذ</th><td>${esc(m.assignee||'—')}</td><th>الموعد المتوقع</th><td>${m.due_date?dLbl(m.due_date):'—'}</td></tr>
+<tr><th>تاريخ الإسناد</th><td>${dt(m.assigned_at)}</td><th>بدء التنفيذ</th><td>${dt(m.started_at)}</td></tr>
+<tr><th>تاريخ الإنجاز</th><td>${dt(m.done_at)}</td><th>مدة الإنجاز</th><td>${m.done_at?hrsTxt(mtHrs(m))+(mtInSla(m)?' — ضمن المهلة':' — تجاوز المهلة'):'—'}</td></tr>
+<tr><th>تقرير الإنجاز</th><td colspan="3">${esc(m.sup_note||'—')}</td></tr><tr><th>التكلفة</th><td>${m.cost?fmt(m.cost,2)+' ر.س':'—'}</td><th>تقييم الفرع</th><td>${m.rating?'★'.repeat(m.rating)+'☆'.repeat(5-m.rating)+' ('+m.rating+'/5)':'—'}</td></tr></table>
+<h2>ثالثاً: سجل الإجراءات</h2><table class="lg"><tr><th>التاريخ</th><th>الإجراء</th><th>بواسطة</th><th>ملاحظات</th></tr>${lg||'<tr><td colspan="4">—</td></tr>'}</table>
+<h2>رابعاً: الاعتمادات</h2><div class="sgs"><div class="sg"><b>مقدّم الطلب</b><div>${esc(m.requested_by||'')}</div><small>✓ ${dt(m.created_at)}</small></div><div class="sg"><b>مشرف الصيانة</b><div>${esc(m.handled_by||'')}</div><small>${m.done_at?'✓ '+dt(m.done_at):'—'}</small></div><div class="sg"><b>تأكيد الفرع</b><div>${esc(m.closed_by||'')}</div><small>${m.closed_at?'✓ '+dt(m.closed_at):'—'}</small></div></div>
+<div class="ft"><span>مستند إلكتروني صادر من منصة الإدارة الموحّدة · unifiedplatform.app</span><span>${mtRef(m)}</span></div></div></body></html>`;
+}
+function mtAsk(title,fields,sub){return new Promise(res=>{const m=document.createElement('div');m.style.cssText='position:fixed;inset:0;z-index:85;background:rgba(0,0,0,.45);display:grid;place-items:center;padding:16px';
+  const F=f=>f.type==='file'?`<input class="inp" type="file" name="${f.name}" accept="image/*" capture="environment">`:f.type==='area'?`<textarea class="inp" name="${f.name}" rows="2" ${f.req?'required':''}></textarea>`:f.type==='stars'?`<div class="stars" data-n="${f.name}">${[1,2,3,4,5].map(i=>`<button type="button" data-v="${i}">★</button>`).join('')}<input type="hidden" name="${f.name}" value="5"></div>`:`<input class="inp ${f.type==='number'?'num':''}" name="${f.name}" type="${f.type||'text'}" value="${esc(f.val||'')}" ${f.list?`list="mtl_${f.name}"`:''} ${f.type==='number'?'inputmode="decimal" min="0" step="0.01"':''} ${f.req?'required':''}>${f.list?`<datalist id="mtl_${f.name}">${f.list.map(x=>`<option value="${esc(x)}">`).join('')}</datalist>`:''}`;
+  m.innerHTML=`<form class="card" style="max-width:390px;width:100%;display:flex;flex-direction:column;gap:10px"><h3>${title}</h3>${sub?`<div class="muted" style="font-size:12px;margin-top:-6px">${sub}</div>`:''}${fields.map(f=>`<div class="field"><label>${f.label}</label>${F(f)}</div>`).join('')}<div style="display:flex;gap:8px"><button class="btn" type="submit" style="flex:1">تأكيد</button><button class="btn ghost" type="button" data-x="1">إلغاء</button></div></form>`;
+  const f=m.querySelector('form');
+  const paint=w=>{const v=+w.querySelector('input').value;w.querySelectorAll('button').forEach(b=>b.classList.toggle('on',+b.dataset.v<=v));}; f.querySelectorAll('.stars').forEach(paint);
+  m.addEventListener('click',e=>{const sb2=e.target.closest('.stars button');if(sb2){const w=sb2.parentElement;w.querySelector('input').value=sb2.dataset.v;paint(w);return;} if(e.target===m||e.target.closest('[data-x]')){m.remove();res(null);}});
+  f.addEventListener('submit',async e=>{e.preventDefault();const o={};for(const x of fields){const el=f.elements[x.name];o[x.name]=x.type==='file'?(el.files[0]?await flImg(el.files[0],1100,.72):null):el.value.trim();}m.remove();res(o);});
+  document.body.appendChild(m);setTimeout(()=>{const i=f.querySelector('input:not([type=file]):not([type=hidden]),textarea');if(i)i.focus();},50);});}
+document.addEventListener('click',async e=>{
+  const t=e.target.closest('[data-mtn],[data-mtx],[data-mtb],[data-mtt],[data-mtst],[data-mtph],[data-mtdel],[data-mtdoc]'); if(!t||!$('#view').contains(t)) return; const d=t.dataset;
+  if(d.mtn){st.mtNew=true;await render();const f=$('#mtFormCard');if(f)f.scrollIntoView({behavior:'smooth'});return;}
+  if(d.mtx){st.mtNew=false;render();return;}
+  if(d.mtb){st.mtB=d.mtb;render();return;}
+  if(d.mtt){st.mtT=d.mtt;render();return;}
+  if(d.mtdoc){const m=(st._mtList||[]).find(x=>String(x.id)===d.mtdoc);if(!m)return;const w=document.createElement('div');w.style.cssText='position:fixed;inset:0;z-index:90;background:#fff';w.innerHTML='<iframe style="border:0;width:100%;height:100%" title="أمر العمل"></iframe>';document.body.appendChild(w);w.querySelector('iframe').srcdoc=mtDoc(m);const cl=ev=>{if(ev.data==='advdoc-close'){w.remove();window.removeEventListener('message',cl);}};window.addEventListener('message',cl);return;}
+  if(d.mtst){const s=d.mtst, m=(st._mtList||[]).find(x=>String(x.id)===d.id)||{}; let o={};
+    const prev=[...new Set((st._mtList||[]).map(x=>x.assignee).filter(Boolean))];
+    const due=(()=>{const x=new Date(Date.now()+mtSla(m)*36e5);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');})();
+    if(s==='assigned'){o=await mtAsk('قبول الطلب وإسناده',[{name:'as',label:'الفني أو الجهة المنفذة',req:1,list:prev},{name:'due',label:'الموعد المتوقع للإنجاز',type:'date',val:due},{name:'note',label:'ملاحظة (اختياري)',type:'area'}],`${mtRef(m)} · ${esc(m.title||'')}`);if(!o)return;}
+    else if(s==='rejected'){o=await mtAsk('رفض الطلب',[{name:'note',label:'سبب الرفض',type:'area',req:1}],`${mtRef(m)} · ${esc(m.title||'')}`);if(!o)return;}
+    else if(s==='hold'){o=await mtAsk('تعليق التنفيذ',[{name:'note',label:'سبب التعليق (مثل: بانتظار قطعة غيار)',type:'area',req:1}]);if(!o)return;}
+    else if(s==='done'){o=await mtAsk('تقرير الإنجاز',[{name:'note',label:'وش اللي تم إصلاحه؟',type:'area',req:1},{name:'cost',label:'التكلفة ر.س (اختياري)',type:'number'},{name:'ph',label:'صورة بعد الإصلاح (اختياري)',type:'file'}],'بعد الإنجاز يروح الطلب لمدير الفرع يأكد الاستلام');if(!o)return;}
+    else if(s==='closed'){o=await mtAsk('تأكيد استلام الصيانة',[{name:'rt',label:'تقييمك للخدمة',type:'stars'},{name:'note',label:'ملاحظة (اختياري)',type:'area'}],'بالتأكيد يُغلق أمر العمل نهائياً');if(!o)return;}
+    else if(s==='progress'&&m.status==='done'){o=await mtAsk('رفض الإنجاز',[{name:'note',label:'وش المشكلة اللي باقية؟',type:'area',req:1}],'يرجع الطلب للتنفيذ عند مشرف الصيانة');if(!o)return;}
+    else if(s==='cancelled'){if(!confirm('إلغاء طلب الصيانة؟'))return;}
+    t.disabled=true;const r=await sb.rpc('maint_update',{p_id:d.id,p_status:s,p_note:o.note||null,p_cost:o.cost?+o.cost:null,p_done_photo:o.ph||null,p_assignee:o.as||null,p_due:o.due||null,p_rating:o.rt?+o.rt:null});t.disabled=false;
+    if(r.error){toast('تعذّر: '+r.error.message);return;} st._alertsAt=0; toast({assigned:'تم القبول والإسناد ✓',rejected:'تم رفض الطلب',progress:m.status==='done'?'رجع الطلب للتنفيذ':'بدأ التنفيذ',done:'تم الإنجاز ✓ — بانتظار تأكيد الفرع',hold:'تم تعليق الطلب',closed:'تم إغلاق أمر العمل ✓',cancelled:'تم الإلغاء'}[s]); render(); return;}
+  if(d.mtph){const r=await sb.rpc('maint_photos',{p_id:d.mtph});const p=r.data||{};const ims=[[p.photo,'قبل الإصلاح'],[p.done_photo,'بعد الإصلاح']].filter(x=>x[0]);if(!ims.length){toast('ما فيه صور');return;}
+    const m=document.createElement('div');m.style.cssText='position:fixed;inset:0;z-index:85;background:rgba(0,0,0,.85);display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;padding:16px;overflow:auto';
+    m.innerHTML=ims.map(([s,l])=>`<figure style="margin:0;text-align:center;color:#fff"><img src="${s}" style="max-width:100%;max-height:70vh;border-radius:12px"><figcaption style="font-size:13px;margin-top:4px">${l}</figcaption></figure>`).join('');m.onclick=()=>m.remove();document.body.appendChild(m);return;}
+  if(d.mtdel){if(!confirm('حذف الطلب نهائياً؟'))return;const r=await sb.rpc('maint_delete',{p_id:d.mtdel});if(r.error){toast('تعذّر: '+r.error.message);return;}toast('تم الحذف');render();}
+});
+document.addEventListener('submit',async e=>{
+  if(e.target.id!=='mtForm') return; e.preventDefault(); const f=e.target; const er=$('#mtErr');
+  if(!f.br.value){er.textContent='اختر الفرع';return;} if(!f.cat.value){er.textContent='اختر نوع الصيانة';return;} if(!f.title.value.trim()){er.textContent='اكتب وصف المشكلة';return;}
+  const b=$('#mtSend'); b.disabled=true; b.textContent='جارِ الرفع…';
+  let ph=null; try{ if(f.ph.files[0]) ph=await flImg(f.ph.files[0],1100,.72); }catch(_){}
+  const r=await sb.rpc('maint_create',{p_branch:f.br.value,p_category:f.cat.value,p_title:f.title.value.trim(),p_details:f.details.value.trim()||null,p_priority:f.pr.value,p_photo:ph});
+  b.disabled=false; b.textContent='رفع الطلب';
+  if(r.error){er.textContent=/function|schema cache/i.test(r.error.message)?'الميزة تحتاج تشغيل ملف maint.sql أولاً':r.error.message;return;}
+  st.mtNew=false; st.mtT='act'; st._alertsAt=0; toast('تم رفع الطلب ✓ — وصل لمشرف الصيانة للمراجعة'); render();
 });
 
 // ----- embedded apps & report pages -----
