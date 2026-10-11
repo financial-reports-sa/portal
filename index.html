@@ -431,7 +431,7 @@ const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'rep',n
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup'];
-const APP_VER='48';
+const APP_VER='49';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -1026,11 +1026,11 @@ async function pushEnable(){
   try{
     const reg=swReg||await navigator.serviceWorker.ready;
     let sub=await reg.pushManager.getSubscription();
-    if(!sub){ const k=await fetch(PUSH_FN()).then(r=>r.json()); if(!k.key) throw new Error(k.error||'دالة الإشعارات غير مفعّلة'); sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(k.key)}); }
+    if(!sub){ let key=null; for(let i=0;i<8&&!key;i++){ const r=await sb.rpc('push_key'); if(r.error) throw r.error; key=r.data; if(!key) await new Promise(z=>setTimeout(z,1500)); } if(!key) throw new Error('مفتاح الإشعارات ما جهز — تأكد من نشر دالة push وجرّب بعد دقيقة'); sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(key)}); }
     await pushRegister(sub);
-    toast('تم تفعيل الإشعارات على هذا الجهاز ✓'); const t=await sb.rpc('push_test');
+    toast('تم تفعيل الإشعارات على هذا الجهاز ✓ — يوصلك إشعار تجريبي'); await sb.rpc('push_test');
     const pn=$('#npanel'); if(pn&&!pn.hidden) pn.innerHTML=npanelHtml(); if(['home','me'].includes(st.tab)) render();
-  }catch(e){ console.error(e); toast('تعذّر التفعيل: '+(/function|schema cache|push_register/i.test(e.message||'')?'شغّل ملف push.sql أولاً':(e.message||e))); }
+  }catch(e){ console.error(e); toast('تعذّر التفعيل: '+(/push_key|push_register|schema cache/i.test(e.message||'')?'شغّل ملف تحديث الإشعارات أولاً':(e.message||e))); }
 }
 async function pushSync(){ try{ if(!pushOK()||Notification.permission!=='granted') return; const sub=await pushSub(); if(sub){ await pushRegister(sub); const pn=$('#npanel'); if(pn&&!pn.hidden) pn.innerHTML=npanelHtml(); } }catch(e){} }
 function pushBox(inPanel){
