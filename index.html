@@ -322,7 +322,7 @@ if(seen){s.remove();return;}if(ever)s.classList.add('quick');s.addEventListener(
 </section>
 
 <!-- ============ SETUP NEEDED ============ -->
-<section id="setup" hidden class="wrap"><div class="card"><h3>البوابة غير مربوطة بقاعدة البيانات بعد</h3><p class="muted">يلزم إضافة رابط ومفتاح Supabase في ملف config.js.</p></div></section>
+<section id="setup" hidden class="wrap"></section>
 
 <!-- ============ APP ============ -->
 <div id="app" hidden>
@@ -348,7 +348,7 @@ const CFG=window.PORTAL_CONFIG||{};
 const DOMAIN='myreportshub.report';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-if(!CFG.url||!CFG.key||!window.supabase){ $('#setup').hidden=false; return; }
+if(!CFG.url||!CFG.key||!window.supabase){ const st=$('#setup'); st.innerHTML='<div class="card"><h3>تعذّر الاتصال بالمنصة</h3><p class="muted">تأكد من اتصال الإنترنت ثم أعد تحميل الصفحة.</p></div>'; st.hidden=false; return; }
 const sb=window.supabase.createClient(CFG.url,CFG.key,{auth:{persistSession:true,autoRefreshToken:true}});
 
 const SECTIONS=[
@@ -379,7 +379,7 @@ const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'rep',n
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees'];
-const APP_VER='41';
+const APP_VER='42';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name]));
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
