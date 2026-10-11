@@ -335,6 +335,23 @@ body.hasnav .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 .mtd-kv{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}.mtd-kv div{background:var(--card);padding:8px 10px}.mtd-kv span{display:block;font-size:11px;color:var(--muted)}.mtd-kv b{font-size:13px}
 .mtd-log{list-style:none;margin:0;padding:0}.mtd-log li{display:flex;gap:10px;padding:8px 0;position:relative}.mtd-log li i{flex:none;width:10px;height:10px;border-radius:50%;background:var(--green);margin-top:6px}.mtd-log li:not(:last-child):after{content:"";position:absolute;right:4px;top:20px;bottom:-4px;width:2px;background:var(--line)}
 .mtd-act{display:flex;flex-wrap:wrap;gap:8px;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:var(--card);border-top:1px solid var(--line);justify-content:center}
+.fl-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}.fl-tabs::-webkit-scrollbar{display:none}
+.fl-tabs button{flex:none;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:9px 14px;font:600 13.5px var(--f-disp);color:var(--fg);cursor:pointer}
+.fl-tabs button span{font-size:11px;background:var(--chip);border-radius:99px;padding:1px 7px;color:var(--muted)}
+.fl-tabs button[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}.fl-tabs button[aria-pressed="true"] span{background:rgba(255,255,255,.2);color:#fff}
+.fl-al{gap:8px;padding:12px}.fl-alist{display:flex;flex-direction:column;gap:6px}
+.fl-ai{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:var(--card);cursor:pointer;font:inherit;color:inherit;width:100%}
+.fl-ai.bad{border-color:rgba(208,69,58,.35);background:rgba(208,69,58,.05)}.fl-ai.warn{border-color:rgba(201,138,12,.35);background:rgba(201,138,12,.06)}
+.fl-ai .ic{font-size:20px;flex:none}.fl-ai b{font-size:13px;display:block}.fl-ai.bad b{color:var(--down)}.fl-ai.warn b{color:#9A6A00}.fl-ai small{font-size:11.5px;color:var(--muted)}.fl-ai .chev{color:var(--muted);font-size:18px}
+.fl-grp{padding:12px;gap:0}.fl-gh{display:flex;justify-content:space-between;align-items:center;padding-bottom:8px;border-bottom:1px solid var(--line);font-size:14px}
+.fl-row{display:flex;align-items:center;gap:10px;width:100%;border:0;border-bottom:1px solid var(--line);background:none;padding:9px 0;cursor:pointer;font:inherit;color:inherit}.fl-row:last-child{border-bottom:0}
+.fl-row .th{flex:none;width:62px;height:46px;border-radius:9px;background:var(--chip);display:grid;place-items:center;overflow:hidden;font-size:20px}.fl-row .th img{width:100%;height:100%;object-fit:cover}
+.fl-row b{font-size:13.5px}.fl-row small{display:block;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fl-row .val{flex:none;font-weight:700;color:var(--green-dk);font-size:13.5px;text-align:left}.fl-row .val small{display:block;font-weight:400;font-size:10px}
+.fl-badge{display:inline-block;margin-top:4px;font-size:10.5px;font-weight:700;border-radius:99px;padding:2px 8px;cursor:pointer}.fl-badge.bad{background:rgba(208,69,58,.12);color:var(--down)}.fl-badge.warn{background:rgba(201,138,12,.15);color:#9A6A00}
+.fl-modal{position:fixed;inset:0;z-index:85;background:rgba(0,0,0,.45);display:grid;place-items:center;padding:16px}
+.fl-ad{border:1px solid var(--line);border-radius:12px;padding:10px 12px}.fl-ad.on{box-shadow:0 0 0 2px var(--gold)}.fl-ad.bad{background:rgba(208,69,58,.04)}.fl-ad.warn{background:rgba(201,138,12,.05)}
+.fl-kv{display:flex;justify-content:space-between;font-size:12.5px;padding:3px 0}.fl-kv span{color:var(--muted)}
 </style>
 </head>
 <body>
@@ -442,7 +459,7 @@ const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'rep',n
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup'];
-const APP_VER='50';
+const APP_VER='52';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -901,7 +918,7 @@ const FL_OWN=['ملك','تمويل','إيجار'];
 const FL_STATUS=['في الخدمة','خارج الخدمة','مباعة'];
 const flEnts=()=>{const b=st.branches.map(x=>x.id).filter(x=>['az','sh','pc'].includes(x));return isAdmin()?[...b,'wafra']:b;};
 const flDays=d=>d?Math.round((new Date(d+'T12:00:00')-new Date(todayIso()+'T12:00:00'))/864e5):null;
-function flAlerts(v){const a=[];[['regExp','الاستمارة'],['insExp','التأمين']].forEach(([k,n])=>{const d=flDays(v[k]);if(d==null)return;if(d<0)a.push({bad:true,t:n+' منتهية منذ '+(-d)+' يوم'});else if(d<=30)a.push({bad:false,t:n+' تنتهي بعد '+d+' يوم'});});if(v.cond==='تحتاج صيانة')a.push({bad:true,t:'تحتاج صيانة'});return a;}
+function flAlerts(v){const a=[];[['regExp','الاستمارة','reg'],['insExp','التأمين','ins']].forEach(([k,n,ty])=>{const d=flDays(v[k]);if(d==null)return;if(d<0)a.push({bad:true,ty,date:v[k],d,t:n+' منتهية منذ '+(-d)+' يوم'});else if(d<=30)a.push({bad:false,ty,date:v[k],d,t:n+' تنتهي بعد '+d+' يوم'});});if(v.cond==='تحتاج صيانة')a.push({bad:true,ty:'maint',t:'تحتاج صيانة'});return a;}
 function flImg(file,max,q){return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=rej;fr.onload=()=>{const im=new Image();im.onerror=rej;im.onload=()=>{const k=Math.min(1,max/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',q));};im.src=fr.result;};fr.readAsDataURL(file);});}
 function flForm(v,id){
   v=v||{};const ents=flEnts();const opt=(arr,cur)=>arr.map(x=>`<option ${x===cur?'selected':''}>${x}</option>`).join('');
@@ -949,24 +966,22 @@ V.fleet=async()=>{
       <div><div style="font-size:11px;opacity:.75">سيارات</div><b class="num" style="font-size:15px">${scope.length}</b></div>
       <div><div style="font-size:11px;opacity:.75">متوسط القيمة</div><b class="num" style="font-size:15px">${fmt(scope.length?tv/scope.length:0)}</b></div>
       <div><div style="font-size:11px;opacity:.75">تحتاج انتباه</div><b class="num" style="font-size:15px;color:${scope.some(v=>flAlerts(v).length)?'#FFB4A8':'#fff'}">${scope.filter(v=>flAlerts(v).length).length}</b></div></div></div>`;
-  if(Object.keys(byE).length>1) h+=`<div class="card"><h3>حسب الجهة</h3><div style="display:flex;height:12px;border-radius:99px;overflow:hidden;margin:4px 0 10px">${Object.entries(byE).sort((a,b)=>b[1].v-a[1].v).map(([k,x])=>`<i style="width:${(x.v/tAll*100).toFixed(1)}%;background:${flEnt(k).color}"></i>`).join('')}</div>
-    ${Object.entries(byE).sort((a,b)=>b[1].v-a[1].v).map(([k,x])=>`<div class="bar-row" style="padding:6px 0;border-bottom:1px solid var(--line)"><span><i class="dot" style="background:${flEnt(k).color}"></i> ${esc(flEnt(k).name)} <span class="muted" style="font-size:12px">· ${x.n} سيارة</span></span><span><b class="num">${fmt(x.v)}</b> <span class="muted" style="font-size:11px">${pct(x.v/tAll,0)}</span></span></div>`).join('')}</div>`;
-  const al=scope.flatMap(v=>flAlerts(v).map(a=>({v,a})));
-  if(al.length) h+=`<div class="note bad"><b class="down">تنبيهات</b><div style="font-size:12.5px;margin-top:4px;display:flex;flex-direction:column;gap:3px">${al.map(o=>`<div class="bar-row" style="gap:6px"><span>${esc(o.v.make+' '+o.v.model)} · <span dir="auto">${esc(o.v.plate||'')}</span></span><span class="${o.a.bad?'down':'flat'}">${esc(o.a.t)}</span></div>`).join('')}</div></div>`;
-  // فلاتر
-  const eKeys=[...new Set(all.map(v=>v.br))];
-  h+=`<div class="chips">${eKeys.length>1?[['all','كل الجهات']].concat(eKeys.map(k=>[k,flEnt(k).name])).map(([k,n])=>`<button data-ff="${k}" aria-pressed="${fe===k}">${k!=='all'?`<i class="dot" style="background:${flEnt(k).color}"></i>`:''}${esc(n)}</button>`).join(''):''}</div>
-    <div class="chips">${[['active','في الخدمة'],['out','خارج الخدمة / مباعة'],['all','الكل']].map(([k,n])=>`<button data-fs="${k}" aria-pressed="${fs===k}">${n}</button>`).join('')}</div>`;
-  // البطاقات
-  h+=vis.length?`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px">${vis.map(v=>{const a=flAlerts(v),e=flEnt(v.br),stt=v.status||'في الخدمة';
-    return `<button class="card" data-fopen="${esc(v.id)}" style="padding:0;text-align:start;cursor:pointer;font:inherit;color:inherit;overflow:hidden;display:flex;flex-direction:column">
-      <div style="position:relative;aspect-ratio:4/3;background:var(--chip);display:grid;place-items:center">${v.thumb?`<img src="${v.thumb}" alt="" style="width:100%;height:100%;object-fit:cover">`:'<span style="font-size:34px;opacity:.4">🚗</span>'}
-        <span class="tag" style="position:absolute;top:6px;inset-inline-start:6px;background:rgba(255,255,255,.92);font-size:10.5px"><i class="dot" style="background:${e.color}"></i>${esc(e.name)}</span>
-        ${a.length?`<span style="position:absolute;top:6px;inset-inline-end:6px;background:${a.some(x=>x.bad)?'var(--down)':'var(--warn)'};color:#fff;border-radius:99px;font-size:10.5px;padding:1px 7px">!</span>`:''}
-        ${stt!=='في الخدمة'?`<span class="tag" style="position:absolute;bottom:6px;inset-inline-start:6px;background:rgba(0,0,0,.6);color:#fff;font-size:10.5px">${stt}</span>`:''}</div>
-      <div style="padding:9px 10px 10px"><b style="font-size:13.5px">${esc(v.make)} ${esc(v.model)}</b> <span class="muted" style="font-size:12px">${esc(v.year||'')}</span>
-        <div class="muted" style="font-size:11.5px" dir="auto">${esc(v.plate||'')}</div>
-        <div class="num" style="font-weight:700;color:var(--green-dk);margin-top:3px">${fmt(v.value)} <span class="muted" style="font-size:10.5px;font-weight:400">ر.س</span></div></div></button>`;}).join('')}</div>`:'<div class="card empty">لا توجد سيارات بهذا الفلتر</div>';
+  // تبويبات الجهات
+  const ORDER=['az','sh','pc','wafra']; const eKeys=[...new Set(all.map(v=>v.br))].sort((x,y)=>(ORDER.indexOf(x)+1||9)-(ORDER.indexOf(y)+1||9));
+  if(eKeys.length>1) h+=`<div class="fl-tabs">${[['all','الكل',act.length]].concat(eKeys.map(k=>[k,flEnt(k).name,act.filter(v=>v.br===k).length])).map(([k,n,c])=>`<button data-ff="${k}" aria-pressed="${fe===k}" style="${k!=='all'&&fe===k?`background:${flEnt(k).color};border-color:${flEnt(k).color}`:''}">${k!=='all'&&fe!==k?`<i class="dot" style="background:${flEnt(k).color}"></i>`:''}${esc(n)} <span>${c}</span></button>`).join('')}</div>`;
+  h+=`<div class="chips" style="margin-top:-4px">${[['active','في الخدمة'],['out','خارج الخدمة / مباعة'],['all','الكل']].map(([k,n])=>`<button data-fs="${k}" aria-pressed="${fs===k}">${n}</button>`).join('')}</div>`;
+  // التنبيهات — قابلة للضغط
+  const al=scope.flatMap(v=>flAlerts(v).map((x,i)=>({v,a:x,i})));
+  if(al.length) h+=`<div class="card fl-al"><div class="bar-row"><h3 style="margin:0;font-size:14px">⚠️ تنبيهات تحتاج انتباه</h3><span class="muted" style="font-size:11.5px">اضغط على أي تنبيه للتفاصيل</span></div>
+    <div class="fl-alist">${al.sort((x,y)=>(y.a.bad-x.a.bad)).filter((o,i)=>st.flAlAll||i<3).map(o=>`<button class="fl-ai ${o.a.bad?'bad':'warn'}" data-fal="${esc(o.v.id)}|${o.i}"><span class="ic">${{reg:'🪪',ins:'🛡️',maint:'🔧'}[o.a.ty]||'⚠️'}</span><span style="flex:1;min-width:0;text-align:right"><b>${esc(o.a.t)}</b><small>${esc(o.v.make+' '+o.v.model)} · <span dir="auto">${esc(o.v.plate||'')}</span>${fe==='all'?' · '+esc(flEnt(o.v.br).name):''}</small></span><span class="chev">‹</span></button>`).join('')}</div>${al.length>3?`<button class="btn ghost sm" data-falall="1" style="align-self:center">${st.flAlAll?'إخفاء':'عرض كل التنبيهات ('+al.length+')'}</button>`:''}</div>`;
+  // السيارات مقسّمة حسب الجهة
+  const row=v=>{const a=flAlerts(v),stt=v.status||'في الخدمة';return `<button class="fl-row" data-fopen="${esc(v.id)}"><span class="th">${v.thumb?`<img src="${v.thumb}" alt="">`:'🚗'}</span>
+    <span style="flex:1;min-width:0;text-align:right"><b>${esc(v.make)} ${esc(v.model)}</b> <span class="muted">${esc(v.year||'')}</span><small><span dir="auto">${esc(v.plate||'—')}</span>${v.use?' · '+esc(v.use):''}${v.driver?' · '+esc(v.driver):''}</small>
+    ${stt!=='في الخدمة'?`<span class="tag" style="font-size:10px;margin-top:3px">${esc(stt)}</span>`:''}${a.length?`<span class="fl-badge ${a.some(x=>x.bad)?'bad':'warn'}" data-fal="${esc(v.id)}|0">${a.length===1?esc(a[0].t):a.length+' تنبيهات'}</span>`:''}</span>
+    <span class="val num">${fmt(v.value)}<small>ر.س</small></span></button>`;};
+  const groups=(fe==='all'?eKeys:[fe]).map(k=>({k,list:vis.filter(v=>v.br===k)})).filter(g=>g.list.length);
+  h+=groups.length?groups.map(g=>{const e=flEnt(g.k),gv=sum(g.list.map(v=>+v.value||0)),ga=g.list.filter(v=>flAlerts(v).length).length;
+    return `<div class="card fl-grp" style="border-top:4px solid ${e.color}"><div class="fl-gh"><div><b>${esc(e.name)}</b><span class="muted"> · ${g.list.length} سيارة${ga?` · <span class="down">${ga} تحتاج انتباه</span>`:''}</span></div><div class="num" style="font-weight:700;color:var(--green-dk)">${fmt(gv)} <small class="muted" style="font-weight:400">ر.س</small></div></div>${g.list.map(row).join('')}</div>`;}).join(''):'<div class="card empty">لا توجد سيارات بهذا الفلتر</div>';
   // تفاصيل السيارة المختارة
   const sel=st.flOpen&&all.find(v=>v.id===st.flOpen);
   if(sel){const e=flEnt(sel.br),a=flAlerts(sel),can=isAdmin()||(sel.br!=='wafra'&&ents.includes(sel.br));
@@ -979,10 +994,26 @@ V.fleet=async()=>{
       ${can?`<button class="btn ghost" data-fedit="${esc(sel.id)}" style="margin-top:10px;width:100%">تعديل البيانات أو الصور</button>`:''}</div>`;}
   return h;
 };
+
+function flAlertInfo(v,ix){
+  const A=flAlerts(v); if(!A.length) return; const e=flEnt(v.br);
+  const TY={reg:['🪪','الاستمارة (رخصة السير)','جدّد الاستمارة من أبشر قبل انتهائها، وحدّث تاريخها هنا بعد التجديد.'],ins:['🛡️','التأمين','جدّد وثيقة التأمين، ثم حدّث تاريخ الانتهاء في بيانات السيارة.'],maint:['🔧','الصيانة','حالة السيارة مسجّلة «تحتاج صيانة». ارفع طلب صيانة، وبعد الإصلاح حدّث الحالة في بيانات السيارة.']};
+  const m=document.createElement('div'); m.className='fl-modal';
+  m.innerHTML=`<div class="card" style="max-width:420px;width:100%;gap:10px"><div class="bar-row"><h3 style="margin:0;font-size:15px">${esc(v.make)} ${esc(v.model)} <span class="muted" style="font-weight:400" dir="auto">${esc(v.plate||'')}</span></h3><button class="icb" data-x="1">✕</button></div>
+    <div class="muted" style="font-size:12px;margin-top:-6px"><i class="dot" style="background:${e.color}"></i> ${esc(e.name)}${v.driver?' · المسؤول: '+esc(v.driver):''}</div>
+    ${A.map((a,i)=>{const t=TY[a.ty]||['⚠️','تنبيه',''];return `<div class="fl-ad ${a.bad?'bad':'warn'} ${i===ix?'on':''}"><div class="bar-row"><b>${t[0]} ${t[1]}</b><span class="tag" style="background:${a.bad?'rgba(208,69,58,.12)':'rgba(201,138,12,.15)'};color:${a.bad?'var(--down)':'var(--warn)'};font-weight:700">${a.bad?(a.ty==='maint'?'تحتاج إجراء':'منتهية'):'قريبة الانتهاء'}</span></div>
+      ${a.date?`<div class="fl-kv"><span>تاريخ الانتهاء</span><b>${dLbl(a.date)}</b></div><div class="fl-kv"><span>${a.d<0?'منتهية منذ':'متبقي'}</span><b class="${a.d<0?'down':''}">${Math.abs(a.d)} يوم</b></div>`:''}
+      <div style="font-size:12.5px;line-height:1.7;margin-top:4px">${t[2]}</div></div>`;}).join('')}
+    <div style="display:flex;gap:8px"><button class="btn" data-go="1" style="flex:1">فتح بيانات السيارة</button><button class="btn ghost" data-x="1">إغلاق</button></div></div>`;
+  m.addEventListener('click',async ev=>{ if(ev.target===m||ev.target.closest('[data-x]')){m.remove();return;} if(ev.target.closest('[data-go]')){m.remove();st.flOpen=v.id;await render();const el=$('#flDetail');if(el)el.scrollIntoView({behavior:'smooth'});flLoadPhotos();} });
+  document.body.appendChild(m);
+}
 async function flLoadPhotos(){const box=document.getElementById('flPhotos');if(!box)return;const r=await sb.rpc('fleet_photos',{p_id:box.dataset.id});if(r.error||!Array.isArray(r.data)||!r.data.length)return;box.innerHTML=r.data.map(src=>`<img src="${src}" style="height:190px;border-radius:12px;flex:none">`).join('');}
 let flNewImgs=null;
 document.addEventListener('click',async e=>{
-  const t=e.target.closest('[data-fadd],[data-fcancel],[data-fopen],[data-fclose],[data-fedit],[data-fdel],[data-ff],[data-fs]'); if(!t||!$('#view').contains(t)) return;
+  const t=e.target.closest('[data-falall],[data-fal],[data-fadd],[data-fcancel],[data-fopen],[data-fclose],[data-fedit],[data-fdel],[data-ff],[data-fs]'); if(!t||!$('#view').contains(t)) return;
+  if(t.dataset.falall){ st.flAlAll=!st.flAlAll; render(); return; }
+  if(t.dataset.fal){ e.stopPropagation(); const [vid,ix]=t.dataset.fal.split('|'); const v=((await appList('fleet','vehicles')).find(x=>x.id===vid)||{}).data; if(v) flAlertInfo({...v,id:vid},+ix||0); return; }
   const d=t.dataset;
   if(d.fadd){st.flEdit='new';flNewImgs=null;await render();$('#flFormCard')&&$('#flFormCard').scrollIntoView({behavior:'smooth'});return;}
   if(d.fcancel){st.flEdit=null;flNewImgs=null;render();return;}
