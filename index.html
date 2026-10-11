@@ -58,6 +58,26 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .ok{color:var(--up);font-size:13px}
 .row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1;min-width:140px}
 
+
+/* الشريط المتحرك */
+.tkr{display:flex;align-items:stretch;height:36px;border-radius:12px;overflow:hidden;background:linear-gradient(90deg,#123A27,#1E5A3E 50%,#123A27);border:1px solid rgba(212,175,55,.45);box-shadow:0 4px 14px -8px rgba(18,58,39,.6);position:relative}
+.tkr[hidden]{display:none}
+.tkr-lbl{flex:none;display:flex;align-items:center;gap:6px;padding-inline:11px 10px;background:linear-gradient(135deg,#F3E2A6,#D4AF37);color:#3E2F05;font-family:var(--f-disp);font-weight:700;font-size:12.5px;position:relative;z-index:2;box-shadow:-6px 0 12px -4px rgba(0,0,0,.35)}
+.tkr-lbl i{width:7px;height:7px;border-radius:50%;background:#C0392B;box-shadow:0 0 0 0 rgba(192,57,43,.6);animation:tkrPulse 1.6s infinite}
+.tkr-vp{flex:1;min-width:0;overflow:hidden;position:relative;-webkit-mask-image:linear-gradient(90deg,transparent,#000 22px,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(90deg,transparent,#000 22px,#000 calc(100% - 22px),transparent)}
+.tkr-track{display:flex;width:max-content;height:100%;align-items:center;animation:tkrMove var(--tkd,40s) linear infinite;will-change:transform}
+.tkr-seq{display:flex;align-items:center;flex:none}
+.tkr:hover .tkr-track,.tkr.paused .tkr-track{animation-play-state:paused}
+.tkr-it{flex:none;display:inline-flex;align-items:center;gap:6px;border:0;background:none;color:#fff;font:inherit;font-size:13px;white-space:nowrap;padding:0 4px;cursor:pointer}
+.tkr-it b{color:#F6E7B0;font-weight:700}
+.tkr-it.bad b{color:#FFB4A8}
+.tkr-it .up{color:#8EE3B5;font-weight:700}.tkr-it .dn{color:#FFB4A8;font-weight:700}
+.tkr-sep{flex:none;color:#D4AF37;font-size:9px;padding:0 12px;opacity:.85}
+@keyframes tkrMove{from{transform:translateX(0)}to{transform:translateX(50%)}}
+@keyframes tkrPulse{0%{box-shadow:0 0 0 0 rgba(192,57,43,.6)}70%{box-shadow:0 0 0 7px rgba(192,57,43,0)}100%{box-shadow:0 0 0 0 rgba(192,57,43,0)}}
+@media (prefers-reduced-motion:reduce){.tkr-track{animation:none}.tkr-vp{overflow-x:auto;scrollbar-width:none}}
+body.appmode .tkr{display:none}
+
 /* login */
 #login{min-height:100vh;display:grid;place-items:center;padding-inline:16px;padding-block:40px}
 .login-card{width:100%;max-width:400px;display:flex;flex-direction:column;gap:14px}
@@ -411,6 +431,7 @@ if(seen){s.remove();return;}if(ever)s.classList.add('quick');s.addEventListener(
       <div class="who"><button class="hbtn" id="bell" type="button" aria-label="التنبيهات" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="bd" id="bellN" hidden></span></button><div class="npanel" id="npanel" hidden></div><button class="avb" id="av" type="button" aria-haspopup="true" aria-expanded="false" aria-label="الحساب">؟</button>
         <div class="umenu" id="umenu" hidden><div><b id="uname"></b><div class="muted" style="font-size:12px" id="urole"></div></div><div class="scope" id="scope"></div><button class="btn ghost sm" id="logout" style="width:100%">تسجيل الخروج</button></div></div>
     </div>
+    <div class="tkr" id="tkr" hidden role="marquee" aria-label="أهم المستجدات"><span class="tkr-lbl"><i></i>مستجدات</span><div class="tkr-vp"><div class="tkr-track" id="tkrT"></div></div></div>
     <nav class="tabs" id="tabs" aria-label="الأقسام"></nav>
     <main id="view" style="display:flex;flex-direction:column;gap:16px;min-width:0"></main>
     <footer>تطوير بواسطة أمير العريفي</footer>
@@ -459,7 +480,7 @@ const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'rep',n
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup'];
-const APP_VER='54';
+const APP_VER='55';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -1110,8 +1131,51 @@ async function loadAlerts(){
       if(mtLate(m)) out.push({k:'mtl:'+m.id+':'+mtDays(m),ic:'⏱',bad:true,t:`أمر عمل تجاوز المهلة: ${m.title}`,s:brById(m.branch).name+' · منذ '+hrsTxt(mtHrs(m))+' · '+(MT_ST[m.status]||[''])[0],go:'maint'});
       if(R!=='sup'&&m.status==='done') out.push({k:'mtd:'+m.id+':'+m.done_at,ic:'✅',t:`صيانة منجزة بانتظار تأكيدك: ${m.title}`,s:brById(m.branch).name+' · '+mtRef(m),go:'maint'});
       if(R==='mgr'&&m.status==='rejected') out.push({k:'mtr:'+m.id,ic:'✕',t:`رُفض طلب الصيانة: ${m.title}`,s:m.reject_reason||'',go:'maint'});}); } }catch(e){}
-  ALERTS=out.sort((a,b)=>(b.bad?1:0)-(a.bad?1:0)); paintBell();
+  ALERTS=out.sort((a,b)=>(b.bad?1:0)-(a.bad?1:0)); paintBell(); paintTicker(ALERTS);
 }
+// ----- الشريط المتحرك (كل مستخدم يشوف أقسامه فقط) -----
+async function paintTicker(out){
+  const el=$('#tkr'), T=$('#tkrT'); if(!el||!T) return;
+  const it=[]; const add=(ic,html,go,bad)=>it.push({ic,html,go,bad});
+  const now=new Date(); add('📅',`<b>${DAYN[now.getDay()]} ${now.getDate()} ${MONTHS[now.getMonth()]}</b>`,'home');
+  try{ if(canSee('sales')){ const ids=st.branches.map(b=>b.id); const S=(await loadSales()).filter(r=>ids.includes(r.branch_id));
+    const ms=[...new Set(S.map(r=>r.day.slice(0,7)))].sort(); const m=ms[ms.length-1], pm=ms[ms.length-2];
+    if(m){ const cur=S.filter(r=>r.day.startsWith(m)); const days=[...new Set(cur.map(r=>r.day))].sort(); const ld=days[days.length-1];
+      const dv=sum(cur.filter(r=>r.day===ld).map(r=>r.amount)); add('💰',`مبيعات ${+ld.slice(8)} ${MONTHS[+ld.slice(5,7)-1]}: <b class="num">${fmt(dv)}</b> ر.س`,'sales');
+      const tot=sum(cur.map(r=>r.amount)), lday=+ld.slice(8); const prev=pm?sum(S.filter(r=>r.day.startsWith(pm)&&+r.day.slice(8)<=lday).map(r=>r.amount)):0;
+      const ch=prev?tot/prev-1:null; add('📈',`مبيعات ${MONTHS[+m.slice(5,7)-1]} حتى يوم ${lday}: <b class="num">${fmt(tot)}</b> ر.س${ch!=null?` <span class="${ch>=0?'up':'dn'}">${ch>=0?'▲':'▼'} ${pct(Math.abs(ch))}</span>`:''}`,'sales');
+      if(st.branches.length>1){ const bt=st.branches.map(b=>({b,v:sum(cur.filter(r=>r.branch_id===b.id).map(r=>r.amount))})).filter(x=>x.v>0).sort((a,c)=>c.v-a.v);
+        if(bt.length>1) add('🏆',`الأعلى مبيعاً هذا الشهر: <b>${esc(bt[0].b.name)}</b> · ${fmt(bt[0].v)} ر.س`,'sales'); } } } }catch(e){}
+  const cnt=(go,f)=>out.filter(a=>a.go===go&&(!f||f(a))).length;
+  if(canSee('maint')){ const nw=cnt('maint',a=>/^mt:/.test(a.k)), lt=cnt('maint',a=>/^mtl:/.test(a.k)), dn=cnt('maint',a=>/^mtd:/.test(a.k));
+    if(nw) add('🛠️',`طلبات صيانة بانتظار المراجعة: <b class="num">${nw}</b>`,'maint',true);
+    if(lt) add('⏱',`أوامر عمل متأخرة عن المهلة: <b class="num">${lt}</b>`,'maint',true);
+    if(dn) add('✅',`صيانة منجزة بانتظار تأكيدك: <b class="num">${dn}</b>`,'maint');
+    if(!nw&&!lt&&!dn) add('🛠️','الصيانة: <b>لا توجد طلبات متأخرة</b>','maint'); }
+  if(canSee('advances')){ const n=cnt('advances'); add('💵',n?`طلبات سلف بانتظار موافقتك: <b class="num">${n}</b>`:'السلف: <b>لا توجد طلبات معلّقة</b>','advances',!!n); }
+  if(canSee('fleet')){ const n=cnt('fleet',a=>a.bad), w=cnt('fleet',a=>!a.bad); if(n||w) add('🚗',`الأسطول: ${n?`<b class="num">${n}</b> منتهية`:''}${n&&w?' · ':''}${w?`<b class="num">${w}</b> تنتهي قريباً`:''}`,'fleet',!!n); }
+  if(canSee('employees')){ const n=cnt('employees'); if(n) add('🪪',`شهادات صحية منتهية أو قريبة: <b class="num">${n}</b>`,'employees',true); }
+  if(canSee('loans')){ out.filter(a=>a.go==='loans').slice(0,2).forEach(a=>add(a.ic,`${esc(a.t)} · <b>${esc(a.s)}</b>`,'loans',a.bad)); }
+  if(canSee('wh')){ out.filter(a=>a.go==='wh').slice(0,2).forEach(a=>add('📦',`${esc(a.t)} · <b>${esc(a.s)}</b>`,'wh',true)); }
+  try{ if(isEmp()){ const A=(await sb.from('advances').select('*').order('created_at',{ascending:false})).data||[];
+    const act=A.filter(a=>a.status==='approved'&&advCalc(a).rem>0); const pend=A.find(a=>a.status==='pending_mgr'||a.status==='pending_owner');
+    if(act.length) add('💵',`المتبقي من سلفتك: <b class="num">${fmt(act.reduce((t,a)=>t+advCalc(a).rem,0))}</b> ر.س · القسط الشهري <b class="num">${fmt(act.reduce((t,a)=>t+advCalc(a).mo,0))}</b>`,'me');
+    if(pend) add('⏳',`طلب سلفتك (${fmt(pend.amount)} ر.س): <b>${ADV_ST[pend.status].t}</b>`,'me');
+    out.filter(a=>a.go==='me').slice(0,1).forEach(a=>add(a.ic,`<b>${esc(a.t)}</b> · ${esc(a.s)}`,'me',a.bad));
+    if(!act.length&&!pend) add('📝','تقدر تطلب سلفة من صفحتك بضغطة','me'); } }catch(e){}
+  if(it.length<2) add('✅','<b>كل الأمور تمام</b> — ما فيه تنبيهات جديدة','home');
+  const seq=it.map(x=>`<button class="tkr-it${x.bad?' bad':''}" data-tgo="${x.go}" type="button"><span>${x.ic}</span><span>${x.html}</span></button><span class="tkr-sep">◆</span>`).join('');
+  const sig=seq; if(el._sig===sig&&!el.hidden) return; el._sig=sig;
+  T.innerHTML=`<div class="tkr-seq">${seq}</div><div class="tkr-seq" aria-hidden="true">${seq}</div>`; el.hidden=false;
+  requestAnimationFrame(()=>{ const w=T.firstChild.offsetWidth||600; T.style.setProperty('--tkd',Math.max(18,w/42)+'s'); });
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-tgo]'); if(!b) return;
+  const g=b.dataset.tgo; if(!canSee(g)&&g!=='home') return; st.tab=g; try{localStorage.setItem('tab',st.tab);}catch(_){} window.scrollTo({top:0}); renderShell();
+});
+(()=>{ const el=document.getElementById('tkr'); if(!el) return; let t;
+  el.addEventListener('touchstart',()=>{el.classList.add('paused'); clearTimeout(t);},{passive:true});
+  el.addEventListener('touchend',()=>{clearTimeout(t); t=setTimeout(()=>el.classList.remove('paused'),2500);},{passive:true}); })();
 function paintBell(){
   const b=$('#bell'),n=$('#bellN'); if(!b) return; b.hidden=false;
   const bad=liveAlerts().length; n.hidden=!bad; n.textContent=bad>9?'9+':String(bad);
