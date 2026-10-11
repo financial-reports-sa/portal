@@ -379,7 +379,7 @@ const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'rep',n
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees'];
-const APP_VER='40';
+const APP_VER='41';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name]));
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -1066,7 +1066,7 @@ V.advances=async()=>{
 };
 const genPin=()=>String(Math.floor(100000+Math.random()*900000));
 function shareCred(name,phone,pin){
-  const msg=`مرحباً ${name}\nتطبيق المجموعة MyHub:\nhttps://myreportshub.report\nالدخول برقم جوالك: ${phone}\nالرمز: ${pin}\nمن التطبيق تقدر تشوف بياناتك وتطلب سلفة.`;
+  const msg=`مرحباً ${name}\nتطبيق المجموعة MyHub:\nhttps://unifiedplatform.app\nالدخول برقم جوالك: ${phone}\nالرمز: ${pin}\nمن التطبيق تقدر تشوف بياناتك وتطلب سلفة.`;
   const wa='https://wa.me/'+(phone.replace(/^0/,'966'))+'?text='+encodeURIComponent(msg);
   const m=document.createElement('div'); m.style.cssText='position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.45);display:grid;place-items:center;padding:16px';
   m.innerHTML=`<div class="card" style="max-width:360px;width:100%"><h3>تم ✓ — بيانات دخول ${esc(name)}</h3><div style="font-size:14px;line-height:2">الجوال: <b dir="ltr">${phone}</b><br>الرمز: <b class="num" style="font-size:22px;letter-spacing:3px">${pin}</b></div><div class="muted" style="font-size:12px;margin:6px 0 10px">الرمز ما يظهر مرة ثانية — أرسله للموظف الحين.</div><div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn" href="${wa}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center">إرسال واتساب</a><button class="btn ghost" data-cp="1">نسخ</button><button class="btn ghost" data-cl="1">إغلاق</button></div></div>`;
