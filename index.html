@@ -459,7 +459,7 @@ const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'rep',n
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup'];
-const APP_VER='52';
+const APP_VER='53';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -1402,10 +1402,10 @@ V.maint=async()=>{
       <div><div style="font-size:10.5px;opacity:.75">متوسط مدة الإنجاز</div><b class="num">${avg==null?'—':avg.toFixed(1)}</b> <small style="font-size:10px;opacity:.7">يوم</small></div>
       <div><div style="font-size:10.5px;opacity:.75">رضا الفروع</div><b class="num" style="color:#F6E7B0">${rAvg==null?'—':rAvg.toFixed(1)+' ★'}</b></div></div></div>`;
   if(st.mtNew) h+=mtForm();
-  const tabs=[['act','المفتوحة',work.length+conf.length],['new','للمراجعة',nw.length],['hold','المعلّقة',hold.length],['done','بانتظار التأكيد',conf.length],['closed','المغلقة',closed.length],['all','الكل',L.length]];
+  const tabs=[['act','المفتوحة',work.length+conf.length],['new','للمراجعة',nw.length],['hold','المعلّقة',hold.length],['done','بانتظار التأكيد',conf.length],['closed','المغلقة',closed.length],['rejected','المرفوضة',L.filter(m=>m.status==='rejected').length],['all','الكل',L.length]];
   h+=`<div class="chips">${tabs.map(([k,n,c])=>`<button data-mtt="${k}" aria-pressed="${ft===k}">${n} <span class="muted">${c}</span></button>`).join('')}</div>`;
   const pr={urgent:0,high:1,normal:2};
-  let rows=ft==='act'?L.filter(m=>mtWork(m)||m.status==='done'):ft==='new'?nw:ft==='hold'?hold:ft==='done'?conf:ft==='closed'?closed:L;
+  let rows=ft==='act'?L.filter(m=>mtWork(m)||m.status==='done'):ft==='new'?nw:ft==='hold'?hold:ft==='done'?conf:ft==='closed'?closed:ft==='rejected'?L.filter(m=>m.status==='rejected'):L;
   if(['act','new','hold'].includes(ft)) rows=rows.slice().sort((a,b)=>(mtLate(b)-mtLate(a))||(pr[a.priority]-pr[b.priority])||(mtHrs(b)-mtHrs(a)));
   h+=rows.length?`<div class="card">${rows.map(m=>mtRow(m,R)).join('')}</div>`:`<div class="card empty">${ft==='act'?'✅ ما فيه أوامر عمل مفتوحة':'لا توجد طلبات'}</div>`;
   if(R!=='mgr'&&all.length&&brs.length>1){ const byB=brs.map(b=>{const x=all.filter(m=>m.branch===b);const o=x.filter(mtWork);const d=x.filter(m=>['done','closed'].includes(m.status)&&String(m.done_at).slice(0,7)===mon);return {b,o:o.length,late:o.filter(mtLate).length,cost:d.reduce((t,m)=>t+(+m.cost||0),0),n:d.length};});
