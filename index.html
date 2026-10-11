@@ -314,6 +314,13 @@ body.hasnav .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 .mt-st{display:flex;gap:4px;margin-top:10px}.mt-st div{flex:1;text-align:center;font-size:9.5px;color:var(--muted)}.mt-st i{display:block;height:4px;border-radius:99px;background:var(--chip);margin-bottom:3px}
 .mt-st .ok i{background:var(--up)}.mt-st .ok{color:var(--fg)}.mt-st .cur i{background:#2F67B0}.mt-st .cur{color:#2F67B0;font-weight:700}.mt-st .h i{background:var(--warn)}.mt-st .h{color:#9A6A00;font-weight:700}.mt-st .x i{background:var(--down)}.mt-st .x{color:var(--down);font-weight:700}
 .stars{display:flex;gap:4px;direction:ltr;justify-content:flex-end}.stars button{border:0;background:none;font-size:30px;color:#D9D9D2;cursor:pointer;padding:0 2px}.stars button.on{color:#D4AF37}
+.usr-top{display:flex;gap:8px;align-items:center;position:sticky;top:0;z-index:5;background:var(--bg);padding:4px 0}.usr-s{flex:1}.usr-s .inp{min-height:42px;font-size:14px}
+.usr{padding:10px 12px;gap:8px}.utop{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:0;cursor:pointer;font:inherit;color:inherit}
+.uav{flex:none;width:34px;height:34px;border-radius:50%;background:var(--gold-soft);color:var(--gold-ink);display:grid;place-items:center;font-weight:700;font-size:14px}
+.utop b{font-size:14px}.utop .role{font-size:10.5px;padding:1px 7px}.usum{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.uchev{flex:none;color:var(--muted);font-size:18px;transition:transform .2s}.utop[aria-expanded="true"] .uchev{transform:rotate(180deg)}
+.ubody{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:8px}
+.usr .tg{font-size:11.5px;padding:4px 8px;border-radius:7px}.usr .btn.sm{font-size:12px;min-height:30px;padding:4px 10px}.usr .muted{font-size:11px!important}.usr .inp{font-size:13.5px}.usr label{font-size:12px}
 </style>
 </head>
 <body>
@@ -421,7 +428,7 @@ const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'rep',n
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup'];
-const APP_VER='46';
+const APP_VER='47';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -1433,14 +1440,20 @@ V.users=async()=>{
   if(P.error) throw P.error;
   const ub=UB.data||[],us=US.data||[];
   const canManage=u=>u.role!=='owner'&&(isOwner()||u.role==='user');
-  let h=`<div class="card"><h3>إضافة مستخدم</h3><form class="row" id="nuf" autocomplete="off">
+  const q=(st.uq||'').trim().toLowerCase(); st.uOpen=st.uOpen||{};
+  let h=`<div class="usr-top"><div class="usr-s"><input class="inp" id="usq" type="search" placeholder="🔍 ابحث بالاسم أو اسم المستخدم" value="${esc(st.uq||'')}" autocomplete="off"></div><button class="btn sm" data-uadd="1">${st.uAdd?'إغلاق':'＋ مستخدم'}</button></div>
+  <div class="muted" id="usqn" style="font-size:11.5px;margin:-6px 2px 0">${P.data.length} مستخدم</div>`;
+  h+=`<div class="card usr" ${st.uAdd?'':'hidden'}><h3 style="font-size:15px">إضافة مستخدم</h3><form class="row" id="nuf" autocomplete="off">
     <div class="field"><label for="nun">الاسم</label><input class="inp" id="nun" required placeholder="مدير فرع العزيزية"></div>
     <div class="field"><label for="nuu">اسم المستخدم (إنجليزي)</label><input class="inp" id="nuu" required dir="ltr" autocapitalize="none" pattern="[a-z0-9._\-]{3,30}" placeholder="azizia"></div>
     <div class="field"><label for="nup">كلمة المرور (8 أحرف على الأقل)</label><input class="inp" id="nup" required dir="ltr" minlength="8"></div>
     <div class="field" style="justify-content:flex-end"><button class="btn" type="submit" id="nub">إنشاء الحساب</button></div></form>
     <div class="muted" style="font-size:12px">بعد الإنشاء حدّد فروعه وأقسامه من القائمة تحت. المستخدم الجديد لا يرى أي شيء حتى تعطيه صلاحية.</div><div class="err" id="nue"></div></div>`;
   h+=P.data.map(u=>{const m=canManage(u),adminLike=u.role!=='user';
-    return `<div class="card ucard"><div class="uhead"><div><b>${esc(u.full_name||u.username)}</b> <span class="role ${u.role}">${ROLE_NAME[u.role]}</span> ${u.active?'':'<span class="tag" style="color:var(--down)">موقوف</span>'}<div class="muted" style="font-size:12px" dir="ltr">${esc(u.username)}</div></div>
+    const bn=st.branches.filter(b=>ub.some(x=>x.user_id===u.id&&x.branch_id===b.id)).map(b=>b.name), sn=us.filter(x=>x.user_id===u.id).length;
+    const sum=adminLike?(u.role==='sync'?'مهام تلقائية':'كل الفروع والأقسام'):(bn.length?bn.join('، '):'بدون فرع')+' · '+(sn?sn+' قسم':'بدون أقسام');
+    const qq=(u.full_name||'')+' '+u.username, open=!!st.uOpen[u.id];
+    return `<div class="card ucard usr" data-q="${esc(qq.toLowerCase())}" ${q&&!qq.toLowerCase().includes(q)?'hidden':''}><button class="utop" type="button" data-uo="${u.id}" aria-expanded="${open}"><span class="uav">${esc((u.full_name||u.username).trim().charAt(0))}</span><div style="flex:1;min-width:0;text-align:right"><b>${esc(u.full_name||u.username)}</b> <span class="role ${u.role}">${ROLE_NAME[u.role]}</span> ${u.active?'':'<span class="tag" style="color:var(--down)">موقوف</span>'}<div class="usum"><span dir="ltr">${esc(u.username)}</span> · ${esc(sum)}</div></div><span class="uchev">⌄</span></button><div class="ubody" ${open?'':'hidden'}><div class="uhead">
       <div style="display:flex;flex-wrap:wrap;gap:6px">${isOwner()&&['admin','user'].includes(u.role)?`<button class="btn ghost sm" data-role="${u.id}" data-to="${u.role==='admin'?'user':'admin'}">${u.role==='admin'?'تحويل لمستخدم':'ترقية لآدمن'}</button>`:''}${u.role!=='sync'&&(m||(u.id===st.user.id&&u.role==='owner'))?`<button class="btn ghost sm" data-nmt="${u.id}">تعديل اسم المستخدم</button>`:''}${m?`<button class="btn ghost sm" data-pwt="${u.id}">تغيير كلمة المرور</button><button class="btn ghost sm" data-act="${u.id}" data-to="${u.active?0:1}">${u.active?'إيقاف':'تفعيل'}</button>`:''}</div></div>
       <form class="row nmf" data-uid="${u.id}" data-un="${esc(u.username)}" data-fn="${esc(u.full_name||'')}" hidden autocomplete="off"><div class="field"><label for="nu_${u.id}">اسم المستخدم للدخول (إنجليزي)</label><input class="inp" id="nu_${u.id}" name="un" required dir="ltr" autocapitalize="none" pattern="[a-z0-9._\-]{3,30}" value="${esc(u.username)}"></div><div class="field"><label for="nm_${u.id}">الاسم الظاهر</label><input class="inp" id="nm_${u.id}" name="fn" required maxlength="60" value="${esc(u.full_name||'')}"></div><div class="field" style="justify-content:flex-end;flex:none"><button class="btn sm" type="submit">حفظ</button></div></form>
       ${m?`<form class="row pwf" data-uid="${u.id}" hidden autocomplete="off"><div class="field"><label for="pw_${u.id}">كلمة المرور الجديدة لـ ${esc(u.full_name||u.username)}</label><input class="inp" id="pw_${u.id}" dir="ltr" minlength="8" required autocomplete="new-password"></div><div class="field" style="justify-content:flex-end;flex:none"><button class="btn sm" type="submit">حفظ</button></div></form>`:''}
@@ -1448,11 +1461,13 @@ V.users=async()=>{
       `<div><div class="muted" style="font-size:12px;margin-bottom:4px">الفروع</div><div class="tgrid">${st.branches.map(b=>{const on=ub.some(x=>x.user_id===u.id&&x.branch_id===b.id);return `<button class="tg" data-tb="${u.id}" data-k="b:${b.id}" aria-pressed="${on}" ${m?'':'disabled'}><i class="dot" style="background:${b.color}"></i>${esc(b.name)}</button>`;}).join('')}</div></div>
       <div><div class="muted" style="font-size:12px;margin-bottom:4px">الأقسام</div><div class="tgrid">${PERM_SECTIONS.map(s=>{const on=us.some(x=>x.user_id===u.id&&x.section===s);return `<button class="tg" data-tb="${u.id}" data-k="s:${s}" aria-pressed="${on}" ${m?'':'disabled'}>${SEC_NAME[s]}</button>`;}).join('')}</div></div>
       ${us.some(x=>x.user_id===u.id&&x.section==='income')?'':us.some(x=>x.user_id===u.id&&x.section==='wh')?'<div class="muted" style="font-size:12px">يرى نسبة تكلفة المستودعات فقط، بدون الإيرادات أو المصروفات.</div>':''}`}
-    </div>`;}).join('');
-  h+=`<div class="card"><h3>تغيير كلمة المرور الخاصة بك</h3><form class="row" id="cpf"><div class="field"><label for="cpn">كلمة المرور الجديدة</label><input class="inp" id="cpn" type="password" minlength="8" required dir="ltr" autocomplete="new-password"></div><div class="field" style="justify-content:flex-end"><button class="btn" type="submit">تغيير</button></div></form></div>`;
+    </div></div>`;}).join('');
+  h+=`<div class="card usr"><h3 style="font-size:15px">تغيير كلمة المرور الخاصة بك</h3><form class="row" id="cpf"><div class="field"><label for="cpn">كلمة المرور الجديدة</label><input class="inp" id="cpn" type="password" minlength="8" required dir="ltr" autocomplete="new-password"></div><div class="field" style="justify-content:flex-end"><button class="btn" type="submit">تغيير</button></div></form></div>`;
   return h;
 };
 document.addEventListener('click',async e=>{
+  const uo=e.target.closest('[data-uo]'); if(uo){st.uOpen=st.uOpen||{};const o=!st.uOpen[uo.dataset.uo];st.uOpen[uo.dataset.uo]=o;uo.setAttribute('aria-expanded',o);uo.nextElementSibling.hidden=!o;return;}
+  if(e.target.closest('[data-uadd]')){st.uAdd=!st.uAdd;render();return;}
   const t=e.target.closest('[data-tb]'); if(t&&!t.disabled){
     const uid=t.dataset.tb,[k,id]=t.dataset.k.split(':'),on=t.getAttribute('aria-pressed')==='true';
     const tbl=k==='b'?'user_branches':'user_sections',col=k==='b'?'branch_id':'section';
@@ -1497,6 +1512,8 @@ document.addEventListener('submit',async e=>{
   if(e.target.id==='cpf'){ e.preventDefault(); const {error}=await sb.auth.updateUser({password:$('#cpn').value}); toast(error?'تعذّر التغيير: '+error.message:'تم تغيير كلمة المرور'); if(!error) $('#cpn').value=''; }
 });
 
+document.addEventListener('input',e=>{ if(e.target.id!=='usq') return; st.uq=e.target.value; const q=e.target.value.trim().toLowerCase(); let n=0;
+  document.querySelectorAll('.ucard[data-q]').forEach(c=>{const ok=!q||c.dataset.q.includes(q);c.hidden=!ok;if(ok)n++;}); const el=$('#usqn'); if(el) el.textContent=q?n+' نتيجة':n+' مستخدم'; });
 // ----- data entry -----
 V.data=async()=>{
   return `<div class="note">إدخال المبيعات والمنافذ وقوائم الدخل صار من داخل كل تطبيق (تبويب «الإدخال» أو «البيانات»)، والتحديث اليومي يصل تلقائياً من المهام المجدولة.</div>
