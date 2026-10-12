@@ -1,10 +1,3 @@
--- ============================================================
---  العُهد النقدية — يشغَّل مرة واحدة في Supabase → SQL Editor → Run
---  الإدارة/المحاسب يسجّل العهدة (حوالة أو نقد) ← الموظف يأكّد الاستلام (أو العكس)
---  الموظف يرفع فواتيره بصورة إلزامية ← المحاسب يعتمد أو يرفض ← التصفية ممنوعة قبل مراجعة كل شي
--- ============================================================
-
--- 1) صلاحية القسم: custody
 do $$
 declare lst text[];
 begin
@@ -14,19 +7,15 @@ begin
   alter table public.user_sections drop constraint if exists user_sections_section_check;
   execute format('alter table public.user_sections add constraint user_sections_section_check check (section = any (%L::text[]))', lst);
 end $$;
-
 create or replace function public.is_owner() returns boolean
 language sql stable security definer set search_path = public as $$
   select exists (select 1 from profiles where id = auth.uid() and role = 'owner' and active)
 $$;
 grant execute on function public.is_owner() to authenticated;
-
 create or replace function public.custody_can(p_branch text) returns boolean
 language sql stable security definer set search_path = public as $$
   select is_admin() or (has_section('custody') and p_branch = any(my_branches()))
 $$;
-
--- 2) الجداول
 create table if not exists public.custodies (
   id          uuid primary key default gen_random_uuid(),
   no          bigserial unique,
@@ -44,7 +33,6 @@ create table if not exists public.custodies (
 );
 create index if not exists custodies_emp_idx on public.custodies (emp_id, status);
 create index if not exists custodies_branch_idx on public.custodies (branch, status);
-
 create table if not exists public.custody_tx (
   id          uuid primary key default gen_random_uuid(),
   no          bigserial unique,
@@ -63,7 +51,7 @@ create table if not exists public.custody_tx (
   note        text not null default '',
   has_photo   boolean not null default false,
   status      text not null default 'pending' check (status in ('pending','approved','rejected')),
-  side        text not null check (side in ('emp','acc')),        -- مين سجّلها: الموظف أو الإدارة/المحاسب
+  side        text not null check (side in ('emp','acc')),
   created_by  text not null default '',
   created_at  timestamptz not null default now(),
   reviewed_by text,
@@ -72,12 +60,10 @@ create table if not exists public.custody_tx (
 );
 create index if not exists custody_tx_c_idx on public.custody_tx (custody_id, date);
 create index if not exists custody_tx_pending_idx on public.custody_tx (branch, status);
-
 create table if not exists public.custody_photos (
   tx_id uuid primary key references public.custody_tx(id) on delete cascade,
   img   text not null
 );
-
 alter table public.custodies enable row level security;
 alter table public.custody_tx enable row level security;
 alter table public.custody_photos enable row level security;
@@ -86,14 +72,11 @@ create policy cu_read on public.custodies for select to authenticated using (cus
 drop policy if exists ct_read on public.custody_tx;
 create policy ct_read on public.custody_tx for select to authenticated using (custody_can(branch) or emp_id = my_emp_id());
 revoke all on public.custodies, public.custody_tx, public.custody_photos from anon, authenticated;
-grant select on public.custodies, public.custody_tx to authenticated;   -- الكتابة والصور عبر الدوال فقط
-
--- 3) أدوات مساعدة
+grant select on public.custodies, public.custody_tx to authenticated;
 create or replace function public.custody_emp_user(p_emp uuid) returns uuid
 language sql stable security definer set search_path = public as $$
   select user_id from emp_accounts where emp_id = p_emp
 $$;
-
 create or replace function public.custody_push(p_users uuid[], p_title text, p_body text, p_tag text) returns void
 language plpgsql security definer set search_path = public as $$
 begin
@@ -102,7 +85,6 @@ begin
   perform push_send(p_users, p_title, p_body, './?tab=custody', p_tag);
 exception when others then null;
 end $$;
-
 create or replace function public.custody_staff(p_branch text) returns uuid[]
 language plpgsql stable security definer set search_path = public as $$
 begin
@@ -112,8 +94,6 @@ begin
                  and exists (select 1 from user_branches b where b.user_id = p.id and b.branch_id = p_branch))));
 exception when others then return '{}';
 end $$;
-
--- الرصيد: الحوالات المؤكدة − المصروفات المعتمدة − المبالغ المرجعة
 create or replace function public.custody_balance(p_id uuid) returns jsonb
 language sql stable security definer set search_path = public as $$
   select jsonb_build_object(
@@ -126,15 +106,11 @@ language sql stable security definer set search_path = public as $$
     'non_tax',  coalesce(sum(amount) filter (where kind = 'expense' and status <> 'rejected' and taxable is false), 0))
   from custody_tx where custody_id = p_id
 $$;
-
--- قائمة الموظفين اللي ينفع تُسجّل عليهم عهدة (للمحاسب حتى لو ما عنده قسم الموظفين)
 create or replace function public.custody_emps() returns table (id uuid, name text, branch text, job text, has_account boolean)
 language sql stable security definer set search_path = public as $$
   select e.id, e.name, e.branch, e.job, exists (select 1 from emp_accounts a where a.emp_id = e.id)
   from employees e where e.status <> 'left' and custody_can(e.branch) order by e.name
 $$;
-
--- 4) فتح عهدة (الإدارة/المحاسب) مع أول مبلغ اختياري
 create or replace function public.custody_open(p_emp uuid, p_title text, p_amount numeric default null, p_method text default 'transfer',
   p_date date default null, p_note text default '', p_img text default null)
 returns uuid language plpgsql security definer set search_path = public as $$
@@ -155,8 +131,6 @@ begin
   end if;
   return cid;
 end $$;
-
--- 5) إضافة حركة: حوالة/نقد مستلم (fund) — فاتورة (expense) — إرجاع مبلغ (return)
 create or replace function public.custody_add(p_custody uuid, p_kind text, p_amount numeric, p_date date, p_method text default null,
   p_vendor text default '', p_category text default '', p_taxable boolean default null, p_vat numeric default null,
   p_invoice text default '', p_note text default '', p_img text default null)
@@ -177,8 +151,6 @@ begin
   if img is not null and length(img) > 1200000 then raise exception 'الصورة كبيرة — صوّرها مرة ثانية'; end if;
   if p_kind = 'expense' and p_taxable is null then raise exception 'حدد هل الفاتورة ضريبية أو غير ضريبية'; end if;
   empu := custody_emp_user(c.emp_id);
-  -- الفاتورة من الموظف تنتظر المحاسب، ومن المحاسب نيابة عنه معتمدة
-  -- الحوالة/الإرجاع: اللي سجّلها طرف، والطرف الثاني يأكّد (وإذا الموظف ما عنده حساب تعتمد مباشرة)
   stt := case when side = 'emp' then 'pending'
               when p_kind = 'expense' then 'approved'
               when empu is null then 'approved'
@@ -206,8 +178,6 @@ begin
   end if;
   return tid;
 end $$;
-
--- 6) المراجعة: المحاسب يعتمد/يرفض حركات الموظف، والموظف يأكّد حركات المحاسب
 create or replace function public.custody_review(p_tx uuid, p_ok boolean, p_note text default '')
 returns void language plpgsql security definer set search_path = public as $$
 declare t custody_tx; c custodies; who text := who_am_i(); n text := nullif(btrim(coalesce(p_note, '')), ''); me uuid := my_emp_id();
@@ -235,8 +205,6 @@ begin
       to_char(t.amount, 'FM999,999,990.00') || ' ر.س — ' || left(n, 100), 'cu-' || t.id);
   end if;
 end $$;
-
--- 7) حذف حركة: صاحبها وهي بانتظار المراجعة، أو المالك
 create or replace function public.custody_tx_delete(p_tx uuid) returns void
 language plpgsql security definer set search_path = public as $$
 declare t custody_tx; me uuid := my_emp_id(); st_ text;
@@ -250,17 +218,11 @@ begin
   if not ((t.side = 'emp' and me is not null and me = t.emp_id) or (t.side = 'acc' and custody_can(t.branch))) then raise exception 'ليس لديك صلاحية'; end if;
   delete from custody_tx where id = p_tx;
 end $$;
-
--- 8) صورة الفاتورة
 create or replace function public.custody_photo(p_tx uuid) returns text
 language sql stable security definer set search_path = public as $$
   select p.img from custody_photos p join custody_tx t on t.id = p.tx_id
   where p.tx_id = p_tx and (custody_can(t.branch) or t.emp_id = my_emp_id())
 $$;
-
--- 9) التصفية: ممنوعة إذا فيه حركة ما تراجعت أو مصروف بدون صورة
---    p_mode: 'settle' = تسوية الرصيد (الموظف رجّع الباقي / الشركة عوّضته) ثم إقفال
---            'carry'  = إقفال وترحيل الرصيد لعهدة جديدة لنفس الموظف
 create or replace function public.custody_settle(p_custody uuid, p_mode text default 'settle', p_note text default '')
 returns jsonb language plpgsql security definer set search_path = public as $$
 declare c custodies; b jsonb; bal numeric; who text := who_am_i(); nid uuid; today date := (now() at time zone 'Asia/Riyadh')::date;
@@ -304,33 +266,24 @@ begin
          else 'العهدة مطابقة ✓' end, 'cu-' || c.id);
   return b || jsonb_build_object('new_id', nid);
 end $$;
-
--- حذف عهدة كاملة: المالك فقط
 create or replace function public.custody_delete(p_custody uuid) returns void
 language plpgsql security definer set search_path = public as $$
 begin
   if not is_owner() then raise exception 'الحذف للمالك فقط'; end if;
   delete from custodies where id = p_custody;
 end $$;
-
 revoke all on function public.custody_open(uuid,text,numeric,text,date,text,text), public.custody_add(uuid,text,numeric,date,text,text,text,boolean,numeric,text,text,text),
   public.custody_review(uuid,boolean,text), public.custody_tx_delete(uuid), public.custody_photo(uuid), public.custody_settle(uuid,text,text),
   public.custody_delete(uuid), public.custody_balance(uuid), public.custody_push(uuid[],text,text,text), public.custody_staff(text), public.custody_emp_user(uuid) from public, anon;
 grant execute on function public.custody_open(uuid,text,numeric,text,date,text,text), public.custody_add(uuid,text,numeric,date,text,text,text,boolean,numeric,text,text,text),
   public.custody_review(uuid,boolean,text), public.custody_tx_delete(uuid), public.custody_photo(uuid), public.custody_settle(uuid,text,text),
   public.custody_delete(uuid), public.custody_can(text), public.custody_emps() to authenticated;
-
 select 'تم تفعيل العُهد النقدية ✓' as result;
--- ============================================================
---  إشعار تغيّر أسعار المشتريات — يشغَّل مرة واحدة في Supabase → SQL Editor → Run
---  كل ما ينرفع تقرير «أسعار المشتريات» اليومي وفيه ارتفاع سعر ← إشعار للإدارة ولمن عنده قسم الأسعار
--- ============================================================
 create or replace function public.price_alerts_of(p_html text) returns text[]
 language sql immutable as $$
   select coalesce(array_agg(btrim(regexp_replace(regexp_replace(m[1] || ': ' || m[2], '<[^>]+>', ' ', 'g'), '\s+', ' ', 'g'))), '{}')
   from regexp_matches(coalesce(p_html, ''), '<div class="al [^"]*"[^>]*>\s*<span class="pill">([^<]*ارتفاع[^<]*)</span>\s*<p>((?:[^<]|<[^/]|</[^p])*)</p>', 'g') as m
 $$;
-
 create or replace function public.price_alerts_push() returns trigger
 language plpgsql security definer set search_path = public as $$
 declare a text[]; o text[] := '{}'; u uuid[]; v_first text;
@@ -339,7 +292,7 @@ begin
   if to_regprocedure('public.push_send(uuid[],text,text,text,text)') is null then return new; end if;
   a := price_alerts_of(new.data->>'html');
   if tg_op = 'UPDATE' then o := price_alerts_of(old.data->>'html'); end if;
-  if coalesce(array_length(a, 1), 0) = 0 or a = o then return new; end if;   -- ما فيه ارتفاع أو نفس التنبيهات
+  if coalesce(array_length(a, 1), 0) = 0 or a = o then return new; end if;
   select coalesce(array_agg(distinct p.id), '{}') into u from profiles p
   where p.active and (p.role in ('owner','admin')
      or (p.role = 'user' and exists (select 1 from user_sections s where s.user_id = p.id and s.section = 'chicken')));
@@ -348,12 +301,10 @@ begin
     left(v_first, 120) || case when array_length(a, 1) > 1 then ' — و' || (array_length(a, 1) - 1) || ' تنبيه ثاني' else '' end,
     './?tab=chicken', 'prices-' || new.id);
   return new;
-exception when others then return new;   -- الإشعار ما يوقف رفع التقرير أبداً
+exception when others then return new;
 end $$;
-
 drop trigger if exists price_alerts_push_trg on public.app_docs;
 create trigger price_alerts_push_trg after insert or update of data on public.app_docs
   for each row execute function public.price_alerts_push();
-
 select 'تم تفعيل إشعار ارتفاع الأسعار ✓ — تنبيهات تقرير اليوم: ' ||
   coalesce((select array_length(price_alerts_of(data->>'html'), 1)::text from app_docs where app = 'prices' and coll = 'pages' order by id desc limit 1), '0') as result;
