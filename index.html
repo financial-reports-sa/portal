@@ -646,7 +646,7 @@ const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'ai',na
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup','feedback'];
-const APP_VER='69';
+const APP_VER='70';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -2112,6 +2112,16 @@ const AI_FN='ai-chat';
 async function aiCtx(){
   if(st._aiCtx&&Date.now()-st._aiCtxAt<300000) return st._aiCtx;
   const td=todayIso(), bs=st.branches.map(b=>b.id), BN=Object.fromEntries(st.branches.map(b=>[b.id,b.name])); const C={today:td,weekday:DAYN[new Date(td+'T12:00:00').getDay()],branches:BN};
+  C.platform_guide={
+    note:'أسئلة طريقة عمل المنصة وأقسامها والإجراءات (الكشوفات، الخصومات، السلف، الصيانة، التسليم…) من صميم العمل وتجاوب عليها بالتفصيل من هذا الدليل.',
+    employee_deductions:'مدير الفرع يسجّل الخصم من قسم الموظفين (المبلغ، التاريخ، السبب، صورة المخالفة). الخصم ينخصم تلقائياً من مستحق الموظف في «كشف الموظفين الشهري» ويظهر في عمود «الخصم» ويُحسب «الصافي» = المستحق − الخصم. الكشف يُصدَّر Excel من قسم الموظفين ← تبويب الكشف ← اختيار الشهر والفرع ← «تصدير Excel» (كل الفروع = ملف واحد فيه ورقة لكل فرع). أسباب الخصم: تأخير، غياب، مخالفة بلدية، مخالفة نظافة، تلف أو كسر، عجز كاشير، سلفة، أخرى. إلغاء الخصم يحذفه من الكشف.',
+    monthly_payroll_sheet:'المستحق = الراتب كامل للشهر الكامل، والمباشر أو المنتهية خدماته خلال الشهر = (الراتب ÷ 30) × أيام العمل.',
+    salary_advances:'الموظف يطلب السلفة من حسابه في التطبيق ← موافقة مدير الفرع ← اعتماد المالك ← تبدأ الأقساط من شهر الخصم المحدد. أقساط السلف ما تنزل تلقائياً في كشف الخصومات إلا إذا سُجّلت كخصم بسبب «سلفة».',
+    maintenance:'مدير الفرع يرفع طلب صيانة ← المشرف يقبل ويسند لفني أو يرفض ← التنفيذ (ويمكن التعليق) ← الإنجاز مع التكلفة والصورة ← مدير الفرع يؤكد الاستلام ويقيّم أو يرفض الإنجاز. المهلة: عاجل 24 ساعة، عالي 3 أيام، عادي 7 أيام.',
+    customer_feedback:'العميل يقيّم من QR في المطعم ← إشعار لمدير الفرع والإدارة ← المراحل: مراجعة ← تواصل مع العميل ← حل المشكلة والتعويض ← إغلاق. الشكوى اللي تعدّي 24 ساعة بدون حل تصير متأخرة.',
+    cashier_handover:'الكاشير يسلّم الوردية من رابط التسليم برمزه الشخصي (كاش، شبكة، آجل، تطبيقات، تحويلات…)، والمحاسب يراجعها ويسجّل العجز أو الزيادة. الإدارة تقدر ترسل للكاشير تنبيه أو إنذار من قسم التسليم ويرد بالسبب.',
+    permissions:'كل مستخدم يشوف فروعه وأقسامه المسموحة فقط، والحذف للمالك فقط.'
+  };
   const r2=x=>Math.round(x*100)/100;
   try{ if(canSee('sales')){ const S=(await loadSales()).filter(r=>bs.includes(r.branch_id)); const from=aiShift(td,-62);
     const daily={}; S.filter(r=>r.day>=from).forEach(r=>{(daily[r.day]=daily[r.day]||{})[r.branch_id]=r2(r.amount);}); C.sales_daily_last_60_days=daily;
