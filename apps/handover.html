@@ -295,7 +295,7 @@ async function cmOpen(code){
   md.querySelector('#cmTpl').innerHTML=(CM_TPL[kind]||[]).map((t,i)=>`<button data-t="${i}">📝 ${esc(t.replace('{d}',yd).slice(0,38))}…</button>`).join('');
   $('#cmSend').textContent='إرسال '+CM_K[kind][0];$('#cmSend').style.background=CM_K[kind][1];};
  const paint=async()=>{const box=md.querySelector('#cmMsgs');try{const {data,error}=await SBC.rpc('cmsg_thread',{p_code:code});if(error)throw error;
-  box.innerHTML=(data||[]).length?data.map(m=>`<div class="cm-b ${m.side==='admin'?'a '+m.kind:'c'}">${m.side==='admin'&&m.kind!=='msg'?`<span class="k">${CM_K[m.kind][0]}</span><br>`:''}${esc(m.body)}<span class="m">${m.side==='admin'?esc(m.by||'الإدارة')+' · ':''}${cmTime(m.at)}${m.side==='admin'?(m.read?' · ✓✓ قرأها':' · ✓ لم تُقرأ بعد'):''}</span>${S.writer?`<button class="x" data-x="${m.id}" title="حذف">✕</button>`:''}</div>`).join(''):'<div class="empty">لا توجد رسائل — ابدأ المحادثة</div>';
+  box.innerHTML=(data||[]).length?data.map(m=>`<div class="cm-b ${m.side==='admin'?'a '+m.kind:'c'}">${m.side==='admin'&&m.kind!=='msg'?`<span class="k">${CM_K[m.kind][0]}</span><br>`:''}${esc(m.body)}<span class="m">${m.side==='admin'?esc(m.by||'الإدارة')+' · ':''}${cmTime(m.at)}${m.side==='admin'?(m.read?' · ✓✓ قرأها':' · ✓ لم تُقرأ بعد'):''}</span>${S.owner?`<button class="x" data-x="${m.id}" title="حذف">✕</button>`:''}</div>`).join(''):'<div class="empty">لا توجد رسائل — ابدأ المحادثة</div>';
   box.scrollTop=box.scrollHeight;c.unread=0;}catch(e){box.innerHTML=`<div class="banner">${/cmsg_|function|schema/i.test(e.message||'')?'شغّل ملف cashier_msgs.sql في Supabase أولاً':'تعذّر التحميل: '+esc(e.message||'')}</div>`}};
  paintK();paint();
  md.addEventListener('click',async e=>{
@@ -678,7 +678,7 @@ document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>setTab(b.data
 (async function boot(){
 const {data:{session}}=await SBC.auth.getSession();
 if(!session){(window.top||window).location.href=new URL('../',location.href).href;return}
-try{const p=await SBC.from('profiles').select('role,active').eq('id',session.user.id).maybeSingle();S.writer=!!(p.data&&p.data.active&&['owner','admin'].includes(p.data.role))}catch(e){S.writer=false}
+try{const p=await SBC.from('profiles').select('role,active').eq('id',session.user.id).maybeSingle();S.writer=!!(p.data&&p.data.active&&['owner','admin'].includes(p.data.role));S.owner=!!(p.data&&p.data.active&&p.data.role==='owner')}catch(e){S.writer=false}
 if(S.writer){try{const c=await SBC.rpc('handover_codes');S.codes=c.data||[]}catch(e){}}
 await cmLoad();
 if(new URLSearchParams(location.search).get('cm')){S.cmOpen=true;}
