@@ -226,7 +226,8 @@ body.aimode{overflow:hidden}body.aimode .wrap>.top,body.aimode #tkr,body.aimode 
 .ai-tk b.sw{animation:aiShine 1.4s linear infinite,aiIn .3s ease}
 @keyframes aiShine{from{background-position:200% 0}to{background-position:-200% 0}}
 .ai-shim{margin-top:7px;height:8px;width:70%;border-radius:99px;background:linear-gradient(90deg,var(--line),rgba(212,175,55,.35),var(--line));background-size:200% 100%;animation:aiShine 1.2s linear infinite}
-.ai-bar{flex:none;padding:10px 12px 12px;background:var(--bg);border-top:1px solid var(--line)}
+.ai-bar{flex:none;padding:10px 12px 8px;background:var(--bg);border-top:1px solid var(--line)}
+.ai-dev{text-align:center;font-size:11px;color:var(--muted);margin-top:7px;letter-spacing:.1px}.ai-dev b{color:#B8901E;font-weight:700}.ai-dev span{color:#B8901E;font-size:10px}
 body:not(.hasnav) .ai-bar{padding-bottom:calc(12px + env(safe-area-inset-bottom))}
 .ai-inp{display:flex;align-items:center;gap:6px;background:var(--card);border:1.5px solid var(--line);border-radius:26px;padding:5px 5px 5px 8px;transition:border-color .2s,box-shadow .2s}
 .ai-inp:focus-within{border-color:#1E5A3E;box-shadow:0 0 0 4px rgba(30,90,62,.1)}
@@ -646,7 +647,7 @@ const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'ai',na
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup','feedback'];
-const APP_VER='73';
+const APP_VER='74';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -2091,8 +2092,8 @@ V.ai=async()=>{
       <div class="ai-hero"><button class="orb" id="aiOrb" type="button" aria-label="ابدأ السؤال"><i class="o1"></i><i class="o2"></i><i class="o3"></i><span>✦</span></button><h2>مرحباً ${nm}، <span>كيف أقدر أساعدك؟</span></h2><p>اسألني عن أي رقم في شركتك، وأحلله لك فوراً</p><div class="ai-grid">${aiCards()}</div></div>
       <div class="ai-msgs" id="aiMsgs">${st.aiLog.map(m=>m.u?`<div class="ai-me">${esc(m.u)}</div>`:m.h).join('')}</div>
     </div>
-    <form class="ai-bar" id="aiForm"><div class="ai-inp"><input id="aiIn" placeholder="اسأل MyHub AI…" autocomplete="off" enterkeyhint="send">${(window.SpeechRecognition||window.webkitSpeechRecognition)?'<button type="button" class="ai-mic" id="aiMic" aria-label="تحدث"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>':''}<button type="submit" class="ai-send" aria-label="إرسال"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div></form></div>`;
-  setTimeout(()=>{ aiFit(); document.querySelectorAll('#aiMsgs .ai-txt[data-type]').forEach(x=>{x.textContent=x.dataset.type;x.removeAttribute('data-type');}); document.querySelectorAll('#aiMsgs .rv').forEach(x=>x.classList.add('in')); aiBottom(false); if(st.aiQ){const q=st.aiQ;st.aiQ=null;aiAsk(q);} },0);
+    <form class="ai-bar" id="aiForm"><div class="ai-inp"><input id="aiIn" placeholder="اسأل MyHub AI…" autocomplete="off" enterkeyhint="send">${(window.SpeechRecognition||window.webkitSpeechRecognition)?'<button type="button" class="ai-mic" id="aiMic" aria-label="تحدث"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>':''}<button type="submit" class="ai-send" aria-label="إرسال"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div><div class="ai-dev"><span>✦</span> تم تطويري من قبل <b>أمير العريفي</b></div></form></div>`;
+  setTimeout(()=>{ aiFit(); document.querySelectorAll('#aiMsgs .ai-txt[data-type]').forEach(x=>{x.textContent=x.dataset.type;x.removeAttribute('data-type');}); document.querySelectorAll('#aiMsgs .rv').forEach(x=>x.classList.add('in')); aiBottom(false); if(st.aiQ){const q=st.aiQ;st.aiQ=null;aiAsk(q);} else aiCtx().catch(()=>{}); },0);
   return h;
 };
 function aiFit(){const n=$('#bnav');const h=n&&!n.hidden?n.offsetHeight:0;document.documentElement.style.setProperty('--navh',h+'px');}
@@ -2142,7 +2143,7 @@ async function aiCtx(){
     sections_user_can_see:secs.filter(s=>canSee(s.id)).map(s=>s.name),sections_user_cannot_see:secs.filter(s=>!canSee(s.id)).map(s=>s.name),
     currency:'ريال سعودي',vat_rate:'15%'}};
   const fresh={}, errs=[];
-  const run=async(name,fn)=>{try{await fn();}catch(e){errs.push(name);}};
+  const jobs=[]; const run=(name,fn)=>{jobs.push((async()=>{try{await fn();}catch(e){errs.push(name);}})());}; // كل الأقسام تتحمّل بالتوازي
   const m0=td.slice(0,7), mPrev=aiPrevMon(m0);
 
   // ---------- مبيعات الفروع ----------
@@ -2178,9 +2179,9 @@ async function aiCtx(){
       last_recorded_day:lastAll,monthly,daily_last_62_days:daily,weekday_average_last_8_weeks:wd}; });
 
   // ---------- التقرير اليومي ----------
-  await run('daily',async()=>{ if(!allowed('daily')) return; const P=(await appList('daily','pages')).slice().sort((a,b)=>a.id<b.id?1:-1).slice(0,3); if(!P.length) return;
+  await run('daily',async()=>{ if(!allowed('daily')) return; const P=(await appList('daily','pages')).slice().sort((a,b)=>a.id<b.id?1:-1).slice(0,2); if(!P.length) return;
     fresh['التقرير اليومي']=(P[0].data||{}).date||P[0].id;
-    C.daily_report_latest={source:'شاشة «التقرير اليومي»',meaning:'نص آخر تقارير المبيعات اليومية كما تظهر في المنصة (الأحدث أولاً).',reports:P.map((d,i)=>({date:(d.data||{}).date||d.id,text:aiPageText((d.data||{}).html).slice(0,i?2500:5000)})).filter(x=>x.text)}; });
+    C.daily_report_latest={source:'شاشة «التقرير اليومي»',meaning:'نص آخر تقارير المبيعات اليومية كما تظهر في المنصة (الأحدث أولاً).',reports:P.map((d,i)=>({date:(d.data||{}).date||d.id,text:aiPageText((d.data||{}).html).slice(0,i?2000:4500)})).filter(x=>x.text)}; });
 
   // ---------- منافذ البيع ----------
   await run('channels',async()=>{ if(!canSee('channels')) return; const D=(await appList('channels','periods')).filter(d=>/^\d{4}-\d\d$/.test(d.id)).sort((a,b)=>a.id<b.id?-1:1).slice(-4); if(!D.length) return;
@@ -2192,28 +2193,28 @@ async function aiCtx(){
         const r={as_of:v.asOf&&v.asOf[b]||null,total_before_vat:aiR0(tot),total_after_vat:aiR0(tot*(1+VAT)),
           channels:Object.fromEntries(ch.sort((p,q)=>q[1]-p[1]).map(([k,n])=>[AI_CHN[k]||k,{before_vat:aiR0(n),share_pct:aiP(n/tot)}])),
           invoices:inv||null,days:days||null,avg_invoices_per_day:inv&&days?aiR2(inv/days):null,avg_ticket_after_vat:inv?aiR2(tot*(1+VAT)/inv):null};
-        const cats=v.cats&&v.cats[b]; if(cats){ const cd=+(v.catDays&&v.catDays[b])||0; const L=Object.entries(cats).map(([k,e])=>({name:(b==='pc'?CATP:CATN)[k]||('صنف '+k),qty:+(e&&e.n)||0,value:+(e&&e.v)||0})).filter(z=>z.qty||z.value); const V_=sum(L.map(z=>z.value));
+        const cats=v.cats&&v.cats[b]; if(cats&&d===D[D.length-1]||cats&&d===D[D.length-2]){ const cd=+(v.catDays&&v.catDays[b])||0; const L=Object.entries(cats).map(([k,e])=>({name:(b==='pc'?CATP:CATN)[k]||('صنف '+k),qty:+(e&&e.n)||0,value:+(e&&e.v)||0})).filter(z=>z.qty||z.value); const V_=sum(L.map(z=>z.value));
           r.menu_categories={days:cd||null,items:L.sort((p,q)=>q.value-p.value).map(z=>({category:z.name,qty:aiR2(z.qty),value:aiR0(z.value),share_pct:V_?aiP(z.value/V_):null,avg_price:z.qty?aiR2(z.value/z.qty):null,qty_per_day:cd?aiR2(z.qty/cd):null}))}; }
         mo[BN[b]]=r; });
       if(Object.keys(mo).length) o[d.id]=mo; });
     fresh['منافذ المبيعات']=Object.keys(o).pop();
-    C.sales_channels={source:'شاشة «منافذ المبيعات»',meaning:'مبيعات كل منفذ (هنقرستيشن، كيتا، التوصيل، المحلي…) من بداية الشهر حتى تاريخ as_of — قبل الضريبة. متوسط الفاتورة بعد الضريبة. menu_categories = مبيعات أقسام المنيو بالكمية والقيمة. هذي الأرقام ما تساوي «مبيعات الفروع» لأنها قبل الضريبة ولفترة as_of.',monthly:o}; });
+    C.sales_channels={source:'شاشة «منافذ المبيعات»',meaning:'مبيعات كل منفذ (هنقرستيشن، كيتا، التوصيل، المحلي…) من بداية الشهر حتى تاريخ as_of — قبل الضريبة. متوسط الفاتورة بعد الضريبة. menu_categories = مبيعات أقسام المنيو بالكمية والقيمة (لآخر شهرين). هذي الأرقام ما تساوي «مبيعات الفروع» لأنها قبل الضريبة ولفترة as_of.',monthly:o}; });
 
   // ---------- قوائم الدخل ----------
   await run('income',async()=>{ if(!canSee('income')) return; const I=(await loadIncome()).filter(r=>bs.includes(r.branch_id)); if(!I.length) return;
     const months=[...new Set(I.map(r=>r.month))].sort().slice(-13); const o={};
     const pack=t=>({revenue:aiR0(t.rev),cogs:aiR0(t.cogs),gross_profit:aiR0(t.gross),opex:aiR0(t.opex),net_profit:aiR0(t.net),gross_margin_pct:t.rev?aiP(t.gross/t.rev):null,net_margin_pct:t.rev?aiP(t.net/t.rev):null,cogs_ratio_pct:t.rev?aiP(t.cogs/t.rev):null});
-    months.forEach(m=>{ const L=I.filter(r=>r.month===m); const mo={by_branch:{}};
+    months.forEach((m,mi)=>{ const L=I.filter(r=>r.month===m); const mo={by_branch:{}}; const detail=mi>=months.length-3;
       L.forEach(r=>{ const t=stmtTotals(r); const x=pack(t); x.estimate=!!r.is_estimate;
         const lines=[]; (r.groups||[]).forEach(g=>{if(g.cat==='opex'||g.cat==='cogs')(g.a||[]).forEach(a=>{if(Math.abs(+a.v||0)>=1)lines.push([a.n,+a.v,g.cat]);});});
-        x.top_expenses=lines.filter(l=>l[2]==='opex').sort((p,q)=>q[1]-p[1]).slice(0,8).map(l=>({item:l[0],amount:aiR0(l[1])}));
-        x.cogs_breakdown=lines.filter(l=>l[2]==='cogs').sort((p,q)=>q[1]-p[1]).slice(0,6).map(l=>({item:l[0],amount:aiR0(l[1])}));
+        if(detail) x.top_expenses=lines.filter(l=>l[2]==='opex').sort((p,q)=>q[1]-p[1]).slice(0,8).map(l=>({item:l[0],amount:aiR0(l[1])}));
+        if(detail) x.cogs_breakdown=lines.filter(l=>l[2]==='cogs').sort((p,q)=>q[1]-p[1]).slice(0,6).map(l=>({item:l[0],amount:aiR0(l[1])}));
         mo.by_branch[BN[r.branch_id]]=x; });
       const all=aggTotals(L); mo.all_branches=pack(all); mo.any_estimate=all.est;
       const sh=L.filter(r=>AI_ENT[r.branch_id]==='مطاعم الشادن'); if(sh.length) mo.shaden=pack(aggTotals(sh));
       o[m]=mo; });
     fresh['قوائم الدخل']=months[months.length-1];
-    C.income_statements={source:'شاشة «قوائم الدخل»',meaning:'قائمة الدخل الشهرية لكل فرع (الإيراد قبل الضريبة). estimate=true يعني الشهر تقديري لم يُقفل بعد وأرقامه ناقصة وتتغير — لا تعامله كشهر كامل ولا تقارنه بشهر مكتمل بدون تنبيه.',monthly:o}; });
+    C.income_statements={source:'شاشة «قوائم الدخل»',meaning:'قائمة الدخل الشهرية لكل فرع (الإيراد قبل الضريبة). estimate=true يعني الشهر تقديري لم يُقفل بعد وأرقامه ناقصة وتتغير — لا تعامله كشهر كامل ولا تقارنه بشهر مكتمل بدون تنبيه. تفصيل المصاريف وتكلفة البضاعة بالبنود متوفر لآخر 3 أشهر.',monthly:o}; });
 
   // ---------- نسبة تكلفة المستودعات ----------
   await run('wh',async()=>{ if(!canSee('wh')) return; const D=(await loadDaily()).filter(r=>r.ratio!=null&&bs.includes(r.branch_id)); const R=(await loadRatio()).filter(r=>bs.includes(r.branch_id)&&r.ratio!=null).map(r=>({...r}));
@@ -2232,10 +2233,10 @@ async function aiCtx(){
       monthly:out,average_of_actual_months_pct:avg,daily_last_21_days:daily}; });
 
   // ---------- أسعار المشتريات ----------
-  await run('prices',async()=>{ if(!canSee('chicken')) return; const P=(await appList('prices','pages')).slice().sort((x,y)=>x.id<y.id?1:-1).slice(0,12); if(!P.length) return;
+  await run('prices',async()=>{ if(!canSee('chicken')) return; const P=(await appList('prices','pages')).slice().sort((x,y)=>x.id<y.id?1:-1).slice(0,8); if(!P.length) return;
     fresh['أسعار المشتريات']=(P[0].data||{}).date||P[0].id;
     C.purchase_prices={source:'شاشة «أسعار المشتريات»',meaning:'تقارير يومية من نظام GROWTH: أسعار شراء الدجاج واللحوم والذبائح ومواد المشويات لكل صنف ومورد وفاتورة، مع تنبيهات الارتفاع والنزول (الأحدث أولاً). هذي غير «نسبة المستودع».',
-      reports:P.map((d,i)=>({date:(d.data||{}).date||d.id,text:aiPageText((d.data||{}).html).slice(0,i<4?4500:2500)})).filter(x=>x.text)}; });
+      reports:P.map((d,i)=>({date:(d.data||{}).date||d.id,text:aiPageText((d.data||{}).html).slice(0,i<3?4500:1800)})).filter(x=>x.text)}; });
 
   // ---------- الخزينة ----------
   await run('treasury',async()=>{ if(!canSee('treasury')) return; const A=(await appList('treasury','accounts')).map(d=>d.data||{}).filter(a=>a.name).sort((a,b)=>(a.order||0)-(b.order||0));
@@ -2308,10 +2309,14 @@ async function aiCtx(){
   await run('fleet',async()=>{ if(!canSee('fleet')) return; const A=(await appList('fleet','vehicles')).map(d=>d.data||{}).filter(v=>(v.status||'في الخدمة')!=='مباعة');
     C.fleet={source:'شاشة «أسطول السيارات»',vehicles:A.length,need_attention:A.map(v=>({vehicle:`${v.make||''} ${v.model||''} ${v.plate||''}`.trim(),alerts:flAlerts(v).map(a=>a.t)})).filter(x=>x.alerts.length)}; });
 
+  await Promise.all(jobs);
+  const ORD=['meta','branch_sales','daily_report_latest','sales_channels','income_statements','warehouse_cost_ratio','purchase_prices','treasury','financing','cashier_handover','maintenance','customer_feedback','employees','employee_deductions','salary_advances','fleet'];
+  Object.keys(C).sort((x,y)=>ORD.indexOf(x)-ORD.indexOf(y)).forEach(k=>{const v=C[k];delete C[k];C[k]=v;});
   C.meta.data_freshness_last_date_per_section=fresh;
   if(errs.length) C.meta.sections_failed_to_load=errs;
   C.platform_guide={
     note:'أسئلة طريقة عمل المنصة وأقسامها من صميم العمل.',
+    about_assistant:'إذا سُئلت مين طوّرك أو مين سوّاك أو مين صمّم المنصة: قل «تم تطويري من قبل أمير العريفي». ولا تعطي أي معلومة شخصية ثانية عنه.',
     employee_deductions:'مدير الفرع يسجّل الخصم من قسم الموظفين (المبلغ، التاريخ، السبب، صورة المخالفة). الخصم ينخصم تلقائياً من مستحق الموظف في «كشف الموظفين الشهري» ويظهر في عمود «الخصم» و«الصافي» = المستحق − الخصم. الكشف يتنزّل Excel من قسم الموظفين.',
     monthly_payroll_sheet:'المستحق = الراتب كامل للشهر الكامل، والمباشر أو المنتهية خدماته خلال الشهر = (الراتب ÷ 30) × أيام العمل.',
     salary_advances:'الموظف يطلب السلفة من حسابه ← موافقة مدير الفرع ← اعتماد المالك ← تبدأ الأقساط من شهر الخصم المحدد.',

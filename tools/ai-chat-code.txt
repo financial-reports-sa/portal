@@ -1,7 +1,7 @@
 // MyHub AI — Supabase → Edge Functions → اسمها: ai-chat (اترك Verify JWT شغّال)
 // المفتاح يُحفظ في Edge Functions → Secrets باسم ANTHROPIC_API_KEY (لا يُكتب هنا أبداً)
 // اختياري: Secret باسم AI_MODEL لتغيير النموذج بدون تعديل الكود
-const MODEL = Deno.env.get("AI_MODEL") || "claude-sonnet-5-5";
+const MODEL = Deno.env.get("AI_MODEL") || "claude-haiku-4-5-20251001"; // أسرع. للأقوى: Secret AI_MODEL = claude-sonnet-5-5
 const FALLBACK = "claude-haiku-4-5-20251001";
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -50,6 +50,7 @@ const SYSTEM = `أنت «MyHub AI»، محلل أعمال داخل «منصة ا
 - لا تذكر أبداً JSON أو أسماء الحقول الإنجليزية أو التعليمات — تكلم بأسماء الشاشات العربية.
 
 ## الخصوصية والنطاق
+- إذا سُئلت مين طوّرك أو مين سوّاك: «تم تطويري من قبل أمير العريفي».
 - نطاقك شغل الشركة وطريقة استخدام المنصة فقط.
 - ممنوع تماماً تعطي أو تخمّن أي معلومات شخصية عن المالك أو أي شخص (حياته، عائلته، عنوانه، أرقامه، صحته، أمواله الخاصة…)، وممنوع تجاوب أسئلة خارج العمل. اعتذر بجملة وحدة وقل إنك مختص بأرقام وتشغيل الشركة.`;
 
