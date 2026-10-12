@@ -25,14 +25,14 @@ body{font-family:'IBM Plex Sans Arabic',sans-serif;display:flex;flex-direction:c
 .in{position:absolute;inset:26px;display:flex;flex-direction:column;align-items:center;padding:52px 58px 40px;text-align:center}
 .brand{display:flex;align-items:center;gap:16px}
 .mark{width:66px;height:66px;border-radius:19px;background:linear-gradient(135deg,var(--be2),var(--be3));color:var(--ink);display:grid;place-items:center;font-family:'Readex Pro';font-weight:700;font-size:32px;box-shadow:0 10px 24px -10px rgba(0,0,0,.6)}
-.brand b{display:block;font-family:'Readex Pro';font-weight:700;font-size:32px;color:var(--be2);line-height:1.2;text-align:start}
-.brand span{display:block;font-size:19px;opacity:.78;text-align:start}
-.rule{display:flex;align-items:center;gap:14px;margin:30px 0 22px;width:62%}.rule i{flex:1;height:1.5px;background:linear-gradient(90deg,transparent,rgba(var(--rgb),.8),transparent)}.rule b{color:var(--be);font-size:16px}
+.brand b{display:block;font-family:'Readex Pro';font-weight:700;font-size:50px;color:var(--be2);line-height:1.2;text-align:center}
+.brand span{display:block;font-size:30px;font-weight:500;opacity:.88;text-align:center;margin-top:4px}
+.rule{display:flex;align-items:center;gap:14px;margin:22px 0 18px;width:62%}.rule i{flex:1;height:1.5px;background:linear-gradient(90deg,transparent,rgba(var(--rgb),.8),transparent)}.rule b{color:var(--be);font-size:16px}
 h1{font-family:'Readex Pro';font-weight:700;font-size:74px;line-height:1.15;letter-spacing:-.5px}
 h1 em{font-style:normal;background:linear-gradient(180deg,var(--be2),var(--be3));-webkit-background-clip:text;background-clip:text;color:transparent}
 .sub{font-size:27px;opacity:.9;margin-top:12px}
 .en{font-family:'Readex Pro';font-size:18px;letter-spacing:.6px;opacity:.6;margin-top:6px;direction:ltr}
-.qrw{position:relative;margin-top:34px;width:372px;height:372px;border-radius:38px;background:#fff;padding:34px;box-shadow:0 30px 60px -25px rgba(0,0,0,.7),0 0 0 10px rgba(255,255,255,.07)}
+.qrw{position:relative;margin-top:30px;width:350px;height:350px;border-radius:38px;background:#fff;padding:34px;box-shadow:0 30px 60px -25px rgba(0,0,0,.7),0 0 0 10px rgba(255,255,255,.07)}
 .qrw svg.q{width:100%;height:100%;display:block}
 .qrw .c{position:absolute;width:62px;height:62px;border:7px solid var(--be3)}
 .c.tl{top:-15px;right:-15px;border-left:0;border-bottom:0;border-radius:0 30px 0 0}
@@ -55,7 +55,7 @@ h1 em{font-style:normal;background:linear-gradient(180deg,var(--be2),var(--be3))
 .foot .l svg{flex:none;width:38px;height:38px}
 .foot .l small{display:block;font-size:14.5px;opacity:.65}
 .stars{color:var(--be3);font-size:30px;letter-spacing:4px;direction:ltr}
-.pg.oud{--b1:#6B2F1A;--b2:#5A2614;--b3:#481D0F;--be:#F0DDBA;--be2:#FAEED8;--be3:#E3C99C;--ink:#4A1E10;--rgb:240,221,186}
+.pg.oud{--b1:#4A1F11;--b2:#3D190D;--b3:#2E1209;--be:#F0DDBA;--be2:#FAEED8;--be3:#E3C99C;--ink:#4A1E10;--rgb:240,221,186}
 .pg.mauve{--b1:#B07FDB;--b2:#9D6AD0;--b3:#8A57C2;--be:#F6E7CC;--be2:#FFF6E6;--be3:#F0D9AE;--ink:#5B2D8E;--rgb:246,231,204}
 .pg.mauve .in{text-shadow:0 2px 6px rgba(60,20,100,.22)}
 .pg.oud .glow,.pg.mauve .glow{display:none}.pg.oud h1 em,.pg.mauve h1 em{background:none;color:var(--be3);-webkit-text-fill-color:var(--be3)}.pg.oud .pat,.pg.mauve .pat{opacity:.06}
@@ -87,7 +87,7 @@ const I={cam:'<svg viewBox="0 0 24 24" fill="none" stroke="#F6E7B0" stroke-width
  shield:'<svg viewBox="0 0 24 24" fill="none" stroke="#E9CF7A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.6-3.4 8.3-8 9-4.6-.7-8-4.4-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-4.5"/></svg>',
  phone:'<svg viewBox="0 0 24 24" fill="none" stroke="#F6E7B0" stroke-width="1.8" stroke-linecap="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg>'};
 document.getElementById('pages').innerHTML=list.map(k=>{const b=BR[k];return `<div class="pg ${b.t}">${PAT}<div class="glow"></div><div class="frame"></div><div class="in">
-  <div class="brand"><div class="mark">${b.m}</div><div><b>${b.n}</b><span>${b.s}</span></div></div>
+  <div class="brand"><div><b>${b.n}</b><span>${b.s}</span></div></div>
   <div class="rule"><i></i><b>◆</b><i></i></div>
   <h1>رأيك <em>يصنع الفرق</em></h1>
   <div class="sub">قيّم تجربتك معنا خلال ٣٠ ثانية</div>
