@@ -146,6 +146,33 @@ body.appmode .tkr{display:none}
 .sb-av{width:14px;height:0;border-top:2px dashed #1E5A3E;display:inline-block}
 .sb-note{margin-top:10px;font-size:12.5px;line-height:1.7;background:linear-gradient(90deg,rgba(212,175,55,.10),transparent);border-inline-start:3px solid #D4AF37;border-radius:8px;padding:7px 10px}
 
+
+/* تقييم العملاء */
+.fb-hero{position:relative;overflow:hidden;border-radius:22px;padding:18px;color:#fff;background:radial-gradient(130% 120% at 100% 0%,#2E7350 0%,#1E5A3E 42%,#0F3322 100%);border:1px solid rgba(212,175,55,.25)}
+.fb-k{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.07);border-radius:13px;padding:8px;display:flex;flex-direction:column;min-width:0}.fb-k span{font-size:10.5px;opacity:.75;white-space:nowrap}.fb-k b{font-size:15px}
+.fb-stars{color:#E2B93B;letter-spacing:1px;direction:ltr;display:inline-block}.fb-stars i{font-style:normal;color:rgba(160,160,150,.35)}
+.fb-row{display:flex;gap:10px;align-items:flex-start;width:100%;border:0;background:none;font:inherit;color:inherit;text-align:start;padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.fb-row:last-child{border-bottom:0}.fb-row.late{background:linear-gradient(90deg,transparent,rgba(208,69,58,.05))}
+.fb-face{flex:none;width:40px;height:40px;border-radius:13px;background:var(--bg);display:grid;place-items:center;font-size:22px}
+.fb-mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.fb-cm{font-size:13.5px;line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.fb-meta{font-size:11.5px;color:var(--muted)}
+.fb-end{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.fb-late{font-size:10.5px;font-weight:700;color:#fff;background:var(--down);border-radius:99px;padding:2px 8px}
+.fb-dist{display:flex;align-items:center;gap:10px;font-size:12.5px;margin:6px 0}.fb-dist span{width:30px;flex:none;color:var(--gold-ink);font-weight:700}.fb-dist .meter{flex:1;margin:0}.fb-dist b{width:28px;text-align:end}
+.fb-tg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}.fb-tg .tag{margin:0 0 4px 4px;display:inline-block}
+.mtd-act .btn{flex:1 1 auto}
+#fbqr{position:fixed;inset:0;z-index:72;background:var(--bg);display:flex;flex-direction:column}.fbq-body>*{flex:none}
+.fbq-body{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;align-items:center;gap:16px}
+.fbq-card{width:100%;max-width:380px;background:#fff;border-radius:22px;padding:22px 20px;text-align:center;border:2px solid var(--c);box-shadow:0 14px 30px -22px rgba(0,0,0,.5);position:relative;overflow:hidden;color:#16231B}
+.fbq-card::before{content:"";position:absolute;inset:0 0 auto 0;height:8px;background:linear-gradient(90deg,#1E5A3E,var(--c),#D4AF37)}
+.fbq-top b{display:block;font-family:var(--f-disp);font-size:20px;color:#1E5A3E}.fbq-top span{font-size:13px;color:#6B746C}
+.fbq-h{font-family:var(--f-disp);font-size:26px;font-weight:700;margin-top:12px}.fbq-s{font-size:14px;color:#4A544C}.fbq-st{color:#D4AF37;font-size:22px;letter-spacing:3px;margin:6px 0}
+.fbq-qr{width:72%;margin:6px auto 4px;padding:10px;border-radius:16px;border:1.5px dashed #D4AF37}.fbq-qr svg{width:100%;height:auto;display:block}
+.fbq-en{font-size:12.5px;color:#6B746C;letter-spacing:.3px}
+.fbq-u{margin-top:12px;font-size:11px;color:#6B746C;display:flex;flex-direction:column;gap:6px;align-items:center;word-break:break-all}
+@media print{body.fbprinting>*:not(#fbqr){display:none!important}body.fbprinting #fbqr{position:static}body.fbprinting .noprint{display:none!important}body.fbprinting .fbq-body{overflow:visible;padding:0}body.fbprinting .fbq-card{page-break-after:always;max-width:none;width:100%;box-shadow:none;margin-top:40px}}
+
 /* login */
 #login{min-height:100vh;display:grid;place-items:center;padding-inline:16px;padding-block:40px}
 .login-card{width:100%;max-width:400px;display:flex;flex-direction:column;gap:14px}
@@ -531,6 +558,7 @@ const SECTIONS=[
   {id:'loans',name:'التمويلات'},
   {id:'fleet',name:'أسطول السيارات'},
   {id:'maint',name:'الصيانة'},
+  {id:'feedback',name:'تقييم العملاء'},
   {id:'advances',name:'السلف',perm:'employees'},
   {id:'me',name:'بوابتي'},
   {id:'handover',name:'تسليم الورديات',app:'handover'},
@@ -544,11 +572,11 @@ const NAV_ICONS={
   ops:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg>',
   fin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/><path d="M6.5 15h4"/></svg>',
   more:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>'};
-const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'rep',name:'التقارير',secs:['sales','daily','channels','income','wh','chicken']},{id:'ops',name:'العمليات',secs:['handover','maint','employees','advances','fleet']},{id:'fin',name:'المالية',secs:['treasury','loans']},{id:'more',name:'الإدارة',secs:['users','data']}];
+const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'rep',name:'التقارير',secs:['sales','daily','channels','income','wh','chicken']},{id:'ops',name:'العمليات',secs:['handover','maint','feedback','employees','advances','fleet']},{id:'fin',name:'المالية',secs:['treasury','loans']},{id:'more',name:'الإدارة',secs:['users','data']}];
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
-const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup'];
-const APP_VER='59';
+const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup','feedback'];
+const APP_VER='60';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -750,7 +778,7 @@ function spark(vals,{w=120,h=34,col='#E9CF7A',fill=true,sw=1.8}={}){
   return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="direction:ltr;display:block"><defs><linearGradient id="${gid}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".35"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>${fill?`<path d="${d} L${X(v.length-1)},${h} L${X(0)},${h} Z" fill="url(#${gid})"/>`:''}<path d="${d}" fill="none" stroke="${col}" stroke-width="${sw}" stroke-linecap="round"/><circle cx="${X(v.length-1)}" cy="${Y(v[v.length-1])}" r="2.8" fill="${col}"/></svg>`;
 }
 const DAYN=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
-const SC_ICON={sales:'📈',daily:'🧾',channels:'🛵',income:'📊',wh:'📦',chicken:'🍗',treasury:'🏦',loans:'💳',fleet:'🚗',maint:'🛠️',advances:'💵',handover:'🔁',employees:'👥',users:'🔐',data:'⬆️'};
+const SC_ICON={sales:'📈',daily:'🧾',channels:'🛵',income:'📊',wh:'📦',chicken:'🍗',treasury:'🏦',loans:'💳',fleet:'🚗',maint:'🛠️',feedback:'⭐',advances:'💵',handover:'🔁',employees:'👥',users:'🔐',data:'⬆️'};
 V.home=async()=>{
   const bs=selBranches(); const now=new Date(), hr=now.getHours();
   const fn_=(st.profile&&(st.profile.full_name||st.profile.username)||'').trim(); const nm=/^(مدير|فرع|حساب)/.test(fn_)?fn_:fn_.split(' ')[0];
@@ -830,6 +858,10 @@ V.home=async()=>{
     if(nx){const dd=Math.round((new Date(nx.date+'T12:00:00')-new Date(td+'T12:00:00'))/864e5);tiles.push(tile('💳','rgba(91,141,214,.14)','القسط القادم',fmt(nx.inst),`بعد ${dd} يوم · ${+nx.date.slice(8)} ${MONTHS[+nx.date.slice(5,7)-1]}`,'loans'));} }catch(e){} }
   if(allowed('fleet')){ try{ const D=await appList('fleet','vehicles'); const A=D.map(d=>d.data||{}).filter(v=>(v.status||'في الخدمة')!=='مباعة'&&(bs.includes(v.br)||(st.f==='all'&&v.br==='wafra')));
     if(A.length){ const al=A.filter(v=>flAlerts(v).length).length; tiles.push(tile('🚗','rgba(155,120,220,.14)','أسطول السيارات',`${A.length} <small style="font-size:12px;font-weight:500">سيارة</small>`,al?`<span class="down">${al} تحتاج انتباه</span>`:'كلها سليمة ✓','fleet')); } }catch(e){} }
+  if(allowed('feedback')){ try{ const r=await sb.from('feedback').select('rating,status,branch,created_at').gte('created_at',new Date(Date.now()-30*864e5).toISOString()).limit(2000); const F=(r.data||[]).filter(f=>bs.includes(f.branch));
+    if(F.length){ const a=F.reduce((t,f)=>t+f.rating,0)/F.length, oc=F.filter(f=>f.rating<=3&&!['resolved','closed'].includes(f.status)).length;
+      tiles.push(tile('⭐','rgba(212,175,55,.16)','رضا العملاء · 30 يوم',`${a.toFixed(1)} <small style="font-size:12px;font-weight:500">من 5</small>`,oc?`<span class="down">${oc} شكوى مفتوحة</span>`:`${F.length} تقييم`,'feedback'));
+      if(oc) ins.push({ic:'⭐',t:`عندك <b>${oc}</b> شكوى عميل مفتوحة — تابعها قبل ما تتأخر.`,go:'feedback',lv:'bad'}); } }catch(e){} }
   if(tiles.length) h+=`<div class="hx-tiles">${tiles.join('')}</div>`;
   // ===== يحتاج إجراء (من التنبيهات) =====
   h+=`<div id="homeTasks"></div>`;
@@ -1294,6 +1326,9 @@ async function loadAlerts(){
       if(R!=='sup'&&m.status==='done') out.push({k:'mtd:'+m.id+':'+m.done_at,ic:'✅',t:`صيانة منجزة بانتظار تأكيدك: ${m.title}`,s:brById(m.branch).name+' · '+mtRef(m),go:'maint'});
       if(R==='mgr'&&m.status==='rejected') out.push({k:'mtr:'+m.id,ic:'✕',t:`رُفض طلب الصيانة: ${m.title}`,s:m.reject_reason||'',go:'maint'});}); } }catch(e){}
   try{ if(canSee('handover')){ const r=await sb.rpc('cmsg_unread'); (r.data||[]).forEach(m=>out.push({k:'cm:'+m.id,ic:'💬',bad:true,t:`رد من الكاشير: ${m.name||m.code}`,s:m.body+' · '+brById(m.branch).name,go:'handover'})); } }catch(e){}
+  try{ if(canSee('feedback')){ const r=await sb.from('feedback').select('id,no,branch,rating,comment,status,created_at').in('status',['new','reviewed','contacted']).order('created_at',{ascending:false}).limit(200); (r.data||[]).forEach(f=>{
+      if(f.status==='new') out.push({k:'fb:'+f.id,ic:f.rating<=2?'⚠️':'⭐',bad:f.rating<=2,t:(f.rating<=3?'شكوى عميل':'تقييم جديد')+' · '+'★'.repeat(f.rating),s:(f.comment?f.comment.slice(0,70)+' · ':'')+brById(f.branch).name,go:'feedback'});
+      else if(fbLate(f)) out.push({k:'fbl:'+f.id+':'+Math.floor(fbAge(f)/24),ic:'⏱',bad:true,t:'شكوى عميل لم تُحل منذ '+hrsTxt(fbAge(f)),s:brById(f.branch).name+' · '+fbRef(f),go:'feedback'}); }); } }catch(e){}
   ALERTS=out.sort((a,b)=>(b.bad?1:0)-(a.bad?1:0)); paintBell(); paintTicker(ALERTS); paintHomeTasks();
 }
 // ----- الشريط المتحرك (كل مستخدم يشوف أقسامه فقط) -----
@@ -1315,6 +1350,7 @@ async function paintTicker(out){
     if(lt) add('⏱',`أوامر عمل متأخرة عن المهلة: <b class="num">${lt}</b>`,'maint',true);
     if(dn) add('✅',`صيانة منجزة بانتظار تأكيدك: <b class="num">${dn}</b>`,'maint');
     if(!nw&&!lt&&!dn) add('🛠️','الصيانة: <b>لا توجد طلبات متأخرة</b>','maint'); }
+  if(canSee('feedback')){ const n=out.filter(a=>a.go==='feedback'&&a.bad).length; if(n) add('⭐',`شكاوى عملاء تحتاج متابعة: <b class="num">${n}</b>`,'feedback',true); }
   if(canSee('advances')){ const n=cnt('advances'); add('💵',n?`طلبات سلف بانتظار موافقتك: <b class="num">${n}</b>`:'السلف: <b>لا توجد طلبات معلّقة</b>','advances',!!n); }
   if(canSee('fleet')){ const n=cnt('fleet',a=>a.bad), w=cnt('fleet',a=>!a.bad); if(n||w) add('🚗',`الأسطول: ${n?`<b class="num">${n}</b> منتهية`:''}${n&&w?' · ':''}${w?`<b class="num">${w}</b> تنتهي قريباً`:''}`,'fleet',!!n); }
   if(canSee('employees')){ const n=cnt('employees'); if(n) add('🪪',`شهادات صحية منتهية أو قريبة: <b class="num">${n}</b>`,'employees',true); }
@@ -1645,6 +1681,123 @@ V.maint=async()=>{
   h+=`<div class="muted" style="font-size:12px;text-align:center;line-height:1.8">دورة الطلب: رفع ← مراجعة وإسناد ← تنفيذ ← إنجاز ← تأكيد الفرع<br>مهلة الإنجاز: عاجل 24 ساعة · عالي 3 أيام · عادي 7 أيام</div>`;
   return h;
 };
+
+// ===================== تقييم العملاء =====================
+const FB_ST={new:['جديد','var(--gold-soft)','var(--gold-ink)'],reviewed:['تمت المراجعة','rgba(91,143,208,.14)','#2F67B0'],contacted:['تم التواصل مع العميل','rgba(91,143,208,.14)','#2F67B0'],resolved:['تم حل المشكلة','rgba(31,161,107,.12)','var(--up)'],closed:['مغلق','var(--chip)','var(--muted)']};
+const FB_ACT={new:'استلام التقييم',reviewed:'تمت المراجعة',contacted:'تم التواصل مع العميل',resolved:'تم حل المشكلة',closed:'إغلاق'};
+const FB_VIS={dine:'داخل المطعم',takeaway:'سفري',delivery:'توصيل'};
+const FB_FACE=['','😠','😕','😐','🙂','😍'];
+const fbRef=f=>'CF-'+String(f.no||0).padStart(5,'0');
+const fbNeg=f=>f.rating<=3;
+const fbOpen=f=>!['resolved','closed'].includes(f.status);
+const fbAge=f=>(Date.now()-new Date(f.created_at))/36e5;
+const fbLate=f=>fbNeg(f)&&fbOpen(f)&&fbAge(f)>24;
+const fbStars=(r,sz)=>`<span class="fb-stars" style="font-size:${sz||13}px">${'★'.repeat(r)}<i>${'★'.repeat(5-r)}</i></span>`;
+const fbPill=s=>{const x=FB_ST[s]||[s,'var(--chip)','inherit'];return `<span class="tag" style="background:${x[1]};color:${x[2]};font-weight:700">${x[0]}</span>`;};
+const fbAgo=t=>{const h=(Date.now()-new Date(t))/36e5;return h<1?'قبل '+Math.max(1,Math.round(h*60))+' دقيقة':h<24?'قبل '+Math.round(h)+' ساعة':'قبل '+Math.round(h/24)+' يوم';};
+const fbUrl=b=>'https://unifiedplatform.app/review/?b='+b;
+function fbSteps(f){const S=['استلام التقييم','المراجعة','التواصل مع العميل','حل المشكلة','الإغلاق'];
+  const cur={new:1,reviewed:2,contacted:3,resolved:4,closed:5}[f.status]||0; const skip=i=>f.status==='closed'&&((i===2&&!f.contacted_at)||(i===3&&!f.resolved_at));
+  return `<div class="mt-st">${S.map((n,i)=>{const c=i<cur?(skip(i)?'':'ok'):i===cur?'cur':'';return `<div class="${c}"><i></i><span>${n}</span></div>`;}).join('')}</div>`;}
+function fbActs(f){const a=[];const pos=!fbNeg(f);
+  if(f.status==='new') a.push(['reviewed','👁 تمت المراجعة',''],['contacted','📞 تم التواصل',''],['closed',pos?'✓ إغلاق (شكر)':'إغلاق','ghost']);
+  if(f.status==='reviewed') a.push(['contacted','📞 تم التواصل مع العميل',''],['resolved','✅ تم حل المشكلة',''],['closed','إغلاق','ghost']);
+  if(f.status==='contacted') a.push(['resolved','✅ تم حل المشكلة',''],['closed','إغلاق','ghost']);
+  if(f.status==='resolved') a.push(['closed','🏁 إغلاق نهائي','']);
+  if(f.status==='closed'&&isAdmin()) a.push(['reviewed','↺ إعادة فتح','ghost']);
+  return a.map(([s,l,c])=>`<button class="btn sm ${c}" data-fbst="${f.id}|${s}">${l}</button>`).join('');}
+function fbRow(f){const b=brById(f.branch);
+  return `<button class="fb-row ${fbLate(f)?'late':''}" data-fbo="${f.id}"><span class="fb-face">${FB_FACE[f.rating]}</span><span class="fb-mid"><span class="bar-row" style="gap:6px">${fbStars(f.rating)}<span class="muted" style="font-size:11px">${fbAgo(f.created_at)}</span></span>
+    <span class="fb-cm">${f.comment?esc(f.comment):f.tags&&f.tags.length?esc(f.tags.join(' · ')):'<span class="muted">بدون تعليق</span>'}</span>
+    <span class="fb-meta"><i class="dot" style="background:${b.color}"></i>${esc(b.name)}${f.name?' · '+esc(f.name):''}${f.phone?' · 📞':''} · ${fbRef(f)}</span></span>
+    <span class="fb-end">${fbPill(f.status)}${fbLate(f)?'<span class="fb-late">متأخر</span>':''}</span></button>`;}
+V.feedback=async()=>{
+  const r=await sb.from('feedback').select('id,no,branch,rating,tags,comment,name,phone,visit,lang,status,resolution,comp,handled_by,created_at,reviewed_at,contacted_at,resolved_at,closed_at,log').order('created_at',{ascending:false}).limit(1000);
+  if(r.error&&/relation|schema cache|does not exist/i.test(r.error.message)) return `<div class="card empty">ميزة تقييم العملاء تحتاج تشغيل ملف feedback.sql في Supabase أولاً</div>`;
+  const all=r.data||[]; st._fbList=all;
+  const ORD=['az','sh','pc']; const brs=[...new Set(st.branches.map(b=>b.id).filter(b=>b!=='wafra').concat(all.map(f=>f.branch)))].sort((x,y)=>(ORD.indexOf(x)+1||9)-(ORD.indexOf(y)+1||9));
+  const fb=st.fbB||'all'; const L=all.filter(f=>fb==='all'||f.branch===fb);
+  const d30=L.filter(f=>fbAge(f)<=720), p30=L.filter(f=>fbAge(f)>720&&fbAge(f)<=1440);
+  const avg=a=>a.length?a.reduce((t,f)=>t+f.rating,0)/a.length:null; const A=avg(d30), PA=avg(p30);
+  const sat=d30.length?d30.filter(f=>f.rating>=4).length/d30.length:null;
+  const openC=L.filter(f=>fbNeg(f)&&fbOpen(f)), late=openC.filter(fbLate), nw=L.filter(f=>f.status==='new');
+  const res=L.filter(f=>f.resolved_at&&fbAge(f)<=720); const rh=res.length?res.reduce((t,f)=>t+(new Date(f.resolved_at)-new Date(f.created_at))/36e5,0)/res.length:null;
+  let h=brs.length>1?`<div class="chips">${[['all','كل الفروع']].concat(brs.map(b=>[b,brById(b).name])).map(([k,n])=>`<button data-fbb="${k}" aria-pressed="${fb===k}">${k!=='all'?`<i class="dot" style="background:${brById(k).color}"></i>`:''}${esc(n)}</button>`).join('')}</div>`:'';
+  h+=`<div class="fb-hero"><div class="hx-glow"></div><div class="bar-row" style="position:relative;z-index:1;align-items:flex-start"><div><div style="font-size:12.5px;opacity:.8">رضا العملاء · آخر 30 يوم</div>
+    <div style="display:flex;align-items:baseline;gap:8px"><b class="num" style="font-size:40px;color:#F6E7B0;line-height:1.1">${A==null?'—':A.toFixed(1)}</b><span style="font-size:13px;opacity:.85">من 5</span></div>
+    ${A!=null?fbStars(Math.round(A),17):''}${A!=null&&PA!=null?`<div style="font-size:12px;margin-top:3px"><b style="color:${A>=PA?'#8EE3B5':'#FFB4A8'}">${A>=PA?'▲':'▼'} ${Math.abs(A-PA).toFixed(1)}</b> <span style="opacity:.75">عن الشهر اللي قبله</span></div>`:''}</div>
+    <button class="mybtn" data-fbqr="1">▦ ملصقات QR</button></div>
+    <div class="hx-stats" style="grid-template-columns:repeat(4,1fr)"><div class="fb-k"><span>تقييمات</span><b class="num">${d30.length}</b></div><div class="fb-k"><span>راضين</span><b class="num">${sat==null?'—':Math.round(sat*100)+'٪'}</b></div><div class="fb-k"><span>مفتوحة</span><b class="num" style="color:${openC.length?'#FFB4A8':'#fff'}">${openC.length}</b></div><div class="fb-k"><span>متوسط الحل</span><b class="num">${rh==null?'—':hrsTxt(rh)}</b></div></div></div>`;
+  if(d30.length){ const dist=[5,4,3,2,1].map(s=>[s,d30.filter(f=>f.rating===s).length]); const mx=Math.max(1,...dist.map(x=>x[1]));
+    const tc=(arr)=>{const m={};arr.forEach(f=>(f.tags||[]).forEach(t=>m[t]=(m[t]||0)+1));return Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,4);};
+    const tp=tc(d30.filter(f=>f.rating>=4)), tn=tc(d30.filter(f=>f.rating<=3));
+    h+=`<div class="card"><h3>توزيع التقييمات <small>30 يوم</small></h3>${dist.map(([s,n])=>`<div class="fb-dist"><span>${s} ★</span><div class="meter"><i style="width:${n/mx*100}%;background:${s>=4?'var(--up)':s===3?'#D4AF37':'var(--down)'}"></i></div><b class="num">${n}</b></div>`).join('')}
+      ${tp.length||tn.length?`<div class="fb-tg">${tp.length?`<div><div class="muted" style="font-size:11.5px;margin-bottom:4px">👍 أكثر شي عجبهم</div>${tp.map(([t,n])=>`<span class="tag" style="background:rgba(31,161,107,.1);color:var(--up)">${esc(t)} · ${n}</span>`).join('')}</div>`:''}${tn.length?`<div><div class="muted" style="font-size:11.5px;margin-bottom:4px">👎 أكثر الملاحظات</div>${tn.map(([t,n])=>`<span class="tag" style="background:rgba(208,69,58,.1);color:var(--down)">${esc(t)} · ${n}</span>`).join('')}</div>`:''}</div>`:''}</div>`; }
+  const def=nw.length||openC.length?'act':'all'; const ft=st.fbT||def;
+  const act=L.filter(f=>f.status==='new'||(fbNeg(f)&&fbOpen(f)));
+  const tabs=[['act','يحتاج إجراء',act.length],['neg','الشكاوى',L.filter(fbNeg).length],['pos','الإيجابية',L.filter(f=>!fbNeg(f)).length],['done','المحلولة',L.filter(f=>f.status==='resolved'||f.status==='closed').length],['all','الكل',L.length]];
+  h+=`<div class="chips">${tabs.map(([k,n,c])=>`<button data-fbt="${k}" aria-pressed="${ft===k}">${n} <span class="muted">${c}</span></button>`).join('')}</div>`;
+  let rows=ft==='act'?act.slice().sort((a,b)=>(fbLate(b)-fbLate(a))||(a.rating-b.rating)):ft==='neg'?L.filter(fbNeg):ft==='pos'?L.filter(f=>!fbNeg(f)):ft==='done'?L.filter(f=>f.status==='resolved'||f.status==='closed'):L;
+  h+=rows.length?`<div class="card" style="padding-block:4px">${rows.slice(0,200).map(fbRow).join('')}</div>`:`<div class="card empty">${ft==='act'?'✅ ما فيه تقييمات تحتاج إجراء':'لا توجد تقييمات'}</div>`;
+  if(isAdmin()&&brs.length>1&&all.length){ const byB=brs.map(b=>{const x=all.filter(f=>f.branch===b&&fbAge(f)<=720);return {b,n:x.length,a:avg(x),o:all.filter(f=>f.branch===b&&fbNeg(f)&&fbOpen(f)).length};});
+    h+=`<div class="card"><h3>حسب الفرع <small>30 يوم</small></h3>${byB.map(x=>`<div class="bar-row" style="padding:8px 0;border-bottom:1px solid var(--line)"><span><i class="dot" style="background:${brById(x.b).color}"></i> <b>${esc(brById(x.b).name)}</b></span><span style="font-size:12.5px">${x.a==null?'—':`<b class="num" style="color:var(--gold-ink)">${x.a.toFixed(1)} ★</b>`} · ${x.n} تقييم${x.o?` · <span class="down">${x.o} شكوى مفتوحة</span>`:''}</span></div>`).join('')}</div>`; }
+  h+=`<div class="muted" style="font-size:12px;text-align:center;line-height:1.8">مراحل المتابعة: استلام ← مراجعة ← تواصل مع العميل ← حل المشكلة ← إغلاق<br>الشكوى اللي تعدّي 24 ساعة بدون حل تطلع «متأخرة»</div>`;
+  return h;
+};
+function fbDetail(f){
+  const b=brById(f.branch); const dt=x=>x?new Date(x).toLocaleString('ar-SA-u-ca-gregory-nu-latn',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'—';
+  const ph=f.phone?String(f.phone).replace(/^0/,'966').replace(/^\+/,''):'';
+  const lg=(f.log||[]).slice().reverse().map(x=>`<li><i></i><div><b>${FB_ACT[x.a]||x.a}</b> <span class="muted">· ${esc(x.by||'')}</span><div class="muted" style="font-size:11.5px">${dt(x.t)}</div>${x.n?`<div style="font-size:12.5px">«${esc(x.n)}»</div>`:''}${x.c?`<div style="font-size:12.5px">🎁 التعويض: ${esc(x.c)}</div>`:''}</div></li>`).join('');
+  const w=document.createElement('div'); w.id='mtdet'; w.dataset.fb='1'; document.body.style.overflow='hidden';
+  w.innerHTML=`<div class="mtd-bar"><button class="icb" data-mtclose="1" aria-label="رجوع">›</button><b>${fbRef(f)}</b><span style="width:36px"></span></div>
+  <div class="mtd-body">
+    <div class="card"><div class="mt-top"><div class="mt-ic" style="font-size:30px">${FB_FACE[f.rating]}</div><div style="flex:1;min-width:0">${fbStars(f.rating,18)}<div class="advref" style="margin-top:2px"><i class="dot" style="background:${b.color}"></i> ${esc(b.name)} · ${FB_VIS[f.visit]||'—'} · ${dt(f.created_at)}</div><div style="margin-top:6px">${fbPill(f.status)} ${fbLate(f)?'<span class="fb-late">متأخر '+hrsTxt(fbAge(f))+'</span>':''}</div></div></div>
+      ${fbSteps(f)}
+      ${f.comment?`<div class="mtd-txt">«${esc(f.comment)}»</div>`:''}
+      ${f.tags&&f.tags.length?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">${f.tags.map(t=>`<span class="tag" style="background:${fbNeg(f)?'rgba(208,69,58,.1)':'rgba(31,161,107,.1)'};color:${fbNeg(f)?'var(--down)':'var(--up)'}">${esc(t)}</span>`).join('')}</div>`:''}</div>
+    <div class="card"><h3>بيانات العميل</h3>${f.name||f.phone?`<div class="bar-row" style="gap:10px"><div><b>${esc(f.name||'بدون اسم')}</b>${f.phone?`<div class="num muted" dir="ltr" style="text-align:start">${esc(f.phone)}</div>`:''}</div>
+      ${f.phone?`<div style="display:flex;gap:6px"><a class="btn sm" href="tel:${esc(f.phone)}">📞 اتصال</a><a class="btn sm ghost" target="_blank" rel="noopener" href="https://wa.me/${esc(ph)}?text=${encodeURIComponent('مرحباً'+(f.name?' '+f.name:'')+'، معك إدارة '+b.name+' بخصوص تقييمك ('+fbRef(f)+')، نعتذر عن تجربتك ونحب نسمع منك.')}">واتساب</a></div>`:''}</div>`:'<div class="muted" style="font-size:13px">العميل ما ترك بيانات تواصل</div>'}${f.lang==='en'?'<div class="muted" style="font-size:11.5px;margin-top:6px">قيّم بالإنجليزي</div>':''}</div>
+    ${f.resolution?`<div class="card"><h3>الحل المتخذ</h3><div class="mtd-txt" style="margin-top:0">${esc(f.resolution)}</div>${f.comp?`<div style="font-size:13px;margin-top:8px">🎁 التعويض: <b>${esc(f.comp)}</b></div>`:''}</div>`:''}
+    <div class="card"><h3>سجل المتابعة</h3><ul class="mtd-log">${lg}</ul></div>
+    ${isAdmin()?`<button class="btn ghost sm" data-fbdel="${f.id}" style="color:var(--down);align-self:center">حذف التقييم</button>`:''}
+  </div>
+  ${fbActs(f)?`<div class="mtd-act">${fbActs(f)}</div>`:''}`;
+  document.body.appendChild(w);
+}
+async function fbQR(){
+  if(!window.qrcode){ await new Promise((ok,no)=>{const s=document.createElement('script');s.src='vendor/qrcode.js';s.onload=ok;s.onerror=no;document.head.appendChild(s);}).catch(()=>{}); }
+  const brs=st.branches.map(b=>b.id).filter(b=>b!=='wafra');
+  const qr=u=>{if(!window.qrcode)return '<div class="muted">تعذّر تحميل QR</div>';const q=qrcode(0,'M');q.addData(u);q.make();return q.createSvgTag({cellSize:6,margin:2,scalable:true});};
+  const NM={az:['مطاعم الشادن','فرع العزيزية'],sh:['مطاعم الشادن','فرع شوران'],pc:['بروست الباتشينو','']};
+  const w=document.createElement('div'); w.id='fbqr'; document.body.style.overflow='hidden';
+  w.innerHTML=`<div class="mtd-bar noprint"><button class="icb" data-fbqrx="1">›</button><b>ملصقات تقييم العملاء</b><button class="btn sm" data-fbprint="1">🖨 طباعة</button></div>
+  <div class="fbq-body"><p class="muted noprint" style="font-size:12.5px;text-align:center">اطبع الملصق وحطه على الطاولات والكاشير. كل فرع له كود خاص — التقييم يوصل لمدير الفرع مباشرة.</p>
+  ${brs.map(b=>{const u=fbUrl(b);const n=NM[b]||[brById(b).name,''];return `<div class="fbq-card" style="--c:${brById(b).color}"><div class="fbq-top"><b>${n[0]}</b>${n[1]?`<span>${n[1]}</span>`:''}</div>
+    <div class="fbq-h">رأيك يهمّنا</div><div class="fbq-s">امسح الكود وقيّم تجربتك خلال دقيقة</div><div class="fbq-st">★★★★★</div>
+    <div class="fbq-qr">${qr(u)}</div><div class="fbq-en">Scan to rate your experience</div>
+    <div class="fbq-u noprint"><span dir="ltr">${u}</span><button class="btn sm ghost" data-fbcp="${u}">نسخ الرابط</button></div></div>`;}).join('')}</div>`;
+  document.body.appendChild(w);
+}
+document.addEventListener('click',async e=>{
+  const t=e.target.closest('[data-fbb],[data-fbt],[data-fbo],[data-fbst],[data-fbdel],[data-fbqr],[data-fbqrx],[data-fbprint],[data-fbcp]'); if(!t) return; const d=t.dataset;
+  if(d.fbb){st.fbB=d.fbb;render();return;}
+  if(d.fbt){st.fbT=d.fbt;render();return;}
+  if(d.fbo){const f=(st._fbList||[]).find(x=>x.id===d.fbo);if(f)fbDetail(f);return;}
+  if(d.fbqr){fbQR();return;}
+  if(d.fbqrx){const w=$('#fbqr');if(w)w.remove();document.body.style.overflow='';return;}
+  if(d.fbprint){document.body.classList.add('fbprinting');setTimeout(()=>{window.print();setTimeout(()=>document.body.classList.remove('fbprinting'),500);},100);return;}
+  if(d.fbcp){try{await navigator.clipboard.writeText(d.fbcp);toast('تم نسخ الرابط');}catch(_){toast(d.fbcp);}return;}
+  if(d.fbdel){if(!confirm('حذف التقييم نهائياً؟'))return;const r=await sb.rpc('feedback_delete',{p_id:d.fbdel});if(r.error){toast(r.error.message);return;}const w=$('#mtdet');if(w)w.remove();document.body.style.overflow='';toast('تم الحذف');st._alertsAt=0;loadAlerts();render();return;}
+  if(d.fbst){const [id,s]=d.fbst.split('|');const f=(st._fbList||[]).find(x=>x.id===id);if(!f)return;let o={};
+    const sub=`${fbRef(f)} · ${'★'.repeat(f.rating)}`;
+    if(s==='contacted'){o=await mtAsk('تم التواصل مع العميل',[{name:'note',label:'ملخص التواصل (وش قال العميل؟)',type:'area',req:1}],sub);if(!o)return;}
+    else if(s==='resolved'){o=await mtAsk('تم حل المشكلة',[{name:'note',label:'الحل أو الإجراء المتخذ',type:'area',req:1},{name:'comp',label:'تعويض للعميل (اختياري) — مثل: وجبة مجانية',list:['وجبة مجانية','خصم على الطلب القادم','استرجاع المبلغ','اعتذار فقط']}],sub);if(!o)return;}
+    else if(s==='closed'){o=await mtAsk(fbNeg(f)?'إغلاق التقييم':'إغلاق مع الشكر',[{name:'note',label:'ملاحظة (اختياري)',type:'area'}],sub);if(!o)return;}
+    const r=await sb.rpc('feedback_update',{p_id:id,p_status:s,p_note:o.note||null,p_comp:o.comp||null});
+    if(r.error){toast(/feedback_update|function|schema/i.test(r.error.message)?'شغّل ملف feedback.sql أولاً':r.error.message);return;}
+    toast('تم ✓ — '+FB_ACT[s]); const w=$('#mtdet');if(w)w.remove();document.body.style.overflow=''; st._alertsAt=0; loadAlerts(); await render();
+    const nf=(st._fbList||[]).find(x=>x.id===id); if(nf&&s!=='closed') fbDetail(nf); return;}
+});
 
 function mtDetail(m){
   const R=mtRole(), work=mtWork(m), h=mtHrs(m), sla=mtSla(m), late=mtLate(m);

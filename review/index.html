@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#123A27">
+<title>قيّم تجربتك</title>
+<link rel="icon" href="../icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="../config.js?v=8"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--g:#1E5A3E;--g2:#123A27;--gold:#D4AF37;--gold2:#F6E7B0;--bg:#F5F4EE;--card:#fff;--ink:#16231B;--mut:#6B746C;--line:#E5E4DC;--acc:#D4AF37}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg)}
+body{font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;color:var(--ink);font-size:15px;line-height:1.55;min-height:100vh}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+.hero{position:relative;overflow:hidden;color:#fff;padding:22px 20px 70px;background:radial-gradient(130% 120% at 100% 0%,#2E7350 0%,var(--g) 45%,var(--g2) 100%)}
+.hero::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(255,255,255,.03) 0 2px,transparent 2px 14px)}
+.hero .glow{position:absolute;inset-inline-start:-60px;bottom:-90px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(233,207,122,.25),transparent 70%)}
+.hrow{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center;gap:10px;max-width:520px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(135deg,var(--gold2),var(--gold));color:#3E2F05;font-family:'Readex Pro';font-weight:700;font-size:19px;box-shadow:0 6px 16px -6px rgba(0,0,0,.5)}
+.brand b{font-family:'Readex Pro';font-size:16px;display:block;line-height:1.3}.brand small{font-size:12px;opacity:.75}
+.lang{border:1px solid rgba(255,255,255,.3);border-radius:99px;padding:5px 12px;font-size:12.5px;color:#fff;background:rgba(255,255,255,.08)}
+.htitle{position:relative;z-index:1;max-width:520px;margin:22px auto 0}
+.htitle h1{font-family:'Readex Pro';font-size:24px;font-weight:600;line-height:1.35}
+.htitle p{opacity:.8;font-size:14px;margin-top:4px}
+.wrap{max-width:520px;margin:-48px auto 0;padding:0 14px 40px;position:relative;z-index:2;display:flex;flex-direction:column;gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px 16px;box-shadow:0 14px 30px -24px rgba(18,58,39,.6)}
+.card h2{font-family:'Readex Pro';font-size:16px;font-weight:600;margin-bottom:12px}
+.faces{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.face{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 2px 8px;border-radius:16px;border:1.5px solid transparent;transition:.15s}
+.face span{font-size:34px;line-height:1;filter:grayscale(.85);opacity:.65;transition:.15s}
+.face small{font-size:11px;color:var(--mut);font-weight:600}
+.face.on{border-color:var(--acc);background:rgba(212,175,55,.10)}
+.face.on span{filter:none;opacity:1;transform:scale(1.15)}
+.face.on small{color:var(--ink)}
+.stars{display:flex;justify-content:center;gap:4px;margin-top:10px;font-size:22px;color:#DDD8C4;direction:ltr}.stars i{font-style:normal}.stars i.on{color:var(--gold)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--line);border-radius:99px;padding:8px 14px;font-size:14px;font-weight:500;background:#fff;transition:.12s}
+.chip.on{background:var(--g);border-color:var(--g);color:#fff}
+.chip.on.neg{background:#A33B30;border-color:#A33B30}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:#F1F0E9;border-radius:14px;padding:4px}
+.seg button{padding:9px 4px;border-radius:11px;font-size:13.5px;font-weight:600;color:var(--mut)}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 2px 8px -4px rgba(0,0,0,.3)}
+textarea,input{width:100%;border:1.5px solid var(--line);border-radius:14px;padding:12px;font:inherit;font-size:15px;background:#FBFAF6;color:var(--ink);outline:none}
+textarea{min-height:96px;resize:vertical}
+textarea:focus,input:focus{border-color:var(--g)}
+.lbl{display:block;font-size:13px;font-weight:600;margin:12px 0 6px}
+.hint{font-size:12.5px;color:var(--mut);margin-top:6px}
+.callout{display:flex;gap:10px;align-items:flex-start;background:rgba(212,175,55,.12);border-radius:14px;padding:10px 12px;font-size:13px;margin-bottom:4px}
+.send{width:100%;padding:15px;border-radius:16px;background:linear-gradient(135deg,#2A6B49,var(--g2));color:#fff;font-weight:700;font-size:16px;box-shadow:0 12px 24px -14px rgba(18,58,39,.9);display:flex;align-items:center;justify-content:center;gap:8px}
+.send:disabled{opacity:.5}
+.hide{display:none!important}
+.done{text-align:center;padding:30px 18px}
+.done .ok{width:76px;height:76px;border-radius:50%;margin:0 auto 14px;display:grid;place-items:center;background:linear-gradient(135deg,var(--gold2),var(--gold));font-size:36px;animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{from{transform:scale(.3);opacity:0}}
+.done h2{font-family:'Readex Pro';font-size:21px;margin-bottom:6px}
+.ref{display:inline-block;margin-top:12px;font-family:'Readex Pro';letter-spacing:1px;background:#F1F0E9;border-radius:10px;padding:6px 14px;font-size:14px;direction:ltr}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:16px;padding:13px;border-radius:14px;border:1.5px solid var(--line);font-weight:700;text-decoration:none;color:var(--ink)}
+.foot{text-align:center;font-size:11.5px;color:var(--mut);margin-top:6px}
+.err{background:#FBE9E7;color:#8E1F17;border-radius:12px;padding:10px 12px;font-size:13.5px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#16231B;color:#fff;padding:10px 18px;border-radius:12px;font-size:14px;z-index:9;max-width:90vw}
+[dir=ltr] body{font-family:'Readex Pro','IBM Plex Sans Arabic',system-ui,sans-serif}
+</style>
+</head>
+<body>
+<div class="hero"><div class="glow"></div>
+  <div class="hrow"><div class="brand"><div class="logo" id="logo">ش</div><div><b id="bName">—</b><small id="bSub"></small></div></div><button class="lang" id="langBtn">English</button></div>
+  <div class="htitle"><h1 id="t_h1"></h1><p id="t_p"></p></div>
+</div>
+<div class="wrap" id="app">
+  <div class="card"><h2 id="t_q1"></h2>
+    <div class="faces" id="faces"></div>
+    <div class="stars" id="stars"></div>
+  </div>
+  <div class="card hide" id="c2"><h2 id="t_q2"></h2><div class="chips" id="tags"></div></div>
+  <div class="card hide" id="c3">
+    <h2 id="t_q3"></h2>
+    <div class="seg" id="visit"></div>
+    <label class="lbl" id="t_cm"></label>
+    <textarea id="comment"></textarea>
+    <div id="contactBox">
+      <div class="callout hide" id="neg"><span>🤝</span><span id="t_neg"></span></div>
+      <label class="lbl" id="t_nm"></label><input id="name" autocomplete="name">
+      <label class="lbl" id="t_ph"></label><input id="phone" inputmode="tel" autocomplete="tel" dir="ltr" style="text-align:start" placeholder="05xxxxxxxx">
+      <p class="hint" id="t_priv"></p>
+    </div>
+  </div>
+  <div class="hide" id="c4"><div class="err hide" id="err"></div><button class="send" id="send"></button><p class="foot" id="t_foot"></p></div>
+</div>
+<div class="wrap hide" id="thanks"><div class="card done"><div class="ok" id="dIc">✓</div><h2 id="d_h"></h2><p class="hint" id="d_p" style="font-size:14px"></p><div class="ref" id="d_ref"></div><a class="gbtn hide" id="gBtn" target="_blank" rel="noopener">⭐ <span id="d_g"></span></a></div></div>
+<script>
+(function(){
+'use strict';
+const BR={
+  az:{ar:'مطاعم الشادن',arS:'فرع العزيزية',en:'Al-Shaden Restaurants',enS:'Al-Aziziyah branch',logo:'ش',acc:'#D4AF37',maps:''},
+  sh:{ar:'مطاعم الشادن',arS:'فرع شوران',en:'Al-Shaden Restaurants',enS:'Shuran branch',logo:'ش',acc:'#5B8FD0',maps:''},
+  pc:{ar:'بروست الباتشينو',arS:'',en:'Al-Pacino Broast',enS:'',logo:'P',acc:'#A07BE6',maps:''}
+};
+const T={
+ ar:{h1:'رأيك يهمّنا',p:'دقيقة وحدة تساعدنا نقدّم لك أفضل',q1:'كيف كانت تجربتك اليوم؟',f:['سيئة','ضعيفة','مقبولة','جيدة','ممتازة'],
+  q2p:'وش اللي عجبك؟',q2n:'وش اللي ما عجبك؟',q3:'تفاصيل الزيارة',v:['داخل المطعم','سفري','توصيل'],cm:'تعليقك (اختياري)',cmN:'وضّح لنا المشكلة',cmPh:'اكتب ملاحظتك هنا…',
+  neg:'نعتذر عن تجربتك 🙏 اترك رقمك ويتواصل معك مدير الفرع شخصياً لحل المشكلة.',nm:'الاسم (اختياري)',ph:'رقم الجوال (اختياري)',priv:'بياناتك تُستخدم فقط للتواصل معك بخصوص ملاحظتك.',
+  send:'إرسال التقييم',sending:'جارِ الإرسال…',foot:'شكراً لوقتك',dh:'شكراً لك!',dpP:'سعدنا بزيارتك، ونتطلع نشوفك مرة ثانية 💛',dpN:'وصلت ملاحظتك لإدارة الفرع وبيتم التواصل معك في أقرب وقت.',
+  g:'شاركنا تقييمك في قوقل ماب',pick:'اختر التقييم أولاً',needC:'اكتب لنا وش صار عشان نقدر نساعدك',bad:'رابط غير صحيح — امسح الكود الموجود في المطعم',net:'ما فيه اتصال — حاول مرة ثانية',
+  tagsP:['الطعم','جودة الأكل','سرعة الخدمة','النظافة','تعامل الموظفين','الكمية','الأسعار','الأجواء'],
+  tagsN:['الطعم','الأكل بارد','وقت الانتظار','الطلب ناقص أو غلط','النظافة','تعامل الموظفين','الكمية','الأسعار']},
+ en:{h1:'Your opinion matters',p:'One minute helps us serve you better',q1:'How was your experience today?',f:['Bad','Poor','Okay','Good','Excellent'],
+  q2p:'What did you like?',q2n:'What went wrong?',q3:'Visit details',v:['Dine-in','Takeaway','Delivery'],cm:'Your comment (optional)',cmN:'Tell us what happened',cmPh:'Write your note here…',
+  neg:'We are sorry 🙏 Leave your number and the branch manager will contact you personally.',nm:'Name (optional)',ph:'Mobile number (optional)',priv:'Your details are only used to follow up on your feedback.',
+  send:'Submit feedback',sending:'Sending…',foot:'Thank you for your time',dh:'Thank you!',dpP:'We were happy to serve you — see you again 💛',dpN:'Your feedback reached the branch management and we will contact you soon.',
+  g:'Share your rating on Google Maps',pick:'Please choose a rating',needC:'Please tell us what happened so we can help',bad:'Invalid link — scan the code in the restaurant',net:'No connection — try again',
+  tagsP:['Taste','Food quality','Fast service','Cleanliness','Staff','Portion size','Prices','Atmosphere'],
+  tagsN:['Taste','Food was cold','Waiting time','Missing or wrong order','Cleanliness','Staff','Portion size','Prices']}
+};
+const TAG_AR={};T.en.tagsP.forEach((x,i)=>TAG_AR['p'+x]=T.ar.tagsP[i]);T.en.tagsN.forEach((x,i)=>TAG_AR['n'+x]=T.ar.tagsN[i]);
+const VIS=['dine','takeaway','delivery'];
+const FACES=['😠','😕','😐','🙂','😍'];
+const $=s=>document.querySelector(s);
+const q=new URLSearchParams(location.search); const bk=(q.get('b')||'').toLowerCase(); const B=BR[bk];
+let L=(()=>{try{return localStorage.getItem('fb_lang')||((navigator.language||'').startsWith('ar')?'ar':'ar')}catch(e){return 'ar'}})();
+const S={r:0,tags:[],visit:'dine'};
+const SB=(window.supabase&&window.PORTAL_CONFIG)?window.supabase.createClient(window.PORTAL_CONFIG.url,window.PORTAL_CONFIG.key,{auth:{persistSession:false}}):null;
+function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2600);}
+function paint(){
+  const t=T[L]; document.documentElement.lang=L; document.documentElement.dir=L==='ar'?'rtl':'ltr';
+  $('#langBtn').textContent=L==='ar'?'English':'العربية';
+  if(B){$('#bName').textContent=B[L];$('#bSub').textContent=B[L+'S']||'';$('#logo').textContent=B.logo;document.documentElement.style.setProperty('--acc',B.acc);}
+  $('#t_h1').textContent=t.h1;$('#t_p').textContent=t.p;$('#t_q1').textContent=t.q1;$('#t_q3').textContent=t.q3;
+  $('#faces').innerHTML=FACES.map((f,i)=>`<button class="face ${S.r===i+1?'on':''}" data-r="${i+1}"><span>${f}</span><small>${t.f[i]}</small></button>`).join('');
+  $('#stars').innerHTML=S.r?[1,2,3,4,5].map(i=>`<i class="${i<=S.r?'on':''}">★</i>`).join(''):'';
+  const neg=S.r&&S.r<=3; const list=neg?t.tagsN:t.tagsP; const enList=neg?T.en.tagsN:T.en.tagsP;
+  $('#t_q2').textContent=neg?t.q2n:t.q2p;
+  $('#tags').innerHTML=list.map((x,i)=>{const k=(neg?'n':'p')+enList[i];return `<button class="chip ${neg?'neg':''} ${S.tags.includes(k)?'on':''}" data-t="${k}">${x}</button>`}).join('');
+  $('#visit').innerHTML=VIS.map((v,i)=>`<button class="${S.visit===v?'on':''}" data-v="${v}">${t.v[i]}</button>`).join('');
+  $('#t_cm').textContent=neg?t.cmN:t.cm;$('#comment').placeholder=t.cmPh;
+  $('#neg').classList.toggle('hide',!neg);$('#t_neg').textContent=t.neg;
+  $('#t_nm').textContent=t.nm;$('#t_ph').textContent=t.ph;$('#t_priv').textContent=t.priv;
+  $('#send').textContent=t.send;$('#t_foot').textContent=t.foot;
+  ['#c2','#c3','#c4'].forEach(s=>$(s).classList.toggle('hide',!S.r));
+}
+document.addEventListener('click',e=>{
+  const r=e.target.closest('[data-r]');if(r){const was=S.r&&S.r<=3;S.r=+r.dataset.r;if((S.r<=3)!==was)S.tags=[];paint();if(!was&&S.r)setTimeout(()=>$('#c2').scrollIntoView({behavior:'smooth',block:'start'}),120);return}
+  const t=e.target.closest('[data-t]');if(t){const k=t.dataset.t;S.tags=S.tags.includes(k)?S.tags.filter(x=>x!==k):S.tags.concat(k);t.classList.toggle('on');return}
+  const v=e.target.closest('[data-v]');if(v){S.visit=v.dataset.v;paint();return}
+});
+$('#langBtn').onclick=()=>{L=L==='ar'?'en':'ar';try{localStorage.setItem('fb_lang',L)}catch(e){}paint();};
+$('#send').onclick=async()=>{
+  const t=T[L],err=$('#err');err.classList.add('hide');
+  if(!S.r){toast(t.pick);return}
+  const cm=$('#comment').value.trim();
+  if(S.r<=2&&!cm&&!S.tags.length){err.textContent=t.needC;err.classList.remove('hide');$('#comment').focus();return}
+  const btn=$('#send');btn.disabled=true;btn.textContent=t.sending;
+  try{
+    if(!SB) throw new Error('net');
+    const tags=S.tags.map(k=>TAG_AR[k]||k.slice(1));
+    const {data:j,error}=await SB.rpc('feedback_submit',{p_branch:bk,p_rating:S.r,p_tags:tags,p_comment:cm||null,p_name:$('#name').value.trim()||null,p_phone:$('#phone').value.trim()||null,p_visit:S.visit,p_lang:L});
+    if(error) throw error;
+    if(!j||!j.ok){err.textContent=(j&&j.message)||t.net;err.classList.remove('hide');btn.disabled=false;btn.textContent=t.send;return}
+    $('#app').classList.add('hide');$('#thanks').classList.remove('hide');window.scrollTo(0,0);
+    const pos=S.r>=4; $('#dIc').textContent=pos?'💛':'🤝'; $('#d_h').textContent=t.dh; $('#d_p').textContent=pos?t.dpP:t.dpN; $('#d_ref').textContent=j.ref||'';
+    if(pos&&B.maps){const g=$('#gBtn');g.href=B.maps;$('#d_g').textContent=t.g;g.classList.remove('hide');}
+  }catch(e){err.textContent=t.net;err.classList.remove('hide');btn.disabled=false;btn.textContent=t.send;}
+};
+if(!B){paint();$('#app').innerHTML=`<div class="card"><div class="err">${T[L].bad}</div></div>`;}
+else paint();
+})();
+</script>
+</body>
+</html>
