@@ -176,12 +176,6 @@ body.appmode .tkr{display:none}
 .mt-late{border:0;background:rgba(208,69,58,.1);color:var(--down);font:inherit;font-weight:700;border-radius:99px;padding:1px 8px;cursor:pointer}
 
 /* المساعد الذكي */
-.bnav button.nav-ai{position:relative;color:#7A7F78}
-.bnav button.nav-ai .bi{width:58px;height:58px;margin-top:-28px;border-radius:50%;color:#FFF6DA;background:radial-gradient(circle at 30% 25%,#3E8A62,#1E5A3E 55%,#0F3322);box-shadow:0 10px 22px -8px rgba(15,51,34,.75),0 0 0 4px var(--bg);position:relative;isolation:isolate}
-.bnav button.nav-ai .bi::before{content:"";position:absolute;inset:-3px;border-radius:50%;background:conic-gradient(from 0deg,#F6E7B0,#D4AF37,#7FD1A8,#F6E7B0);z-index:-1;animation:aiRot 3.2s linear infinite}
-.bnav button.nav-ai .bi::after{content:"";position:absolute;inset:1px;border-radius:50%;background:radial-gradient(circle at 30% 25%,#3E8A62,#1E5A3E 55%,#0F3322);z-index:-1}
-.bnav button.nav-ai svg{width:26px;height:26px;filter:drop-shadow(0 0 6px rgba(246,231,176,.7))}
-.bnav button.nav-ai[aria-pressed="true"]{color:var(--green-dk)}.bnav button.nav-ai[aria-pressed="true"] .bi{background:radial-gradient(circle at 30% 25%,#3E8A62,#1E5A3E 55%,#0F3322)}
 @keyframes aiRot{to{transform:rotate(360deg)}}
 body.aimode{overflow:hidden}body.aimode .wrap>.top,body.aimode #tkr,body.aimode #tabs,body.aimode footer{display:none!important}
 .aiv{position:fixed;left:0;right:0;top:0;bottom:var(--navh,0px);z-index:25;display:flex;flex-direction:column;background:var(--bg);max-width:760px;margin:0 auto;padding-top:env(safe-area-inset-top)}
@@ -244,16 +238,7 @@ body:not(.hasnav) .ai-bar{padding-bottom:calc(12px + env(safe-area-inset-bottom)
 .ai-mic{background:none;color:var(--muted)}.ai-mic.on{background:#C0392B;color:#fff;animation:tkrPulse 1.2s infinite}
 
 
-/* شريط سفلي بزر المساعد في المنتصف */
-.bnav.wai{display:grid;grid-template-columns:1fr 64px 1fr;align-items:end;gap:2px}
-.bnav.wai .bside{display:flex;justify-content:flex-start;align-items:stretch;min-width:0}
-.bnav.wai .bside button{max-width:none;flex:0 0 calc(100% / var(--k,2));min-width:0;font-size:10px;padding:3px 0}
-.bnav.wai .bside .bi{width:38px;height:26px}
-.bnav.wai .bside svg{width:20px;height:20px}
 .bnav .bl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.bnav.wai button.nav-ai{max-width:none;padding:0 0 3px;font-size:10px}
-.bnav.wai button.nav-ai .bi{width:50px;height:50px;margin-top:-22px}
-.bnav.wai button.nav-ai svg{width:23px;height:23px}
 /* login */
 #login{min-height:100vh;display:grid;place-items:center;padding-inline:16px;padding-block:40px}
 .login-card{width:100%;max-width:400px;display:flex;flex-direction:column;gap:14px}
@@ -649,17 +634,17 @@ const SECTIONS=[
   {id:'data',name:'إدخال البيانات',admin:true}
 ];
 const NAV_ICONS={
-  ai:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l1.9 5.2a3 3 0 0 0 1.8 1.8l5.2 1.9-5.2 1.9a3 3 0 0 0-1.8 1.8L12 20.3l-1.9-5.2a3 3 0 0 0-1.8-1.8L3.1 11.4l5.2-1.9a3 3 0 0 0 1.8-1.8z"/><circle cx="19" cy="4.5" r="1.6"/><circle cx="5" cy="19" r="1.2"/></svg>',
+  ai:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.9a2.5 2.5 0 0 0 1.5 1.5L20 11l-4.7 1.7a2.5 2.5 0 0 0-1.5 1.5L12 19l-1.8-4.8a2.5 2.5 0 0 0-1.5-1.5L4 11l4.7-1.6a2.5 2.5 0 0 0 1.5-1.5z"/><path d="M19 3v3M17.5 4.5h3"/></svg>',
   home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
   rep:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>',
   ops:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg>',
   fin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/><path d="M6.5 15h4"/></svg>',
   more:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>'};
-const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'rep',name:'التقارير',secs:['sales','daily','channels','income','wh','chicken']},{id:'ai',name:'المساعد',secs:['ai']},{id:'ops',name:'العمليات',secs:['handover','maint','feedback','employees','advances','fleet']},{id:'fin',name:'المالية',secs:['treasury','loans']},{id:'more',name:'الإدارة',secs:['users','data']}];
+const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'ai',name:'المساعد الذكي',secs:['ai']},{id:'rep',name:'التقارير',secs:['sales','daily','channels','income','wh','chicken']},{id:'ops',name:'العمليات',secs:['handover','maint','feedback','employees','advances','fleet']},{id:'fin',name:'المالية',secs:['treasury','loans']},{id:'more',name:'الإدارة',secs:['users','data']}];
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup','feedback'];
-const APP_VER='67';
+const APP_VER='68';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -741,10 +726,7 @@ function renderShell(){
   if(!canSee(st.tab)) st.tab='home';
   const g=groupOf(st.tab); st.lastIn=st.lastIn||{}; st.lastIn[g]=st.tab;
   const gs=GROUPS.filter(x=>x.secs.some(canSee));
-  { const btn=x=>`<button data-g="${x.id}" class="${x.id==='ai'?'nav-ai':''}" aria-pressed="${x.id===g}"><span class="bi">${NAV_ICONS[x.id]}</span><span class="bl">${x.name}</span></button>`;
-    const ai=gs.find(x=>x.id==='ai'), rest=gs.filter(x=>x.id!=='ai');
-    if(ai&&rest.length>1){ const k=Math.ceil(rest.length/2); $('#bnav').innerHTML=`<div class="bside" style="--k:${k}">${rest.slice(0,k).map(btn).join('')}</div>${btn(ai)}<div class="bside" style="--k:${k}">${rest.slice(k).map(btn).join('')}</div>`; $('#bnav').classList.add('wai'); }
-    else { $('#bnav').innerHTML=gs.map(btn).join(''); $('#bnav').classList.remove('wai'); } }
+  $('#bnav').innerHTML=gs.map(x=>`<button data-g="${x.id}" aria-pressed="${x.id===g}"><span class="bi">${NAV_ICONS[x.id]}</span><span class="bl">${x.name}</span></button>`).join('');
   document.body.classList.toggle('hasnav',gs.length>1); $('#bnav').hidden=gs.length<=1;
   const subs=(GROUPS.find(x=>x.id===g)||{secs:[]}).secs.filter(canSee);
   $('#tabs').innerHTML=subs.length>1?SECTIONS.filter(s=>subs.includes(s.id)).map(s=>`<button data-t="${s.id}" aria-pressed="${st.tab===s.id}">${s.name}</button>`).join(''):'';
@@ -1917,6 +1899,39 @@ async function aiAnswer(q){
   if(B.denied) return {text:`ما عندك صلاحية على ${B.denied.map(b=>brById(b).name).join(' و')}.`};
   const bs=B.ids, bl=aiBr(bs);
   if(!t||aiHas(t,'مرحبا','السلام','هلا','وش تقدر','ايش تقدر','مساعده','ساعدني','كيف استخدم')) return {intro:true};
+  // ---- خصومات الموظفين ----
+  if(aiHas(t,'خصم','خصومات','مخالفه','مخالفات','جزاء','جزاءات')&&!aiHas(t,'خصم شهري','قسط')){
+    if(!canSee('employees')) return aiNo('ما عندك صلاحية على الموظفين والخصومات.');
+    const per=P||{kind:'month',month:todayIso().slice(0,7),from:todayIso().slice(0,7)+'-01',to:todayIso(),label:monLbl(todayIso().slice(0,7))+' حتى الآن'};
+    const r=await sb.from('employee_deductions').select('id,emp_id,branch,date,amount,reason').gte('date',per.from).limit(3000);
+    if(r.error&&/relation|schema cache|does not exist/i.test(r.error.message)) return {text:'ميزة الخصومات ما تفعّلت في القاعدة بعد.',go:'employees'};
+    const D=(r.data||[]).filter(d=>bs.includes(d.branch)&&d.date<=per.to);
+    if(!D.length) return {text:`ما فيه خصومات مسجّلة في ${per.label} (${bl}) ✓`,go:'employees'};
+    const E=(await sb.from('employees').select('id,name').in('id',[...new Set(D.map(d=>d.emp_id))])).data||[]; const en=id=>(E.find(e=>e.id===id)||{}).name||'موظف';
+    const byE={}; D.forEach(d=>{byE[d.emp_id]=(byE[d.emp_id]||0)+(+d.amount||0);}); const topE=Object.entries(byE).sort((a,c)=>c[1]-a[1]).slice(0,5);
+    const byR={}; D.forEach(d=>{byR[d.reason]=(byR[d.reason]||0)+1;}); const topR=Object.entries(byR).sort((a,c)=>c[1]-a[1]).slice(0,3);
+    const lines=[]; if(bs.length>1) bs.forEach(b=>{const x=D.filter(d=>d.branch===b);if(x.length)lines.push([brById(b).name,`${fmt(sum(x.map(d=>d.amount)))} <small class="muted">· ${x.length} خصم</small>`,brById(b).color]);});
+    topE.forEach(([id,v])=>lines.push(['👤 '+en(id),fmt(v)]));
+    return {title:`خصومات الموظفين · ${per.label}`,big:fmt(sum(D.map(d=>d.amount))),unit:'ر.س',sub:`${D.length} خصم على ${Object.keys(byE).length} موظف · ${bl}`,lines,note:topR.length?'أكثر الأسباب: '+topR.map(([k,n])=>`${esc(k)} (${n})`).join('، '):'',go:'employees'};
+  }
+  // ---- ملخص فرع / الشركة ----
+  const onlyBranch=!B.all&&t.replace(/(فرع|ال|عزيزيه|شوران|باتشينو|بتشينو|الشادن|شادن|عن|في|و|\?|؟|\s)/g,'').length<3;
+  if(aiHas(t,'ملخص','لخص','تلخيص','نظره عامه','وضع','حال','اداء','كيف الشغل','كيف الفرع','تقرير عن','تقرير شامل','عطني تقرير','اعطني تقرير','وش الوضع','ايش الوضع')||onlyBranch){
+    const out=[]; const td=todayIso(); let big=null,unit='',bigT='';
+    try{ if(canSee('sales')){ const S=(await loadSales()).filter(r=>bs.includes(r.branch_id)); if(S.length){ const last=S[S.length-1].day, m=last.slice(0,7); const cur=S.filter(r=>r.day.startsWith(m)); const dd=[...new Set(cur.map(r=>r.day))]; const tot=sum(cur.map(r=>r.amount)); const lv=sum(S.filter(r=>r.day===last).map(r=>r.amount));
+      const pm=aiPrevMon(m), lastD=+last.slice(8), pv=sum(S.filter(r=>r.day.startsWith(pm)&&+r.day.slice(8)<=lastD).map(r=>r.amount)); const fc=tot/dd.length*daysIn(m);
+      big=fmt(tot); unit='ر.س'; bigT=`مبيعات ${monLbl(m)} حتى يوم ${lastD}`;
+      out.push(['آخر يوم ('+aiD(last)+')',fmt(lv)],['مقارنة بنفس الفترة من '+monShort(pm),aiDelta(tot,pv,'')||'—'],['المتوقع لنهاية الشهر',fmt(fc)],['المتوسط اليومي',fmt(tot/dd.length)]); } } }catch(e){}
+    try{ if(canSee('wh')){ const D=(await loadDaily()).filter(r=>r.ratio!=null&&bs.includes(r.branch_id)); if(D.length){ const m=D.map(r=>r.day).sort().pop().slice(0,7); const L=D.filter(r=>r.day.startsWith(m)); const money=L.some(x=>x.rev!=null); const r=money?sum(L.map(x=>x.cogs))/(sum(L.map(x=>x.rev))||1):sum(L.map(x=>+x.ratio))/L.length; out.push(['نسبة المستودع · '+monShort(m),pct(r)]); } } }catch(e){}
+    try{ if(canSee('income')){ const I=(await loadIncome()).filter(r=>bs.includes(r.branch_id)&&!r.is_estimate); const ms=[...new Set(I.map(r=>r.month))].sort(); if(ms.length){ const mm=ms[ms.length-1]; const x=aggTotals(I.filter(r=>r.month===mm)); out.push(['صافي الربح · '+monShort(mm),`<span class="${x.net>=0?'up':'down'}">${fmt(x.net)}</span> <small class="muted">هامش ${pct(x.rev?x.net/x.rev:null)}</small>`]); } } }catch(e){}
+    try{ if(canSee('maint')){ const r=await sb.from('maint_requests').select('branch,status,priority,created_at,done_at').limit(1000); const L=(r.data||[]).filter(m=>bs.includes(m.branch)); const o=L.filter(mtWork); if(L.length) out.push(['الصيانة',`${o.length} مفتوح${o.filter(mtLate).length?` · <span class="down">${o.filter(mtLate).length} متأخر</span>`:''}`]); } }catch(e){}
+    try{ if(canSee('feedback')){ const r=await sb.from('feedback').select('rating,status,branch,created_at').gte('created_at',aiShift(td,-30)+'T00:00:00').limit(2000); const F=(r.data||[]).filter(f=>bs.includes(f.branch)); if(F.length){ const oc=F.filter(f=>f.rating<=3&&!['resolved','closed'].includes(f.status)).length; out.push(['رضا العملاء · 30 يوم',`${(sum(F.map(f=>f.rating))/F.length).toFixed(1)} ★${oc?` · <span class="down">${oc} شكوى مفتوحة</span>`:''}`]); } } }catch(e){}
+    try{ if(canSee('employees')){ const r=await sb.from('employees').select('id,branch,status,health_exp').neq('status','left'); const E=(r.data||[]).filter(e=>bs.includes(e.branch)); if(E.length){ const ex=E.filter(e=>e.health_exp&&e.health_exp<td).length; out.push(['الموظفين',`${E.length}${ex?` · <span class="down">${ex} شهادة صحية منتهية</span>`:''}`]); }
+      const dr=await sb.from('employee_deductions').select('branch,amount,date').gte('date',td.slice(0,7)+'-01').limit(2000); const DD=(dr.data||[]).filter(d=>bs.includes(d.branch)); if(DD.length) out.push(['خصومات هذا الشهر',`${fmt(sum(DD.map(d=>d.amount)))} <small class="muted">· ${DD.length} خصم</small>`]); } }catch(e){}
+    try{ if(canSee('advances')){ const r=await sb.from('advances').select('*').limit(1000); const L=(r.data||[]).filter(a=>bs.includes(a.branch)); const act=L.filter(a=>a.status==='approved'&&advCalc(a).rem>0); const pend=L.filter(a=>['pending_mgr','pending_owner'].includes(a.status)).length; if(act.length||pend) out.push(['السلف القائمة',`${fmt(act.reduce((x,a)=>x+advCalc(a).rem,0))}${pend?` · ${pend} بانتظار الموافقة`:''}`]); } }catch(e){}
+    if(!out.length&&big==null) return {text:'ما عندي بيانات كافية أسوي لك ملخص بصلاحياتك الحالية.'};
+    return {title:`ملخص ${bl}`,big:big||'—',unit,sub:bigT,lines:out,go:bs.length===1?'sales':null};
+  }
   // ---- منافذ البيع ----
   const ch=Object.keys(AI_CH).find(k=>AI_CH[k].some(w=>t.includes(aiN(w))));
   if(ch&&aiHas(t,'مبيع','بيع','كم','دخل','نسبه','حصه')&&!aiHas(t,'ربح')){
@@ -2036,7 +2051,7 @@ async function aiAnswer(q){
   }
   return {unknown:true};
 }
-function aiSugg(){const s=[];
+function aiSugg(){const s=['عطني ملخص عن الشركة'];
   if(canSee('sales')) s.push('كم مبيعات أمس؟','كم مبيعات هذا الشهر؟','وش المتوقع لنهاية الشهر؟','أعلى يوم مبيعات هذا الشهر','أعلى فرع مبيعات الشهر الماضي');
   if(canSee('wh')) s.push('كم نسبة المستودع أمس؟');
   if(canSee('income')) s.push('كم الربح في شهر يناير؟','كم المصاريف الشهر الماضي؟');
@@ -2044,12 +2059,13 @@ function aiSugg(){const s=[];
   if(canSee('treasury')) s.push('كم الأرصدة في البنوك؟');
   if(canSee('loans')) s.push('متى القسط القادم؟');
   if(canSee('feedback')) s.push('كم تقييم العملاء؟');
+  if(canSee('employees')) s.push('كم خصومات الموظفين هذا الشهر؟');
   if(canSee('maint')) s.push('كم طلب صيانة مفتوح؟');
   return s;}
 const AI_ORB=`<div class="orb"><i class="o1"></i><i class="o2"></i><i class="o3"></i><span>✦</span></div>`;
 const AI_SG_IC=['📈','📦','💼','🛵','🏦','⭐','🛠️','💳'];
-function aiCards(){const s=aiSugg();const pick=[s.find(x=>x.includes('أمس')&&x.includes('مبيعات')),s.find(x=>x.includes('المستودع')),s.find(x=>x.includes('الربح')),s.find(x=>x.includes('المتوقع')),s.find(x=>x.includes('كيتا')),s.find(x=>x.includes('الأرصدة')),s.find(x=>x.includes('تقييم')),s.find(x=>x.includes('صيانة'))].filter(Boolean).slice(0,4);
-  const ic=q=>q.includes('مستودع')?'📦':q.includes('ربح')?'💼':q.includes('كيتا')?'🛵':q.includes('الأرصدة')?'🏦':q.includes('تقييم')?'⭐':q.includes('صيانة')?'🛠️':q.includes('متوقع')?'🎯':'📈';
+function aiCards(){const s=aiSugg();const pick=[s.find(x=>x.includes('ملخص')),s.find(x=>x.includes('أمس')&&x.includes('مبيعات')),s.find(x=>x.includes('المستودع')),s.find(x=>x.includes('الربح')),s.find(x=>x.includes('المتوقع')),s.find(x=>x.includes('كيتا')),s.find(x=>x.includes('الأرصدة')),s.find(x=>x.includes('تقييم')),s.find(x=>x.includes('صيانة'))].filter(Boolean).slice(0,4);
+  const ic=q=>q.includes('ملخص')?'🧭':q.includes('مستودع')?'📦':q.includes('ربح')?'💼':q.includes('كيتا')?'🛵':q.includes('الأرصدة')?'🏦':q.includes('تقييم')?'⭐':q.includes('صيانة')?'🛠️':q.includes('متوقع')?'🎯':'📈';
   return pick.map(q=>`<button class="ai-sc" data-aiq="${esc(q)}"><span>${ic(q)}</span><b>${esc(q)}</b></button>`).join('');}
 function aiBubble(a){
   if(a.intro||a.unknown) return `<div class="ai-msg"><div class="ai-av">✦</div><div class="ai-body"><div class="ai-txt" data-type="${esc(a.unknown?'ما فهمت السؤال تماماً. أقدر أجاوبك عن المبيعات، نسبة المستودع، الأرباح والمصاريف، منافذ البيع، الأرصدة، الأقساط، الصيانة، السلف وتقييم العملاء — حدّد الفترة (أمس، هذا الشهر، يناير…) والفرع إذا تبي.':'أهلاً! اسألني عن أي رقم.')}"></div><div class="ai-chips">${aiSugg().slice(0,4).map(x=>`<button data-aiq="${esc(x)}">${esc(x)}</button>`).join('')}</div></div></div>`;
