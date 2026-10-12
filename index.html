@@ -239,6 +239,8 @@ body:not(.hasnav) .ai-bar{padding-bottom:calc(12px + env(safe-area-inset-bottom)
 
 
 .bnav .bl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.ai-llm{font-size:14.5px;line-height:1.85}.ai-llm p{margin:0 0 6px}.ai-llm b{color:#1E5A3E}.ai-llm ul{margin:4px 0 8px;padding:0;list-style:none}.ai-llm li{position:relative;padding-inline-start:16px;margin:3px 0}.ai-llm li::before{content:"";position:absolute;inset-inline-start:2px;top:.75em;width:6px;height:6px;border-radius:50%;background:#D4AF37}.ai-llm li.n::before{display:none}.ai-llm li.n i{font-style:normal;font-weight:700;color:#1E5A3E;margin-inline-end:6px}
+.ai-llm.typing>*:last-child::after{content:"";display:inline-block;width:7px;height:15px;margin-inline-start:3px;vertical-align:-2px;background:#1E5A3E;border-radius:2px;animation:aiBlink .7s steps(1) infinite}
 /* login */
 #login{min-height:100vh;display:grid;place-items:center;padding-inline:16px;padding-block:40px}
 .login-card{width:100%;max-width:400px;display:flex;flex-direction:column;gap:14px}
@@ -644,7 +646,7 @@ const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'ai',na
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup','feedback'];
-const APP_VER='68';
+const APP_VER='69';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -2105,14 +2107,66 @@ async function aiReveal(node){
   const card=node.querySelector('.ai-card'); if(card){card.classList.add('in');const b=card.querySelector('[data-count]');if(b)aiCount(b);const rs=[...node.querySelectorAll('.ai-ln .rv, .ai-nt.rv, .ai-go.rv')];for(const r of rs){await aiSleep(70);r.classList.add('in');}}
   node.querySelectorAll('.ai-chips,.ai-go:not(.rv)').forEach(x=>x.classList.add('in'));
 }
+// ---- ربط النموذج الحقيقي (Claude عبر دالة ai-chat) ----
+const AI_FN='ai-chat';
+async function aiCtx(){
+  if(st._aiCtx&&Date.now()-st._aiCtxAt<300000) return st._aiCtx;
+  const td=todayIso(), bs=st.branches.map(b=>b.id), BN=Object.fromEntries(st.branches.map(b=>[b.id,b.name])); const C={today:td,weekday:DAYN[new Date(td+'T12:00:00').getDay()],branches:BN};
+  const r2=x=>Math.round(x*100)/100;
+  try{ if(canSee('sales')){ const S=(await loadSales()).filter(r=>bs.includes(r.branch_id)); const from=aiShift(td,-62);
+    const daily={}; S.filter(r=>r.day>=from).forEach(r=>{(daily[r.day]=daily[r.day]||{})[r.branch_id]=r2(r.amount);}); C.sales_daily_last_60_days=daily;
+    const mon={}; S.forEach(r=>{const m=r.day.slice(0,7);mon[m]=mon[m]||{};mon[m][r.branch_id]=r2((mon[m][r.branch_id]||0)+r.amount);}); C.sales_monthly=Object.fromEntries(Object.entries(mon).sort().slice(-14));
+    C.sales_last_recorded_day=S.length?S[S.length-1].day:null; } }catch(e){}
+  try{ if(canSee('wh')){ const D=(await loadDaily()).filter(r=>r.ratio!=null&&bs.includes(r.branch_id)); const m={}; D.forEach(r=>{const k=r.day.slice(0,7);(m[k]=m[k]||{});(m[k][r.branch_id]=m[k][r.branch_id]||[]).push(r);});
+    const rt=a=>{const money=a.some(x=>x.rev!=null);return r2((money?sum(a.map(x=>x.cogs))/(sum(a.map(x=>x.rev))||1):sum(a.map(x=>+x.ratio))/a.length)*100);};
+    C.warehouse_cost_ratio_percent_monthly=Object.fromEntries(Object.entries(m).sort().slice(-6).map(([k,v])=>[k,Object.fromEntries(Object.entries(v).map(([b,a])=>[b,rt(a)]))]));
+    const dl={}; D.filter(r=>r.day>=aiShift(td,-14)).forEach(r=>{(dl[r.day]=dl[r.day]||{})[r.branch_id]=r2(+r.ratio*100);}); C.warehouse_cost_ratio_percent_daily_last_14=dl; } }catch(e){}
+  try{ if(canSee('income')){ const I=(await loadIncome()).filter(r=>bs.includes(r.branch_id)); const o={}; I.forEach(r=>{const t=aggTotals([r]);(o[r.month]=o[r.month]||{})[r.branch_id]={revenue:r2(t.rev),cogs:r2(t.cogs),opex:r2(t.opex),net_profit:r2(t.net),estimate:!!r.is_estimate};}); C.income_statements_monthly=Object.fromEntries(Object.entries(o).sort().slice(-13)); } }catch(e){}
+  try{ if(canSee('channels')){ const D=await appList('channels','periods'); const o={}; D.filter(d=>/^\d{4}-\d\d$/.test(d.id)).sort((a,b)=>a.id<b.id?-1:1).slice(-4).forEach(d=>{o[d.id]={};bs.forEach(b=>{const v=(d.data||{})[b];if(v)o[d.id][b]=Object.fromEntries(Object.entries(v).filter(([,x])=>typeof x==='number').map(([k,x])=>[AI_CHN[k]||k,r2(x)]));});}); C.sales_channels_monthly=o; } }catch(e){}
+  try{ if(canSee('treasury')){ C.bank_and_cash_balances=(await appList('treasury','accounts')).map(d=>d.data||{}).filter(a=>a.name).map(a=>({account:a.name,balance:r2(+a.balance||0)})); } }catch(e){}
+  try{ if(canSee('loans')){ C.financing=(await appList('loans','contracts')).map(d=>{const L=d.data||{};const un=(L.sched||[]).filter(x=>!x.paid);const nx=un.find(x=>x.date>=td);return {name:L.name,bank:L.bank,remaining:r2(sum(un.map(x=>+x.inst||0))),installments_left:un.length,next_installment:nx?{date:nx.date,amount:r2(+nx.inst||0)}:null,overdue_unpaid:(L.sched||[]).filter(x=>x.unpaid&&x.date<=td).length};}); } }catch(e){}
+  try{ if(canSee('maint')){ const r=await sb.from('maint_requests').select('branch,category,title,status,priority,created_at,done_at,cost').order('created_at',{ascending:false}).limit(300); const L=(r.data||[]).filter(m=>bs.includes(m.branch));
+    C.maintenance={open:L.filter(mtWork).map(m=>({branch:BN[m.branch]||m.branch,category:m.category,title:m.title,status:(MT_ST[m.status]||[m.status])[0],priority:(MT_PR[m.priority]||[m.priority])[0],days_open:mtDays(m),overdue:mtLate(m)})).slice(0,40),closed_last_30_days:L.filter(m=>m.status==='closed'&&m.done_at&&m.done_at>=aiShift(td,-30)).length,cost_this_month:r2(sum(L.filter(m=>String(m.done_at||'').startsWith(td.slice(0,7))).map(m=>+m.cost||0)))}; } }catch(e){}
+  try{ if(canSee('feedback')){ const r=await sb.from('feedback').select('branch,rating,tags,comment,status,created_at').gte('created_at',aiShift(td,-60)+'T00:00:00').limit(2000); const F=(r.data||[]).filter(f=>bs.includes(f.branch));
+    C.customer_feedback_last_60_days={count:F.length,by_branch:Object.fromEntries(bs.map(b=>{const x=F.filter(f=>f.branch===b);return [BN[b],x.length?{avg_rating:r2(sum(x.map(f=>f.rating))/x.length),count:x.length}:null];})),open_complaints:F.filter(f=>f.rating<=3&&!['resolved','closed'].includes(f.status)).length,recent_complaints:F.filter(f=>f.rating<=3).slice(0,12).map(f=>({branch:BN[f.branch],rating:f.rating,tags:f.tags,comment:(f.comment||'').slice(0,160),status:FB_ST[f.status]?FB_ST[f.status][0]:f.status,date:String(f.created_at).slice(0,10)}))}; } }catch(e){}
+  try{ if(canSee('employees')){ const r=await sb.from('employees').select('id,name,branch,status,job,health_exp').neq('status','left'); const E=(r.data||[]).filter(e=>bs.includes(e.branch));
+    C.employees={count_by_branch:Object.fromEntries(bs.map(b=>[BN[b],E.filter(e=>e.branch===b).length])),health_certificates_expired:E.filter(e=>e.health_exp&&e.health_exp<td).length,health_certificates_expiring_30d:E.filter(e=>e.health_exp&&e.health_exp>=td&&e.health_exp<=aiShift(td,30)).length};
+    const dr=await sb.from('employee_deductions').select('emp_id,branch,date,amount,reason').gte('date',aiPrevMon(td.slice(0,7))+'-01').limit(3000); const en=id=>(E.find(e=>e.id===id)||{}).name||'موظف';
+    C.employee_deductions_this_and_last_month=(dr.data||[]).filter(d=>bs.includes(d.branch)).map(d=>({date:d.date,branch:BN[d.branch],employee:en(d.emp_id),amount:r2(+d.amount),reason:d.reason})); } }catch(e){}
+  try{ if(canSee('advances')){ const r=await sb.from('advances').select('*').limit(1000); const L=(r.data||[]).filter(a=>bs.includes(a.branch)); const act=L.filter(a=>a.status==='approved'&&advCalc(a).rem>0);
+    C.salary_advances={outstanding_total:r2(act.reduce((x,a)=>x+advCalc(a).rem,0)),monthly_deduction:r2(act.reduce((x,a)=>x+advCalc(a).mo,0)),employees_with_advances:new Set(act.map(a=>a.emp_id)).size,pending_requests:L.filter(a=>['pending_mgr','pending_owner'].includes(a.status)).length}; } }catch(e){}
+  try{ if(canSee('fleet')){ const A=(await appList('fleet','vehicles')).map(d=>d.data||{}).filter(v=>(v.status||'في الخدمة')!=='مباعة'); C.fleet={vehicles:A.length,alerts:A.map(v=>({vehicle:`${v.make||''} ${v.model||''} ${v.plate||''}`.trim(),alerts:flAlerts(v).map(a=>a.t)})).filter(x=>x.alerts.length)}; } }catch(e){}
+  st._aiCtx=C; st._aiCtxAt=Date.now(); return C;
+}
+function aiMd(t){ const e=esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
+  return e.split('\n').map(l=>{const m=l.match(/^\s*[-•]\s+(.*)/);if(m)return `<li>${m[1]}</li>`;const n=l.match(/^\s*(\d+)[.)]\s+(.*)/);if(n)return `<li class="n"><i>${n[1]}</i>${n[2]}</li>`;return l.trim()?`<p>${l}</p>`:'';}).join('').replace(/(<li[^>]*>.*?<\/li>)+/g,m=>`<ul>${m}</ul>`);}
+async function aiLLM(q,onText){
+  const ctx=await aiCtx(); const {data:{session}}=await sb.auth.getSession(); if(!session) throw new Error('nosession');
+  const r=await fetch(CFG.url+'/functions/v1/'+AI_FN,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token,'apikey':CFG.key},body:JSON.stringify({question:q,history:(st.aiConv||[]).slice(-8),context:JSON.stringify(ctx)})});
+  if(!r.ok||!r.body){ throw new Error('http '+r.status); }
+  const rd=r.body.getReader(), dec=new TextDecoder(); let txt='';
+  while(true){ const {done,value}=await rd.read(); if(done) break; txt+=dec.decode(value,{stream:true}); onText(txt); }
+  if(!txt.trim()) throw new Error('empty'); return txt;
+}
+
 async function aiAsk(q){
   q=String(q||'').trim(); if(!q) return; const box=$('#aiMsgs'); if(!box) return; const v=$('#aiV'); if(v){v.classList.remove('welcome');const nb=v.querySelector('.ai-new');if(nb)nb.hidden=false;}
   if(st._aiBusy) return; st._aiBusy=true; const sb_=document.querySelector('.ai-send'); if(sb_) sb_.disabled=true;
   st.aiLog.push({u:q}); box.insertAdjacentHTML('beforeend',`<div class="ai-me">${esc(q)}</div><div class="ai-msg ai-think" id="aiTy"><div class="ai-spin"><i></i><span>✦</span></div><div class="ai-tk"><b id="aiTkT">أفكر…</b><div class="ai-shim"></div></div></div>`);
   aiBottom(true);
   const steps=aiThinkSteps(q); let si=0; const iv=setInterval(()=>{si=Math.min(si+1,steps.length-1);const e=$('#aiTkT');if(e){e.classList.remove('sw');void e.offsetWidth;e.textContent=steps[si];e.classList.add('sw');}},650);
-  const t0=Date.now(); let a; try{ a=await aiAnswer(q); }catch(e){ console.error(e); a={text:'صار خطأ أثناء جلب البيانات — حاول مرة ثانية.'}; }
-  const wait=Math.max(0,1500+Math.random()*700-(Date.now()-t0)); await aiSleep(wait); clearInterval(iv);
+  const t0=Date.now(); st.aiConv=st.aiConv||[];
+  if(!st.aiOff){
+    let node=null, body=null, started=false;
+    try{
+      const txt=await aiLLM(q,cur=>{ if(!started){ started=true; clearInterval(iv); const ty=$('#aiTy'); const w=document.createElement('div'); w.innerHTML=`<div class="ai-msg"><div class="ai-av">✦</div><div class="ai-body"><div class="ai-llm typing"></div></div></div>`; node=w.firstElementChild; if(ty) ty.replaceWith(node); else box.appendChild(node); body=node.querySelector('.ai-llm'); }
+        body.innerHTML=aiMd(cur); aiBottom(false); });
+      body.classList.remove('typing'); st.aiConv.push({role:'user',content:q},{role:'assistant',content:txt}); st.aiLog.push({h:node.outerHTML});
+      aiBottom(true); st._aiBusy=false; if(sb_) sb_.disabled=false; return;
+    }catch(e){ console.warn('AI model unavailable',e); if(node){ body.classList.remove('typing'); body.insertAdjacentHTML('beforeend','<p class="muted">انقطع الاتصال — حاول مرة ثانية.</p>'); st._aiBusy=false; if(sb_) sb_.disabled=false; return; } st.aiOff=true; }
+  }
+  let a; try{ a=await aiAnswer(q); }catch(e){ console.error(e); a={text:'صار خطأ أثناء جلب البيانات — حاول مرة ثانية.'}; }
+  const wait=Math.max(0,1200+Math.random()*600-(Date.now()-t0)); await aiSleep(wait); clearInterval(iv);
   const html=aiBubble(a); st.aiLog.push({h:html.replace(/data-type="([^"]*)"><\/div>/g,(m,s)=>`>${s}</div>`).replace(/class="(ai-card|rv[^"]*|ai-ln|ai-nt|ai-go) rv"/g,'class="$1 rv in"')});
   const ty=$('#aiTy'); const wrap=document.createElement('div'); wrap.innerHTML=html; const node=wrap.firstElementChild; if(ty) ty.replaceWith(node); else box.appendChild(node);
   aiBottom(true); await aiReveal(node); aiBottom(true);
@@ -2121,7 +2175,7 @@ async function aiAsk(q){
 document.addEventListener('submit',e=>{ if(e.target.id==='aiForm'){ e.preventDefault(); const i=$('#aiIn'); const q=i.value; i.value=''; aiAsk(q); } });
 document.addEventListener('click',e=>{
   const c=e.target.closest('[data-aiq]'); if(c){ if(st.tab!=='ai'){st.aiQ=c.dataset.aiq;st.tab='ai';renderShell();} else aiAsk(c.dataset.aiq); return; }
-  if(e.target.closest('[data-aiclr]')){ st.aiLog=[]; render(); return; }
+  if(e.target.closest('[data-aiclr]')){ st.aiLog=[]; st.aiConv=[]; st._aiCtx=null; render(); return; }
   if(e.target.closest('#aiOrb')){ const i=$('#aiIn'); if(i){i.focus(); const f=$('.ai-inp'); if(f){f.classList.remove('glow'); void f.offsetWidth; f.classList.add('glow');}} return; }
   if(e.target.closest('#aiMic')){ const R=window.SpeechRecognition||window.webkitSpeechRecognition; const r=new R(); r.lang='ar-SA'; r.interimResults=false; const b=$('#aiMic'); b.classList.add('on');
     r.onresult=ev=>{const tx=ev.results[0][0].transcript; aiAsk(tx);}; r.onend=()=>b.classList.remove('on'); r.onerror=()=>{b.classList.remove('on');toast('ما قدرت أسمعك — جرّب مرة ثانية');}; r.start(); }
