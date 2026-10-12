@@ -548,7 +548,7 @@ const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'rep',n
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup'];
-const APP_VER='58';
+const APP_VER='59';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -1293,6 +1293,7 @@ async function loadAlerts(){
       if(mtLate(m)) out.push({k:'mtl:'+m.id+':'+mtDays(m),ic:'⏱',bad:true,t:`أمر عمل تجاوز المهلة: ${m.title}`,s:brById(m.branch).name+' · منذ '+hrsTxt(mtHrs(m))+' · '+(MT_ST[m.status]||[''])[0],go:'maint'});
       if(R!=='sup'&&m.status==='done') out.push({k:'mtd:'+m.id+':'+m.done_at,ic:'✅',t:`صيانة منجزة بانتظار تأكيدك: ${m.title}`,s:brById(m.branch).name+' · '+mtRef(m),go:'maint'});
       if(R==='mgr'&&m.status==='rejected') out.push({k:'mtr:'+m.id,ic:'✕',t:`رُفض طلب الصيانة: ${m.title}`,s:m.reject_reason||'',go:'maint'});}); } }catch(e){}
+  try{ if(canSee('handover')){ const r=await sb.rpc('cmsg_unread'); (r.data||[]).forEach(m=>out.push({k:'cm:'+m.id,ic:'💬',bad:true,t:`رد من الكاشير: ${m.name||m.code}`,s:m.body+' · '+brById(m.branch).name,go:'handover'})); } }catch(e){}
   ALERTS=out.sort((a,b)=>(b.bad?1:0)-(a.bad?1:0)); paintBell(); paintTicker(ALERTS); paintHomeTasks();
 }
 // ----- الشريط المتحرك (كل مستخدم يشوف أقسامه فقط) -----
