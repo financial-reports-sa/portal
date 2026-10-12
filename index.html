@@ -183,28 +183,29 @@ body.appmode .tkr{display:none}
 .bnav button.nav-ai svg{width:26px;height:26px;filter:drop-shadow(0 0 6px rgba(246,231,176,.7))}
 .bnav button.nav-ai[aria-pressed="true"]{color:var(--green-dk)}.bnav button.nav-ai[aria-pressed="true"] .bi{background:radial-gradient(circle at 30% 25%,#3E8A62,#1E5A3E 55%,#0F3322)}
 @keyframes aiRot{to{transform:rotate(360deg)}}
-body.aimode #tkr,body.aimode #tabs,body.aimode footer{display:none!important}
-.aiv{display:flex;flex-direction:column;min-height:calc(100vh - 210px)}
-.ai-top{display:flex;align-items:center;justify-content:space-between;gap:10px;position:sticky;top:0;z-index:5;background:var(--bg);padding:6px 0 10px}
+body.aimode{overflow:hidden}body.aimode .wrap>.top,body.aimode #tkr,body.aimode #tabs,body.aimode footer{display:none!important}
+.aiv{position:fixed;left:0;right:0;top:0;bottom:var(--navh,0px);z-index:25;display:flex;flex-direction:column;background:var(--bg);max-width:760px;margin:0 auto;padding-top:env(safe-area-inset-top)}
+.ai-top{flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--bg)}
 .ai-brand{display:flex;align-items:center;gap:8px}.ai-brand b{font-family:var(--f-disp);font-size:18px;letter-spacing:.3px}
 .ai-dot{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;color:#FFF3CF;background:linear-gradient(135deg,#2E7350,#0F3322);font-size:14px}
 .ai-badge{font-size:10.5px;font-weight:700;color:#7A5A06;background:linear-gradient(135deg,#FFF3CF,#E9CF7A);border-radius:99px;padding:2px 8px}
 .ai-new{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:6px 12px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;color:inherit}
-.ai-hero{display:none;flex-direction:column;align-items:center;text-align:center;padding:18px 4px 10px}
+.ai-scroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px 10px;overscroll-behavior:contain}
+.ai-hero{display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:100%;padding:6px 0}
 .aiv.welcome .ai-hero{display:flex}
-.ai-hero h2{font-family:var(--f-disp);font-size:24px;line-height:1.45;margin-top:22px}.ai-hero h2 span{background:linear-gradient(90deg,#1E5A3E,#B8901E);-webkit-background-clip:text;background-clip:text;color:transparent}
-.ai-hero p{color:var(--muted);font-size:13.5px;margin-top:6px;max-width:330px}
-.orb{position:relative;width:118px;height:118px;display:grid;place-items:center}
+.ai-hero h2{font-family:var(--f-disp);font-size:21px;line-height:1.5;margin-top:16px}.ai-hero h2 span{display:block}.ai-hero h2 span{background:linear-gradient(90deg,#1E5A3E,#B8901E);-webkit-background-clip:text;background-clip:text;color:transparent}
+.ai-hero p{color:var(--muted);font-size:13px;margin-top:4px;max-width:320px}
+.orb{position:relative;width:96px;height:96px;display:grid;place-items:center;border:0;background:none;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}.orb:active{transform:scale(.95)}
 .orb i{position:absolute;inset:0;border-radius:50%;filter:blur(1px)}
 .orb .o1{background:conic-gradient(from 0deg,#1E5A3E,#7FD1A8,#F6E7B0,#D4AF37,#1E5A3E);animation:aiRot 6s linear infinite;filter:blur(10px);opacity:.75}
 .orb .o2{inset:10px;background:radial-gradient(circle at 35% 30%,#4FA27A,#1E5A3E 50%,#0B2A1B);box-shadow:inset 0 -10px 24px rgba(0,0,0,.35),inset 0 8px 18px rgba(255,255,255,.18)}
 .orb .o3{inset:10px;background:conic-gradient(from 90deg,transparent 0 60%,rgba(246,231,176,.55) 75%,transparent 90%);animation:aiRot 2.6s linear infinite;mix-blend-mode:screen}
-.orb span{position:relative;font-size:38px;color:#FFF3CF;text-shadow:0 0 18px rgba(246,231,176,.9);animation:aiPulse 2.4s ease-in-out infinite}
+.orb span{position:relative;font-size:32px;color:#FFF3CF;text-shadow:0 0 18px rgba(246,231,176,.9);animation:aiPulse 2.4s ease-in-out infinite}
 @keyframes aiPulse{50%{transform:scale(1.12);opacity:.85}}
-.ai-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;margin-top:24px}
-.ai-sc{border:1px solid var(--line);background:var(--card);border-radius:18px;padding:13px 12px;text-align:start;font:inherit;color:inherit;cursor:pointer;display:flex;flex-direction:column;gap:6px;box-shadow:0 8px 20px -16px rgba(20,40,30,.45);transition:transform .15s}
-.ai-sc:active{transform:scale(.97)}.ai-sc span{font-size:20px}.ai-sc b{font-size:13px;font-weight:600;line-height:1.5}
-.ai-msgs{display:flex;flex-direction:column;gap:16px;padding:4px 0 150px}
+.ai-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;width:100%;margin-top:18px}
+.ai-sc{border:1px solid var(--line);background:var(--card);border-radius:16px;padding:11px 12px;min-height:76px;text-align:start;font:inherit;color:inherit;cursor:pointer;display:flex;flex-direction:column;gap:6px;box-shadow:0 8px 20px -16px rgba(20,40,30,.45);transition:transform .15s}
+.ai-sc:active{transform:scale(.97)}.ai-sc span{font-size:18px}.ai-sc b{font-size:12.5px;font-weight:600;line-height:1.5}
+.ai-msgs{display:flex;flex-direction:column;gap:16px}.aiv.welcome .ai-msgs{display:none}
 .ai-me{align-self:flex-end;max-width:85%;background:linear-gradient(135deg,#1E5A3E,#123A27);color:#fff;border-radius:20px 20px 6px 20px;padding:10px 15px;font-size:14.5px;line-height:1.6;box-shadow:0 8px 18px -12px rgba(15,51,34,.8);animation:aiIn .3s ease}
 .ai-msg{display:flex;gap:10px;align-items:flex-start;animation:aiIn .35s ease}
 @keyframes aiIn{from{opacity:0;transform:translateY(8px)}}
@@ -231,15 +232,16 @@ body.aimode #tkr,body.aimode #tabs,body.aimode footer{display:none!important}
 .ai-tk b.sw{animation:aiShine 1.4s linear infinite,aiIn .3s ease}
 @keyframes aiShine{from{background-position:200% 0}to{background-position:-200% 0}}
 .ai-shim{margin-top:7px;height:8px;width:70%;border-radius:99px;background:linear-gradient(90deg,var(--line),rgba(212,175,55,.35),var(--line));background-size:200% 100%;animation:aiShine 1.2s linear infinite}
-.ai-bar{position:fixed;left:0;right:0;bottom:calc(94px + env(safe-area-inset-bottom));z-index:30;padding:10px 14px 4px;background:linear-gradient(180deg,transparent,var(--bg) 35%);max-width:1100px;margin:0 auto}
-body:not(.hasnav) .ai-bar{bottom:env(safe-area-inset-bottom)}
-.ai-inp{display:flex;align-items:center;gap:6px;background:var(--card);border:1.5px solid var(--line);border-radius:26px;padding:6px 6px 6px 8px;box-shadow:0 12px 28px -18px rgba(0,0,0,.5);transition:border-color .2s,box-shadow .2s}
-.ai-inp:focus-within{border-color:#1E5A3E;box-shadow:0 0 0 4px rgba(30,90,62,.1),0 12px 28px -18px rgba(0,0,0,.5)}
-.ai-inp input{flex:1;min-width:0;border:0;background:none;font:inherit;font-size:15px;color:inherit;outline:none;padding:8px 8px}
+.ai-bar{flex:none;padding:10px 12px 12px;background:var(--bg);border-top:1px solid var(--line)}
+body:not(.hasnav) .ai-bar{padding-bottom:calc(12px + env(safe-area-inset-bottom))}
+.ai-inp{display:flex;align-items:center;gap:6px;background:var(--card);border:1.5px solid var(--line);border-radius:26px;padding:5px 5px 5px 8px;transition:border-color .2s,box-shadow .2s}
+.ai-inp:focus-within{border-color:#1E5A3E;box-shadow:0 0 0 4px rgba(30,90,62,.1)}
+.ai-inp.glow{animation:aiGlow 1s ease}
+@keyframes aiGlow{0%{box-shadow:0 0 0 0 rgba(212,175,55,.6)}100%{box-shadow:0 0 0 12px rgba(212,175,55,0)}}
+.ai-inp input{flex:1;min-width:0;border:0;background:none;font:inherit;font-size:15px;color:inherit;outline:none;padding:8px 6px}
 .ai-send,.ai-mic{flex:none;width:40px;height:40px;border-radius:50%;border:0;display:grid;place-items:center;cursor:pointer}
 .ai-send{background:linear-gradient(135deg,#2A6B49,#123A27);color:#FFF3CF}.ai-send:disabled{opacity:.45}
 .ai-mic{background:none;color:var(--muted)}.ai-mic.on{background:#C0392B;color:#fff;animation:tkrPulse 1.2s infinite}
-.ai-disc{text-align:center;font-size:10.5px;color:var(--muted);margin-top:5px}
 
 /* login */
 #login{min-height:100vh;display:grid;place-items:center;padding-inline:16px;padding-block:40px}
@@ -646,7 +648,7 @@ const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'rep',n
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup','feedback'];
-const APP_VER='65';
+const APP_VER='66';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -2050,14 +2052,19 @@ function aiThinkSteps(q){const t=aiN(q);const src=aiHas(t,'مستودع')?'بي�
 V.ai=async()=>{
   st.aiLog=st.aiLog||[]; const nm=esc(((st.profile.full_name||st.profile.username||'').trim().split(' ')[0])||'');
   const welcome=!st.aiLog.length;
-  const h=`<div class="aiv ${welcome?'welcome':''}">
-    <div class="ai-top"><div class="ai-brand"><span class="ai-dot">✦</span><b>MyHub AI</b><span class="ai-badge">ذكي</span></div>${welcome?'':'<button class="ai-new" data-aiclr="1">＋ محادثة جديدة</button>'}</div>
-    <div class="ai-hero">${AI_ORB}<h2>مرحباً ${nm}،<br><span>كيف أقدر أساعدك اليوم؟</span></h2><p>اسألني عن أي رقم في شركتك — أقرأ بياناتك وأحللها لك فوراً</p><div class="ai-grid">${aiCards()}</div></div>
-    <div class="ai-msgs" id="aiMsgs">${st.aiLog.map(m=>m.u?`<div class="ai-me">${esc(m.u)}</div>`:m.h).join('')}</div>
-    <form class="ai-bar" id="aiForm"><div class="ai-inp"><input id="aiIn" placeholder="اسأل MyHub AI…" autocomplete="off">${(window.SpeechRecognition||window.webkitSpeechRecognition)?'<button type="button" class="ai-mic" id="aiMic" aria-label="تحدث"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>':''}<button type="submit" class="ai-send" aria-label="إرسال"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div><div class="ai-disc">يجاوب من بيانات المنصة وحسب صلاحياتك</div></form></div>`;
-  setTimeout(()=>{ document.querySelectorAll('#aiMsgs .ai-txt[data-type]').forEach(x=>{x.textContent=x.dataset.type;x.removeAttribute('data-type');}); document.querySelectorAll('#aiMsgs .rv').forEach(x=>x.classList.add('in')); const m=$('#aiMsgs'); if(m) window.scrollTo({top:document.body.scrollHeight}); if(st.aiQ){const q=st.aiQ;st.aiQ=null;aiAsk(q);} },0);
+  const h=`<div class="aiv ${welcome?'welcome':''}" id="aiV">
+    <div class="ai-top"><div class="ai-brand"><span class="ai-dot">✦</span><b>MyHub AI</b><span class="ai-badge">ذكي</span></div><button class="ai-new" data-aiclr="1" ${welcome?'hidden':''}>＋ محادثة جديدة</button></div>
+    <div class="ai-scroll" id="aiScroll">
+      <div class="ai-hero"><button class="orb" id="aiOrb" type="button" aria-label="ابدأ السؤال"><i class="o1"></i><i class="o2"></i><i class="o3"></i><span>✦</span></button><h2>مرحباً ${nm}، <span>كيف أقدر أساعدك؟</span></h2><p>اسألني عن أي رقم في شركتك، وأحلله لك فوراً</p><div class="ai-grid">${aiCards()}</div></div>
+      <div class="ai-msgs" id="aiMsgs">${st.aiLog.map(m=>m.u?`<div class="ai-me">${esc(m.u)}</div>`:m.h).join('')}</div>
+    </div>
+    <form class="ai-bar" id="aiForm"><div class="ai-inp"><input id="aiIn" placeholder="اسأل MyHub AI…" autocomplete="off" enterkeyhint="send">${(window.SpeechRecognition||window.webkitSpeechRecognition)?'<button type="button" class="ai-mic" id="aiMic" aria-label="تحدث"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>':''}<button type="submit" class="ai-send" aria-label="إرسال"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div></form></div>`;
+  setTimeout(()=>{ aiFit(); document.querySelectorAll('#aiMsgs .ai-txt[data-type]').forEach(x=>{x.textContent=x.dataset.type;x.removeAttribute('data-type');}); document.querySelectorAll('#aiMsgs .rv').forEach(x=>x.classList.add('in')); aiBottom(false); if(st.aiQ){const q=st.aiQ;st.aiQ=null;aiAsk(q);} },0);
   return h;
 };
+function aiFit(){const n=$('#bnav');const h=n&&!n.hidden?n.offsetHeight:0;document.documentElement.style.setProperty('--navh',h+'px');}
+function aiBottom(smooth){const sc=$('#aiScroll');if(sc)sc.scrollTo({top:sc.scrollHeight,behavior:smooth?'smooth':'auto'});}
+window.addEventListener('resize',()=>{if(st.tab==='ai')aiFit();});
 const aiSleep=ms=>new Promise(r=>setTimeout(r,ms));
 function aiType(el,txt,speed){return new Promise(res=>{let i=0;const w=[...txt];el.classList.add('typing');const tick=()=>{i+=Math.max(1,Math.round(w.length/40));el.textContent=w.slice(0,i).join('');if(i<w.length)setTimeout(tick,speed||18);else{el.classList.remove('typing');res();}};tick();});}
 function aiCount(el){const raw=el.dataset.count;const m=raw.match(/-?[\d,]+(\.\d+)?/);if(!m){return;}const target=parseFloat(m[0].replace(/,/g,''));const dec=(m[1]||'').length-1>0?(m[1].length-1):0;const pre=raw.slice(0,m.index),post=raw.slice(m.index+m[0].length);const t0=performance.now(),D=900;
@@ -2069,22 +2076,23 @@ async function aiReveal(node){
   node.querySelectorAll('.ai-chips,.ai-go:not(.rv)').forEach(x=>x.classList.add('in'));
 }
 async function aiAsk(q){
-  q=String(q||'').trim(); if(!q) return; const box=$('#aiMsgs'); if(!box) return; const v=document.querySelector('.aiv'); if(v){v.classList.remove('welcome');const tp=v.querySelector('.ai-top');if(tp&&!tp.querySelector('.ai-new'))tp.insertAdjacentHTML('beforeend','<button class="ai-new" data-aiclr="1">＋ محادثة جديدة</button>');}
+  q=String(q||'').trim(); if(!q) return; const box=$('#aiMsgs'); if(!box) return; const v=$('#aiV'); if(v){v.classList.remove('welcome');const nb=v.querySelector('.ai-new');if(nb)nb.hidden=false;}
   if(st._aiBusy) return; st._aiBusy=true; const sb_=document.querySelector('.ai-send'); if(sb_) sb_.disabled=true;
   st.aiLog.push({u:q}); box.insertAdjacentHTML('beforeend',`<div class="ai-me">${esc(q)}</div><div class="ai-msg ai-think" id="aiTy"><div class="ai-spin"><i></i><span>✦</span></div><div class="ai-tk"><b id="aiTkT">أفكر…</b><div class="ai-shim"></div></div></div>`);
-  window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
+  aiBottom(true);
   const steps=aiThinkSteps(q); let si=0; const iv=setInterval(()=>{si=Math.min(si+1,steps.length-1);const e=$('#aiTkT');if(e){e.classList.remove('sw');void e.offsetWidth;e.textContent=steps[si];e.classList.add('sw');}},650);
   const t0=Date.now(); let a; try{ a=await aiAnswer(q); }catch(e){ console.error(e); a={text:'صار خطأ أثناء جلب البيانات — حاول مرة ثانية.'}; }
   const wait=Math.max(0,1500+Math.random()*700-(Date.now()-t0)); await aiSleep(wait); clearInterval(iv);
   const html=aiBubble(a); st.aiLog.push({h:html.replace(/data-type="([^"]*)"><\/div>/g,(m,s)=>`>${s}</div>`).replace(/class="(ai-card|rv[^"]*|ai-ln|ai-nt|ai-go) rv"/g,'class="$1 rv in"')});
   const ty=$('#aiTy'); const wrap=document.createElement('div'); wrap.innerHTML=html; const node=wrap.firstElementChild; if(ty) ty.replaceWith(node); else box.appendChild(node);
-  await aiReveal(node); window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
+  aiBottom(true); await aiReveal(node); aiBottom(true);
   st._aiBusy=false; if(sb_) sb_.disabled=false;
 }
 document.addEventListener('submit',e=>{ if(e.target.id==='aiForm'){ e.preventDefault(); const i=$('#aiIn'); const q=i.value; i.value=''; aiAsk(q); } });
 document.addEventListener('click',e=>{
   const c=e.target.closest('[data-aiq]'); if(c){ if(st.tab!=='ai'){st.aiQ=c.dataset.aiq;st.tab='ai';renderShell();} else aiAsk(c.dataset.aiq); return; }
   if(e.target.closest('[data-aiclr]')){ st.aiLog=[]; render(); return; }
+  if(e.target.closest('#aiOrb')){ const i=$('#aiIn'); if(i){i.focus(); const f=$('.ai-inp'); if(f){f.classList.remove('glow'); void f.offsetWidth; f.classList.add('glow');}} return; }
   if(e.target.closest('#aiMic')){ const R=window.SpeechRecognition||window.webkitSpeechRecognition; const r=new R(); r.lang='ar-SA'; r.interimResults=false; const b=$('#aiMic'); b.classList.add('on');
     r.onresult=ev=>{const tx=ev.results[0][0].transcript; aiAsk(tx);}; r.onend=()=>b.classList.remove('on'); r.onerror=()=>{b.classList.remove('on');toast('ما قدرت أسمعك — جرّب مرة ثانية');}; r.start(); }
 });
