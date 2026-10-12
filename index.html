@@ -646,7 +646,7 @@ const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'ai',na
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup','feedback'];
-const APP_VER='71';
+const APP_VER='72';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -2121,6 +2121,7 @@ async function aiCtx(){
     customer_feedback:'العميل يقيّم من QR في المطعم ← إشعار لمدير الفرع والإدارة ← المراحل: مراجعة ← تواصل مع العميل ← حل المشكلة والتعويض ← إغلاق. الشكوى اللي تعدّي 24 ساعة بدون حل تصير متأخرة.',
     cashier_handover:'الكاشير يسلّم الوردية من رابط التسليم برمزه الشخصي (كاش، شبكة، آجل، تطبيقات، تحويلات…)، والمحاسب يراجعها ويسجّل العجز أو الزيادة. الإدارة تقدر ترسل للكاشير تنبيه أو إنذار من قسم التسليم ويرد بالسبب.',
     permissions:'كل مستخدم يشوف فروعه وأقسامه المسموحة فقط، والحذف للمالك فقط.',
+    warehouse_ratio:'«نسبة تكلفة المستودعات» = تكلفة المستودع ÷ إيراد المستودع من التقرير اليومي. عند السؤال عن نسبة المستودع أو تكلفته أو إيراده استخدم warehouse_monthly_details و warehouse_cost_ratio_percent_daily_last_14 فقط، واذكر التكلفة والإيراد منها كما هي. ممنوع تخلطها بأرقام قوائم الدخل (income_statements_monthly) لأنها مصدر مختلف وقد تكون تقديرية أو ناقصة للشهر الجاري — وإذا ذكرت قائمة الدخل قل صراحة إنها مصدر مختلف.',
     purchase_prices:'قسم «أسعار المشتريات» (ضمن التقارير) تقرير يومي يتحدّث تلقائياً من نظام GROWTH: أسعار شراء الدجاج (حبة) واللحوم والذبائح ومواد المشويات لكل صنف ومورد وفاتورة، مع تنبيهات الارتفاع والنزول وتعدد الأسعار. تحليل أسعار المشتريات والموردين من صميم العمل: استخدم purchase_price_reports_latest (نص التقارير اليومية، الأحدث أولاً) لحساب متوسطات الأسعار والتغيّر وأرخص/أغلى مورد وتوصيات التوفير. هذي غير «نسبة المستودع» (تكلفة البضاعة ÷ المبيعات).'
   };
   const r2=x=>Math.round(x*100)/100;
@@ -2131,6 +2132,7 @@ async function aiCtx(){
   try{ if(canSee('wh')){ const D=(await loadDaily()).filter(r=>r.ratio!=null&&bs.includes(r.branch_id)); const m={}; D.forEach(r=>{const k=r.day.slice(0,7);(m[k]=m[k]||{});(m[k][r.branch_id]=m[k][r.branch_id]||[]).push(r);});
     const rt=a=>{const money=a.some(x=>x.rev!=null);return r2((money?sum(a.map(x=>x.cogs))/(sum(a.map(x=>x.rev))||1):sum(a.map(x=>+x.ratio))/a.length)*100);};
     C.warehouse_cost_ratio_percent_monthly=Object.fromEntries(Object.entries(m).sort().slice(-6).map(([k,v])=>[k,Object.fromEntries(Object.entries(v).map(([b,a])=>[b,rt(a)]))]));
+    C.warehouse_monthly_details=Object.fromEntries(Object.entries(m).sort().slice(-6).map(([k,v])=>[k,Object.fromEntries(Object.entries(v).map(([b,a])=>{const mo=a.filter(x=>x.rev!=null);return [b,{ratio_percent:rt(a),warehouse_cost:mo.length?r2(sum(mo.map(x=>+x.cogs||0))):null,warehouse_revenue:mo.length?r2(sum(mo.map(x=>+x.rev||0))):null,days_recorded:a.length,last_day:a.map(x=>x.day).sort().pop()}];}))]));
     const dl={}; D.filter(r=>r.day>=aiShift(td,-14)).forEach(r=>{(dl[r.day]=dl[r.day]||{})[r.branch_id]=r2(+r.ratio*100);}); C.warehouse_cost_ratio_percent_daily_last_14=dl; } }catch(e){}
   try{ if(canSee('income')){ const I=(await loadIncome()).filter(r=>bs.includes(r.branch_id)); const o={}; I.forEach(r=>{const t=aggTotals([r]);(o[r.month]=o[r.month]||{})[r.branch_id]={revenue:r2(t.rev),cogs:r2(t.cogs),opex:r2(t.opex),net_profit:r2(t.net),estimate:!!r.is_estimate};}); C.income_statements_monthly=Object.fromEntries(Object.entries(o).sort().slice(-13)); } }catch(e){}
   try{ if(canSee('channels')){ const D=await appList('channels','periods'); const o={}; D.filter(d=>/^\d{4}-\d\d$/.test(d.id)).sort((a,b)=>a.id<b.id?-1:1).slice(-4).forEach(d=>{o[d.id]={};bs.forEach(b=>{const v=(d.data||{})[b];if(v)o[d.id][b]=Object.fromEntries(Object.entries(v).filter(([,x])=>typeof x==='number').map(([k,x])=>[AI_CHN[k]||k,r2(x)]));});}); C.sales_channels_monthly=o; } }catch(e){}
