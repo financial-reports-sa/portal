@@ -646,7 +646,7 @@ const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'ai',na
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup','feedback'];
-const APP_VER='70';
+const APP_VER='71';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -2120,7 +2120,8 @@ async function aiCtx(){
     maintenance:'مدير الفرع يرفع طلب صيانة ← المشرف يقبل ويسند لفني أو يرفض ← التنفيذ (ويمكن التعليق) ← الإنجاز مع التكلفة والصورة ← مدير الفرع يؤكد الاستلام ويقيّم أو يرفض الإنجاز. المهلة: عاجل 24 ساعة، عالي 3 أيام، عادي 7 أيام.',
     customer_feedback:'العميل يقيّم من QR في المطعم ← إشعار لمدير الفرع والإدارة ← المراحل: مراجعة ← تواصل مع العميل ← حل المشكلة والتعويض ← إغلاق. الشكوى اللي تعدّي 24 ساعة بدون حل تصير متأخرة.',
     cashier_handover:'الكاشير يسلّم الوردية من رابط التسليم برمزه الشخصي (كاش، شبكة، آجل، تطبيقات، تحويلات…)، والمحاسب يراجعها ويسجّل العجز أو الزيادة. الإدارة تقدر ترسل للكاشير تنبيه أو إنذار من قسم التسليم ويرد بالسبب.',
-    permissions:'كل مستخدم يشوف فروعه وأقسامه المسموحة فقط، والحذف للمالك فقط.'
+    permissions:'كل مستخدم يشوف فروعه وأقسامه المسموحة فقط، والحذف للمالك فقط.',
+    purchase_prices:'قسم «أسعار المشتريات» (ضمن التقارير) تقرير يومي يتحدّث تلقائياً من نظام GROWTH: أسعار شراء الدجاج (حبة) واللحوم والذبائح ومواد المشويات لكل صنف ومورد وفاتورة، مع تنبيهات الارتفاع والنزول وتعدد الأسعار. تحليل أسعار المشتريات والموردين من صميم العمل: استخدم purchase_price_reports_latest (نص التقارير اليومية، الأحدث أولاً) لحساب متوسطات الأسعار والتغيّر وأرخص/أغلى مورد وتوصيات التوفير. هذي غير «نسبة المستودع» (تكلفة البضاعة ÷ المبيعات).'
   };
   const r2=x=>Math.round(x*100)/100;
   try{ if(canSee('sales')){ const S=(await loadSales()).filter(r=>bs.includes(r.branch_id)); const from=aiShift(td,-62);
@@ -2133,6 +2134,9 @@ async function aiCtx(){
     const dl={}; D.filter(r=>r.day>=aiShift(td,-14)).forEach(r=>{(dl[r.day]=dl[r.day]||{})[r.branch_id]=r2(+r.ratio*100);}); C.warehouse_cost_ratio_percent_daily_last_14=dl; } }catch(e){}
   try{ if(canSee('income')){ const I=(await loadIncome()).filter(r=>bs.includes(r.branch_id)); const o={}; I.forEach(r=>{const t=aggTotals([r]);(o[r.month]=o[r.month]||{})[r.branch_id]={revenue:r2(t.rev),cogs:r2(t.cogs),opex:r2(t.opex),net_profit:r2(t.net),estimate:!!r.is_estimate};}); C.income_statements_monthly=Object.fromEntries(Object.entries(o).sort().slice(-13)); } }catch(e){}
   try{ if(canSee('channels')){ const D=await appList('channels','periods'); const o={}; D.filter(d=>/^\d{4}-\d\d$/.test(d.id)).sort((a,b)=>a.id<b.id?-1:1).slice(-4).forEach(d=>{o[d.id]={};bs.forEach(b=>{const v=(d.data||{})[b];if(v)o[d.id][b]=Object.fromEntries(Object.entries(v).filter(([,x])=>typeof x==='number').map(([k,x])=>[AI_CHN[k]||k,r2(x)]));});}); C.sales_channels_monthly=o; } }catch(e){}
+  try{ if(canSee('chicken')){ const P=(await appList('prices','pages')).slice().sort((x,y)=>x.id<y.id?1:-1).slice(0,12);
+    const tx=h=>{try{const d=new DOMParser().parseFromString(h||'','text/html');d.querySelectorAll('style,script,link,title').forEach(n=>n.remove());d.querySelectorAll('tr').forEach(tr=>tr.append(' | '));d.querySelectorAll('td,th').forEach(c=>c.append(' ؛ '));d.body.querySelectorAll('span,b,strong,em,i,small').forEach(n=>n.append(' '));d.querySelectorAll('h1,h2,h3,p,li,div,tr').forEach(n=>n.append('\n'));return (d.body.textContent||'').replace(/[ \t\u00a0]+/g,' ').replace(/\s*\n\s*/g,'\n').replace(/\n?إعداد[^\n]*$/,'').trim();}catch(e){return '';}};
+    C.purchase_price_reports_latest=P.map((d,i)=>({date:(d.data||{}).date||d.id,report:tx((d.data||{}).html).slice(0,i<4?4500:2500)})).filter(x=>x.report); } }catch(e){}
   try{ if(canSee('treasury')){ C.bank_and_cash_balances=(await appList('treasury','accounts')).map(d=>d.data||{}).filter(a=>a.name).map(a=>({account:a.name,balance:r2(+a.balance||0)})); } }catch(e){}
   try{ if(canSee('loans')){ C.financing=(await appList('loans','contracts')).map(d=>{const L=d.data||{};const un=(L.sched||[]).filter(x=>!x.paid);const nx=un.find(x=>x.date>=td);return {name:L.name,bank:L.bank,remaining:r2(sum(un.map(x=>+x.inst||0))),installments_left:un.length,next_installment:nx?{date:nx.date,amount:r2(+nx.inst||0)}:null,overdue_unpaid:(L.sched||[]).filter(x=>x.unpaid&&x.date<=td).length};}); } }catch(e){}
   try{ if(canSee('maint')){ const r=await sb.from('maint_requests').select('branch,category,title,status,priority,created_at,done_at,cost').order('created_at',{ascending:false}).limit(300); const L=(r.data||[]).filter(m=>bs.includes(m.branch));
