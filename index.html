@@ -80,6 +80,60 @@ body.appmode .tkr{display:none}
 
 .advdel{border:1px solid var(--line);background:var(--card);border-radius:9px;width:30px;height:30px;display:grid;place-items:center;font-size:13px;cursor:pointer;flex:none;padding:0}
 .advdel:active{background:rgba(208,69,58,.12)}
+
+/* الرئيسية */
+.hx-hero{position:relative;overflow:hidden;border-radius:22px;padding:18px 18px 14px;color:#fff;background:radial-gradient(130% 120% at 100% 0%,#2E7350 0%,#1E5A3E 42%,#0F3322 100%);box-shadow:0 18px 40px -22px rgba(15,51,34,.75);border:1px solid rgba(212,175,55,.25)}
+.hx-glow{position:absolute;inset-inline-start:-60px;bottom:-80px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(233,207,122,.20),transparent 70%);pointer-events:none}
+.hx-hero::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(255,255,255,.025) 0 2px,transparent 2px 14px);pointer-events:none}
+.hx-top{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.hx-date{font-size:12px;opacity:.7}.hx-hi{font-family:var(--f-disp);font-size:18px;font-weight:600}
+.hx-tag{flex:none;font-size:11.5px;padding:4px 10px;border-radius:99px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15)}
+.hx-main{position:relative;z-index:1;display:flex;align-items:center;gap:12px;margin-top:14px}
+.hx-lbl{font-size:12px;opacity:.78}
+.hx-big{font-size:clamp(28px,9vw,38px);font-weight:700;color:#F6E7B0;line-height:1.15;letter-spacing:-.5px;white-space:nowrap}
+.hx-big small{font-size:12px;color:#fff;opacity:.75;font-weight:500;margin-inline-start:5px;letter-spacing:0}
+.hx-chg{font-size:12px;opacity:.9;margin-top:2px}.hx-chg b.u,.hx-pace.u i,.hx-stats em.u{color:#8EE3B5}.hx-chg b.d,.hx-stats em.d{color:#FFB4A8}
+.hx-ring{position:relative;flex:none;width:84px;height:84px}
+.hx-rtx{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1}
+.hx-rtx b{font-size:18px;color:#F6E7B0}.hx-rtx span{font-size:9.5px;opacity:.75}
+.hx-arc{animation:hxArc 1.2s cubic-bezier(.2,.8,.2,1) both}
+@keyframes hxArc{from{stroke-dashoffset:var(--c)}}
+.hx-pace{position:relative;z-index:1;margin-top:10px;font-size:11.5px;display:flex;align-items:center;gap:7px;background:rgba(0,0,0,.18);border-radius:10px;padding:6px 10px;line-height:1.5}
+.hx-pace i{flex:none;width:8px;height:8px;border-radius:50%;background:#8EE3B5;box-shadow:0 0 0 3px rgba(142,227,181,.18)}
+.hx-pace.d i{background:#FFB4A8;box-shadow:0 0 0 3px rgba(255,180,168,.18)}
+.hx-spark{position:relative;z-index:1;margin:8px -4px 0}.hx-spark svg{width:100%;height:auto}
+.hx-stats{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+.hx-stats button{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.07);border-radius:13px;padding:8px 8px;color:#fff;font:inherit;text-align:start;display:flex;flex-direction:column;gap:1px;min-width:0;cursor:pointer}
+.hx-stats span{font-size:10.5px;opacity:.72;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hx-stats b{font-size:15px}.hx-stats em{font-style:normal;font-size:10px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hx-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hx-tile{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px;text-align:start;font:inherit;color:inherit;display:flex;flex-direction:column;gap:2px;cursor:pointer;min-width:0;box-shadow:0 6px 18px -14px rgba(20,40,30,.35)}
+.hx-tile:last-child:nth-child(odd){grid-column:span 2;display:grid;grid-template-columns:auto 1fr;column-gap:12px;align-items:center}.hx-tile:last-child:nth-child(odd) .hx-ic{grid-row:span 3;margin:0;width:42px;height:42px;font-size:20px}
+.hx-ic{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;font-size:16px;margin-bottom:6px}
+.hx-tl{font-size:11.5px;color:var(--muted)}.hx-tile b{font-size:19px;font-weight:700}.hx-ts{font-size:11px;color:var(--muted)}
+.hx-tasks h3,.hx-ai h3{font-size:15px}
+.hx-cnt{display:inline-grid;place-items:center;min-width:20px;height:20px;border-radius:99px;background:var(--down,#D0453A);color:#fff;font-size:11px;padding:0 6px;margin-inline-start:4px;vertical-align:2px}
+.hx-tk,.hx-in{width:100%;display:flex;align-items:center;gap:10px;border:0;background:none;font:inherit;color:inherit;text-align:start;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.hx-tk:last-child,.hx-in:last-child{border-bottom:0}
+.hx-tki,.hx-ii{flex:none;width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:16px;background:var(--gold-soft)}
+.hx-tki.bad{background:rgba(208,69,58,.12)}
+.hx-tkt{flex:1;min-width:0;display:flex;flex-direction:column}.hx-tkt b{font-size:13px;font-weight:600}.hx-tkt small{font-size:11.5px;color:var(--muted)}
+.hx-ia{flex:none;color:var(--muted);font-size:18px;opacity:.6}
+.hx-clear{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:rgba(30,90,62,.07);border:1px dashed rgba(30,90,62,.3)}.hx-clear>span{font-size:22px}
+.hx-ai{background:linear-gradient(180deg,rgba(212,175,55,.08),var(--card) 90px)}
+.hx-aih{display:flex;gap:10px;align-items:center;margin-bottom:6px}
+.hx-aib{flex:none;width:36px;height:36px;border-radius:12px;display:grid;place-items:center;font-size:17px;color:#3E2F05;background:linear-gradient(135deg,#F6E7B0,#D4AF37);box-shadow:0 6px 14px -6px rgba(212,175,55,.8)}
+.hx-it{flex:1;font-size:13px;line-height:1.75}
+.hx-in.bad .hx-ii{background:rgba(208,69,58,.12)}.hx-in.warn .hx-ii{background:rgba(230,150,40,.15)}.hx-in.ok .hx-ii{background:rgba(30,140,90,.12)}
+.hx-rank{display:flex;flex-direction:column;gap:4px}
+.hx-rk{display:flex;align-items:center;gap:10px;border:0;background:none;font:inherit;color:inherit;text-align:start;padding:8px 0;cursor:pointer;border-bottom:1px solid var(--line)}.hx-rk:last-child{border-bottom:0}
+.hx-md{flex:none;width:30px;text-align:center;font-size:20px}
+.hx-g{font-weight:700;padding:1px 7px;border-radius:99px}.hx-g.u{color:#17804F;background:rgba(23,128,79,.1)}.hx-g.d{color:#C0392B;background:rgba(192,57,43,.1)}
+.hx-sc{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.hx-sc button{border:1px solid var(--line);background:var(--bg);border-radius:16px;padding:12px 4px 10px;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;font:inherit;color:inherit}
+.hx-sc button span{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;font-size:20px;background:var(--card);box-shadow:0 4px 10px -6px rgba(20,40,30,.35)}
+.hx-sc small{font-size:10.5px;line-height:1.3;text-align:center}
+@media (prefers-reduced-motion:reduce){.hx-arc{animation:none}}
+
 /* login */
 #login{min-height:100vh;display:grid;place-items:center;padding-inline:16px;padding-block:40px}
 .login-card{width:100%;max-width:400px;display:flex;flex-direction:column;gap:14px}
@@ -482,7 +536,7 @@ const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'rep',n
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup'];
-const APP_VER='56';
+const APP_VER='57';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -662,65 +716,98 @@ const SC_ICON={sales:'📈',daily:'🧾',channels:'🛵',income:'📊',wh:'📦'
 V.home=async()=>{
   const bs=selBranches(); const now=new Date(), hr=now.getHours();
   const fn_=(st.profile&&(st.profile.full_name||st.profile.username)||'').trim(); const nm=/^(مدير|فرع|حساب)/.test(fn_)?fn_:fn_.split(' ')[0];
-  const dateTxt=`${DAYN[now.getDay()]} ${now.getDate()} ${MONTHS[now.getMonth()]} ${now.getFullYear()}`;
+  const dateTxt=`${DAYN[now.getDay()]} ${now.getDate()} ${MONTHS[now.getMonth()]}`;
+  const greet=hr<5?'مساء الخير':hr<12?'صباح الخير':'مساء الخير';
   let h='', tiles=[], ins=[];
-  let S=[],months=[],m=null,pm=null,cur=[],lastDay=0,tot=0,prevSame=0,dayKeys=[],dayTot=[];
+  let S=[],months=[],m=null,pm=null,cur=[],lastDay=0,tot=0,prevSame=0,pmTot=0,dayKeys=[],dayTot=[];
   if(allowed('sales')){
     S=(await loadSales()).filter(r=>bs.includes(r.branch_id));
     months=[...new Set(S.map(r=>r.day.slice(0,7)))].sort();
     if(months.length){ m=months[months.length-1]; pm=months[months.length-2];
       cur=S.filter(r=>r.day.startsWith(m)); lastDay=Math.max(...cur.map(r=>+r.day.slice(8)));
       tot=sum(cur.map(r=>r.amount)); prevSame=pm?sum(S.filter(r=>r.day.startsWith(pm)&&+r.day.slice(8)<=lastDay).map(r=>r.amount)):0;
+      pmTot=pm?sum(S.filter(r=>r.day.startsWith(pm)).map(r=>r.amount)):0;
       dayKeys=[...new Set(cur.map(r=>r.day))].sort(); dayTot=dayKeys.map(d=>sum(cur.filter(r=>r.day===d).map(r=>r.amount)));
     }
   }
-  // ===== البطاقة الترحيبية =====
-  const dPct=prevSame?tot/prevSame-1:null;
-  h+=`<div class="card" style="background:radial-gradient(120% 140% at 100% 0%,#2A6B49 0%,#1E5A3E 45%,#123A27 100%);color:#fff;border:0;overflow:hidden;position:relative;padding:18px">
-    <div style="position:absolute;inset-inline-start:-40px;top:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(233,207,122,.18),transparent 70%)"></div>
-    <div class="bar-row" style="position:relative"><div><div style="font-size:13px;opacity:.75">${dateTxt}</div><div style="font-family:var(--f-disp);font-size:19px;font-weight:600">${hr<12?'صباح الخير':'مساء الخير'}${nm?'، '+esc(nm):''} 👋</div></div>
-      ${st.branches.length>1?`<span class="tag" style="background:rgba(255,255,255,.12);color:#fff">${st.f==='all'?'كل الفروع':esc(brById(st.f).name)}</span>`:''}</div>
-    ${m?`<div style="position:relative;margin-top:14px;display:flex;align-items:flex-end;justify-content:space-between;gap:10px">
-      <div><div style="font-size:12.5px;opacity:.8">مبيعات ${monLbl(m)} حتى يوم ${lastDay}</div>
-        <div class="num" style="font-size:30px;font-weight:700;color:#F6E7B0;line-height:1.2">${fmt(tot)} <small style="font-size:12px;color:#fff;opacity:.8">ر.س</small></div>
-        ${dPct!=null?`<div style="font-size:12.5px;margin-top:2px"><span style="color:${dPct>=0?'#8EE3B5':'#FFB4A8'};font-weight:700">${dPct>=0?'▲':'▼'} ${pct(Math.abs(dPct))}</span> <span style="opacity:.75">عن نفس الفترة من ${monShort(pm)}</span></div>`:''}</div>
-      <div style="flex:none">${spark(dayTot,{w:118,h:52})}</div></div>`:`<div style="margin-top:12px;opacity:.85">أهلاً بك في منصة الإدارة الموحّدة</div>`}</div>`;
-  // ===== المربعات =====
-  const tile=(ic,l,v,sub,go)=>`<button class="card" ${go?`data-t="${go}"`:''} style="padding:12px;text-align:start;font:inherit;color:inherit;${go?'cursor:pointer':''}"><div class="bar-row" style="gap:6px"><span class="muted" style="font-size:11.5px">${l}</span><span style="font-size:15px">${ic}</span></div><div class="num" style="font-size:19px;font-weight:700;margin-top:3px">${v}</div>${sub?`<div style="font-size:11px;margin-top:2px">${sub}</div>`:''}</button>`;
+  const dayVal=d=>sum(S.filter(r=>r.day===d).map(r=>r.amount));
+  const shiftD=(d,n)=>{const x=new Date(d+'T12:00:00');x.setDate(x.getDate()+n);return x.toISOString().slice(0,10);};
+  const sgn=x=>(x>=0?'+':'−')+pct(Math.abs(x));
+  // ===== البطاقة الرئيسية =====
+  const brTag=st.branches.length>1?`<span class="hx-tag">${st.f==='all'?'كل الفروع':esc(brById(st.f).name)}</span>`:'';
   if(m){
-    const yd=dayKeys[dayKeys.length-1], yv=dayTot[dayTot.length-1];
-    const wk=new Date(yd+'T12:00:00'); wk.setDate(wk.getDate()-7); const wkKey=wk.toISOString().slice(0,10);
-    const wkv=sum(S.filter(r=>r.day===wkKey).map(r=>r.amount));
-    tiles.push(tile('📅','آخر يوم · '+DAYN[new Date(yd+'T12:00:00').getDay()],fmt(yv),wkv?delta(yv,wkv,'عن الأسبوع الماضي'):'<span class="muted">'+dLbl(yd)+'</span>','daily'));
-    const avg=tot/lastDay, dim=daysIn(m);
-    tiles.push(tile('📈','المتوقع لنهاية الشهر',fmt(avg*dim),`<span class="muted">متوسط يومي ${fmt(avg)}</span>`,'sales'));
+    const dPct=prevSame?tot/prevSame-1:null, dim=daysIn(m), avg=tot/lastDay, fc=avg*dim;
+    const yd=dayKeys[dayKeys.length-1], yv=dayTot[dayTot.length-1], wkv=dayVal(shiftD(yd,-7));
+    const prog=pmTot?Math.min(tot/pmTot,1.5):lastDay/dim, timeP=lastDay/dim;
+    const R=34,C=2*Math.PI*R, ring=`<svg width="84" height="84" viewBox="0 0 84 84" style="display:block;transform:rotate(-90deg)"><circle cx="42" cy="42" r="${R}" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="7"/><circle cx="42" cy="42" r="${R}" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="7" stroke-dasharray="1.2 ${(C/dim-1.2).toFixed(2)}"/><circle class="hx-arc" cx="42" cy="42" r="${R}" fill="none" stroke="url(#hxg)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C*(1-Math.min(prog,1))).toFixed(1)}" style="--c:${C.toFixed(1)}"/><defs><linearGradient id="hxg"><stop offset="0" stop-color="#F6E7B0"/><stop offset="1" stop-color="#D4AF37"/></linearGradient></defs></svg>`;
+    const ahead=pmTot?prog-timeP:null;
+    h+=`<div class="hx-hero">
+      <div class="hx-glow"></div>
+      <div class="hx-top"><div><div class="hx-date">${dateTxt}</div><div class="hx-hi">${greet}${nm?'، '+esc(nm):''} 👋</div></div>${brTag}</div>
+      <div class="hx-main">
+        <div style="min-width:0;flex:1"><div class="hx-lbl">مبيعات ${MONTHS[+m.slice(5,7)-1]} · حتى يوم ${lastDay}</div>
+          <div class="hx-big num">${fmt(tot)}<small>ر.س</small></div>
+          ${dPct!=null?`<div class="hx-chg"><b class="${dPct>=0?'u':'d'}">${dPct>=0?'▲':'▼'} ${pct(Math.abs(dPct))}</b> عن نفس الفترة من ${MONTHS[+pm.slice(5,7)-1]}</div>`:''}</div>
+        <div class="hx-ring">${ring}<div class="hx-rtx"><b class="num">${Math.round(prog*100)}%</b><span>${pmTot?'من '+MONTHS[+pm.slice(5,7)-1]:'من الشهر'}</span></div></div>
+      </div>
+      ${ahead!=null?`<div class="hx-pace ${ahead>=0?'u':'d'}"><i></i>${ahead>=0?'متقدمين على المعدل':'متأخرين عن المعدل'} — مضى ${Math.round(timeP*100)}% من الشهر وحققنا ${Math.round(prog*100)}% من مبيعات ${MONTHS[+pm.slice(5,7)-1]}</div>`:''}
+      <div class="hx-spark">${spark(dayTot,{w:340,h:46})}</div>
+      <div class="hx-stats">
+        <button data-t="daily"><span>آخر يوم · ${DAYN[new Date(yd+'T12:00:00').getDay()]}</span><b class="num">${fmt(yv)}</b>${wkv?`<em class="${yv>=wkv?'u':'d'}">${yv>=wkv?'▲':'▼'} ${pct(Math.abs(yv/wkv-1))} أسبوعي</em>`:`<em>${dLbl(yd)}</em>`}</button>
+        <button data-t="sales"><span>المتوقع للشهر</span><b class="num">${fmt(fc)}</b>${pmTot?`<em class="${fc>=pmTot?'u':'d'}">${fc>=pmTot?'▲':'▼'} ${pct(Math.abs(fc/pmTot-1))} عن ${MONTHS[+pm.slice(5,7)-1]}</em>`:''}</button>
+        <button data-t="sales"><span>المتوسط اليومي</span><b class="num">${fmt(avg)}</b><em>${dim-lastDay} يوم متبقي</em></button>
+      </div></div>`;
+    // ===== التحليلات الذكية =====
+    if(pmTot) ins.push({ic:'🎯',t:`على المعدل الحالي الشهر يقفل عند <b>${fmt(fc)}</b> — ${fc>=pmTot?'أعلى':'أقل'} من ${MONTHS[+pm.slice(5,7)-1]} بـ <b class="${fc>=pmTot?'up':'down'}">${pct(Math.abs(fc/pmTot-1))}</b>.`,go:'sales',lv:fc>=pmTot?'ok':'warn'});
+    const wd=new Date(yd+'T12:00:00').getDay(); const same=[1,2,3,4].map(k=>dayVal(shiftD(yd,-7*k))).filter(v=>v>0);
+    if(same.length>=2){ const sa=sum(same)/same.length, df=yv/sa-1;
+      if(Math.abs(df)>=0.06) ins.push({ic:df>=0?'⚡':'🔻',t:`مبيعات ${DAYN[wd]} (${fmt(yv)}) ${df>=0?'أعلى':'أقل'} من متوسط آخر ${same.length} أيام ${DAYN[wd]} بـ <b class="${df>=0?'up':'down'}">${pct(Math.abs(df))}</b>.`,go:'daily',lv:df>=0?'ok':'warn'}); }
+    const allDays=[...new Set(S.map(r=>r.day))].sort().slice(-56); const byW=[0,1,2,3,4,5,6].map(w=>{const L=allDays.filter(d=>new Date(d+'T12:00:00').getDay()===w).map(dayVal);return L.length?sum(L)/L.length:0;});
+    if(allDays.length>=21){ const bw=byW.indexOf(Math.max(...byW)), ww=byW.indexOf(Math.min(...byW.filter(x=>x>0)));
+      ins.push({ic:'📆',t:`أقوى يوم في الأسبوع: <b>${DAYN[bw]}</b> (متوسط ${fmt(byW[bw])}) — والأضعف ${DAYN[ww]} (${fmt(byW[ww])}).`,go:'sales'}); }
+    if(bs.length>1){
+      const L7=[0,1,2,3,4,5,6].map(k=>shiftD(yd,-k)), P7=[7,8,9,10,11,12,13].map(k=>shiftD(yd,-k));
+      const tr=bs.map(b=>{const a=sum(S.filter(r=>r.branch_id===b&&L7.includes(r.day)).map(r=>r.amount)),p=sum(S.filter(r=>r.branch_id===b&&P7.includes(r.day)).map(r=>r.amount));return {b,g:p?a/p-1:null};}).filter(x=>x.g!=null).sort((a,c)=>a.g-c.g);
+      if(tr.length&&tr[0].g<=-0.05) ins.push({ic:'⚠️',t:`<b>${esc(brById(tr[0].b).name)}</b> نزلت مبيعاته آخر 7 أيام بـ <b class="down">${pct(-tr[0].g)}</b> مقارنة بالأسبوع اللي قبله — يستاهل متابعة.`,go:'sales',lv:'bad'});
+      if(tr.length&&tr[tr.length-1].g>=0.05) ins.push({ic:'🚀',t:`<b>${esc(brById(tr[tr.length-1].b).name)}</b> في صعود: آخر 7 أيام <b class="up">${sgn(tr[tr.length-1].g)}</b> عن الأسبوع اللي قبله.`,go:'sales',lv:'ok'});
+    }
     const best=dayKeys[dayTot.indexOf(Math.max(...dayTot))];
-    ins.push(['🏆',`أعلى يوم مبيعات هذا الشهر: <b>${DAYN[new Date(best+'T12:00:00').getDay()]} ${+best.slice(8)} ${monShort(m)}</b> بـ ${fmt(Math.max(...dayTot))}.`]);
+    ins.push({ic:'🏆',t:`أعلى يوم هذا الشهر: <b>${DAYN[new Date(best+'T12:00:00').getDay()]} ${+best.slice(8)}</b> بـ ${fmt(Math.max(...dayTot))}.`,go:'daily'});
+  } else {
+    h+=`<div class="hx-hero"><div class="hx-glow"></div><div class="hx-top"><div><div class="hx-date">${dateTxt}</div><div class="hx-hi">${greet}${nm?'، '+esc(nm):''} 👋</div></div>${brTag}</div><div style="position:relative;margin-top:10px;opacity:.85;font-size:14px">أهلاً بك في منصة الإدارة الموحّدة</div></div>`;
   }
+  // ===== المؤشرات =====
+  const tile=(ic,bg,l,v,sub,go)=>`<button class="hx-tile" ${go?`data-t="${go}"`:''}><span class="hx-ic" style="background:${bg}">${ic}</span><span class="hx-tl">${l}</span><b class="num">${v}</b>${sub?`<span class="hx-ts">${sub}</span>`:''}</button>`;
   if(allowed('income')){ const I=(await loadIncome()).filter(r=>bs.includes(r.branch_id)&&!r.is_estimate); const ms=[...new Set(I.map(r=>r.month))].sort();
-    if(ms.length){const mm=ms[ms.length-1];const t=aggTotals(I.filter(r=>r.month===mm));tiles.push(tile('💼','صافي الربح · '+monShort(mm),`<span class="${t.net>=0?'up':'down'}">${fmt(t.net)}</span>`,`<span class="muted">هامش ${pct(t.rev?t.net/t.rev:null)}</span>`,'income'));}}
+    if(ms.length){const mm=ms[ms.length-1];const t=aggTotals(I.filter(r=>r.month===mm));const pmm=ms[ms.length-2];const tp=pmm?aggTotals(I.filter(r=>r.month===pmm)):null;
+      tiles.push(tile('💼','rgba(30,90,62,.1)','صافي الربح · '+monShort(mm),`<span class="${t.net>=0?'up':'down'}">${fmt(t.net)}</span>`,`هامش ${pct(t.rev?t.net/t.rev:null)}${tp&&tp.rev?` · كان ${pct(tp.net/tp.rev)}`:''}`,'income'));
+      if(tp&&tp.rev&&t.rev){const d=t.net/t.rev-tp.net/tp.rev; if(Math.abs(d)>=0.01) ins.push({ic:'💼',t:`هامش الربح في ${monShort(mm)} <b>${pct(t.net/t.rev)}</b> — ${d>=0?'تحسّن':'تراجع'} <b class="${d>=0?'up':'down'}">${(Math.abs(d)*100).toFixed(1)} نقطة</b> عن ${monShort(pmm)}.`,go:'income',lv:d>=0?'ok':'warn'});}}}
   if(allowed('wh')){ try{ const DD=(await loadDaily()).filter(r=>bs.includes(r.branch_id)&&r.ratio!=null); const ms=[...new Set(DD.map(r=>r.day.slice(0,7)))].sort();
-    if(ms.length){const mm=ms[ms.length-1];const L=DD.filter(r=>r.day.startsWith(mm));const money=L.some(x=>x.rev!=null);const ratio=money?sum(L.map(x=>x.cogs))/(sum(L.map(x=>x.rev))||1):sum(L.map(x=>+x.ratio))/L.length;
-      tiles.push(tile('📦','تكلفة المستودعات · '+monShort(mm),pct(ratio),'<span class="muted">من الإيرادات</span>','wh'));}}catch(e){} }
+    const rt=mm=>{const L=DD.filter(r=>r.day.startsWith(mm));const money=L.some(x=>x.rev!=null);return money?sum(L.map(x=>x.cogs))/(sum(L.map(x=>x.rev))||1):sum(L.map(x=>+x.ratio))/L.length;};
+    if(ms.length){const mm=ms[ms.length-1],r=rt(mm),pr=ms.length>1?rt(ms[ms.length-2]):null;
+      tiles.push(tile('📦','rgba(212,175,55,.16)','تكلفة المستودعات · '+monShort(mm),pct(r),pr!=null?`<span class="${r<=pr?'up':'down'}">${r<=pr?'▼':'▲'} ${((Math.abs(r-pr))*100).toFixed(1)} نقطة</span> عن ${monShort(ms[ms.length-2])}`:'من الإيرادات','wh'));
+      if(pr!=null&&r-pr>=0.01) ins.push({ic:'📦',t:`تكلفة المستودعات ارتفعت إلى <b>${pct(r)}</b> (كانت ${pct(pr)}) — راجع الهدر والأسعار.`,go:'wh',lv:'warn'});}}catch(e){} }
   if(allowed('loans')){ try{ const D=await appList('loans','contracts'); const td=todayIso(); let nx=null;
     D.forEach(d=>{const L=d.data||{};(L.sched||[]).forEach(x=>{if(x.date>td&&!x.paid&&(!nx||x.date<nx.date))nx={...x,name:L.name};});});
-    if(nx){const dd=Math.round((new Date(nx.date+'T12:00:00')-new Date(td+'T12:00:00'))/864e5);ins.push(['💳',`القسط التالي <b>${fmt(nx.inst,2)}</b> بعد ${dd} يوم (${dLbl(nx.date)}) — ${esc(nx.name)}.`]);} }catch(e){} }
+    if(nx){const dd=Math.round((new Date(nx.date+'T12:00:00')-new Date(td+'T12:00:00'))/864e5);tiles.push(tile('💳','rgba(91,141,214,.14)','القسط القادم',fmt(nx.inst),`بعد ${dd} يوم · ${+nx.date.slice(8)} ${MONTHS[+nx.date.slice(5,7)-1]}`,'loans'));} }catch(e){} }
   if(allowed('fleet')){ try{ const D=await appList('fleet','vehicles'); const A=D.map(d=>d.data||{}).filter(v=>(v.status||'في الخدمة')!=='مباعة'&&(bs.includes(v.br)||(st.f==='all'&&v.br==='wafra')));
-    if(A.length){ tiles.push(tile('🚗','أسطول السيارات',fmt(sum(A.map(v=>+v.value||0))),`<span class="muted">${A.length} سيارة · قيمة تقديرية</span>`,'fleet'));
-      const al=A.filter(v=>flAlerts(v).length).length; if(al) ins.push(['⚠️',`<b>${al}</b> سيارة تحتاج انتباه (استمارة أو تأمين أو صيانة).`]); } }catch(e){} }
-  if(tiles.length) h+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${tiles.join('')}</div>`;
-  // ===== أداء الفروع =====
+    if(A.length){ const al=A.filter(v=>flAlerts(v).length).length; tiles.push(tile('🚗','rgba(155,120,220,.14)','أسطول السيارات',`${A.length} <small style="font-size:12px;font-weight:500">سيارة</small>`,al?`<span class="down">${al} تحتاج انتباه</span>`:'كلها سليمة ✓','fleet')); } }catch(e){} }
+  if(tiles.length) h+=`<div class="hx-tiles">${tiles.join('')}</div>`;
+  // ===== يحتاج إجراء (من التنبيهات) =====
+  h+=`<div id="homeTasks"></div>`;
+  // ===== التحليل الذكي =====
+  if(ins.length){ const ord={bad:0,warn:1,ok:2,undefined:3}; ins.sort((a,b)=>ord[a.lv]-ord[b.lv]);
+    h+=`<div class="card hx-ai"><div class="hx-aih"><span class="hx-aib">✦</span><div><h3 style="margin:0">التحليل الذكي</h3><div class="muted" style="font-size:11.5px">قراءة تلقائية لأرقامك — تتحدّث مع كل بيانات جديدة</div></div></div>
+      ${ins.slice(0,6).map(x=>`<button class="hx-in ${x.lv||''}" ${x.go?`data-t="${x.go}"`:''}><span class="hx-ii">${x.ic}</span><span class="hx-it">${x.t}</span><span class="hx-ia">‹</span></button>`).join('')}</div>`; }
+  // ===== ترتيب الفروع =====
   if(m&&bs.length>1){
-    h+=`<div class="card"><h3>أداء الفروع <small>${monLbl(m)}</small></h3><div style="display:flex;flex-direction:column;gap:12px">${bs.map(b=>{const B=brById(b),rows=cur.filter(r=>r.branch_id===b),v=sum(rows.map(r=>r.amount)),pv=pm?sum(S.filter(r=>r.branch_id===b&&r.day.startsWith(pm)&&+r.day.slice(8)<=lastDay).map(r=>r.amount)):0;
-      return `<div style="display:flex;align-items:center;gap:10px"><div style="flex:1;min-width:0"><div class="bar-row" style="gap:6px"><b style="font-size:14px"><i class="dot" style="background:${B.color}"></i> ${esc(B.name)}</b><b class="num">${fmt(v)}</b></div>
-        <div class="meter" style="margin:5px 0 3px"><i style="width:${tot?v/tot*100:0}%;--c:${B.color};background:${B.color}"></i></div>
-        <div class="bar-row" style="font-size:11.5px"><span class="muted">${pct(tot?v/tot:0)} من المبيعات</span><span>${pv?delta(v,pv,''):''}</span></div></div>
-        <div style="flex:none">${spark(dayKeys.map(d=>sum(rows.filter(r=>r.day===d).map(r=>r.amount))),{w:70,h:34,col:B.color,fill:false,sw:1.6})}</div></div>`;}).join('')}</div></div>`;
-    const gr=bs.map(b=>{const v=sum(cur.filter(r=>r.branch_id===b).map(r=>r.amount)),pv=pm?sum(S.filter(r=>r.branch_id===b&&r.day.startsWith(pm)&&+r.day.slice(8)<=lastDay).map(r=>r.amount)):0;return {b,g:pv?v/pv-1:null};}).filter(x=>x.g!=null).sort((a,b)=>b.g-a.g);
-    if(gr.length>1) ins.unshift(['🚀',`الأعلى نمواً: <b>${esc(brById(gr[0].b).name)}</b> (${gr[0].g>=0?'+':''}${pct(gr[0].g)}) — والأقل: ${esc(brById(gr[gr.length-1].b).name)} (${gr[gr.length-1].g>=0?'+':''}${pct(gr[gr.length-1].g)}).`]);
+    const rk=bs.map(b=>{const rows=cur.filter(r=>r.branch_id===b),v=sum(rows.map(r=>r.amount)),pv=pm?sum(S.filter(r=>r.branch_id===b&&r.day.startsWith(pm)&&+r.day.slice(8)<=lastDay).map(r=>r.amount)):0;return {b,B:brById(b),rows,v,g:pv?v/pv-1:null};}).sort((a,c)=>c.v-a.v);
+    const md=['🥇','🥈','🥉'];
+    h+=`<div class="card"><h3>ترتيب الفروع <small>${monLbl(m)}</small></h3><div class="hx-rank">${rk.map((x,i)=>`<button class="hx-rk" data-t="sales"><span class="hx-md">${md[i]||i+1}</span><div style="flex:1;min-width:0"><div class="bar-row" style="gap:6px"><b style="font-size:14px"><i class="dot" style="background:${x.B.color}"></i> ${esc(x.B.name)}</b><b class="num">${fmt(x.v)}</b></div>
+      <div class="meter" style="margin:6px 0 4px"><i style="width:${tot?x.v/tot*100:0}%;background:${x.B.color}"></i></div>
+      <div class="bar-row" style="font-size:11.5px"><span class="muted">حصة ${pct(tot?x.v/tot:0)}</span>${x.g!=null?`<span class="hx-g ${x.g>=0?'u':'d'}">${x.g>=0?'▲':'▼'} ${pct(Math.abs(x.g))}</span>`:''}</div></div>
+      <div style="flex:none">${spark(dayKeys.map(d=>sum(x.rows.filter(r=>r.day===d).map(r=>r.amount))),{w:64,h:32,col:x.B.color,fill:false,sw:1.6})}</div></button>`).join('')}</div></div>`;
   }
-  // ===== رؤى =====
-  if(ins.length) h+=`<div class="card"><h3>نظرة سريعة</h3><div style="display:flex;flex-direction:column;gap:10px">${ins.map(([i,t])=>`<div style="display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.7"><span style="flex:none;width:30px;height:30px;border-radius:10px;background:var(--gold-soft);display:grid;place-items:center;font-size:15px">${i}</span><div>${t}</div></div>`).join('')}</div></div>`;
   // ===== المبيعات اليومية للشهر =====
   if(m&&dayKeys.length>1) h+=`<div class="card"><h3>المبيعات اليومية <small>${monLbl(m)}</small></h3>${stackBars(dayKeys.map(d=>String(+d.slice(8))),bs.map(b=>({name:brById(b).name,color:brById(b).color,vals:dayKeys.map(d=>sum(cur.filter(r=>r.branch_id===b&&r.day===d).map(r=>r.amount)))})),{h:200,fv:v=>fmt(v)})}${bs.length>1?legend(bs.map(brById)):''}</div>`;
   // ===== المبيعات الشهرية =====
@@ -732,11 +819,19 @@ V.home=async()=>{
     h+=`<div class="card"><h3>المبيعات الشهرية <small>${ms.length} شهر · ${fmt(sum(ser.flatMap(x=>x.vals)))}</small></h3>${stackBars(ms.map(monShort),ser,{fv:v=>fmt(v)})}${bs.length>1?legend(bs.map(brById)):''}${Object.keys(fromStmt).length?'<div class="muted" style="font-size:11.5px;margin-top:6px">الأشهر قبل '+monShort(months[0])+' من إيرادات قوائم الدخل شاملة الضريبة.</div>':''}</div>`; }
   // ===== اختصارات =====
   const sc=SECTIONS.filter(x=>x.id!=='home'&&(x.admin?isAdmin():allowed(x.id)));
-  if(sc.length) h+=`<div class="card"><h3>الأقسام</h3><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">${sc.map(x=>`<button data-t="${x.id}" style="border:1px solid var(--line);background:var(--bg);border-radius:14px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;font:inherit;color:inherit"><span style="font-size:20px">${SC_ICON[x.id]||'📄'}</span><span style="font-size:10.5px;line-height:1.3;text-align:center">${esc(x.name)}</span></button>`).join('')}</div></div>`;
+  if(sc.length) h+=`<div class="card"><h3>الوصول السريع</h3><div class="hx-sc">${sc.map(x=>`<button data-t="${x.id}"><span>${SC_ICON[x.id]||'📄'}</span><small>${esc(x.name)}</small></button>`).join('')}</div></div>`;
   h=(st.branches.length>1?`<div class="bar-row">${branchChips()}</div>`:'')+h;
   if(!m&&!tiles.length) h+=`<div class="card empty">لا توجد تقارير متاحة لحسابك بعد</div>`;
+  setTimeout(paintHomeTasks,0);
   return h;
 };
+function paintHomeTasks(){
+  const el=document.getElementById('homeTasks'); if(!el) return;
+  const L=liveAlerts(); if(!L.length){ el.innerHTML=`<div class="hx-clear"><span>✅</span><div><b>ما فيه شي يحتاج إجراء</b><div class="muted" style="font-size:12px">كل الأمور تحت السيطرة</div></div></div>`; return; }
+  el.innerHTML=`<div class="card hx-tasks"><div class="bar-row" style="margin-bottom:4px"><h3 style="margin:0">يحتاج إجراء <span class="hx-cnt">${L.length}</span></h3>${L.length>4?`<button class="btn ghost sm" data-hxall="1" style="min-height:30px;font-size:12px">عرض الكل</button>`:''}</div>
+    ${L.slice(0,4).map(a=>`<button class="hx-tk" data-ngo="${a.go}" data-nk="${esc(a.k||'')}"><span class="hx-tki ${a.bad?'bad':''}">${a.ic}</span><span class="hx-tkt"><b>${esc(a.t)}</b><small class="${a.bad?'down':''}">${esc(a.s)}</small></span><span class="hx-ia">‹</span></button>`).join('')}</div>`;
+}
+document.addEventListener('click',e=>{ if(e.target.closest('[data-hxall]')){ e.stopPropagation(); const b=$('#bell'); if(b) b.click(); } });
 async function whDaily(bs){
   const D=(await loadDaily()).filter(r=>bs.includes(r.branch_id)&&r.ratio!=null);
   if(!D.length) return `<div class="card"><h3>نسبة المستودعات اليومية</h3><div class="empty">تبدأ الأرقام اليومية من أول تحديث ليلي لقوائم الدخل</div></div>`;
@@ -1133,7 +1228,7 @@ async function loadAlerts(){
       if(mtLate(m)) out.push({k:'mtl:'+m.id+':'+mtDays(m),ic:'⏱',bad:true,t:`أمر عمل تجاوز المهلة: ${m.title}`,s:brById(m.branch).name+' · منذ '+hrsTxt(mtHrs(m))+' · '+(MT_ST[m.status]||[''])[0],go:'maint'});
       if(R!=='sup'&&m.status==='done') out.push({k:'mtd:'+m.id+':'+m.done_at,ic:'✅',t:`صيانة منجزة بانتظار تأكيدك: ${m.title}`,s:brById(m.branch).name+' · '+mtRef(m),go:'maint'});
       if(R==='mgr'&&m.status==='rejected') out.push({k:'mtr:'+m.id,ic:'✕',t:`رُفض طلب الصيانة: ${m.title}`,s:m.reject_reason||'',go:'maint'});}); } }catch(e){}
-  ALERTS=out.sort((a,b)=>(b.bad?1:0)-(a.bad?1:0)); paintBell(); paintTicker(ALERTS);
+  ALERTS=out.sort((a,b)=>(b.bad?1:0)-(a.bad?1:0)); paintBell(); paintTicker(ALERTS); paintHomeTasks();
 }
 // ----- الشريط المتحرك (كل مستخدم يشوف أقسامه فقط) -----
 async function paintTicker(out){
