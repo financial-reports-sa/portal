@@ -243,6 +243,17 @@ body:not(.hasnav) .ai-bar{padding-bottom:calc(12px + env(safe-area-inset-bottom)
 .ai-send{background:linear-gradient(135deg,#2A6B49,#123A27);color:#FFF3CF}.ai-send:disabled{opacity:.45}
 .ai-mic{background:none;color:var(--muted)}.ai-mic.on{background:#C0392B;color:#fff;animation:tkrPulse 1.2s infinite}
 
+
+/* شريط سفلي بزر المساعد في المنتصف */
+.bnav.wai{display:grid;grid-template-columns:1fr 64px 1fr;align-items:end;gap:2px}
+.bnav.wai .bside{display:flex;justify-content:flex-start;align-items:stretch;min-width:0}
+.bnav.wai .bside button{max-width:none;flex:0 0 calc(100% / var(--k,2));min-width:0;font-size:10px;padding:3px 0}
+.bnav.wai .bside .bi{width:38px;height:26px}
+.bnav.wai .bside svg{width:20px;height:20px}
+.bnav .bl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.bnav.wai button.nav-ai{max-width:none;padding:0 0 3px;font-size:10px}
+.bnav.wai button.nav-ai .bi{width:50px;height:50px;margin-top:-22px}
+.bnav.wai button.nav-ai svg{width:23px;height:23px}
 /* login */
 #login{min-height:100vh;display:grid;place-items:center;padding-inline:16px;padding-block:40px}
 .login-card{width:100%;max-width:400px;display:flex;flex-direction:column;gap:14px}
@@ -648,7 +659,7 @@ const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'rep',n
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup','feedback'];
-const APP_VER='66';
+const APP_VER='67';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -730,7 +741,10 @@ function renderShell(){
   if(!canSee(st.tab)) st.tab='home';
   const g=groupOf(st.tab); st.lastIn=st.lastIn||{}; st.lastIn[g]=st.tab;
   const gs=GROUPS.filter(x=>x.secs.some(canSee));
-  $('#bnav').innerHTML=gs.map(x=>`<button data-g="${x.id}" class="${x.id==='ai'?'nav-ai':''}" aria-pressed="${x.id===g}"><span class="bi">${NAV_ICONS[x.id]}</span>${x.name}</button>`).join('');
+  { const btn=x=>`<button data-g="${x.id}" class="${x.id==='ai'?'nav-ai':''}" aria-pressed="${x.id===g}"><span class="bi">${NAV_ICONS[x.id]}</span><span class="bl">${x.name}</span></button>`;
+    const ai=gs.find(x=>x.id==='ai'), rest=gs.filter(x=>x.id!=='ai');
+    if(ai&&rest.length>1){ const k=Math.ceil(rest.length/2); $('#bnav').innerHTML=`<div class="bside" style="--k:${k}">${rest.slice(0,k).map(btn).join('')}</div>${btn(ai)}<div class="bside" style="--k:${k}">${rest.slice(k).map(btn).join('')}</div>`; $('#bnav').classList.add('wai'); }
+    else { $('#bnav').innerHTML=gs.map(btn).join(''); $('#bnav').classList.remove('wai'); } }
   document.body.classList.toggle('hasnav',gs.length>1); $('#bnav').hidden=gs.length<=1;
   const subs=(GROUPS.find(x=>x.id===g)||{secs:[]}).secs.filter(canSee);
   $('#tabs').innerHTML=subs.length>1?SECTIONS.filter(s=>subs.includes(s.id)).map(s=>`<button data-t="${s.id}" aria-pressed="${st.tab===s.id}">${s.name}</button>`).join(''):'';
