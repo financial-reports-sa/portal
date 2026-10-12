@@ -78,6 +78,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 @media (prefers-reduced-motion:reduce){.tkr-track{animation:none}.tkr-vp{overflow-x:auto;scrollbar-width:none}}
 body.appmode .tkr{display:none}
 
+.advdel{border:1px solid var(--line);background:var(--card);border-radius:9px;width:30px;height:30px;display:grid;place-items:center;font-size:13px;cursor:pointer;flex:none;padding:0}
+.advdel:active{background:rgba(208,69,58,.12)}
 /* login */
 #login{min-height:100vh;display:grid;place-items:center;padding-inline:16px;padding-block:40px}
 .login-card{width:100%;max-width:400px;display:flex;flex-direction:column;gap:14px}
@@ -480,7 +482,7 @@ const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'rep',n
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup'];
-const APP_VER='55';
+const APP_VER='56';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -1332,9 +1334,9 @@ V.advances=async()=>{
       <div class="muted" style="font-size:12px">${esc(brById(a.branch).name)} · الراتب ${fmt(e.salary)}${AD&&prev.length?` · <span class="down">عليه سلفة قائمة ${fmt(prev.reduce((t,x)=>t+advCalc(x).rem,0))}</span>`:''}</div>
       ${a.reason?`<div style="font-size:12.5px;margin-top:4px">«${esc(a.reason)}»</div>`:''}${a.mgr_by&&a.status==='pending_owner'?`<div class="muted" style="font-size:11.5px">وافق ${esc(a.mgr_by)}${a.mgr_note?' — '+esc(a.mgr_note):''}</div>`:''}
       <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">${a.status==='pending_owner'||isAdmin()?`<select class="inp" data-advs="${a.id}" style="width:auto;min-height:34px;padding:4px 8px;font-size:12.5px">${[0,1,2].map(i=>{const [cy,cm]=curMon().split('-').map(Number);const t=cy*12+cm-1+i;const k=Math.floor(t/12)+'-'+String(t%12+1).padStart(2,'0');return `<option value="${k}" ${i===1?'selected':''}>الخصم من ${monLbl(k)}</option>`;}).join('')}</select>`:''}<button class="btn sm" data-advok="${a.id}">موافقة ✓</button><button class="btn ghost sm" data-advno="${a.id}" style="color:var(--down)">رفض</button><button class="btn ghost sm" data-advdoc="${a.id}">📄 النموذج</button></div></div>`;}).join('')}</div>`;
-  if(AD&&act.length) h+=`<div class="card"><h3>السلف القائمة</h3>${act.map(a=>{const c=advCalc(a);return `<div style="padding:8px 0;border-bottom:1px solid var(--line);cursor:pointer" data-advdoc="${a.id}"><div class="bar-row"><b>${esc(a.emp_name)}</b><b class="num">${fmt(c.rem)}</b></div><div class="meter" style="margin:5px 0"><i style="width:${(c.done/a.months*100).toFixed(0)}%;background:${brById(a.branch).color}"></i></div><div class="bar-row muted" style="font-size:11.5px"><span>${esc(brById(a.branch).name)} · ${fmt(a.amount)} على ${a.months} أشهر</span><span>${fmt(c.mo)} شهرياً من ${monLbl(a.start_month)}</span></div></div>`;}).join('')}</div>`;
+  if(AD&&act.length) h+=`<div class="card"><h3>السلف القائمة</h3>${act.map(a=>{const c=advCalc(a);return `<div style="padding:8px 0;border-bottom:1px solid var(--line);cursor:pointer" data-advdoc="${a.id}"><div class="bar-row"><b>${esc(a.emp_name)}</b><span style="display:flex;align-items:center;gap:8px"><b class="num">${fmt(c.rem)}</b><button class="advdel" data-advdel="${a.id}" type="button" aria-label="حذف">🗑</button></span></div><div class="meter" style="margin:5px 0"><i style="width:${(c.done/a.months*100).toFixed(0)}%;background:${brById(a.branch).color}"></i></div><div class="bar-row muted" style="font-size:11.5px"><span>${esc(brById(a.branch).name)} · ${fmt(a.amount)} على ${a.months} أشهر</span><span>${fmt(c.mo)} شهرياً من ${monLbl(a.start_month)}</span></div></div>`;}).join('')}</div>`;
   const hist=adv.filter(a=>inB(a)&&!mine.includes(a)&&!act.includes(a)).slice(0,30);
-  if(AD&&hist.length) h+=`<div class="card"><h3>آخر الطلبات</h3>${hist.map(a=>`<div class="bar-row" style="padding:7px 0;border-bottom:1px solid var(--line);cursor:pointer" data-advdoc="${a.id}"><span><b>${esc(a.emp_name)}</b> <span class="num">${fmt(a.amount)}</span> <span class="muted" style="font-size:11.5px">· ${dLbl(String(a.created_at).slice(0,10))}</span></span>${advPill(a)}</div>`).join('')}</div>`;
+  if(AD&&hist.length) h+=`<div class="card"><h3>آخر الطلبات</h3>${hist.map(a=>`<div class="bar-row" style="padding:7px 0;border-bottom:1px solid var(--line);cursor:pointer" data-advdoc="${a.id}"><span><b>${esc(a.emp_name)}</b> <span class="num">${fmt(a.amount)}</span> <span class="muted" style="font-size:11.5px">· ${dLbl(String(a.created_at).slice(0,10))}</span></span><span style="display:flex;align-items:center;gap:8px;flex:none">${advPill(a)}<button class="advdel" data-advdel="${a.id}" type="button" aria-label="حذف">🗑</button></span></div>`).join('')}</div>`;
   // دخول الموظفين
   const list=emps.filter(inB);
   h+=`<div class="card"><h3>دخول الموظفين للتطبيق <small>${Object.keys(acc).length} حساب</small></h3><div class="muted" style="font-size:12px;margin-bottom:8px">الموظف يدخل برقم جواله ورمز من 6 أرقام، ويشوف بياناته وسلفه ويطلب سلفة.</div>
@@ -1352,7 +1354,12 @@ function shareCred(name,phone,pin){
   document.body.appendChild(m);
 }
 document.addEventListener('click',async e=>{
-  const t=e.target.closest('[data-advdoc],[data-advp],[data-advn],[data-advx],[data-advc],[data-advf],[data-advok],[data-advno],[data-eanew],[data-eapin],[data-eadel]'); if(!t||!$('#view').contains(t)) return; const d=t.dataset;
+  const t=e.target.closest('[data-advdel],[data-advdoc],[data-advp],[data-advn],[data-advx],[data-advc],[data-advf],[data-advok],[data-advno],[data-eanew],[data-eapin],[data-eadel]'); if(!t||!$('#view').contains(t)) return; const d=t.dataset;
+  if(d.advdel){ const a=(st._advList||[]).find(x=>String(x.id)===d.advdel); if(!a) return;
+    if(!confirm(`حذف طلب سلفة ${a.emp_name} بمبلغ ${fmt(a.amount)} ر.س نهائياً؟\nما يمكن التراجع.`)) return;
+    const r=await sb.rpc('adv_delete',{p_id:a.id});
+    if(r.error){ toast(/adv_delete|function|schema cache/i.test(r.error.message)?'شغّل ملف adv_delete.sql في Supabase أولاً':'تعذّر الحذف: '+r.error.message); return; }
+    toast('تم حذف الطلب'); st._alertsAt=0; loadAlerts(); render(); return; }
   if(d.advdoc){const a=(st._advList||[]).find(x=>String(x.id)===d.advdoc);if(!a)return;const em=st._advMe&&!st._advEmps?st._advMe:(st._advEmps||[]).find(x=>x.id===a.emp_id);openAdvDoc(a,em);return;}
   if(d.advp){const f=$('#advForm');const sel=f.emp;const sal=sel?(sel.selectedOptions[0]?+sel.selectedOptions[0].dataset.sal||0:0):(+f.amount.max||0);if(!sal){toast('اختر الموظف أولاً');return;}f.amount.value=Math.floor(sal*(+d.advp)/100);f.dispatchEvent(new Event('input',{bubbles:true}));return;}
   if(d.advn){st.advNew=true;await render();const f=$('#advFormCard');if(f)f.scrollIntoView({behavior:'smooth'});return;}
