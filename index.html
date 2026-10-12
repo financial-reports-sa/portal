@@ -174,6 +174,38 @@ body.appmode .tkr{display:none}
 @media print{body.fbprinting>*:not(#fbqr){display:none!important}body.fbprinting #fbqr{position:static}body.fbprinting .noprint{display:none!important}body.fbprinting .fbq-body{overflow:visible;padding:0}body.fbprinting .fbq-card{page-break-after:always;max-width:none;width:100%;box-shadow:none;margin-top:40px}}
 
 .mt-late{border:0;background:rgba(208,69,58,.1);color:var(--down);font:inherit;font-weight:700;border-radius:99px;padding:1px 8px;cursor:pointer}
+
+/* المساعد الذكي */
+.ai-wrap{display:flex;flex-direction:column;gap:10px;min-height:calc(100vh - 230px)}
+.ai-head{display:flex;align-items:center;gap:10px}.ai-head b{font-family:var(--f-disp);font-size:17px}
+.ai-orb{flex:none;width:40px;height:40px;border-radius:14px;display:grid;place-items:center;color:#3E2F05;font-size:19px;background:linear-gradient(135deg,#F6E7B0,#D4AF37);box-shadow:0 6px 16px -6px rgba(212,175,55,.9)}
+.ai-orb.sm{width:32px;height:32px;border-radius:11px;font-size:15px}
+.ai-msgs{flex:1;display:flex;flex-direction:column;gap:10px;padding-bottom:80px}
+.ai-b{max-width:92%;border-radius:18px;padding:11px 14px;font-size:14px;line-height:1.7}
+.ai-b.me{align-self:flex-end;background:var(--fg);color:var(--bg);border-end-end-radius:5px}
+.ai-b.bot{align-self:flex-start;background:var(--card);border:1px solid var(--line);border-end-start-radius:5px;box-shadow:0 6px 18px -14px rgba(20,40,30,.4)}
+.ai-card{min-width:min(320px,88%)}
+.ai-tt{font-size:12.5px;color:var(--muted);font-weight:600}
+.ai-big{font-size:30px;font-weight:700;color:var(--green,#1E5A3E);line-height:1.25;margin-top:2px}.ai-big small{font-size:13px;color:var(--muted);font-weight:500;margin-inline-start:6px}
+.ai-sub{font-size:12.5px;color:var(--muted)}
+.ai-sp{margin:6px 0 2px}.ai-sp svg{width:100%;height:auto}
+.ai-ln{margin-top:8px;border-top:1px solid var(--line);padding-top:6px}.ai-ln>div{display:flex;justify-content:space-between;gap:10px;padding:4px 0;font-size:13px}.ai-ln span{color:var(--muted)}
+.ai-nt{margin-top:8px;font-size:12.5px;background:var(--bg);border-radius:10px;padding:7px 10px}
+.ai-go{margin-top:8px;border:0;background:none;color:var(--gold-ink);font:inherit;font-weight:700;font-size:12.5px;cursor:pointer;padding:0}
+.ai-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.ai-chips button{border:1px solid var(--line);background:var(--bg);border-radius:99px;padding:6px 12px;font:inherit;font-size:12.5px;cursor:pointer;color:inherit}
+.ai-typing{display:flex;gap:5px;padding:14px 16px}.ai-typing i{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:aiDot 1s infinite}.ai-typing i:nth-child(2){animation-delay:.15s}.ai-typing i:nth-child(3){animation-delay:.3s}
+@keyframes aiDot{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+.ai-bar{position:fixed;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom));z-index:30;display:flex;gap:8px;padding:10px 14px;background:linear-gradient(180deg,transparent,var(--bg) 30%);max-width:1100px;margin:0 auto}
+body:not(.hasnav) .ai-bar{bottom:env(safe-area-inset-bottom)}
+.ai-bar input{flex:1;min-width:0;border:1.5px solid var(--line);background:var(--card);border-radius:99px;padding:12px 16px;font:inherit;font-size:15px;color:inherit;outline:none;box-shadow:0 8px 20px -14px rgba(0,0,0,.4)}
+.ai-bar input:focus{border-color:var(--green,#1E5A3E)}
+.ai-send,.ai-mic{flex:none;width:46px;height:46px;border-radius:50%;border:0;display:grid;place-items:center;font-size:18px;cursor:pointer}
+.ai-send{background:linear-gradient(135deg,#2A6B49,#123A27);color:#F6E7B0;transform:scaleX(-1)}
+.ai-mic{background:var(--card);border:1.5px solid var(--line)}.ai-mic.on{background:#C0392B;color:#fff;border-color:#C0392B;animation:tkrPulse 1.2s infinite}
+.hx-ask{display:flex;align-items:center;gap:8px;background:var(--card);border:1.5px solid rgba(212,175,55,.45);border-radius:99px;padding:5px 5px 5px 6px;box-shadow:0 8px 22px -16px rgba(18,58,39,.6)}
+.hx-ask input{flex:1;min-width:0;border:0;background:none;font:inherit;font-size:14.5px;color:inherit;outline:none;padding:6px 4px}
+.hx-ask button{flex:none;width:38px;height:38px;border-radius:50%;border:0;background:linear-gradient(135deg,#2A6B49,#123A27);color:#F6E7B0;cursor:pointer;transform:scaleX(-1)}
+
 /* login */
 #login{min-height:100vh;display:grid;place-items:center;padding-inline:16px;padding-block:40px}
 .login-card{width:100%;max-width:400px;display:flex;flex-direction:column;gap:14px}
@@ -549,6 +581,7 @@ const sb=window.supabase.createClient(CFG.url,CFG.key,{auth:{persistSession:true
 
 const SECTIONS=[
   {id:'home',name:'الرئيسية'},
+  {id:'ai',name:'المساعد الذكي'},
   {id:'sales',name:'مبيعات الفروع',app:'sales'},
   {id:'daily',name:'التقرير اليومي',page:'daily',perm:'sales'},
   {id:'channels',name:'منافذ المبيعات',app:'channels'},
@@ -573,11 +606,11 @@ const NAV_ICONS={
   ops:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg>',
   fin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/><path d="M6.5 15h4"/></svg>',
   more:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>'};
-const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'rep',name:'التقارير',secs:['sales','daily','channels','income','wh','chicken']},{id:'ops',name:'العمليات',secs:['handover','maint','feedback','employees','advances','fleet']},{id:'fin',name:'المالية',secs:['treasury','loans']},{id:'more',name:'الإدارة',secs:['users','data']}];
+const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','ai','me']},{id:'rep',name:'التقارير',secs:['sales','daily','channels','income','wh','chicken']},{id:'ops',name:'العمليات',secs:['handover','maint','feedback','employees','advances','fleet']},{id:'fin',name:'المالية',secs:['treasury','loans']},{id:'more',name:'الإدارة',secs:['users','data']}];
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup','feedback'];
-const APP_VER='62';
+const APP_VER='64';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -604,7 +637,7 @@ const st={user:null,profile:null,branches:[],myBranches:[],mySections:[],tab:'ho
 const isAdmin=()=>st.profile&&['owner','admin'].includes(st.profile.role);
 const isOwner=()=>st.profile&&st.profile.role==='owner';
 const isEmp=()=>st.profile&&st.profile.role==='employee';
-const allowed=id=>{ if(isEmp()) return id==='me'; if(id==='me') return false; if(isAdmin()||id==='home') return true; if(id==='daily') return st.mySections.includes('sales')&&st.allBranches; if(id==='maint') return st.mySections.includes('maint')||st.mySections.includes('maint_sup'); const x=SECTIONS.find(q=>q.id===id); return st.mySections.includes(x&&x.perm?x.perm:id); };
+const allowed=id=>{ if(isEmp()) return id==='me'; if(id==='me') return false; if(isAdmin()||id==='home'||id==='ai') return true; if(id==='daily') return st.mySections.includes('sales')&&st.allBranches; if(id==='maint') return st.mySections.includes('maint')||st.mySections.includes('maint_sup'); const x=SECTIONS.find(q=>q.id===id); return st.mySections.includes(x&&x.perm?x.perm:id); };
 const brById=id=>st.branches.find(b=>b.id===id)||{id,name:id,color:'#888'};
 const selBranches=()=>st.f==='all'?st.branches.map(b=>b.id):[st.f];
 
@@ -779,7 +812,7 @@ function spark(vals,{w=120,h=34,col='#E9CF7A',fill=true,sw=1.8}={}){
   return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="direction:ltr;display:block"><defs><linearGradient id="${gid}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".35"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>${fill?`<path d="${d} L${X(v.length-1)},${h} L${X(0)},${h} Z" fill="url(#${gid})"/>`:''}<path d="${d}" fill="none" stroke="${col}" stroke-width="${sw}" stroke-linecap="round"/><circle cx="${X(v.length-1)}" cy="${Y(v[v.length-1])}" r="2.8" fill="${col}"/></svg>`;
 }
 const DAYN=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
-const SC_ICON={sales:'📈',daily:'🧾',channels:'🛵',income:'📊',wh:'📦',chicken:'🍗',treasury:'🏦',loans:'💳',fleet:'🚗',maint:'🛠️',feedback:'⭐',advances:'💵',handover:'🔁',employees:'👥',users:'🔐',data:'⬆️'};
+const SC_ICON={sales:'📈',daily:'🧾',channels:'🛵',income:'📊',wh:'📦',chicken:'🍗',treasury:'🏦',loans:'💳',fleet:'🚗',maint:'🛠️',feedback:'⭐',ai:'✦',advances:'💵',handover:'🔁',employees:'👥',users:'🔐',data:'⬆️'};
 V.home=async()=>{
   const bs=selBranches(); const now=new Date(), hr=now.getHours();
   const fn_=(st.profile&&(st.profile.full_name||st.profile.username)||'').trim(); const nm=/^(مدير|فرع|حساب)/.test(fn_)?fn_:fn_.split(' ')[0];
@@ -843,6 +876,7 @@ V.home=async()=>{
   } else {
     h+=`<div class="hx-hero"><div class="hx-glow"></div><div class="hx-top"><div><div class="hx-date">${dateTxt}</div><div class="hx-hi">${greet}${nm?'، '+esc(nm):''} 👋</div></div>${brTag}</div><div style="position:relative;margin-top:10px;opacity:.85;font-size:14px">أهلاً بك في منصة الإدارة الموحّدة</div></div>`;
   }
+  h+=`<form class="hx-ask" id="hxAsk"><span class="ai-orb sm">✦</span><input placeholder="اسأل المساعد… كم مبيعات أمس؟" autocomplete="off"><button type="submit" aria-label="اسأل">➤</button></form>`;
   // ===== المؤشرات =====
   const tile=(ic,bg,l,v,sub,go)=>`<button class="hx-tile" ${go?`data-t="${go}"`:''}><span class="hx-ic" style="background:${bg}">${ic}</span><span class="hx-tl">${l}</span><b class="num">${v}</b>${sub?`<span class="hx-ts">${sub}</span>`:''}</button>`;
   if(allowed('income')){ const I=(await loadIncome()).filter(r=>bs.includes(r.branch_id)&&!r.is_estimate); const ms=[...new Set(I.map(r=>r.month))].sort();
@@ -1789,6 +1823,207 @@ document.addEventListener('click',async e=>{
     if(r.error){toast(/feedback_update|function|schema/i.test(r.error.message)?'شغّل ملف feedback.sql أولاً':r.error.message);return;}
     toast('تم ✓ — '+FB_ACT[s]); const w=$('#mtdet');if(w)w.remove();document.body.style.overflow=''; st._alertsAt=0; loadAlerts(); await render();
     const nf=(st._fbList||[]).find(x=>x.id===id); if(nf&&s!=='closed') fbDetail(nf); return;}
+});
+
+// ===================== المساعد الذكي =====================
+const AI_MON=['يناير','فبراير','مارس','ابريل','مايو','يونيو','يوليو','اغسطس','سبتمبر','اكتوبر','نوفمبر','ديسمبر'];
+const AI_CH={hs:['هنقر','هانقر','هنجر','هانجر','hunger'],keeta:['كيتا','كيته','keeta'],ninja:['نينجا','ninja'],shaden:['تطبيق الشادن','تطبيق شادن'],family:['عائلات','العوائل','قسم العائلات'],awail:['عوائل'],dlv:['توصيل'],sfr:['سفري'],mhl:['محلي'],tkl:['سفري / محلي'],bonat:['بونات'],ajl:['اجل','آجل'],meals:['وجبات']};
+const AI_CHN={ajl:'آجل عملاء',awail:'عوائل',bonat:'تطبيق بونات',dlv:'توصيل',family:'قسم العائلات',hs:'هنقرستيشن',keeta:'كيتا',meals:'وجبات',mhl:'محلي',ninja:'نينجا',sfr:'سفري',shaden:'تطبيق الشادن',tkl:'سفري / محلي'};
+const aiN=s=>String(s||'').replace(/[ً-ْـ]/g,'').replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/\s+/g,' ').trim().toLowerCase();
+const aiHas=(t,...w)=>w.some(x=>t.includes(aiN(x)));
+const aiD=d=>{const x=new Date(d+'T12:00:00');return `${DAYN[x.getDay()]} ${x.getDate()} ${MONTHS[x.getMonth()]}`;};
+const aiShift=(d,n)=>{const x=new Date(d+'T12:00:00');x.setDate(x.getDate()+n);return x.toISOString().slice(0,10);};
+const aiMonEnd=m=>m+'-'+String(daysIn(m)).padStart(2,'0');
+const aiPrevMon=m=>{const [y,mm]=m.split('-').map(Number);const d=new Date(y,mm-2,1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');};
+function aiPeriod(t){
+  const td=todayIso(), cm=td.slice(0,7);
+  const md=t.match(/(20\d\d)-(\d\d)-(\d\d)/); if(md) return {kind:'day',from:md[0],to:md[0],label:aiD(md[0])};
+  for(let i=0;i<12;i++){ const re=new RegExp('(\\d{1,2})\\s*(?:من\\s*)?(?:شهر\\s*)?'+AI_MON[i]); const mm=t.match(re); if(mm){ let y=+td.slice(0,4); if(i+1>+td.slice(5,7)) y--; const d=`${y}-${String(i+1).padStart(2,'0')}-${String(+mm[1]).padStart(2,'0')}`; return {kind:'day',from:d,to:d,label:aiD(d)}; } }
+  if(aiHas(t,'قبل امس','قبل البارحه')){const d=aiShift(td,-2);return {kind:'day',from:d,to:d,label:'قبل أمس ('+aiD(d)+')'};}
+  if(aiHas(t,'امس','البارحه','مبارح')){const d=aiShift(td,-1);return {kind:'day',from:d,to:d,label:'أمس ('+aiD(d)+')'};}
+  if(aiHas(t,'اليوم')&&!aiHas(t,'ايام')) return {kind:'day',from:td,to:td,label:'اليوم'};
+  const ln=t.match(/اخر\s*(\d+)\s*(يوم|ايام)/); if(ln){const n=+ln[1];return {kind:'range',from:aiShift(td,-n),to:aiShift(td,-1),label:'آخر '+n+' يوم'};}
+  if(aiHas(t,'اخر اسبوع','الاسبوع الماضي','الاسبوع اللي فات')) return {kind:'range',from:aiShift(td,-7),to:aiShift(td,-1),label:'آخر 7 أيام'};
+  if(aiHas(t,'هذا الاسبوع','الاسبوع')){const x=new Date(td+'T12:00:00');const back=(x.getDay()+1)%7;return {kind:'range',from:aiShift(td,-back),to:td,label:'هذا الأسبوع'};}
+  if(aiHas(t,'الشهر الماضي','الشهر اللي فات','الشهر السابق')){const m=aiPrevMon(cm);return {kind:'month',month:m,from:m+'-01',to:aiMonEnd(m),label:monLbl(m)};}
+  if(aiHas(t,'هذي السنه','هذه السنه','السنه','سنه')){const y=td.slice(0,4);return {kind:'year',from:y+'-01-01',to:td,label:'سنة '+y,year:y};}
+  for(let i=0;i<12;i++){ if(t.includes(AI_MON[i])){ let y=+td.slice(0,4); if(i+1>+td.slice(5,7)) y--; const m=y+'-'+String(i+1).padStart(2,'0'); return {kind:'month',month:m,from:m+'-01',to:aiMonEnd(m),label:monLbl(m)}; } }
+  const sm=t.match(/شهر\s*(\d{1,2})/); if(sm&&+sm[1]>=1&&+sm[1]<=12){ let y=+td.slice(0,4); if(+sm[1]>+td.slice(5,7)) y--; const m=y+'-'+String(+sm[1]).padStart(2,'0'); return {kind:'month',month:m,from:m+'-01',to:aiMonEnd(m),label:monLbl(m)}; }
+  if(aiHas(t,'هذا الشهر','الشهر الحالي','الشهر')) return {kind:'month',month:cm,from:cm+'-01',to:td,label:monLbl(cm)+' حتى الآن',cur:true};
+  return null;
+}
+function aiBranches(t){
+  const mine=st.branches.map(b=>b.id).filter(b=>b!=='wafra'); let want=null;
+  if(aiHas(t,'عزيزيه')) want=['az']; else if(aiHas(t,'شوران')) want=['sh']; else if(aiHas(t,'باتشينو','بتشينو','باتشنو','pacino')) want=['pc']; else if(aiHas(t,'الشادن','شادن')&&!aiHas(t,'تطبيق الشادن')) want=['az','sh'];
+  if(!want) return {ids:mine,all:true};
+  const ok=want.filter(b=>mine.includes(b)); return ok.length?{ids:ok,all:false}:{ids:[],denied:want};
+}
+const aiBr=ids=>ids.length===1?brById(ids[0]).name:ids.length===2&&ids.includes('az')&&ids.includes('sh')?'الشادن (العزيزية وشوران)':'كل الفروع';
+const aiDelta=(a,b,lbl)=>b?`<span class="${a>=b?'up':'down'}">${a>=b?'▲':'▼'} ${pct(Math.abs(a/b-1))}</span> ${lbl}`:'';
+const aiNo=(why)=>({title:'ما عندك صلاحية',text:why});
+async function aiAnswer(q){
+  const t=aiN(q); const P=aiPeriod(t); const B=aiBranches(t);
+  if(B.denied) return {text:`ما عندك صلاحية على ${B.denied.map(b=>brById(b).name).join(' و')}.`};
+  const bs=B.ids, bl=aiBr(bs);
+  if(!t||aiHas(t,'مرحبا','السلام','هلا','وش تقدر','ايش تقدر','مساعده','ساعدني','كيف استخدم')) return {intro:true};
+  // ---- منافذ البيع ----
+  const ch=Object.keys(AI_CH).find(k=>AI_CH[k].some(w=>t.includes(aiN(w))));
+  if(ch&&aiHas(t,'مبيع','بيع','كم','دخل','نسبه','حصه')&&!aiHas(t,'ربح')){
+    if(!canSee('channels')) return aiNo('ما عندك صلاحية على منافذ المبيعات.');
+    const D=await appList('channels','periods'); const ms=D.map(d=>d.id).filter(x=>/^\d{4}-\d\d$/.test(x)).sort();
+    let m=P&&P.month?P.month:ms[ms.length-1]; if(!ms.includes(m)) return {text:`ما فيه بيانات منافذ لشهر ${monLbl(m)}. آخر شهر متوفر: ${ms.length?monLbl(ms[ms.length-1]):'—'}.`,go:'channels'};
+    const dv=(D.find(d=>d.id===m)||{}).data||{}; const rows=bs.map(b=>[b,+((dv[b]||{})[ch]||0)]).filter(x=>x[1]);
+    const tot=sum(rows.map(x=>x[1])); const allTot=sum(bs.map(b=>sum(Object.entries(dv[b]||{}).filter(([k])=>k!=='tkl').map(([,v])=>+v||0))));
+    if(!tot) return {text:`ما فيه مبيعات لـ${AI_CHN[ch]} في ${monLbl(m)} (${bl}).`,go:'channels'};
+    return {title:`مبيعات ${AI_CHN[ch]} · ${monLbl(m)}`,big:fmt(tot),unit:'ر.س',sub:bl,lines:rows.length>1?rows.map(([b,v])=>[brById(b).name,fmt(v),brById(b).color]):[],go:'channels'};
+  }
+  // ---- المستودع ----
+  if(aiHas(t,'مستودع','مستودعات','تكلفه البضاعه','تكلفه المواد','نسبه التكلفه','تكلفه المبيعات')){
+    if(!canSee('wh')) return aiNo('ما عندك صلاحية على نسبة تكلفة المستودعات.');
+    const D=(await loadDaily()).filter(r=>r.ratio!=null&&bs.includes(r.branch_id)); if(!D.length) return {text:'ما فيه بيانات مستودع متوفرة.',go:'wh'};
+    const days=[...new Set(D.map(r=>r.day))].sort(); let per=P;
+    if(!per){const m=days[days.length-1].slice(0,7);per={kind:'month',month:m,from:m+'-01',to:aiMonEnd(m),label:monLbl(m)};}
+    let L=D.filter(r=>r.day>=per.from&&r.day<=per.to), note='';
+    if(!L.length&&per.kind==='day'){const ld=days.filter(d=>d<=per.to).pop()||days[days.length-1];L=D.filter(r=>r.day===ld);note=`ما فيه بيانات لـ${per.label} — هذا آخر يوم مسجّل (${aiD(ld)}).`;per={kind:'day',label:aiD(ld),from:ld,to:ld};}
+    if(!L.length) return {text:`ما فيه بيانات مستودع لـ${per.label}.`,go:'wh'};
+    const rt=a=>{const money=a.some(x=>x.rev!=null);return money?sum(a.map(x=>x.cogs))/(sum(a.map(x=>x.rev))||1):sum(a.map(x=>+x.ratio))/a.length;};
+    const r=rt(L); const lines=bs.length>1?bs.map(b=>{const x=L.filter(y=>y.branch_id===b);return x.length?[brById(b).name,pct(rt(x)),brById(b).color]:null;}).filter(Boolean):[];
+    const allM=D.filter(x=>x.day.slice(0,7)===per.from.slice(0,7)); const avgM=allM.length?rt(allM):null;
+    return {title:`نسبة تكلفة المستودع · ${per.label}`,big:pct(r),sub:bl,lines,note:note||(per.kind==='day'&&avgM!=null?`متوسط الشهر ${pct(avgM)} — ${r>avgM?'<span class="down">أعلى من المتوسط</span>':'<span class="up">ضمن أو أقل من المتوسط</span>'}`:''),go:'wh'};
+  }
+  // ---- قوائم الدخل ----
+  if(aiHas(t,'ربح','صافي','خساره','خسر','ايراد','مصاريف','مصروف','هامش','قائمه الدخل','قوائم الدخل')){
+    if(!canSee('income')) return aiNo('ما عندك صلاحية على قوائم الدخل.');
+    const I=(await loadIncome()).filter(r=>bs.includes(r.branch_id)&&!r.is_estimate); const ms=[...new Set(I.map(r=>r.month))].sort(); if(!ms.length) return {text:'ما فيه قوائم دخل متوفرة.',go:'income'};
+    let sel, label, note='';
+    if(P&&P.kind==='year'){sel=ms.filter(m=>m.startsWith(P.year));label=P.label;}
+    else { let m=P&&P.month?P.month:ms[ms.length-1]; if(!ms.includes(m)){note=`قائمة ${monLbl(m)} ما انرفعت بعد — هذي آخر قائمة متوفرة.`;m=ms[ms.length-1];} sel=[m];label=monLbl(m); }
+    const R=I.filter(r=>sel.includes(r.month)); if(!R.length) return {text:`ما فيه قوائم دخل لـ${label}.`,go:'income'};
+    const tt=aggTotals(R); const exp=aiHas(t,'مصاريف','مصروف'), rev=aiHas(t,'ايراد')&&!aiHas(t,'ربح');
+    const big=exp?tt.opex+tt.cogs:rev?tt.rev:tt.net;
+    const lines=[['الإيرادات',fmt(tt.rev)],['تكلفة المبيعات',fmt(tt.cogs)],['المصاريف التشغيلية',fmt(tt.opex)],['صافي الربح',`<span class="${tt.net>=0?'up':'down'}">${fmt(tt.net)}</span>`],['هامش الربح',pct(tt.rev?tt.net/tt.rev:null)]];
+    if(bs.length>1) bs.forEach(b=>{const x=R.filter(r=>r.branch_id===b);if(x.length){const y=aggTotals(x);lines.push(['صافي '+brById(b).name,`<span class="${y.net>=0?'up':'down'}">${fmt(y.net)}</span>`,brById(b).color]);}});
+    if(sel.length===1){const pm=ms[ms.indexOf(sel[0])-1]; if(pm){const pt=aggTotals(I.filter(r=>r.month===pm)); note=(note?note+'<br>':'')+`مقارنة بـ${monShort(pm)}: صافي الربح ${aiDelta(tt.net,pt.net,'')||'—'}`;}}
+    return {title:`${exp?'المصاريف':rev?'الإيرادات':(tt.net>=0?'صافي الربح':'صافي الخسارة')} · ${label}`,big:fmt(big),unit:'ر.س',sub:bl,lines,note,go:'income'};
+  }
+  // ---- الخزينة ----
+  if(aiHas(t,'رصيد','ارصده','خزينه','البنك','بنوك','سيوله')){
+    if(!canSee('treasury')) return aiNo('ما عندك صلاحية على خزينة الأرصدة.');
+    const A=(await appList('treasury','accounts')).map(d=>d.data||{}).filter(a=>a.name).sort((a,b)=>(a.order||0)-(b.order||0));
+    if(!A.length) return {text:'ما فيه حسابات مسجّلة في الخزينة.',go:'treasury'};
+    return {title:'الأرصدة الحالية',big:fmt(sum(A.map(a=>+a.balance||0))),unit:'ر.س',sub:A.length+' حساب',lines:A.map(a=>[a.name,fmt(+a.balance||0),a.color]),go:'treasury'};
+  }
+  // ---- التمويلات ----
+  if(aiHas(t,'قسط','اقساط','تمويل','تمويلات','قروض','قرض')){
+    if(!canSee('loans')) return aiNo('ما عندك صلاحية على التمويلات.');
+    const D=await appList('loans','contracts'); const td=todayIso(); let nx=null,rem=0,mo=0; const lines=[];
+    D.forEach(d=>{const L=d.data||{};const un=(L.sched||[]).filter(x=>!x.paid);const r=sum(un.map(x=>+x.inst||0));rem+=r;const n=un.find(x=>x.date>=td);if(n){mo+=+n.inst||0;if(!nx||n.date<nx.date)nx={...n,name:L.name};}if(r)lines.push([L.name,fmt(r)]);});
+    if(nx&&aiHas(t,'متى','القادم','الجاي','الجاي','التالي','قادم')){const dd=Math.round((new Date(nx.date+'T12:00:00')-new Date(td+'T12:00:00'))/864e5);return {title:'القسط القادم',big:fmt(nx.inst,2),unit:'ر.س',sub:`${aiD(nx.date)} · بعد ${dd} يوم`,lines:[['التمويل',esc(nx.name)],['إجمالي المتبقي على التمويلات',fmt(rem)]],go:'loans'};}
+    return {title:'التمويلات',big:fmt(rem),unit:'ر.س متبقي',lines,note:nx?`القسط القادم ${fmt(nx.inst,2)} بتاريخ ${aiD(nx.date)} — ${esc(nx.name)}`:'',go:'loans'};
+  }
+  // ---- الصيانة ----
+  if(aiHas(t,'صيانه','اعطال','عطل','اصلاح')){
+    if(!canSee('maint')) return aiNo('ما عندك صلاحية على الصيانة.');
+    const r=await sb.from('maint_requests').select('id,branch,status,priority,created_at,done_at').limit(1000); const L=(r.data||[]).filter(m=>bs.includes(m.branch));
+    const o=L.filter(mtWork), lt=o.filter(mtLate);
+    return {title:'الصيانة · '+bl,big:String(o.length),unit:'طلب مفتوح',lines:[['بانتظار المراجعة',String(L.filter(m=>m.status==='new').length)],['متأخرة عن المهلة',`<span class="${lt.length?'down':''}">${lt.length}</span>`],['بانتظار تأكيد الفرع',String(L.filter(m=>m.status==='done').length)],['مغلقة',String(L.filter(m=>m.status==='closed').length)]],go:'maint'};
+  }
+  // ---- السلف ----
+  if(aiHas(t,'سلف','سلفه','سلفيات')){
+    if(!canSee('advances')) return aiNo('ما عندك صلاحية على السلف.');
+    const r=await sb.from('advances').select('*').limit(1000); const L=(r.data||[]).filter(a=>bs.includes(a.branch)); const act=L.filter(a=>a.status==='approved'&&advCalc(a).rem>0);
+    return {title:'السلف · '+bl,big:fmt(act.reduce((x,a)=>x+advCalc(a).rem,0)),unit:'ر.س قائمة',lines:[['موظفين عليهم سلف',String(new Set(act.map(a=>a.emp_id)).size)],['الخصم الشهري',fmt(act.reduce((x,a)=>x+advCalc(a).mo,0))],['طلبات بانتظار الموافقة',String(L.filter(a=>['pending_mgr','pending_owner'].includes(a.status)).length)]],go:'advances'};
+  }
+  // ---- تقييم العملاء ----
+  if(aiHas(t,'تقييم','رضا','شكاوي','شكوى','شكوي','العملاء')){
+    if(!canSee('feedback')) return aiNo('ما عندك صلاحية على تقييم العملاء.');
+    const per=P||{from:aiShift(todayIso(),-30),to:todayIso(),label:'آخر 30 يوم'};
+    const r=await sb.from('feedback').select('rating,status,branch,created_at').gte('created_at',per.from+'T00:00:00').limit(3000); const F=(r.data||[]).filter(f=>bs.includes(f.branch)&&String(f.created_at).slice(0,10)<=per.to);
+    if(!F.length) return {text:`ما فيه تقييمات في ${per.label} (${bl}).`,go:'feedback'};
+    const a=sum(F.map(f=>f.rating))/F.length; const oc=F.filter(f=>f.rating<=3&&!['resolved','closed'].includes(f.status)).length;
+    return {title:`رضا العملاء · ${per.label}`,big:a.toFixed(1),unit:'من 5 ★',sub:bl,lines:[['عدد التقييمات',String(F.length)],['راضين (4–5 نجوم)',pct(F.filter(f=>f.rating>=4).length/F.length)],['شكاوى مفتوحة',`<span class="${oc?'down':''}">${oc}</span>`]].concat(bs.length>1?bs.map(b=>{const x=F.filter(f=>f.branch===b);return x.length?[brById(b).name,(sum(x.map(f=>f.rating))/x.length).toFixed(1)+' ★',brById(b).color]:null;}).filter(Boolean):[]),go:'feedback'};
+  }
+  // ---- الأسطول ----
+  if(aiHas(t,'سياره','سيارات','اسطول','استماره','تامين','فحص')){
+    if(!canSee('fleet')) return aiNo('ما عندك صلاحية على أسطول السيارات.');
+    const A=(await appList('fleet','vehicles')).map(d=>d.data||{}).filter(v=>(v.status||'في الخدمة')!=='مباعة');
+    const al=A.map(v=>({v,a:flAlerts(v)})).filter(x=>x.a.length);
+    return {title:'أسطول السيارات',big:String(A.length),unit:'سيارة',lines:al.slice(0,6).map(x=>[`${x.v.make||''} ${x.v.model||''} · ${x.v.plate||''}`,`<span class="${x.a.some(y=>y.bad)?'down':''}">${esc(x.a[0].t)}</span>`]),note:al.length?`${al.length} سيارة تحتاج انتباه`:'كل السيارات سليمة ✓',go:'fleet'};
+  }
+  // ---- الموظفين ----
+  if(aiHas(t,'موظف','موظفين','عمال','شهاده صحيه','الشهادات الصحيه')){
+    if(!canSee('employees')) return aiNo('ما عندك صلاحية على الموظفين.');
+    const r=await sb.from('employees').select('id,branch,status,health_exp').neq('status','left'); const E=(r.data||[]).filter(e=>bs.includes(e.branch)); const td=todayIso();
+    const ex=E.filter(e=>e.health_exp&&e.health_exp<td).length, soon=E.filter(e=>e.health_exp&&e.health_exp>=td&&e.health_exp<=aiShift(td,30)).length;
+    return {title:'الموظفين · '+bl,big:String(E.length),unit:'موظف',lines:bs.length>1?bs.map(b=>[brById(b).name,String(E.filter(e=>e.branch===b).length),brById(b).color]):[],note:`الشهادات الصحية: ${ex?`<span class="down">${ex} منتهية</span>`:'لا يوجد منتهية'}${soon?` · ${soon} تنتهي خلال 30 يوم`:''}`,go:'employees'};
+  }
+  // ---- المبيعات (الافتراضي) ----
+  if(aiHas(t,'مبيع','بيع','بعنا','دخل','بعت','سيلز','كم','توقع','متوقع','افضل','اعلى','اقل','متوسط')||P){
+    if(!canSee('sales')) return aiNo('ما عندك صلاحية على المبيعات.');
+    const S=(await loadSales()).filter(r=>bs.includes(r.branch_id)); if(!S.length) return {text:'ما فيه مبيعات مسجّلة.',go:'sales'};
+    const days=[...new Set(S.map(r=>r.day))].sort(), last=days[days.length-1];
+    const dv=d=>sum(S.filter(r=>r.day===d).map(r=>r.amount));
+    let per=P||{kind:'month',month:last.slice(0,7),from:last.slice(0,7)+'-01',to:last,label:monLbl(last.slice(0,7))+' حتى الآن',cur:true};
+    let note='';
+    if(per.kind==='day'&&!days.includes(per.from)){const ld=days.filter(d=>d<=per.from).pop()||last;note=`ما انرفعت مبيعات ${per.label} بعد — هذا آخر يوم مسجّل.`;per={kind:'day',from:ld,to:ld,label:aiD(ld)};}
+    const L=S.filter(r=>r.day>=per.from&&r.day<=per.to); if(!L.length) return {text:`ما فيه مبيعات مسجّلة في ${per.label}.`,go:'sales'};
+    const dd=[...new Set(L.map(r=>r.day))].sort(), vals=dd.map(dv), tot=sum(vals);
+    const byB=bs.map(b=>[b,sum(L.filter(r=>r.branch_id===b).map(r=>r.amount))]).filter(x=>x[1]).sort((a,c)=>c[1]-a[1]);
+    const brLines=byB.length>1?byB.map(([b,v])=>[brById(b).name,`${fmt(v)} <small class="muted">${pct(v/tot)}</small>`,brById(b).color]):[];
+    if(aiHas(t,'افضل يوم','اعلى يوم','اكثر يوم','احسن يوم')){const i=vals.indexOf(Math.max(...vals));return {title:`أعلى يوم مبيعات · ${per.label}`,big:fmt(vals[i]),unit:'ر.س',sub:aiD(dd[i])+' · '+bl,spark:vals,go:'daily'};}
+    if(aiHas(t,'اقل يوم','اضعف يوم','اسوا يوم')){const i=vals.indexOf(Math.min(...vals));return {title:`أقل يوم مبيعات · ${per.label}`,big:fmt(vals[i]),unit:'ر.س',sub:aiD(dd[i])+' · '+bl,spark:vals,go:'daily'};}
+    if(aiHas(t,'افضل فرع','اعلى فرع','اكثر فرع','احسن فرع','اقل فرع','اضعف فرع')&&byB.length>1){const lo=aiHas(t,'اقل','اضعف');const x=lo?byB[byB.length-1]:byB[0];return {title:`${lo?'أقل':'أعلى'} فرع مبيعات · ${per.label}`,big:brById(x[0]).name,sub:fmt(x[1])+' ر.س · حصة '+pct(x[1]/tot),lines:brLines,go:'sales'};}
+    if(aiHas(t,'متوسط')) return {title:`متوسط المبيعات اليومي · ${per.label}`,big:fmt(tot/dd.length),unit:'ر.س',sub:`${dd.length} يوم · ${bl}`,spark:vals,go:'sales'};
+    if(aiHas(t,'توقع','متوقع','بيقفل','نهايه الشهر')){const m=last.slice(0,7);const cur=S.filter(r=>r.day.startsWith(m));const cd=[...new Set(cur.map(r=>r.day))];const ct=sum(cur.map(r=>r.amount));const fc=ct/cd.length*daysIn(m);const pm=aiPrevMon(m);const pt=sum(S.filter(r=>r.day.startsWith(pm)).map(r=>r.amount));
+      return {title:`المتوقع لنهاية ${monLbl(m)}`,big:fmt(fc),unit:'ر.س',sub:bl,lines:[['المحقق حتى الآن',fmt(ct)],['المتوسط اليومي',fmt(ct/cd.length)],['الأيام المتبقية',String(daysIn(m)-cd.length)]],note:pt?`مقارنة بـ${monShort(pm)} كامل (${fmt(pt)}): ${aiDelta(fc,pt,'')}`:'',go:'sales'};}
+    // مقارنة تلقائية
+    let cmp='';
+    if(per.kind==='day'){const w=dv(aiShift(per.from,-7));if(w)cmp=aiDelta(tot,w,'عن نفس اليوم الأسبوع الماضي');}
+    else if(per.kind==='month'){const pm=aiPrevMon(per.month);const lastD=+dd[dd.length-1].slice(8);const pv=sum(S.filter(r=>r.day.startsWith(pm)&&+r.day.slice(8)<=lastD).map(r=>r.amount));if(pv)cmp=aiDelta(tot,pv,`عن نفس الفترة من ${monShort(pm)}`);}
+    else if(per.kind==='range'){const n=Math.round((new Date(per.to)-new Date(per.from))/864e5)+1;if(dd.length<n){note=(note?note+'<br>':'')+`البيانات المسجّلة ${dd.length} يوم فقط من ${n} (آخر يوم مسجّل ${aiD(dd[dd.length-1])}).`;}else{const pv=sum(S.filter(r=>r.day>=aiShift(per.from,-n)&&r.day<per.from).map(r=>r.amount));if(pv)cmp=aiDelta(tot,pv,'عن الفترة اللي قبلها');}}
+    return {title:`المبيعات · ${per.label}`,big:fmt(tot),unit:'ر.س',sub:bl+(dd.length>1?` · ${dd.length} يوم · متوسط ${fmt(tot/dd.length)}`:''),lines:brLines,spark:dd.length>2?vals:null,note:[note,cmp].filter(Boolean).join('<br>'),go:per.kind==='day'?'daily':'sales'};
+  }
+  return {unknown:true};
+}
+function aiSugg(){const s=[];
+  if(canSee('sales')) s.push('كم مبيعات أمس؟','كم مبيعات هذا الشهر؟','وش المتوقع لنهاية الشهر؟','أعلى يوم مبيعات هذا الشهر','أعلى فرع مبيعات الشهر الماضي');
+  if(canSee('wh')) s.push('كم نسبة المستودع أمس؟');
+  if(canSee('income')) s.push('كم الربح في شهر يناير؟','كم المصاريف الشهر الماضي؟');
+  if(canSee('channels')) s.push('كم مبيعات كيتا الشهر الماضي؟');
+  if(canSee('treasury')) s.push('كم الأرصدة في البنوك؟');
+  if(canSee('loans')) s.push('متى القسط القادم؟');
+  if(canSee('feedback')) s.push('كم تقييم العملاء؟');
+  if(canSee('maint')) s.push('كم طلب صيانة مفتوح؟');
+  return s;}
+function aiBubble(a){
+  if(a.intro) return `<div class="ai-b bot"><b>أهلاً ${esc((st.profile.full_name||'').split(' ')[0]||'')} 👋</b><div>أنا مساعدك الذكي. اسألني عن أرقامك بأسلوبك، مثل:</div><div class="ai-chips">${aiSugg().slice(0,6).map(x=>`<button data-aiq="${esc(x)}">${esc(x)}</button>`).join('')}</div><div class="muted" style="font-size:11.5px;margin-top:6px">أجاوب من بيانات المنصة مباشرة، وحسب صلاحياتك فقط.</div></div>`;
+  if(a.unknown) return `<div class="ai-b bot">ما فهمت السؤال تماماً 🤔 جرّب تسأل عن المبيعات، المستودع، الربح، المنافذ، الأرصدة، الأقساط، الصيانة، السلف أو تقييم العملاء — مع الفترة (أمس، هذا الشهر، يناير…) والفرع.<div class="ai-chips">${aiSugg().slice(0,4).map(x=>`<button data-aiq="${esc(x)}">${esc(x)}</button>`).join('')}</div></div>`;
+  if(!a.big) return `<div class="ai-b bot">${a.text||''}${a.go&&canSee(a.go)?`<button class="ai-go" data-t="${a.go}">فتح التقرير ‹</button>`:''}</div>`;
+  return `<div class="ai-b bot ai-card"><div class="ai-tt">${esc(a.title)}</div><div class="ai-big num" ${String(a.big).trim().startsWith('-')?'style="color:var(--down)"':''}>${a.big}${a.unit?`<small>${a.unit}</small>`:''}</div>${a.sub?`<div class="ai-sub">${a.sub}</div>`:''}
+    ${a.spark?`<div class="ai-sp">${spark(a.spark,{w:300,h:40,col:'#1E5A3E'})}</div>`:''}
+    ${a.lines&&a.lines.length?`<div class="ai-ln">${a.lines.map(([k,v,c])=>`<div><span>${c?`<i class="dot" style="background:${c}"></i>`:''}${esc(k)}</span><b class="num">${v}</b></div>`).join('')}</div>`:''}
+    ${a.note?`<div class="ai-nt">${a.note}</div>`:''}${a.go&&canSee(a.go)?`<button class="ai-go" data-t="${a.go}">فتح التقرير ‹</button>`:''}</div>`;
+}
+V.ai=async()=>{
+  st.aiLog=st.aiLog||[];
+  const h=`<div class="ai-wrap"><div class="ai-head"><span class="ai-orb">✦</span><div><b>المساعد الذكي</b><div class="muted" style="font-size:12px">اسأل عن أي رقم في شركتك</div></div>${st.aiLog.length?'<button class="btn ghost sm" data-aiclr="1" style="margin-inline-start:auto">محادثة جديدة</button>':''}</div>
+    <div class="ai-msgs" id="aiMsgs">${aiBubble({intro:true})}${st.aiLog.map(m=>m.u?`<div class="ai-b me">${esc(m.u)}</div>`:m.h).join('')}</div>
+    <form class="ai-bar" id="aiForm"><input id="aiIn" placeholder="اكتب سؤالك… مثل: كم مبيعات أمس؟" autocomplete="off">${(window.SpeechRecognition||window.webkitSpeechRecognition)?'<button type="button" class="ai-mic" id="aiMic" aria-label="تحدث">🎤</button>':''}<button type="submit" class="ai-send" aria-label="إرسال">➤</button></form></div>`;
+  setTimeout(()=>{const m=$('#aiMsgs');if(m)m.scrollTop=m.scrollHeight; if(st.aiQ){const q=st.aiQ;st.aiQ=null;aiAsk(q);}},0);
+  return h;
+};
+async function aiAsk(q){
+  q=String(q||'').trim(); if(!q) return; const box=$('#aiMsgs'); if(!box) return;
+  st.aiLog.push({u:q}); box.insertAdjacentHTML('beforeend',`<div class="ai-b me">${esc(q)}</div><div class="ai-b bot ai-typing" id="aiTy"><i></i><i></i><i></i></div>`); box.scrollTop=box.scrollHeight;
+  let a; try{ a=await aiAnswer(q); }catch(e){ console.error(e); a={text:'صار خطأ أثناء جلب البيانات — حاول مرة ثانية.'}; }
+  const html=aiBubble(a); st.aiLog.push({h:html}); const ty=$('#aiTy'); if(ty) ty.outerHTML=html; box.scrollTop=box.scrollHeight;
+}
+document.addEventListener('submit',e=>{ if(e.target.id==='aiForm'){ e.preventDefault(); const i=$('#aiIn'); const q=i.value; i.value=''; aiAsk(q); } if(e.target.id==='hxAsk'){ e.preventDefault(); const v=e.target.querySelector('input').value.trim(); st.aiQ=v||null; st.tab='ai'; try{localStorage.setItem('tab','ai');}catch(_){} renderShell(); } });
+document.addEventListener('click',e=>{
+  const c=e.target.closest('[data-aiq]'); if(c){ if(st.tab!=='ai'){st.aiQ=c.dataset.aiq;st.tab='ai';renderShell();} else aiAsk(c.dataset.aiq); return; }
+  if(e.target.closest('[data-aiclr]')){ st.aiLog=[]; render(); return; }
+  if(e.target.closest('#aiMic')){ const R=window.SpeechRecognition||window.webkitSpeechRecognition; const r=new R(); r.lang='ar-SA'; r.interimResults=false; const b=$('#aiMic'); b.classList.add('on');
+    r.onresult=ev=>{const tx=ev.results[0][0].transcript; aiAsk(tx);}; r.onend=()=>b.classList.remove('on'); r.onerror=()=>{b.classList.remove('on');toast('ما قدرت أسمعك — جرّب مرة ثانية');}; r.start(); }
 });
 
 function mtDetail(m){
