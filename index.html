@@ -646,7 +646,7 @@ const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'ai',na
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup','feedback'];
-const APP_VER='72';
+const APP_VER='73';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -678,11 +678,12 @@ const brById=id=>st.branches.find(b=>b.id===id)||{id,name:id,color:'#888'};
 const selBranches=()=>st.f==='all'?st.branches.map(b=>b.id):[st.f];
 
 async function q(key,fn){ if(st.cache[key]) return st.cache[key]; const r=await fn(); if(r.error) throw r.error; st.cache[key]=r.data||[]; return st.cache[key]; }
-const appList=(app,coll)=>q(app+'/'+coll,()=>sb.rpc('app_list',{p_app:app,p_coll:coll}));
+const appList=(app,coll)=>q(app+'/'+coll,async()=>{const r=await rpcAll('app_list',{p_app:app,p_coll:coll});if(r.error)return r;const seen=new Set();return {data:(r.data||[]).filter(d=>!seen.has(d.id)&&seen.add(d.id)),error:null};});
 const loadSales=async()=>{const r=[];(await appList('sales','sales')).forEach(d=>{const v=d.data||{};if(!v.date)return;for(const k in v){if(k!=='date'&&typeof v[k]==='number')r.push({branch_id:k,day:v.date,amount:v[k]});}});return r.sort((a,b)=>a.day<b.day?-1:1);};
 const loadIncome=async()=>(await appList('income','stmts')).map(d=>({branch_id:d.data.br,month:d.data.month,is_estimate:!!d.data.est,groups:d.data.groups||[]}));
 const loadRatio=()=>q('ratio',()=>sb.rpc('get_cogs_ratio'));
-const loadDaily=()=>q('daily-cogs',async()=>{const r=await sb.rpc('get_cogs_daily');return r.error&&/function|schema cache/i.test(r.error.message)?{data:[],error:null}:r;});
+async function rpcAll(n,a){ let all=[]; for(let off=0;off<50000;off+=1000){ let b=sb.rpc(n,a); const pg=typeof b.range==='function'; if(pg) b=b.range(off,off+999); const r=await b; if(r.error) return off?{data:all,error:null}:r; const d=r.data||[]; all=all.concat(d); if(!pg||d.length<1000) break; } return {data:all,error:null}; }
+const loadDaily=()=>q('daily-cogs',async()=>{const r=await rpcAll('get_cogs_daily');return r.error&&/function|schema cache/i.test(r.error.message)?{data:[],error:null}:r;});
 
 // ================= auth =================
 $('#loginForm').onsubmit=async e=>{
@@ -872,7 +873,7 @@ V.home=async()=>{
   // ===== البطاقة الرئيسية =====
   const brTag=st.branches.length>1?`<span class="hx-tag">${st.f==='all'?'كل الفروع':esc(brById(st.f).name)}</span>`:'';
   if(m){
-    const dPct=prevSame?tot/prevSame-1:null, dim=daysIn(m), avg=tot/lastDay, fc=avg*dim;
+    const dPct=prevSame?tot/prevSame-1:null, dim=daysIn(m), avg=tot/lastDay, fc=salesFcOf(S,m,bs)??avg*dim;
     const yd=dayKeys[dayKeys.length-1], yv=dayTot[dayTot.length-1], wkv=dayVal(shiftD(yd,-7));
     const prog=pmTot?Math.min(tot/pmTot,1.5):lastDay/dim, timeP=lastDay/dim;
     const R=34,C=2*Math.PI*R, ring=`<svg width="84" height="84" viewBox="0 0 84 84" style="display:block;transform:rotate(-90deg)"><circle cx="42" cy="42" r="${R}" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="7"/><circle cx="42" cy="42" r="${R}" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="7" stroke-dasharray="1.2 ${(C/dim-1.2).toFixed(2)}"/><circle class="hx-arc" cx="42" cy="42" r="${R}" fill="none" stroke="url(#hxg)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C*(1-Math.min(prog,1))).toFixed(1)}" style="--c:${C.toFixed(1)}"/><defs><linearGradient id="hxg"><stop offset="0" stop-color="#F6E7B0"/><stop offset="1" stop-color="#D4AF37"/></linearGradient></defs></svg>`;
@@ -924,7 +925,7 @@ V.home=async()=>{
       tiles.push(tile('📦','rgba(212,175,55,.16)','تكلفة المستودعات · '+monShort(mm),pct(r),pr!=null?`<span class="${r<=pr?'up':'down'}">${r<=pr?'▼':'▲'} ${((Math.abs(r-pr))*100).toFixed(1)} نقطة</span> عن ${monShort(ms[ms.length-2])}`:'من الإيرادات','wh'));
       if(pr!=null&&r-pr>=0.01) ins.push({ic:'📦',t:`تكلفة المستودعات ارتفعت إلى <b>${pct(r)}</b> (كانت ${pct(pr)}) — راجع الهدر والأسعار.`,go:'wh',lv:'warn'});}}catch(e){} }
   if(allowed('loans')){ try{ const D=await appList('loans','contracts'); const td=todayIso(); let nx=null;
-    D.forEach(d=>{const L=d.data||{};(L.sched||[]).forEach(x=>{if(x.date>td&&!x.paid&&(!nx||x.date<nx.date))nx={...x,name:L.name};});});
+    D.forEach(d=>{const L=d.data||{};const x=loanCalc(L,td).next;if(x&&(!nx||x.date<nx.date))nx={...x,name:L.name};});
     if(nx){const dd=Math.round((new Date(nx.date+'T12:00:00')-new Date(td+'T12:00:00'))/864e5);tiles.push(tile('💳','rgba(91,141,214,.14)','القسط القادم',fmt(nx.inst),`بعد ${dd} يوم · ${+nx.date.slice(8)} ${MONTHS[+nx.date.slice(5,7)-1]}`,'loans'));} }catch(e){} }
   if(allowed('fleet')){ try{ const D=await appList('fleet','vehicles'); const A=D.map(d=>d.data||{}).filter(v=>(v.status||'في الخدمة')!=='مباعة'&&(bs.includes(v.br)||(st.f==='all'&&v.br==='wafra')));
     if(A.length){ const al=A.filter(v=>flAlerts(v).length).length; tiles.push(tile('🚗','rgba(155,120,220,.14)','أسطول السيارات',`${A.length} <small style="font-size:12px;font-weight:500">سيارة</small>`,al?`<span class="down">${al} تحتاج انتباه</span>`:'كلها سليمة ✓','fleet')); } }catch(e){} }
@@ -954,8 +955,8 @@ V.home=async()=>{
     const tt=all.map((_,k)=>sum(ser.map(x=>x.vals[k]))); const act=tt.map((v,k)=>v>0?k:-1).filter(k=>k>=0);
     const hi=act.reduce((a,k)=>tt[k]>tt[a]?k:a,act[0]), lo=act.reduce((a,k)=>tt[k]<tt[a]?k:a,act[0]), la=act[act.length-1];
     const marks={}; marks[hi]={t:fk(tt[hi]),c:'#17804F'}; if(lo!==hi) marks[lo]={t:fk(tt[lo]),c:'#C0392B'}; if(la!==hi&&la!==lo&&Math.abs(la-lo)>1) marks[la]={t:fk(tt[la]),c:'var(--fg)'};
-    const proj=all.map((d,k)=>k+1>lastDay?avgD:0);
-    const info=all.map((d,k)=>{const dn=DAYN[new Date(d+'T12:00:00').getDay()]; if(k+1>lastDay) return `<b>${dn} ${k+1}</b> · متوقع <b class="num">${fmt(avgD)}</b> <span class="muted">(حسب المتوسط اليومي)</span>`; if(!tt[k]) return `<b>${dn} ${k+1}</b> · لا توجد بيانات`; const df=tt[k]/avgD-1;
+    const fcRows=bs.map(b=>salesMonthStats(S,m,b).rows); const fcDay=k=>sum(fcRows.map(r=>r[k]&&r[k].fc||0))||avgD; const proj=all.map((d,k)=>k+1>lastDay?fcDay(k):0);
+    const info=all.map((d,k)=>{const dn=DAYN[new Date(d+'T12:00:00').getDay()]; if(k+1>lastDay) return `<b>${dn} ${k+1}</b> · متوقع <b class="num">${fmt(fcDay(k))}</b> <span class="muted">(حسب متوسط يوم ${dn})</span>`; if(!tt[k]) return `<b>${dn} ${k+1}</b> · لا توجد بيانات`; const df=tt[k]/avgD-1;
       return `<div class="bar-row"><b>${dn} ${k+1} ${MONTHS[+m.slice(5,7)-1]}</b><b class="num">${fmt(tt[k])}</b></div><div style="font-size:11.5px"><span class="${df>=0?'up':'down'}">${df>=0?'▲':'▼'} ${pct(Math.abs(df))}</span> <span class="muted">عن المتوسط</span>${bs.length>1?' · '+ser.filter(x=>x.vals[k]).map(x=>`<i class="dot" style="background:${x.color}"></i>${esc(x.name)} ${fmt(x.vals[k])}`).join(' · '):''}</div>`;});
     const wkend=act.filter(k=>[5,6].includes(new Date(all[k]+'T12:00:00').getDay())), wkday=act.filter(k=>![5,6].includes(new Date(all[k]+'T12:00:00').getDay()));
     const wa=wkend.length?sum(wkend.map(k=>tt[k]))/wkend.length:0, wd=wkday.length?sum(wkday.map(k=>tt[k]))/wkday.length:0;
@@ -970,7 +971,7 @@ V.home=async()=>{
     const allM=[...new Set(months.concat(I.map(r=>r.month)))].sort().filter(x=>x<=m); const ms=allM.slice(-12); const fromStmt={};
     const mval=(b,mm)=>{const rows=S.filter(r=>r.branch_id===b&&r.day.startsWith(mm)); if(rows.length) return sum(rows.map(r=>r.amount)); const q_=I.find(r=>r.branch_id===b&&r.month===mm); if(q_){fromStmt[mm]=1;return revOf(q_)*(1+VAT);} return 0;};
     const ser=bs.map(b=>({name:brById(b).name,color:brById(b).color,vals:ms.map(mm=>mval(b,mm))}));
-    const tt=ms.map((_,k)=>sum(ser.map(x=>x.vals[k]))); const ci=ms.indexOf(m); const fcM=ci>=0?tot/lastDay*daysIn(m):0;
+    const tt=ms.map((_,k)=>sum(ser.map(x=>x.vals[k]))); const ci=ms.indexOf(m); const fcM=ci>=0?(salesFcOf(S,m,bs)??tot/lastDay*daysIn(m)):0;
     const proj=ms.map((mm,k)=>k===ci&&fcM>tt[k]?fcM-tt[k]:0); const full=tt.map((v,k)=>k===ci?Math.max(v,fcM):v);
     const done=full.filter((v,k)=>k!==ci&&v>0); const avgM=done.length?sum(done)/done.length:0;
     const bi=full.reduce((a,v,k)=>k!==ci&&v>full[a]?k:a,ci===0?1:0);
@@ -1921,7 +1922,7 @@ async function aiAnswer(q){
   if(aiHas(t,'ملخص','لخص','تلخيص','نظره عامه','وضع','حال','اداء','كيف الشغل','كيف الفرع','تقرير عن','تقرير شامل','عطني تقرير','اعطني تقرير','وش الوضع','ايش الوضع')||onlyBranch){
     const out=[]; const td=todayIso(); let big=null,unit='',bigT='';
     try{ if(canSee('sales')){ const S=(await loadSales()).filter(r=>bs.includes(r.branch_id)); if(S.length){ const last=S[S.length-1].day, m=last.slice(0,7); const cur=S.filter(r=>r.day.startsWith(m)); const dd=[...new Set(cur.map(r=>r.day))]; const tot=sum(cur.map(r=>r.amount)); const lv=sum(S.filter(r=>r.day===last).map(r=>r.amount));
-      const pm=aiPrevMon(m), lastD=+last.slice(8), pv=sum(S.filter(r=>r.day.startsWith(pm)&&+r.day.slice(8)<=lastD).map(r=>r.amount)); const fc=tot/dd.length*daysIn(m);
+      const pm=aiPrevMon(m), lastD=+last.slice(8), pv=sum(S.filter(r=>r.day.startsWith(pm)&&+r.day.slice(8)<=lastD).map(r=>r.amount)); const fc=salesFcOf(S,m,st.branches.map(b=>b.id))??tot/dd.length*daysIn(m);
       big=fmt(tot); unit='ر.س'; bigT=`مبيعات ${monLbl(m)} حتى يوم ${lastD}`;
       out.push(['آخر يوم ('+aiD(last)+')',fmt(lv)],['مقارنة بنفس الفترة من '+monShort(pm),aiDelta(tot,pv,'')||'—'],['المتوقع لنهاية الشهر',fmt(fc)],['المتوسط اليومي',fmt(tot/dd.length)]); } } }catch(e){}
     try{ if(canSee('wh')){ const D=(await loadDaily()).filter(r=>r.ratio!=null&&bs.includes(r.branch_id)); if(D.length){ const m=D.map(r=>r.day).sort().pop().slice(0,7); const L=D.filter(r=>r.day.startsWith(m)); const money=L.some(x=>x.rev!=null); const r=money?sum(L.map(x=>x.cogs))/(sum(L.map(x=>x.rev))||1):sum(L.map(x=>+x.ratio))/L.length; out.push(['نسبة المستودع · '+monShort(m),pct(r)]); } } }catch(e){}
@@ -1985,7 +1986,7 @@ async function aiAnswer(q){
   if(aiHas(t,'قسط','اقساط','تمويل','تمويلات','قروض','قرض')){
     if(!canSee('loans')) return aiNo('ما عندك صلاحية على التمويلات.');
     const D=await appList('loans','contracts'); const td=todayIso(); let nx=null,rem=0,mo=0; const lines=[];
-    D.forEach(d=>{const L=d.data||{};const un=(L.sched||[]).filter(x=>!x.paid);const r=sum(un.map(x=>+x.inst||0));rem+=r;const n=un.find(x=>x.date>=td);if(n){mo+=+n.inst||0;if(!nx||n.date<nx.date)nx={...n,name:L.name};}if(r)lines.push([L.name,fmt(r)]);});
+    D.forEach(d=>{const L=d.data||{};const c=loanCalc(L,td);const un=c.un;const r=c.rem;rem+=r;const n=c.next;if(n){mo+=+n.inst||0;if(!nx||n.date<nx.date)nx={...n,name:L.name};}if(r)lines.push([L.name,fmt(r)]);});
     if(nx&&aiHas(t,'متى','القادم','الجاي','الجاي','التالي','قادم')){const dd=Math.round((new Date(nx.date+'T12:00:00')-new Date(td+'T12:00:00'))/864e5);return {title:'القسط القادم',big:fmt(nx.inst,2),unit:'ر.س',sub:`${aiD(nx.date)} · بعد ${dd} يوم`,lines:[['التمويل',esc(nx.name)],['إجمالي المتبقي على التمويلات',fmt(rem)]],go:'loans'};}
     return {title:'التمويلات',big:fmt(rem),unit:'ر.س متبقي',lines,note:nx?`القسط القادم ${fmt(nx.inst,2)} بتاريخ ${aiD(nx.date)} — ${esc(nx.name)}`:'',go:'loans'};
   }
@@ -2042,7 +2043,7 @@ async function aiAnswer(q){
     if(aiHas(t,'اقل يوم','اضعف يوم','اسوا يوم')){const i=vals.indexOf(Math.min(...vals));return {title:`أقل يوم مبيعات · ${per.label}`,big:fmt(vals[i]),unit:'ر.س',sub:aiD(dd[i])+' · '+bl,spark:vals,go:'daily'};}
     if(aiHas(t,'افضل فرع','اعلى فرع','اكثر فرع','احسن فرع','اقل فرع','اضعف فرع')&&byB.length>1){const lo=aiHas(t,'اقل','اضعف');const x=lo?byB[byB.length-1]:byB[0];return {title:`${lo?'أقل':'أعلى'} فرع مبيعات · ${per.label}`,big:brById(x[0]).name,sub:fmt(x[1])+' ر.س · حصة '+pct(x[1]/tot),lines:brLines,go:'sales'};}
     if(aiHas(t,'متوسط')) return {title:`متوسط المبيعات اليومي · ${per.label}`,big:fmt(tot/dd.length),unit:'ر.س',sub:`${dd.length} يوم · ${bl}`,spark:vals,go:'sales'};
-    if(aiHas(t,'توقع','متوقع','بيقفل','نهايه الشهر')){const m=last.slice(0,7);const cur=S.filter(r=>r.day.startsWith(m));const cd=[...new Set(cur.map(r=>r.day))];const ct=sum(cur.map(r=>r.amount));const fc=ct/cd.length*daysIn(m);const pm=aiPrevMon(m);const pt=sum(S.filter(r=>r.day.startsWith(pm)).map(r=>r.amount));
+    if(aiHas(t,'توقع','متوقع','بيقفل','نهايه الشهر')){const m=last.slice(0,7);const cur=S.filter(r=>r.day.startsWith(m));const cd=[...new Set(cur.map(r=>r.day))];const ct=sum(cur.map(r=>r.amount));const fc=salesFcOf(S,m,st.branches.map(b=>b.id))??ct/cd.length*daysIn(m);const pm=aiPrevMon(m);const pt=sum(S.filter(r=>r.day.startsWith(pm)).map(r=>r.amount));
       return {title:`المتوقع لنهاية ${monLbl(m)}`,big:fmt(fc),unit:'ر.س',sub:bl,lines:[['المحقق حتى الآن',fmt(ct)],['المتوسط اليومي',fmt(ct/cd.length)],['الأيام المتبقية',String(daysIn(m)-cd.length)]],note:pt?`مقارنة بـ${monShort(pm)} كامل (${fmt(pt)}): ${aiDelta(fc,pt,'')}`:'',go:'sales'};}
     // مقارنة تلقائية
     let cmp='';
@@ -2109,60 +2110,232 @@ async function aiReveal(node){
 }
 // ---- ربط النموذج الحقيقي (Claude عبر دالة ai-chat) ----
 const AI_FN='ai-chat';
+// ===== توقع المبيعات الموحّد (نفس طريقة شاشة مبيعات الفروع): الأيام الناقصة = متوسط نفس اليوم من الأسبوع =====
+function salesMonthStats(S,m,b){
+  const n=daysIn(m), map={}; S.forEach(r=>{if(r.branch_id===b&&r.day.startsWith(m)){const d=+r.day.slice(8);map[d]=(map[d]||0)+(+r.amount||0);}});
+  const rows=[]; for(let d=1;d<=n;d++){const key=m+'-'+String(d).padStart(2,'0');rows.push({day:d,key,wd:new Date(key+'T12:00:00').getDay(),act:map[d]!=null?map[d]:null});}
+  const has=rows.filter(r=>r.act!=null), rec=has.length, actual=sum(has.map(r=>r.act)), avg=rec?actual/rec:null;
+  const wdAvg=[0,1,2,3,4,5,6].map(w=>{const a=has.filter(r=>r.wd===w);return a.length?sum(a.map(r=>r.act))/a.length:null;});
+  rows.forEach(r=>{r.fc=(r.act==null&&rec)?(wdAvg[r.wd]??avg):null;});
+  const forecast=rec?actual+sum(rows.map(r=>r.fc||0)):null, last=rec?Math.max(...has.map(r=>r.day)):0;
+  const win=(a,b2)=>{const x=has.filter(r=>r.day>a&&r.day<=b2);return {sum:sum(x.map(r=>r.act)),n:x.length};};
+  const l7=win(last-7,last), p7=win(last-14,last-7), trend=(l7.n&&p7.n)?(l7.sum/l7.n)/(p7.sum/p7.n)-1:null;
+  const peak=rec?has.reduce((a,c)=>c.act>a.act?c:a):null, low=rec?has.reduce((a,c)=>c.act<a.act?c:a):null;
+  const sd=rec>1?Math.sqrt(sum(has.map(r=>(r.act-avg)**2))/(rec-1)):null, remaining=rows.filter(r=>r.act==null).length, spread=sd!=null&&forecast!=null?1.645*sd*Math.sqrt(remaining):0;
+  return {n,rows,rec,actual,avg,wdAvg,forecast,last,trend,peak,low,remaining,fcLow:forecast!=null?Math.max(actual,forecast-spread):null,fcHigh:forecast!=null?forecast+spread:null,conf:!rec?null:remaining===0?'نهائي':rec>=15?'عالية':rec>=7?'متوسطة':'منخفضة'};
+}
+const salesFcOf=(S,m,bs)=>{let t=0,any=false;bs.forEach(b=>{const a=salesMonthStats(S,m,b);if(a.rec){t+=a.forecast;any=true;}});return any?t:null;};
+// ===== حزمة بيانات المساعد الذكي: أرقام محسوبة بنفس طريقة الشاشات حتى ما يتناقض المساعد مع المنصة =====
+const AI_ENT={az:'مطاعم الشادن',sh:'مطاعم الشادن',pc:'بروست الباتشينو'};
+const aiR0=x=>x==null||isNaN(x)?null:Math.round(+x);
+const aiR2=x=>x==null||isNaN(x)?null:Math.round(+x*100)/100;
+const aiP=(x,d=1)=>x==null||isNaN(x)||!isFinite(x)?null:Math.round(x*100*10**d)/10**d;
+const aiDayName=d=>DAYN[new Date(d+'T12:00:00').getDay()];
+function aiPageText(h){try{const d=new DOMParser().parseFromString(h||'','text/html');d.querySelectorAll('style,script,link,title,svg').forEach(n=>n.remove());d.querySelectorAll('td,th').forEach(c=>c.append(' ؛ '));d.querySelectorAll('tr').forEach(tr=>tr.append(' |'));d.body.querySelectorAll('span,b,strong,em,i,small,label').forEach(n=>n.append(' '));d.querySelectorAll('h1,h2,h3,h4,p,li,div,tr,section,header,footer').forEach(n=>n.append('\n'));return (d.body.textContent||'').replace(/[ \t ]+/g,' ').replace(/\s*\n\s*/g,'\n').replace(/\n?إعداد[^\n]*$/,'').trim();}catch(e){return '';}}
 async function aiCtx(){
   if(st._aiCtx&&Date.now()-st._aiCtxAt<300000) return st._aiCtx;
-  const td=todayIso(), bs=st.branches.map(b=>b.id), BN=Object.fromEntries(st.branches.map(b=>[b.id,b.name])); const C={today:td,weekday:DAYN[new Date(td+'T12:00:00').getDay()],branches:BN};
+  const td=todayIso(), now=new Date(), bs=st.branches.map(b=>b.id), BN=Object.fromEntries(st.branches.map(b=>[b.id,b.name]));
+  const role=isOwner()?'المالك':isAdmin()?'إدارة (صلاحية كاملة)':'مدير فرع / مستخدم بصلاحيات محدودة';
+  const secs=SECTIONS.filter(s=>!['home','me','ai','users','data'].includes(s.id));
+  const C={meta:{today:td,weekday:DAYN[now.getDay()],time_now:String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0'),
+    user_role:role,branches:BN,brands:Object.fromEntries(['مطاعم الشادن','بروست الباتشينو'].map(n=>[n,bs.filter(b=>AI_ENT[b]===n).map(b=>BN[b])]).filter(x=>x[1].length)),
+    sections_user_can_see:secs.filter(s=>canSee(s.id)).map(s=>s.name),sections_user_cannot_see:secs.filter(s=>!canSee(s.id)).map(s=>s.name),
+    currency:'ريال سعودي',vat_rate:'15%'}};
+  const fresh={}, errs=[];
+  const run=async(name,fn)=>{try{await fn();}catch(e){errs.push(name);}};
+  const m0=td.slice(0,7), mPrev=aiPrevMon(m0);
+
+  // ---------- مبيعات الفروع ----------
+  await run('sales',async()=>{ if(!canSee('sales')) return; const S=(await loadSales()).filter(r=>bs.includes(r.branch_id)); if(!S.length) return;
+    const T={}; try{(await appList('sales','targets')).forEach(d=>{const v=d.data||{};if(v.month)T[v.month]=v;});}catch(e){}
+    const months=[...new Set(S.map(r=>r.day.slice(0,7)))].sort().slice(-13); const lastAll=S[S.length-1].day; fresh['مبيعات الفروع']=lastAll;
+    const monthly={};
+    months.forEach(m=>{ const o={}; let tAct=0,tFc=0,tTg=0,tLo=0,tHi=0,lastD=0,nDays=0,allTg=true;
+      bs.forEach(b=>{ const a=salesMonthStats(S,m,b); if(!a.rec) return; const tg=T[m]&&T[m][b]!=null&&T[m][b]!==''?+T[m][b]:null;
+        const pm=aiPrevMon(m), prevSame=sum(S.filter(r=>r.branch_id===b&&r.day.startsWith(pm)&&+r.day.slice(8)<=a.last).map(r=>r.amount));
+        const ly=(+m.slice(0,4)-1)+m.slice(4), lyTot=sum(S.filter(r=>r.branch_id===b&&r.day.startsWith(ly)).map(r=>r.amount));
+        o[BN[b]]={total:aiR0(a.actual),days_recorded:a.rec,last_day:a.last?m+'-'+String(a.last).padStart(2,'0'):null,month_days:a.n,complete:a.rec>=a.n,
+          avg_daily:aiR0(a.avg),best_day:a.peak?{date:a.peak.key,day:aiDayName(a.peak.key),amount:aiR0(a.peak.act)}:null,worst_day:a.low?{date:a.low.key,day:aiDayName(a.low.key),amount:aiR0(a.low.act)}:null,
+          missing_days:a.rows.filter(r=>r.act==null&&r.day<a.last).map(r=>r.day),
+          forecast_month:a.rec<a.n?aiR0(a.forecast):null,forecast_range_90pct:a.rec<a.n?[aiR0(a.fcLow),aiR0(a.fcHigh)]:null,forecast_confidence:a.rec<a.n?a.conf:null,target:tg,remaining_to_target:tg?aiR0(Math.max(0,tg-a.actual)):null,
+          target_achieved_pct:tg?aiP(a.actual/tg):null,forecast_vs_target_pct:tg&&a.rec<a.n?aiP(a.forecast/tg):null,
+          required_daily_for_target:tg&&a.rec<a.n?aiR0(Math.max(0,(tg-a.actual)/(a.n-a.last||1))):null,
+          prev_month_same_days_total:prevSame?aiR0(prevSame):null,change_vs_prev_month_same_days_pct:prevSame?aiP(a.actual/prevSame-1):null,
+          same_month_last_year_total:lyTot?aiR0(lyTot):null,
+          trend_last7_vs_prev7_pct:a.trend!=null?aiP(a.trend):null};
+        tAct+=a.actual; tFc+=a.rec<a.n?a.forecast:a.actual; tLo+=a.rec<a.n?a.fcLow:a.actual; tHi+=a.rec<a.n?a.fcHigh:a.actual; lastD=Math.max(lastD,a.last); nDays=a.n; if(tg) tTg+=tg; else allTg=false; });
+      const brs=Object.values(o); if(!brs.length) return;
+      const sh=bs.filter(b=>AI_ENT[b]==='مطاعم الشادن'&&o[BN[b]]);
+      const inc=brs.some(x=>!x.complete), TG=allTg&&tTg?tTg:null;
+      monthly[m]={by_branch:o,all_branches_total:aiR0(tAct),all_branches_forecast:inc?aiR0(tFc):null,all_branches_forecast_range_90pct:inc?[aiR0(tLo),aiR0(tHi)]:null,all_branches_target:TG,
+        all_branches_target_achieved_pct:TG?aiP(tAct/TG):null,all_branches_remaining_to_target:TG?aiR0(Math.max(0,TG-tAct)):null,all_branches_required_daily_for_target:TG&&inc&&nDays>lastD?aiR0(Math.max(0,(TG-tAct)/(nDays-lastD))):null,all_branches_forecast_vs_target_pct:TG&&inc?aiP(tFc/TG):null,
+        shaden_total:sh.length?aiR0(sum(sh.map(b=>o[BN[b]].total))):null}; });
+    const from=aiShift(lastAll,-61), daily={}; S.filter(r=>r.day>=from).forEach(r=>{const d=daily[r.day]=daily[r.day]||{day:aiDayName(r.day)};d[BN[r.branch_id]]=aiR0(r.amount);});
+    Object.values(daily).forEach(d=>{d.total=aiR0(sum(bs.map(b=>d[BN[b]]||0)));});
+    const days56=[...new Set(S.map(r=>r.day))].sort().slice(-56), wd={};
+    bs.forEach(b=>{const x={};[0,1,2,3,4,5,6].forEach(w=>{const L=days56.filter(d=>new Date(d+'T12:00:00').getDay()===w).map(d=>sum(S.filter(r=>r.branch_id===b&&r.day===d).map(r=>r.amount))).filter(v=>v>0);if(L.length)x[DAYN[w]]=aiR0(sum(L)/L.length);});if(Object.keys(x).length)wd[BN[b]]=x;});
+    C.branch_sales={source:'شاشة «مبيعات الفروع» والرئيسية',meaning:'مبيعات يومية لكل فرع شاملة ضريبة القيمة المضافة. المتوقع للشهر محسوب بنفس طريقة شاشة مبيعات الفروع: الأيام الباقية = متوسط نفس اليوم من الأسبوع في الشهر.',
+      last_recorded_day:lastAll,monthly,daily_last_62_days:daily,weekday_average_last_8_weeks:wd}; });
+
+  // ---------- التقرير اليومي ----------
+  await run('daily',async()=>{ if(!allowed('daily')) return; const P=(await appList('daily','pages')).slice().sort((a,b)=>a.id<b.id?1:-1).slice(0,3); if(!P.length) return;
+    fresh['التقرير اليومي']=(P[0].data||{}).date||P[0].id;
+    C.daily_report_latest={source:'شاشة «التقرير اليومي»',meaning:'نص آخر تقارير المبيعات اليومية كما تظهر في المنصة (الأحدث أولاً).',reports:P.map((d,i)=>({date:(d.data||{}).date||d.id,text:aiPageText((d.data||{}).html).slice(0,i?2500:5000)})).filter(x=>x.text)}; });
+
+  // ---------- منافذ البيع ----------
+  await run('channels',async()=>{ if(!canSee('channels')) return; const D=(await appList('channels','periods')).filter(d=>/^\d{4}-\d\d$/.test(d.id)).sort((a,b)=>a.id<b.id?-1:1).slice(-4); if(!D.length) return;
+    const CATN={102:'المعجنات',103:'الصحون',104:'المقبلات',105:'الحلويات',106:'العصائر',112:'الذبائح',115:'الإيدامات',117:'الكوكتيل',118:'المشروبات الباردة',120:'بوفيات خارجية',121:'أرز الدجاج',123:'طبخ الذبائح',126:'الأصناف المضافة حديثاً'};
+    const CATP={101:'المشروبات الباردة',107:'بروست الباتشينو / الدجاج',108:'الاستربس والجمبري',109:'البرجر والساندوتش',110:'وجبات الأطفال',111:'المقبلات',113:'الصوصات',114:'الخبز',116:'المسحب'};
+    const o={}; D.forEach(d=>{ const v=d.data||{}; const mo={};
+      bs.forEach(b=>{ const x=v[b]; if(!x||typeof x!=='object') return; const ch=Object.entries(x).filter(([,n])=>typeof n==='number'&&n); const tot=sum(ch.map(([,n])=>n)); if(!tot) return;
+        const inv=+(v.inv&&v.inv[b])||0, days=+(v.days&&v.days[b])||0;
+        const r={as_of:v.asOf&&v.asOf[b]||null,total_before_vat:aiR0(tot),total_after_vat:aiR0(tot*(1+VAT)),
+          channels:Object.fromEntries(ch.sort((p,q)=>q[1]-p[1]).map(([k,n])=>[AI_CHN[k]||k,{before_vat:aiR0(n),share_pct:aiP(n/tot)}])),
+          invoices:inv||null,days:days||null,avg_invoices_per_day:inv&&days?aiR2(inv/days):null,avg_ticket_after_vat:inv?aiR2(tot*(1+VAT)/inv):null};
+        const cats=v.cats&&v.cats[b]; if(cats){ const cd=+(v.catDays&&v.catDays[b])||0; const L=Object.entries(cats).map(([k,e])=>({name:(b==='pc'?CATP:CATN)[k]||('صنف '+k),qty:+(e&&e.n)||0,value:+(e&&e.v)||0})).filter(z=>z.qty||z.value); const V_=sum(L.map(z=>z.value));
+          r.menu_categories={days:cd||null,items:L.sort((p,q)=>q.value-p.value).map(z=>({category:z.name,qty:aiR2(z.qty),value:aiR0(z.value),share_pct:V_?aiP(z.value/V_):null,avg_price:z.qty?aiR2(z.value/z.qty):null,qty_per_day:cd?aiR2(z.qty/cd):null}))}; }
+        mo[BN[b]]=r; });
+      if(Object.keys(mo).length) o[d.id]=mo; });
+    fresh['منافذ المبيعات']=Object.keys(o).pop();
+    C.sales_channels={source:'شاشة «منافذ المبيعات»',meaning:'مبيعات كل منفذ (هنقرستيشن، كيتا، التوصيل، المحلي…) من بداية الشهر حتى تاريخ as_of — قبل الضريبة. متوسط الفاتورة بعد الضريبة. menu_categories = مبيعات أقسام المنيو بالكمية والقيمة. هذي الأرقام ما تساوي «مبيعات الفروع» لأنها قبل الضريبة ولفترة as_of.',monthly:o}; });
+
+  // ---------- قوائم الدخل ----------
+  await run('income',async()=>{ if(!canSee('income')) return; const I=(await loadIncome()).filter(r=>bs.includes(r.branch_id)); if(!I.length) return;
+    const months=[...new Set(I.map(r=>r.month))].sort().slice(-13); const o={};
+    const pack=t=>({revenue:aiR0(t.rev),cogs:aiR0(t.cogs),gross_profit:aiR0(t.gross),opex:aiR0(t.opex),net_profit:aiR0(t.net),gross_margin_pct:t.rev?aiP(t.gross/t.rev):null,net_margin_pct:t.rev?aiP(t.net/t.rev):null,cogs_ratio_pct:t.rev?aiP(t.cogs/t.rev):null});
+    months.forEach(m=>{ const L=I.filter(r=>r.month===m); const mo={by_branch:{}};
+      L.forEach(r=>{ const t=stmtTotals(r); const x=pack(t); x.estimate=!!r.is_estimate;
+        const lines=[]; (r.groups||[]).forEach(g=>{if(g.cat==='opex'||g.cat==='cogs')(g.a||[]).forEach(a=>{if(Math.abs(+a.v||0)>=1)lines.push([a.n,+a.v,g.cat]);});});
+        x.top_expenses=lines.filter(l=>l[2]==='opex').sort((p,q)=>q[1]-p[1]).slice(0,8).map(l=>({item:l[0],amount:aiR0(l[1])}));
+        x.cogs_breakdown=lines.filter(l=>l[2]==='cogs').sort((p,q)=>q[1]-p[1]).slice(0,6).map(l=>({item:l[0],amount:aiR0(l[1])}));
+        mo.by_branch[BN[r.branch_id]]=x; });
+      const all=aggTotals(L); mo.all_branches=pack(all); mo.any_estimate=all.est;
+      const sh=L.filter(r=>AI_ENT[r.branch_id]==='مطاعم الشادن'); if(sh.length) mo.shaden=pack(aggTotals(sh));
+      o[m]=mo; });
+    fresh['قوائم الدخل']=months[months.length-1];
+    C.income_statements={source:'شاشة «قوائم الدخل»',meaning:'قائمة الدخل الشهرية لكل فرع (الإيراد قبل الضريبة). estimate=true يعني الشهر تقديري لم يُقفل بعد وأرقامه ناقصة وتتغير — لا تعامله كشهر كامل ولا تقارنه بشهر مكتمل بدون تنبيه.',monthly:o}; });
+
+  // ---------- نسبة تكلفة المستودعات ----------
+  await run('wh',async()=>{ if(!canSee('wh')) return; const D=(await loadDaily()).filter(r=>r.ratio!=null&&bs.includes(r.branch_id)); const R=(await loadRatio()).filter(r=>bs.includes(r.branch_id)&&r.ratio!=null).map(r=>({...r}));
+    const money=D.some(x=>x.rev!=null);
+    const agg=L=>{if(!L.length)return null;const mo=L.some(x=>x.rev!=null);if(mo){const rv=sum(L.map(x=>x.rev)),cg=sum(L.map(x=>x.cogs));return {ratio:rv?cg/rv:null,rev:rv,cogs:cg};}return {ratio:sum(L.map(x=>+x.ratio))/L.length};};
+    const dm={}; D.forEach(r=>{const k=r.branch_id+'|'+r.day.slice(0,7);(dm[k]=dm[k]||[]).push(r);});
+    const monthly={}; const put=(m,b,v)=>{(monthly[m]=monthly[m]||{})[BN[b]]=v;};
+    R.forEach(r=>{ if(!dm[r.branch_id+'|'+r.month]) put(r.month,r.branch_id,{ratio_pct:aiP(+r.ratio,2),estimate:!!r.is_estimate,based_on:'قائمة الدخل'}); });
+    Object.entries(dm).forEach(([k,L])=>{const [b,m]=k.split('|');const a=agg(L);put(m,b,{ratio_pct:aiP(a.ratio,2),warehouse_cost:a.cogs!=null?aiR0(a.cogs):undefined,warehouse_revenue:a.rev!=null?aiR0(a.rev):undefined,days_recorded:L.length,last_day:L.map(x=>x.day).sort().pop(),based_on:'التقرير اليومي للمستودع'});});
+    const allMs=Object.keys(monthly).sort(); const isEst=m=>Object.values(monthly[m]).some(x=>x.estimate); const ms=allMs.slice(-8); const out={};
+    ms.forEach(m=>{out[m]={by_branch:monthly[m],estimate_month:isEst(m)}; const L=D.filter(r=>r.day.startsWith(m)); if(L.length){const a=agg(L); out[m].all_branches={ratio_pct:aiP(a.ratio,2),warehouse_cost:a.cogs!=null?aiR0(a.cogs):undefined,warehouse_revenue:a.rev!=null?aiR0(a.rev):undefined};}});
+    const avg={}; bs.forEach(b=>{const v=allMs.filter(m=>!isEst(m)).map(m=>monthly[m][BN[b]]).filter(x=>x&&x.ratio_pct!=null);if(v.length)avg[BN[b]]=aiR2(sum(v.map(x=>x.ratio_pct))/v.length);});
+    const last=D.length?D.map(x=>x.day).sort().pop():null; if(last) fresh['نسبة تكلفة المستودعات']=last;
+    const from=last?aiShift(last,-20):null, daily={}; if(from) D.filter(r=>r.day>=from).forEach(r=>{(daily[r.day]=daily[r.day]||{})[BN[r.branch_id]]=money?{ratio_pct:aiP(+r.ratio,2),cost:aiR0(r.cogs),revenue:aiR0(r.rev)}:{ratio_pct:aiP(+r.ratio,2)};});
+    C.warehouse_cost_ratio={source:'شاشة «نسبة تكلفة المستودعات»',meaning:'النسبة = تكلفة المستودع ÷ إيراد المستودع (من التقرير اليومي للمستودع، وللأشهر القديمة من قائمة الدخل). كل ما قلّت النسبة كان أفضل. الأرقام هنا هي نفس أرقام الشاشة بالضبط.'+(money?'':' (حسابك يشوف النسبة فقط بدون المبالغ)'),
+      monthly:out,average_of_actual_months_pct:avg,daily_last_21_days:daily}; });
+
+  // ---------- أسعار المشتريات ----------
+  await run('prices',async()=>{ if(!canSee('chicken')) return; const P=(await appList('prices','pages')).slice().sort((x,y)=>x.id<y.id?1:-1).slice(0,12); if(!P.length) return;
+    fresh['أسعار المشتريات']=(P[0].data||{}).date||P[0].id;
+    C.purchase_prices={source:'شاشة «أسعار المشتريات»',meaning:'تقارير يومية من نظام GROWTH: أسعار شراء الدجاج واللحوم والذبائح ومواد المشويات لكل صنف ومورد وفاتورة، مع تنبيهات الارتفاع والنزول (الأحدث أولاً). هذي غير «نسبة المستودع».',
+      reports:P.map((d,i)=>({date:(d.data||{}).date||d.id,text:aiPageText((d.data||{}).html).slice(0,i<4?4500:2500)})).filter(x=>x.text)}; });
+
+  // ---------- الخزينة ----------
+  await run('treasury',async()=>{ if(!canSee('treasury')) return; const A=(await appList('treasury','accounts')).map(d=>d.data||{}).filter(a=>a.name).sort((a,b)=>(a.order||0)-(b.order||0));
+    let bd=null; try{const M=await appList('treasury','meta');const s=M.find(d=>d.id==='settings');bd=s&&s.data&&s.data.balanceDate||null;}catch(e){}
+    let hist={}; try{(await appList('treasury','daily')).map(d=>d.data||{}).filter(x=>x.date).sort((a,b)=>a.date<b.date?-1:1).slice(-45).forEach(x=>hist[x.date]=aiR0(x.total));}catch(e){}
+    if(bd) fresh['خزينة الأرصدة']=bd;
+    C.treasury={source:'شاشة «خزينة الأرصدة»',meaning:'أرصدة البنوك والصناديق كما سُجّلت بتاريخ balance_date. daily_total_history = إجمالي الأرصدة لكل يوم.',balance_date:bd,
+      accounts:A.map(a=>({account:a.name,type:a.kind==='cash'?'صندوق نقدي':'بنك',balance:aiR2(+a.balance||0)})),total:aiR2(sum(A.map(a=>+a.balance||0))),daily_total_history:hist}; });
+
+  // ---------- التمويلات ----------
+  await run('loans',async()=>{ if(!canSee('loans')) return; const docs=await appList('loans','contracts'); if(!docs.length) return;
+    const LS=docs.map(d=>({...d.data,entity:d.data.entity==='fleet'?'wafra':d.data.entity,id:d.id}));
+    const rows=LS.map(L=>{const c=loanCalc(L,td);return {name:L.name,entity:ENTITY_NAME[L.entity]||L.entity,bank:L.bank,product:L.product||null,amount:aiR0(L.amount),monthly_installment:aiR2(L.inst),start:L.start||null,end:c.end||null,
+      installments_total:c.N,installments_paid:c.paid.length,installments_left:c.un.length,paid_amount:aiR0(c.paidAmt),remaining_amount:aiR0(c.rem),remaining_principal:c.remPrin!=null?aiR0(c.remPrin):null,remaining_profit:c.remProf!=null?aiR0(c.remProf):null,
+      next_installment:c.next?{date:c.next.date,amount:aiR2(c.next.inst)}:null,overdue_unpaid:c.over.map(x=>({date:x.date,amount:aiR2(x.inst)}))};});
+    const up=LS.flatMap(L=>loanCalc(L,td).un.filter(x=>x.date>=td).map(x=>({date:x.date,amount:+x.inst,name:L.name}))).sort((a,b)=>a.date<b.date?-1:1);
+    const byMonth={}; up.forEach(x=>{const k=x.date.slice(0,7);byMonth[k]=(byMonth[k]||0)+x.amount;});
+    C.financing={source:'شاشة «التمويلات»',meaning:'القسط اللي تاريخه مضى يُعتبر مدفوع تلقائياً إلا إذا تعلّم «غير مدفوع» (overdue_unpaid). remaining_amount = مجموع الأقساط الباقية (أصل + أرباح).',
+      contracts:rows,totals:{remaining_amount:aiR0(sum(rows.map(r=>r.remaining_amount||0))),overdue_count:sum(rows.map(r=>r.overdue_unpaid.length))},
+      next_5_installments:up.slice(0,5).map(x=>({date:x.date,amount:aiR2(x.amount),contract:x.name})),installments_due_by_month_next_6:Object.fromEntries(Object.entries(byMonth).slice(0,6).map(([k,v])=>[k,aiR0(v)]))}; });
+
+  // ---------- تسليم الورديات ----------
+  await run('handover',async()=>{ if(!canSee('handover')) return; const out={};
+    for(const m of [m0,mPrev]){ const r=await sb.rpc('handover_list',{p_month:m}); if(r.error) throw r.error; const L=(r.data||[]).filter(x=>bs.includes(x.branch)); if(!L.length) continue;
+      const tot=x=>+x.total||0, diff=x=>x.adj!=null?+x.adj:(x.system==null||x.system===''?null:tot(x)-(+x.system));
+      const per={}; bs.forEach(b=>{const X=L.filter(x=>x.branch===b);if(!X.length)return;const d=X.map(diff).filter(v=>v!=null);
+        per[BN[b]]={handovers:X.length,days:new Set(X.map(x=>x.date)).size,total:aiR0(sum(X.map(tot))),cash:aiR0(sum(X.map(x=>+x.cash||0))),card:aiR0(sum(X.map(x=>+x.card||0))),
+          shortages_total:aiR2(-sum(d.filter(v=>v<-0.004))),shortages_count:d.filter(v=>v<-0.004).length,overages_total:aiR2(sum(d.filter(v=>v>0.004))),pending_review:X.filter(x=>!x.review_status).length,last_date:X.map(x=>x.date).sort().pop()};});
+      const cs={}; L.forEach(x=>{const d=diff(x);const k=x.cashier+' — '+(BN[x.branch]||x.branch);const c=cs[k]=cs[k]||{handovers:0,shortages:0,overages:0};c.handovers++;if(d!=null&&d<-0.004)c.shortages+=-d;if(d!=null&&d>0.004)c.overages+=d;});
+      out[m]={by_branch:per,by_cashier:Object.fromEntries(Object.entries(cs).map(([k,c])=>[k,{handovers:c.handovers,shortages:aiR2(c.shortages),overages:aiR2(c.overages)}]))}; }
+    if(Object.keys(out).length) C.cashier_handover={source:'شاشة «تسليم الورديات»',meaning:'تسليمات الكاشيرات لكل وردية: الإجمالي (كاش+شبكة+آجل+تطبيقات+تحويلات+فواتير)، والعجز/الزيادة حسب مطابقة المحاسب أو الفرق عن إجمالي النظام.',monthly:out}; });
+
+  // ---------- الصيانة ----------
+  await run('maint',async()=>{ if(!canSee('maint')) return; const r=await sb.from('maint_requests').select('no,branch,category,title,status,priority,created_at,done_at,cost').order('created_at',{ascending:false}).limit(500); if(r.error) throw r.error; const L=(r.data||[]).filter(m=>bs.includes(m.branch));
+    const open=L.filter(mtWork);
+    C.maintenance={source:'شاشة «الصيانة»',meaning:'أوامر العمل. المهلة: عاجل 24 ساعة، عالي 3 أيام، عادي 7 أيام. overdue = تجاوز المهلة وهو مفتوح.',
+      open_count:open.length,overdue_count:open.filter(mtLate).length,awaiting_branch_confirmation:L.filter(m=>m.status==='done').length,
+      open_orders:open.slice(0,40).map(m=>({ref:mtRef(m),branch:BN[m.branch]||m.branch,category:m.category,title:m.title,status:(MT_ST[m.status]||[m.status])[0],priority:(MT_PR[m.priority]||[m.priority])[0],opened:String(m.created_at).slice(0,10),days_open:mtDays(m),overdue:mtLate(m)})),
+      closed_last_30_days:L.filter(m=>['closed','done'].includes(m.status)&&m.done_at&&m.done_at>=aiShift(td,-30)).length,
+      cost_this_month:aiR0(sum(L.filter(m=>String(m.done_at||'').startsWith(m0)).map(m=>+m.cost||0))),cost_last_month:aiR0(sum(L.filter(m=>String(m.done_at||'').startsWith(mPrev)).map(m=>+m.cost||0)))}; });
+
+  // ---------- تقييم العملاء ----------
+  await run('feedback',async()=>{ if(!canSee('feedback')) return; const r=await sb.from('feedback').select('no,branch,rating,tags,comment,status,created_at').gte('created_at',aiShift(td,-60)+'T00:00:00').limit(3000); if(r.error) throw r.error; const F=(r.data||[]).filter(f=>bs.includes(f.branch));
+    const tagc={}; F.forEach(f=>(f.tags||[]).forEach(t=>tagc[t]=(tagc[t]||0)+1));
+    const per=(L)=>L.length?{count:L.length,avg_rating:aiR2(sum(L.map(f=>f.rating))/L.length),complaints_1_to_3:L.filter(f=>f.rating<=3).length}:null;
+    C.customer_feedback={source:'شاشة «تقييم العملاء»',meaning:'تقييمات العملاء من QR آخر 60 يوم (1 إلى 5).',last_30_days:{all:per(F.filter(f=>f.created_at>=aiShift(td,-30))),by_branch:Object.fromEntries(bs.map(b=>[BN[b],per(F.filter(f=>f.branch===b&&f.created_at>=aiShift(td,-30)))]))},
+      last_60_days:{all:per(F),by_branch:Object.fromEntries(bs.map(b=>[BN[b],per(F.filter(f=>f.branch===b))]))},
+      open_complaints:F.filter(f=>f.rating<=3&&!['resolved','closed'].includes(f.status)).length,top_tags:Object.entries(tagc).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([t,n])=>({tag:t,count:n})),
+      recent_complaints:F.filter(f=>f.rating<=3).sort((a,b)=>a.created_at<b.created_at?1:-1).slice(0,12).map(f=>({ref:'CF-'+String(f.no||0).padStart(5,'0'),branch:BN[f.branch],rating:f.rating,date:String(f.created_at).slice(0,10),status:(FB_ST[f.status]||[f.status])[0],comment:String(f.comment||'').slice(0,160),tags:f.tags}))}; });
+
+  // ---------- الموظفين والخصومات ----------
+  await run('employees',async()=>{ if(!canSee('employees')) return; const r=await sb.from('employees').select('id,name,branch,status,job,health_exp').neq('status','left'); if(r.error) throw r.error; const E=(r.data||[]).filter(e=>bs.includes(e.branch));
+    const jobs={}; E.forEach(e=>{const k=(BN[e.branch]||e.branch);(jobs[k]=jobs[k]||{});jobs[k][e.job||'غير محدد']=(jobs[k][e.job||'غير محدد']||0)+1;});
+    C.employees={source:'شاشة «الموظفين»',count_total:E.length,count_by_branch:Object.fromEntries(bs.map(b=>[BN[b],E.filter(e=>e.branch===b).length])),jobs_by_branch:jobs,
+      health_certificates_expired:E.filter(e=>e.health_exp&&e.health_exp<td).map(e=>({name:e.name,branch:BN[e.branch],expired:e.health_exp})),
+      health_certificates_expiring_30d:E.filter(e=>e.health_exp&&e.health_exp>=td&&e.health_exp<=aiShift(td,30)).map(e=>({name:e.name,branch:BN[e.branch],expires:e.health_exp}))};
+    const dr=await sb.from('employee_deductions').select('emp_id,branch,date,amount,reason').gte('date',mPrev+'-01').limit(3000); const en=id=>(E.find(e=>e.id===id)||{}).name||'موظف';
+    const DL=(dr.data||[]).filter(d=>bs.includes(d.branch));
+    C.employee_deductions={source:'شاشة «الموظفين» ← الخصومات',meaning:'خصومات الموظفين المسجلة هذا الشهر والشهر الماضي.',
+      totals:Object.fromEntries([m0,mPrev].map(m=>[m,{count:DL.filter(d=>d.date.startsWith(m)).length,amount:aiR2(sum(DL.filter(d=>d.date.startsWith(m)).map(d=>+d.amount)))}])),
+      list:DL.sort((a,b)=>a.date<b.date?1:-1).slice(0,120).map(d=>({date:d.date,branch:BN[d.branch],employee:en(d.emp_id),amount:aiR2(+d.amount),reason:d.reason}))}; });
+
+  // ---------- السلف ----------
+  await run('advances',async()=>{ if(!canSee('advances')) return; const r=await sb.from('advances').select('*').limit(2000); if(r.error) throw r.error; const L=(r.data||[]).filter(a=>bs.includes(a.branch)); const act=L.filter(a=>a.status==='approved'&&advCalc(a).rem>0);
+    C.salary_advances={source:'شاشة «السلف»',outstanding_total:aiR0(sum(act.map(a=>advCalc(a).rem))),monthly_deduction_total:aiR0(sum(act.map(a=>advCalc(a).mo))),employees_with_active_advances:new Set(act.map(a=>a.emp_id)).size,
+      pending_branch_manager:L.filter(a=>a.status==='pending_mgr').length,pending_owner_approval:L.filter(a=>a.status==='pending_owner').length,
+      by_branch:Object.fromEntries(bs.map(b=>[BN[b],aiR0(sum(act.filter(a=>a.branch===b).map(a=>advCalc(a).rem)))]))}; });
+
+  // ---------- الأسطول ----------
+  await run('fleet',async()=>{ if(!canSee('fleet')) return; const A=(await appList('fleet','vehicles')).map(d=>d.data||{}).filter(v=>(v.status||'في الخدمة')!=='مباعة');
+    C.fleet={source:'شاشة «أسطول السيارات»',vehicles:A.length,need_attention:A.map(v=>({vehicle:`${v.make||''} ${v.model||''} ${v.plate||''}`.trim(),alerts:flAlerts(v).map(a=>a.t)})).filter(x=>x.alerts.length)}; });
+
+  C.meta.data_freshness_last_date_per_section=fresh;
+  if(errs.length) C.meta.sections_failed_to_load=errs;
   C.platform_guide={
-    note:'أسئلة طريقة عمل المنصة وأقسامها والإجراءات (الكشوفات، الخصومات، السلف، الصيانة، التسليم…) من صميم العمل وتجاوب عليها بالتفصيل من هذا الدليل.',
-    employee_deductions:'مدير الفرع يسجّل الخصم من قسم الموظفين (المبلغ، التاريخ، السبب، صورة المخالفة). الخصم ينخصم تلقائياً من مستحق الموظف في «كشف الموظفين الشهري» ويظهر في عمود «الخصم» ويُحسب «الصافي» = المستحق − الخصم. الكشف يُصدَّر Excel من قسم الموظفين ← تبويب الكشف ← اختيار الشهر والفرع ← «تصدير Excel» (كل الفروع = ملف واحد فيه ورقة لكل فرع). أسباب الخصم: تأخير، غياب، مخالفة بلدية، مخالفة نظافة، تلف أو كسر، عجز كاشير، سلفة، أخرى. إلغاء الخصم يحذفه من الكشف.',
+    note:'أسئلة طريقة عمل المنصة وأقسامها من صميم العمل.',
+    employee_deductions:'مدير الفرع يسجّل الخصم من قسم الموظفين (المبلغ، التاريخ، السبب، صورة المخالفة). الخصم ينخصم تلقائياً من مستحق الموظف في «كشف الموظفين الشهري» ويظهر في عمود «الخصم» و«الصافي» = المستحق − الخصم. الكشف يتنزّل Excel من قسم الموظفين.',
     monthly_payroll_sheet:'المستحق = الراتب كامل للشهر الكامل، والمباشر أو المنتهية خدماته خلال الشهر = (الراتب ÷ 30) × أيام العمل.',
-    salary_advances:'الموظف يطلب السلفة من حسابه في التطبيق ← موافقة مدير الفرع ← اعتماد المالك ← تبدأ الأقساط من شهر الخصم المحدد. أقساط السلف ما تنزل تلقائياً في كشف الخصومات إلا إذا سُجّلت كخصم بسبب «سلفة».',
-    maintenance:'مدير الفرع يرفع طلب صيانة ← المشرف يقبل ويسند لفني أو يرفض ← التنفيذ (ويمكن التعليق) ← الإنجاز مع التكلفة والصورة ← مدير الفرع يؤكد الاستلام ويقيّم أو يرفض الإنجاز. المهلة: عاجل 24 ساعة، عالي 3 أيام، عادي 7 أيام.',
-    customer_feedback:'العميل يقيّم من QR في المطعم ← إشعار لمدير الفرع والإدارة ← المراحل: مراجعة ← تواصل مع العميل ← حل المشكلة والتعويض ← إغلاق. الشكوى اللي تعدّي 24 ساعة بدون حل تصير متأخرة.',
-    cashier_handover:'الكاشير يسلّم الوردية من رابط التسليم برمزه الشخصي (كاش، شبكة، آجل، تطبيقات، تحويلات…)، والمحاسب يراجعها ويسجّل العجز أو الزيادة. الإدارة تقدر ترسل للكاشير تنبيه أو إنذار من قسم التسليم ويرد بالسبب.',
-    permissions:'كل مستخدم يشوف فروعه وأقسامه المسموحة فقط، والحذف للمالك فقط.',
-    warehouse_ratio:'«نسبة تكلفة المستودعات» = تكلفة المستودع ÷ إيراد المستودع من التقرير اليومي. عند السؤال عن نسبة المستودع أو تكلفته أو إيراده استخدم warehouse_monthly_details و warehouse_cost_ratio_percent_daily_last_14 فقط، واذكر التكلفة والإيراد منها كما هي. ممنوع تخلطها بأرقام قوائم الدخل (income_statements_monthly) لأنها مصدر مختلف وقد تكون تقديرية أو ناقصة للشهر الجاري — وإذا ذكرت قائمة الدخل قل صراحة إنها مصدر مختلف.',
-    purchase_prices:'قسم «أسعار المشتريات» (ضمن التقارير) تقرير يومي يتحدّث تلقائياً من نظام GROWTH: أسعار شراء الدجاج (حبة) واللحوم والذبائح ومواد المشويات لكل صنف ومورد وفاتورة، مع تنبيهات الارتفاع والنزول وتعدد الأسعار. تحليل أسعار المشتريات والموردين من صميم العمل: استخدم purchase_price_reports_latest (نص التقارير اليومية، الأحدث أولاً) لحساب متوسطات الأسعار والتغيّر وأرخص/أغلى مورد وتوصيات التوفير. هذي غير «نسبة المستودع» (تكلفة البضاعة ÷ المبيعات).'
-  };
-  const r2=x=>Math.round(x*100)/100;
-  try{ if(canSee('sales')){ const S=(await loadSales()).filter(r=>bs.includes(r.branch_id)); const from=aiShift(td,-62);
-    const daily={}; S.filter(r=>r.day>=from).forEach(r=>{(daily[r.day]=daily[r.day]||{})[r.branch_id]=r2(r.amount);}); C.sales_daily_last_60_days=daily;
-    const mon={}; S.forEach(r=>{const m=r.day.slice(0,7);mon[m]=mon[m]||{};mon[m][r.branch_id]=r2((mon[m][r.branch_id]||0)+r.amount);}); C.sales_monthly=Object.fromEntries(Object.entries(mon).sort().slice(-14));
-    C.sales_last_recorded_day=S.length?S[S.length-1].day:null; } }catch(e){}
-  try{ if(canSee('wh')){ const D=(await loadDaily()).filter(r=>r.ratio!=null&&bs.includes(r.branch_id)); const m={}; D.forEach(r=>{const k=r.day.slice(0,7);(m[k]=m[k]||{});(m[k][r.branch_id]=m[k][r.branch_id]||[]).push(r);});
-    const rt=a=>{const money=a.some(x=>x.rev!=null);return r2((money?sum(a.map(x=>x.cogs))/(sum(a.map(x=>x.rev))||1):sum(a.map(x=>+x.ratio))/a.length)*100);};
-    C.warehouse_cost_ratio_percent_monthly=Object.fromEntries(Object.entries(m).sort().slice(-6).map(([k,v])=>[k,Object.fromEntries(Object.entries(v).map(([b,a])=>[b,rt(a)]))]));
-    C.warehouse_monthly_details=Object.fromEntries(Object.entries(m).sort().slice(-6).map(([k,v])=>[k,Object.fromEntries(Object.entries(v).map(([b,a])=>{const mo=a.filter(x=>x.rev!=null);return [b,{ratio_percent:rt(a),warehouse_cost:mo.length?r2(sum(mo.map(x=>+x.cogs||0))):null,warehouse_revenue:mo.length?r2(sum(mo.map(x=>+x.rev||0))):null,days_recorded:a.length,last_day:a.map(x=>x.day).sort().pop()}];}))]));
-    const dl={}; D.filter(r=>r.day>=aiShift(td,-14)).forEach(r=>{(dl[r.day]=dl[r.day]||{})[r.branch_id]=r2(+r.ratio*100);}); C.warehouse_cost_ratio_percent_daily_last_14=dl; } }catch(e){}
-  try{ if(canSee('income')){ const I=(await loadIncome()).filter(r=>bs.includes(r.branch_id)); const o={}; I.forEach(r=>{const t=aggTotals([r]);(o[r.month]=o[r.month]||{})[r.branch_id]={revenue:r2(t.rev),cogs:r2(t.cogs),opex:r2(t.opex),net_profit:r2(t.net),estimate:!!r.is_estimate};}); C.income_statements_monthly=Object.fromEntries(Object.entries(o).sort().slice(-13)); } }catch(e){}
-  try{ if(canSee('channels')){ const D=await appList('channels','periods'); const o={}; D.filter(d=>/^\d{4}-\d\d$/.test(d.id)).sort((a,b)=>a.id<b.id?-1:1).slice(-4).forEach(d=>{o[d.id]={};bs.forEach(b=>{const v=(d.data||{})[b];if(v)o[d.id][b]=Object.fromEntries(Object.entries(v).filter(([,x])=>typeof x==='number').map(([k,x])=>[AI_CHN[k]||k,r2(x)]));});}); C.sales_channels_monthly=o; } }catch(e){}
-  try{ if(canSee('chicken')){ const P=(await appList('prices','pages')).slice().sort((x,y)=>x.id<y.id?1:-1).slice(0,12);
-    const tx=h=>{try{const d=new DOMParser().parseFromString(h||'','text/html');d.querySelectorAll('style,script,link,title').forEach(n=>n.remove());d.querySelectorAll('tr').forEach(tr=>tr.append(' | '));d.querySelectorAll('td,th').forEach(c=>c.append(' ؛ '));d.body.querySelectorAll('span,b,strong,em,i,small').forEach(n=>n.append(' '));d.querySelectorAll('h1,h2,h3,p,li,div,tr').forEach(n=>n.append('\n'));return (d.body.textContent||'').replace(/[ \t\u00a0]+/g,' ').replace(/\s*\n\s*/g,'\n').replace(/\n?إعداد[^\n]*$/,'').trim();}catch(e){return '';}};
-    C.purchase_price_reports_latest=P.map((d,i)=>({date:(d.data||{}).date||d.id,report:tx((d.data||{}).html).slice(0,i<4?4500:2500)})).filter(x=>x.report); } }catch(e){}
-  try{ if(canSee('treasury')){ C.bank_and_cash_balances=(await appList('treasury','accounts')).map(d=>d.data||{}).filter(a=>a.name).map(a=>({account:a.name,balance:r2(+a.balance||0)})); } }catch(e){}
-  try{ if(canSee('loans')){ C.financing=(await appList('loans','contracts')).map(d=>{const L=d.data||{};const un=(L.sched||[]).filter(x=>!x.paid);const nx=un.find(x=>x.date>=td);return {name:L.name,bank:L.bank,remaining:r2(sum(un.map(x=>+x.inst||0))),installments_left:un.length,next_installment:nx?{date:nx.date,amount:r2(+nx.inst||0)}:null,overdue_unpaid:(L.sched||[]).filter(x=>x.unpaid&&x.date<=td).length};}); } }catch(e){}
-  try{ if(canSee('maint')){ const r=await sb.from('maint_requests').select('branch,category,title,status,priority,created_at,done_at,cost').order('created_at',{ascending:false}).limit(300); const L=(r.data||[]).filter(m=>bs.includes(m.branch));
-    C.maintenance={open:L.filter(mtWork).map(m=>({branch:BN[m.branch]||m.branch,category:m.category,title:m.title,status:(MT_ST[m.status]||[m.status])[0],priority:(MT_PR[m.priority]||[m.priority])[0],days_open:mtDays(m),overdue:mtLate(m)})).slice(0,40),closed_last_30_days:L.filter(m=>m.status==='closed'&&m.done_at&&m.done_at>=aiShift(td,-30)).length,cost_this_month:r2(sum(L.filter(m=>String(m.done_at||'').startsWith(td.slice(0,7))).map(m=>+m.cost||0)))}; } }catch(e){}
-  try{ if(canSee('feedback')){ const r=await sb.from('feedback').select('branch,rating,tags,comment,status,created_at').gte('created_at',aiShift(td,-60)+'T00:00:00').limit(2000); const F=(r.data||[]).filter(f=>bs.includes(f.branch));
-    C.customer_feedback_last_60_days={count:F.length,by_branch:Object.fromEntries(bs.map(b=>{const x=F.filter(f=>f.branch===b);return [BN[b],x.length?{avg_rating:r2(sum(x.map(f=>f.rating))/x.length),count:x.length}:null];})),open_complaints:F.filter(f=>f.rating<=3&&!['resolved','closed'].includes(f.status)).length,recent_complaints:F.filter(f=>f.rating<=3).slice(0,12).map(f=>({branch:BN[f.branch],rating:f.rating,tags:f.tags,comment:(f.comment||'').slice(0,160),status:FB_ST[f.status]?FB_ST[f.status][0]:f.status,date:String(f.created_at).slice(0,10)}))}; } }catch(e){}
-  try{ if(canSee('employees')){ const r=await sb.from('employees').select('id,name,branch,status,job,health_exp').neq('status','left'); const E=(r.data||[]).filter(e=>bs.includes(e.branch));
-    C.employees={count_by_branch:Object.fromEntries(bs.map(b=>[BN[b],E.filter(e=>e.branch===b).length])),health_certificates_expired:E.filter(e=>e.health_exp&&e.health_exp<td).length,health_certificates_expiring_30d:E.filter(e=>e.health_exp&&e.health_exp>=td&&e.health_exp<=aiShift(td,30)).length};
-    const dr=await sb.from('employee_deductions').select('emp_id,branch,date,amount,reason').gte('date',aiPrevMon(td.slice(0,7))+'-01').limit(3000); const en=id=>(E.find(e=>e.id===id)||{}).name||'موظف';
-    C.employee_deductions_this_and_last_month=(dr.data||[]).filter(d=>bs.includes(d.branch)).map(d=>({date:d.date,branch:BN[d.branch],employee:en(d.emp_id),amount:r2(+d.amount),reason:d.reason})); } }catch(e){}
-  try{ if(canSee('advances')){ const r=await sb.from('advances').select('*').limit(1000); const L=(r.data||[]).filter(a=>bs.includes(a.branch)); const act=L.filter(a=>a.status==='approved'&&advCalc(a).rem>0);
-    C.salary_advances={outstanding_total:r2(act.reduce((x,a)=>x+advCalc(a).rem,0)),monthly_deduction:r2(act.reduce((x,a)=>x+advCalc(a).mo,0)),employees_with_advances:new Set(act.map(a=>a.emp_id)).size,pending_requests:L.filter(a=>['pending_mgr','pending_owner'].includes(a.status)).length}; } }catch(e){}
-  try{ if(canSee('fleet')){ const A=(await appList('fleet','vehicles')).map(d=>d.data||{}).filter(v=>(v.status||'في الخدمة')!=='مباعة'); C.fleet={vehicles:A.length,alerts:A.map(v=>({vehicle:`${v.make||''} ${v.model||''} ${v.plate||''}`.trim(),alerts:flAlerts(v).map(a=>a.t)})).filter(x=>x.alerts.length)}; } }catch(e){}
+    salary_advances:'الموظف يطلب السلفة من حسابه ← موافقة مدير الفرع ← اعتماد المالك ← تبدأ الأقساط من شهر الخصم المحدد.',
+    maintenance:'مدير الفرع يرفع الطلب ← المشرف يقبل ويسند أو يرفض ← التنفيذ ← الإنجاز مع التكلفة والصورة ← مدير الفرع يؤكد الاستلام ويقيّم.',
+    customer_feedback:'العميل يقيّم من QR ← إشعار لمدير الفرع والإدارة ← مراجعة ← تواصل ← حل وتعويض ← إغلاق.',
+    cashier_handover:'الكاشير يسلّم الوردية من رابط التسليم برمزه الشخصي، والمحاسب يراجع ويسجّل العجز أو الزيادة. الإدارة ترسل للكاشير تنبيه أو إنذار ويرد بالسبب.',
+    permissions:'كل مستخدم يشوف فروعه وأقسامه المسموحة فقط، والحذف للمالك فقط.'};
   st._aiCtx=C; st._aiCtxAt=Date.now(); return C;
 }
 function aiMd(t){ const e=esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
   return e.split('\n').map(l=>{const m=l.match(/^\s*[-•]\s+(.*)/);if(m)return `<li>${m[1]}</li>`;const n=l.match(/^\s*(\d+)[.)]\s+(.*)/);if(n)return `<li class="n"><i>${n[1]}</i>${n[2]}</li>`;return l.trim()?`<p>${l}</p>`:'';}).join('').replace(/(<li[^>]*>.*?<\/li>)+/g,m=>`<ul>${m}</ul>`);}
 async function aiLLM(q,onText){
   const ctx=await aiCtx(); const {data:{session}}=await sb.auth.getSession(); if(!session) throw new Error('nosession');
-  const r=await fetch(CFG.url+'/functions/v1/'+AI_FN,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token,'apikey':CFG.key},body:JSON.stringify({question:q,history:(st.aiConv||[]).slice(-8),context:JSON.stringify(ctx)})});
-  if(!r.ok||!r.body){ throw new Error('http '+r.status); }
-  const rd=r.body.getReader(), dec=new TextDecoder(); let txt='';
-  while(true){ const {done,value}=await rd.read(); if(done) break; txt+=dec.decode(value,{stream:true}); onText(txt); }
-  if(!txt.trim()) throw new Error('empty'); return txt;
+  const ac=new AbortController(); const to=setTimeout(()=>ac.abort(),120000);
+  try{
+    const r=await fetch(CFG.url+'/functions/v1/'+AI_FN,{method:'POST',signal:ac.signal,headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token,'apikey':CFG.key},body:JSON.stringify({question:q,history:(st.aiConv||[]).slice(-10),context:JSON.stringify(ctx)})});
+    if(!r.ok||!r.body){ throw new Error('http '+r.status); }
+    const rd=r.body.getReader(), dec=new TextDecoder(); let raw='';
+    const vis=()=>raw.split('\u001e').pop().replace(/\u0015/g,'');
+    while(true){ const {done,value}=await rd.read(); if(done) break; raw+=dec.decode(value,{stream:true}); const v=vis(); onText(v, raw.endsWith('\u001e')); }
+    const txt=vis().trim(); const broke=raw.includes('\u0015');
+    if(!txt) throw new Error(broke?'upstream':'empty');
+    return {txt,broke};
+  } finally { clearTimeout(to); }
 }
 
 async function aiAsk(q){
@@ -2172,17 +2345,26 @@ async function aiAsk(q){
   aiBottom(true);
   const steps=aiThinkSteps(q); let si=0; const iv=setInterval(()=>{si=Math.min(si+1,steps.length-1);const e=$('#aiTkT');if(e){e.classList.remove('sw');void e.offsetWidth;e.textContent=steps[si];e.classList.add('sw');}},650);
   const t0=Date.now(); st.aiConv=st.aiConv||[];
-  if(!st.aiOff){
-    let node=null, body=null, started=false;
+  let llmFail=false;
+  {
+    let node=null, body=null;
+    const mk=()=>{ if(node) return; clearInterval(iv); const ty=$('#aiTy'); const w=document.createElement('div'); w.innerHTML=`<div class="ai-msg"><div class="ai-av">✦</div><div class="ai-body"><div class="ai-llm typing"></div></div></div>`; node=w.firstElementChild; if(ty) ty.replaceWith(node); else box.appendChild(node); body=node.querySelector('.ai-llm'); };
     try{
-      const txt=await aiLLM(q,cur=>{ if(!started){ started=true; clearInterval(iv); const ty=$('#aiTy'); const w=document.createElement('div'); w.innerHTML=`<div class="ai-msg"><div class="ai-av">✦</div><div class="ai-body"><div class="ai-llm typing"></div></div></div>`; node=w.firstElementChild; if(ty) ty.replaceWith(node); else box.appendChild(node); body=node.querySelector('.ai-llm'); }
-        body.innerHTML=aiMd(cur); aiBottom(false); });
-      body.classList.remove('typing'); st.aiConv.push({role:'user',content:q},{role:'assistant',content:txt}); st.aiLog.push({h:node.outerHTML});
+      const res=await aiLLM(q,(cur,calc)=>{ if(!cur.trim()){ const e=$('#aiTkT'); if(e&&calc) e.textContent='أراجع الحسابات…'; if(node&&calc) body.innerHTML='<p class="muted">أراجع الحسابات…</p>'; return; } mk(); body.innerHTML=aiMd(cur); aiBottom(false); });
+      mk(); body.innerHTML=aiMd(res.txt); body.classList.remove('typing');
+      if(res.broke) body.insertAdjacentHTML('beforeend','<p class="muted">⚠️ انقطع الجواب قبل ما يكمل — اسأل مرة ثانية للتأكد.</p>');
+      else st.aiConv.push({role:'user',content:q},{role:'assistant',content:res.txt});
+      st.aiLog.push({h:node.outerHTML});
       aiBottom(true); st._aiBusy=false; if(sb_) sb_.disabled=false; return;
-    }catch(e){ console.warn('AI model unavailable',e); if(node){ body.classList.remove('typing'); body.insertAdjacentHTML('beforeend','<p class="muted">انقطع الاتصال — حاول مرة ثانية.</p>'); st._aiBusy=false; if(sb_) sb_.disabled=false; return; } st.aiOff=true; }
+    }catch(e){ console.warn('AI model unavailable',e);
+      if(node){ body.classList.remove('typing'); body.insertAdjacentHTML('beforeend','<p class="muted">⚠️ انقطع الاتصال قبل ما يكمل الجواب — اسأل مرة ثانية.</p>'); st.aiLog.push({h:node.outerHTML}); st._aiBusy=false; if(sb_) sb_.disabled=false; return; }
+      llmFail=true; }
   }
   let a; try{ a=await aiAnswer(q); }catch(e){ console.error(e); a={text:'صار خطأ أثناء جلب البيانات — حاول مرة ثانية.'}; }
   const wait=Math.max(0,1200+Math.random()*600-(Date.now()-t0)); await aiSleep(wait); clearInterval(iv);
+  if(llmFail&&(a.intro||a.unknown)) a={text:'⚠️ المساعد الذكي ما رد الحين — تأكد من الإنترنت وجرّب مرة ثانية بعد شوي.'};
+  else if(llmFail&&!a.big) a.text=String(a.text||'')+' — (إجابة سريعة محدودة لأن المساعد الذكي ما رد الحين)';
+  else if(llmFail) a.note=(a.note?a.note+'<br>':'')+'<span class="muted">⚠️ المساعد الذكي ما رد الحين، وهذي إجابة سريعة محدودة من بيانات المنصة — جرّب السؤال مرة ثانية بعد شوي للتحليل الكامل.</span>';
   const html=aiBubble(a); st.aiLog.push({h:html.replace(/data-type="([^"]*)"><\/div>/g,(m,s)=>`>${s}</div>`).replace(/class="(ai-card|rv[^"]*|ai-ln|ai-nt|ai-go) rv"/g,'class="$1 rv in"')});
   const ty=$('#aiTy'); const wrap=document.createElement('div'); wrap.innerHTML=html; const node=wrap.firstElementChild; if(ty) ty.replaceWith(node); else box.appendChild(node);
   aiBottom(true); await aiReveal(node); aiBottom(true);
@@ -2443,7 +2625,7 @@ async function render(){
   try{ v.innerHTML=(['home','me'].includes(st.tab)?pushBox(false):'')+await V[st.tab](); v.querySelectorAll('.sc-end').forEach(s=>s.scrollLeft=s.scrollWidth); if(sec.app) fitApp(); if(sec.page) mountPage(sec); }
   catch(err){ console.error(err); v.innerHTML=`<div class="card"><div class="err">تعذّر تحميل البيانات: ${esc(err.message||err)}</div><button class="btn ghost sm" onclick="location.reload()">إعادة المحاولة</button></div>`; }
 }
-document.addEventListener('visibilitychange',()=>{ if(document.visibilityState!=='visible'||!st.profile) return; if(st.tab==='fleet'&&st.flEdit) return; const sec=SECTIONS.find(s=>s.id===st.tab)||{}; st.cache={}; st._alertsAt=0; loadAlerts(); if(!sec.app&&st.tab!=='data') render(); });
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState!=='visible'||!st.profile) return; if(st.tab==='fleet'&&st.flEdit) return; const sec=SECTIONS.find(s=>s.id===st.tab)||{}; st.cache={}; st._aiCtx=null; st._alertsAt=0; loadAlerts(); if(!sec.app&&st.tab!=='data'&&st.tab!=='ai') render(); });
 sb.auth.onAuthStateChange((ev)=>{ if(ev==='SIGNED_OUT'){ $('#app').hidden=true; $('#login').hidden=false; } });
 boot();
 })();
