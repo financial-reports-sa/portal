@@ -576,7 +576,7 @@ const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'rep',n
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup','feedback'];
-const APP_VER='60';
+const APP_VER='61';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -1764,18 +1764,9 @@ function fbDetail(f){
   ${fbActs(f)?`<div class="mtd-act">${fbActs(f)}</div>`:''}`;
   document.body.appendChild(w);
 }
-async function fbQR(){
-  if(!window.qrcode){ await new Promise((ok,no)=>{const s=document.createElement('script');s.src='vendor/qrcode.js';s.onload=ok;s.onerror=no;document.head.appendChild(s);}).catch(()=>{}); }
-  const brs=st.branches.map(b=>b.id).filter(b=>b!=='wafra');
-  const qr=u=>{if(!window.qrcode)return '<div class="muted">تعذّر تحميل QR</div>';const q=qrcode(0,'M');q.addData(u);q.make();return q.createSvgTag({cellSize:6,margin:2,scalable:true});};
-  const NM={az:['مطاعم الشادن','فرع العزيزية'],sh:['مطاعم الشادن','فرع شوران'],pc:['بروست الباتشينو','']};
+function fbQR(){
   const w=document.createElement('div'); w.id='fbqr'; document.body.style.overflow='hidden';
-  w.innerHTML=`<div class="mtd-bar noprint"><button class="icb" data-fbqrx="1">›</button><b>ملصقات تقييم العملاء</b><button class="btn sm" data-fbprint="1">🖨 طباعة</button></div>
-  <div class="fbq-body"><p class="muted noprint" style="font-size:12.5px;text-align:center">اطبع الملصق وحطه على الطاولات والكاشير. كل فرع له كود خاص — التقييم يوصل لمدير الفرع مباشرة.</p>
-  ${brs.map(b=>{const u=fbUrl(b);const n=NM[b]||[brById(b).name,''];return `<div class="fbq-card" style="--c:${brById(b).color}"><div class="fbq-top"><b>${n[0]}</b>${n[1]?`<span>${n[1]}</span>`:''}</div>
-    <div class="fbq-h">رأيك يهمّنا</div><div class="fbq-s">امسح الكود وقيّم تجربتك خلال دقيقة</div><div class="fbq-st">★★★★★</div>
-    <div class="fbq-qr">${qr(u)}</div><div class="fbq-en">Scan to rate your experience</div>
-    <div class="fbq-u noprint"><span dir="ltr">${u}</span><button class="btn sm ghost" data-fbcp="${u}">نسخ الرابط</button></div></div>`;}).join('')}</div>`;
+  w.innerHTML=`<div class="mtd-bar"><button class="icb" data-fbqrx="1">›</button><b>ملصقات تقييم العملاء</b><button class="btn sm" data-fbprint="1">🖨 طباعة</button></div><iframe id="fbqf" src="review/poster.html?b=all" style="flex:1;border:0;width:100%;background:#E9E7DE"></iframe>`;
   document.body.appendChild(w);
 }
 document.addEventListener('click',async e=>{
@@ -1785,7 +1776,7 @@ document.addEventListener('click',async e=>{
   if(d.fbo){const f=(st._fbList||[]).find(x=>x.id===d.fbo);if(f)fbDetail(f);return;}
   if(d.fbqr){fbQR();return;}
   if(d.fbqrx){const w=$('#fbqr');if(w)w.remove();document.body.style.overflow='';return;}
-  if(d.fbprint){document.body.classList.add('fbprinting');setTimeout(()=>{window.print();setTimeout(()=>document.body.classList.remove('fbprinting'),500);},100);return;}
+  if(d.fbprint){const f=$('#fbqf');try{f.contentWindow.focus();f.contentWindow.print();}catch(_){window.open('review/poster.html?b=all','_blank');}return;}
   if(d.fbcp){try{await navigator.clipboard.writeText(d.fbcp);toast('تم نسخ الرابط');}catch(_){toast(d.fbcp);}return;}
   if(d.fbdel){if(!confirm('حذف التقييم نهائياً؟'))return;const r=await sb.rpc('feedback_delete',{p_id:d.fbdel});if(r.error){toast(r.error.message);return;}const w=$('#mtdet');if(w)w.remove();document.body.style.overflow='';toast('تم الحذف');st._alertsAt=0;loadAlerts();render();return;}
   if(d.fbst){const [id,s]=d.fbst.split('|');const f=(st._fbList||[]).find(x=>x.id===id);if(!f)return;let o={};
