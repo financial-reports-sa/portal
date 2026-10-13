@@ -1,5 +1,3 @@
-// التقرير المسائي — Supabase → Edge Functions → اسمها: daily-brief (Verify JWT: OFF)
-// القاعدة ترسل له أرقام اليوم + رمز سري، وهو يكتب التقرير بالذكاء الاصطناعي ويحفظه (المفتاح ANTHROPIC_API_KEY نفسه)
 const MODEL = Deno.env.get("BRIEF_MODEL") || Deno.env.get("AI_MODEL") || "claude-haiku-4-5-20251001";
 const FALLBACK = "claude-haiku-4-5-20251001";
 
@@ -53,9 +51,7 @@ Deno.serve(async (req) => {
     await rpc("brief_save", { p_token: token, p_day: day, p_text: text, p_facts: facts });
     console.log("brief saved", day, text.length);
   };
-  // يرد فوراً ويكمل الكتابة بالخلفية (عشان القاعدة ما تنتظر)
   const p = work().catch((e) => console.error("brief failed", String((e as Error).message || e)));
-  // deno-lint-ignore no-explicit-any
   const ER = (globalThis as any).EdgeRuntime;
   if (ER && typeof ER.waitUntil === "function") { ER.waitUntil(p); return json({ ok: true, queued: true }, 202); }
   await p; return json({ ok: true });

@@ -1,7 +1,4 @@
-// MyHub AI — Supabase → Edge Functions → اسمها: ai-chat (اترك Verify JWT شغّال)
-// المفتاح يُحفظ في Edge Functions → Secrets باسم ANTHROPIC_API_KEY (لا يُكتب هنا أبداً)
-// اختياري: Secret باسم AI_MODEL لتغيير النموذج بدون تعديل الكود
-const MODEL = Deno.env.get("AI_MODEL") || "claude-haiku-4-5-20251001"; // أسرع. للأقوى: Secret AI_MODEL = claude-sonnet-5-5
+const MODEL = Deno.env.get("AI_MODEL") || "claude-haiku-4-5-20251001";
 const FALLBACK = "claude-haiku-4-5-20251001";
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -64,7 +61,6 @@ const TOOLS = [{
   },
 }];
 
-// حاسبة آمنة بدون eval
 function calc(src: string): number {
   const s = String(src).replace(/[,،\s]/g, "").replace(/×/g, "*").replace(/÷/g, "/").replace(/−/g, "-");
   if (!/^[0-9.+\-*/()%]+$/.test(s) || s.length > 3000) throw new Error("عملية غير صالحة");
@@ -121,7 +117,7 @@ Deno.serve(async (req) => {
           let r = await call(model);
           for (let tryN = 0; tryN < 2 && !r.ok; tryN++) {
             const t = await r.text(); console.error("upstream", model, r.status, t.slice(0, 400));
-            if ((r.status === 404 || (r.status === 400 && /model/i.test(t))) && model !== FALLBACK) model = FALLBACK; // النموذج غير متاح ← البديل
+            if ((r.status === 404 || (r.status === 400 && /model/i.test(t))) && model !== FALLBACK) model = FALLBACK;
             else if ([429, 500, 502, 503, 529].includes(r.status)) await new Promise((ok) => setTimeout(ok, 1500 * (tryN + 1)));
             else break;
             r = await call(model);
@@ -147,8 +143,7 @@ Deno.serve(async (req) => {
             }
           }
           if (stop !== "tool_use") break;
-          // نفّذ الحاسبة وكمّل
-          if (wrote) send("\u001e"); // الكلام اللي قبل الحساب يُستبدل بالجواب النهائي
+          if (wrote) send("\u001e");
           const content = blocks.filter(Boolean).map((b) => b.type === "tool_use"
             ? { type: "tool_use", id: b.id, name: b.name, input: (() => { try { return JSON.parse((b._json as string) || "{}"); } catch { return {}; } })() }
             : { type: "text", text: b.text }).filter((b) => b.type === "tool_use" || (b as { text: string }).text);
