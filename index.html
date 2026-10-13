@@ -511,6 +511,10 @@ body.hasnav .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 .mt[data-mtopen]{cursor:pointer}.mt[data-mtopen]:active{background:var(--bg)}
 #mtdet{position:fixed;inset:0;z-index:70;background:var(--bg);display:flex;flex-direction:column}
 #cudet{position:fixed;inset:0;z-index:70;background:var(--bg);display:flex;flex-direction:column}
+.br-card{display:flex;gap:12px;align-items:flex-start;width:100%;font:inherit;color:inherit;cursor:pointer;border:1.5px solid rgba(212,175,55,.45);background:linear-gradient(140deg,rgba(30,90,62,.06),rgba(212,175,55,.1))}
+.br-ic{width:42px;height:42px;border-radius:12px;background:linear-gradient(140deg,#1E5A3E,#143F2A);display:grid;place-items:center;font-size:20px;flex:none}
+.br-head{display:block;font-size:14px;line-height:1.6;margin-top:2px}.br-more{display:block;font-size:12px;color:var(--gold-ink);font-weight:700;margin-top:4px}
+.br-days{flex-wrap:nowrap;overflow-x:auto}
 .cu-hero{background:linear-gradient(140deg,#1E5A3E,#143F2A);color:#fff;border:0}
 .cu-hg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;border-top:1px solid rgba(255,255,255,.15);padding-top:10px;text-align:center}.cu-hg span{display:block;font-size:11px;opacity:.75}
 .cu-tabs{display:flex;gap:6px;background:var(--chip);padding:4px;border-radius:12px}.cu-tabs button{flex:1;border:0;background:transparent;border-radius:9px;padding:9px 6px;font:inherit;font-weight:700;font-size:13px;color:var(--muted);cursor:pointer}.cu-tabs button[aria-selected=true]{background:var(--card);color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.08)}
@@ -669,7 +673,7 @@ const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'ai',na
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup','feedback','custody'];
-const APP_VER='78';
+const APP_VER='79';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -739,6 +743,7 @@ async function boot(){
   st.branches=b.data||[]; st.mySections=(us.data||[]).map(x=>x.section);
   $('#login').hidden=true; $('#app').hidden=false;
   if(isEmp()) st.tab='me'; else { try{ const t=localStorage.getItem('tab'); if(t&&allowed(t)) st.tab=t; }catch(e){} }
+  try{ const qb=new URLSearchParams(location.search).get('brief'); if(qb&&/^\d{4}-\d\d-\d\d$/.test(qb)) st.brDay=qb; }catch(e){}
   try{ const qt=new URLSearchParams(location.search).get('tab'); if(qt&&allowed(qt)) st.tab=qt; if(qt) history.replaceState(null,'',location.pathname); }catch(e){}
   renderShell(); pushSync();
 }
@@ -936,6 +941,8 @@ V.home=async()=>{
   } else {
     h+=`<div class="hx-hero"><div class="hx-glow"></div><div class="hx-top"><div><div class="hx-date">${dateTxt}</div><div class="hx-hi">${greet}${nm?'، '+esc(nm):''} 👋</div></div>${brTag}</div><div style="position:relative;margin-top:10px;opacity:.85;font-size:14px">أهلاً بك في منصة الإدارة الموحّدة</div></div>`;
   }
+  try{ h+=await brCard(); }catch(e){}
+  if(st.brDay){ const d=st.brDay; st.brDay=null; setTimeout(async()=>{ if(!st._br) await brLoad(); brOpen(d); },300); }
   // ===== المؤشرات =====
   const tile=(ic,bg,l,v,sub,go)=>`<button class="hx-tile" ${go?`data-t="${go}"`:''}><span class="hx-ic" style="background:${bg}">${ic}</span><span class="hx-tl">${l}</span><b class="num">${v}</b>${sub?`<span class="hx-ts">${sub}</span>`:''}</button>`;
   if(allowed('income')){ const I=(await loadIncome()).filter(r=>bs.includes(r.branch_id)&&!r.is_estimate); const ms=[...new Set(I.map(r=>r.month))].sort();
@@ -1687,6 +1694,24 @@ document.addEventListener('submit',async e=>{
   st.advNew=false; st._alertsAt=0; toast(emp?'تم تسجيل السلفة ✓':'تم إرسال طلبك ✓ — يوصلك إشعار بالنتيجة'); render();
 });
 
+
+// ----- التقرير المسائي -----
+async function brLoad(){ const r=await sb.from('daily_briefs').select('day,text,updated_at').order('day',{ascending:false}).limit(30); if(r.error) return null; st._br=r.data||[]; return st._br; }
+async function brCard(){ if(!isAdmin()) return ''; let L; try{ L=await brLoad(); }catch(e){ return ''; } if(!L||!L.length) return '';
+  const b=L[0]; const head=b.text.split('\n').find(x=>x.trim())||''; 
+  return `<button class="card br-card" data-bropen="${b.day}"><span class="br-ic">📊</span><span style="flex:1;min-width:0;text-align:start"><span class="advref">التقرير المسائي · ${esc(dLbl(b.day))}</span><b class="br-head">${esc(head.replace(/[*#]/g,'').trim())}</b><span class="br-more">قراءة التقرير كامل ‹</span></span></button>`; }
+function brOpen(day){ const L=st._br||[]; const b=L.find(x=>x.day===day)||L[0]; if(!b) return; const old=$('#cudet'); if(old) old.remove();
+  const w=document.createElement('div'); w.id='cudet'; document.body.style.overflow='hidden';
+  w.innerHTML=`<div class="mtd-bar"><button class="icb" data-cuclose="1" aria-label="رجوع">›</button><b>التقرير المسائي</b><span style="width:36px"></span></div>
+  <div class="mtd-body"><div class="chips br-days">${L.slice(0,14).map(x=>`<button data-bropen="${x.day}" aria-pressed="${x.day===b.day}">${esc(dLbl(x.day))}</button>`).join('')}</div>
+    <div class="card"><div class="advref" style="margin-bottom:6px">${esc(DAYN[new Date(b.day+'T12:00:00').getDay()])} ${esc(dLbl(b.day))} · كُتب ${new Date(b.updated_at).toLocaleString('ar-SA-u-ca-gregory-nu-latn',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div><div class="ai-llm">${aiMd(b.text)}</div></div>
+    <button class="btn ghost sm" data-brre="${b.day}" style="align-self:center">🔄 إعادة كتابة التقرير بآخر الأرقام</button>
+    <div class="muted" style="font-size:11.5px;text-align:center">يُكتب تلقائياً أول ما ينرفع التقرير اليومي، ويوصلك إشعار.</div></div>`;
+  document.body.appendChild(w); }
+document.addEventListener('click',async e=>{ const t=e.target.closest('[data-bropen],[data-brre]'); if(!t) return;
+  if(t.dataset.bropen){ if(!st._br) await brLoad(); brOpen(t.dataset.bropen); return; }
+  if(t.dataset.brre){ t.disabled=true; const r=await sb.rpc('brief_request',{p_day:t.dataset.brre}); if(r.error){toast(r.error.message);t.disabled=false;return;} toast('جارِ كتابة التقرير — يوصلك إشعار خلال دقيقة'); const day=t.dataset.brre; setTimeout(async()=>{ await brLoad(); if($('#cudet')&&document.querySelector('[data-brre]')) brOpen(day); },45000); }
+});
 
 // ----- العُهد النقدية -----
 const CU_CAT=['مشتريات مواد','خضار وفواكه','لحوم ودواجن','مستلزمات تشغيل','صيانة وإصلاح','نقل وتوصيل','رسوم حكومية','ضيافة','أخرى'];
