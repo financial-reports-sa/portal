@@ -292,6 +292,14 @@ tr.sub td{font-weight:600;background:var(--bg)}
 .bc .head{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .meter{height:6px;border-radius:99px;background:var(--chip);overflow:hidden}
 .meter i{display:block;height:100%;background:var(--c)}
+.hr-kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}.hr-kp .card{text-align:start;cursor:pointer;border:1px solid var(--line);font:inherit;color:inherit;padding:12px 14px}.hr-kp span{display:block;font-size:12px;color:var(--muted)}.hr-kp b{font-size:24px}.hr-kp .bad b{color:var(--down)}.hr-kp .warn b{color:#B7791F}.hr-kp .info b{color:#3C6FB0}
+.hr-tabs{overflow-x:auto;flex-wrap:nowrap;padding-bottom:2px}.hr-tabs button{flex:none}
+.hr-row{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;border-bottom:1px solid var(--line);padding:10px 2px;font:inherit;color:inherit;text-align:start;cursor:pointer}.hr-row:last-child{border-bottom:0}
+.hr-ic{flex:none;width:36px;height:36px;border-radius:11px;background:var(--chip);display:grid;place-items:center;font-size:18px}.hr-m{flex:1;min-width:0}.hr-m b{display:block;font-size:14px}.hr-m small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.5}
+.hr-b{flex:none;font-size:11px;font-weight:700;border-radius:99px;padding:3px 9px;white-space:nowrap;background:var(--chip);color:var(--muted)}.hr-b.bad{background:rgba(208,69,58,.12);color:var(--down)}.hr-b.warn{background:rgba(224,123,57,.14);color:#C0601F}.hr-b.soon{background:var(--gold-soft);color:#8A6A10}.hr-b.ok{background:rgba(31,161,107,.1);color:#1B8A5C}
+.hr-bs{flex:none;display:grid;grid-template-columns:auto auto;gap:4px 6px;align-items:center;justify-items:end}.hr-l{font-size:10.5px;color:var(--muted)}
+.hr-blk{border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px}.hr-blk h4{margin:0;display:flex;align-items:center;gap:8px;font-size:14px}.hr-mini{font-size:12.5px}
+.hr-hij{font-size:11px}
 .ws-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
 .ws-c{border-top:3px solid var(--line)}.ws-c.ok{border-top-color:#1FA16B}.ws-c.warn{border-top-color:#D4AF37}.ws-c.bad{border-top-color:#C0392B}
 .ws-h{display:flex;align-items:center;gap:8px;margin-bottom:6px}.ws-ic{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;font-size:18px}.ws-bad{background:#FDECEA;color:#C0392B;margin-inline-start:auto}
@@ -672,6 +680,7 @@ const SECTIONS=[
   {id:'feedback',name:'تقييم العملاء'},
   {id:'advances',name:'السلف',perm:'employees'},
   {id:'custody',name:'العُهد'},
+  {id:'hr',name:'الموارد البشرية'},
   {id:'me',name:'بوابتي'},
   {id:'handover',name:'تسليم الورديات',app:'handover'},
   {id:'employees',name:'الموظفين',app:'employees'},
@@ -685,11 +694,11 @@ const NAV_ICONS={
   ops:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg>',
   fin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/><path d="M6.5 15h4"/></svg>',
   more:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>'};
-const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'ai',name:'المساعد الذكي',secs:['ai']},{id:'rep',name:'التقارير',secs:['brief','sales','daily','channels','income','wh','waste','chicken']},{id:'ops',name:'العمليات',secs:['handover','maint','feedback','employees','advances','fleet']},{id:'fin',name:'المالية',secs:['treasury','loans','custody']},{id:'more',name:'الإدارة',secs:['users','data'],nav:false}];
+const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'ai',name:'المساعد الذكي',secs:['ai']},{id:'rep',name:'التقارير',secs:['brief','sales','daily','channels','income','wh','waste','chicken']},{id:'ops',name:'العمليات',secs:['hr','handover','maint','feedback','employees','advances','fleet']},{id:'fin',name:'المالية',secs:['treasury','loans','custody']},{id:'more',name:'الإدارة',secs:['users','data'],nav:false}];
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
-const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup','feedback','custody'];
-const APP_VER='83';
+const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup','feedback','custody','hr'];
+const APP_VER='84';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -716,7 +725,7 @@ const st={user:null,profile:null,branches:[],myBranches:[],mySections:[],tab:'ho
 const isAdmin=()=>st.profile&&['owner','admin'].includes(st.profile.role);
 const isOwner=()=>st.profile&&st.profile.role==='owner';
 const isEmp=()=>st.profile&&st.profile.role==='employee';
-const allowed=id=>{ if(isEmp()) return id==='me'; if(id==='me') return false; if(isAdmin()||id==='home'||id==='ai') return true; if(id==='daily') return st.mySections.includes('sales')&&st.allBranches; if(id==='maint') return st.mySections.includes('maint')||st.mySections.includes('maint_sup'); const x=SECTIONS.find(q=>q.id===id); return st.mySections.includes(x&&x.perm?x.perm:id); };
+const allowed=id=>{ if(isEmp()) return id==='me'; if(id==='me') return false; if(isAdmin()||id==='home'||id==='ai') return true; if(id==='daily') return st.mySections.includes('sales')&&st.allBranches; if(id==='maint') return st.mySections.includes('maint')||st.mySections.includes('maint_sup'); if(id==='hr') return st.mySections.includes('hr')||st.mySections.includes('employees'); const x=SECTIONS.find(q=>q.id===id); return st.mySections.includes(x&&x.perm?x.perm:id); };
 const brById=id=>st.branches.find(b=>b.id===id)||{id,name:id,color:'#888'};
 const selBranches=()=>st.f==='all'?st.branches.map(b=>b.id):[st.f];
 
@@ -760,6 +769,7 @@ async function boot(){
   $('#login').hidden=true; $('#app').hidden=false;
   if(isEmp()) st.tab='me'; else { try{ const t=localStorage.getItem('tab'); if(t&&allowed(t)) st.tab=t; }catch(e){} }
   try{ const qb=new URLSearchParams(location.search).get('brief'); if(qb&&/^\d{4}-\d\d-\d\d$/.test(qb)) st.brSel=qb; }catch(e){}
+  try{ const qh=new URLSearchParams(location.search).get('hrt'); if(qh) st.hrT=qh; }catch(e){}
   try{ const qt=new URLSearchParams(location.search).get('tab'); if(qt&&allowed(qt)) st.tab=qt; if(st.brSel&&isAdmin()) st.tab='brief'; if(qt) history.replaceState(null,'',location.pathname); }catch(e){}
   renderShell(); pushSync();
 }
@@ -895,7 +905,7 @@ function spark(vals,{w=120,h=34,col='#E9CF7A',fill=true,sw=1.8}={}){
   return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="direction:ltr;display:block"><defs><linearGradient id="${gid}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".35"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>${fill?`<path d="${d} L${X(v.length-1)},${h} L${X(0)},${h} Z" fill="url(#${gid})"/>`:''}<path d="${d}" fill="none" stroke="${col}" stroke-width="${sw}" stroke-linecap="round"/><circle cx="${X(v.length-1)}" cy="${Y(v[v.length-1])}" r="2.8" fill="${col}"/></svg>`;
 }
 const DAYN=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
-const SC_ICON={sales:'📈',daily:'🧾',channels:'🛵',income:'📊',wh:'📦',chicken:'🍗',treasury:'🏦',loans:'💳',fleet:'🚗',maint:'🛠️',feedback:'⭐',ai:'✦',advances:'💵',custody:'💼',brief:'📊',handover:'🔁',employees:'👥',users:'🔐',data:'⬆️'};
+const SC_ICON={sales:'📈',daily:'🧾',channels:'🛵',income:'📊',wh:'📦',chicken:'🍗',treasury:'🏦',loans:'💳',fleet:'🚗',maint:'🛠️',feedback:'⭐',ai:'✦',advances:'💵',custody:'💼',hr:'🗂️',waste:'♻️',brief:'📊',handover:'🔁',employees:'👥',users:'🔐',data:'⬆️'};
 V.home=async()=>{
   const bs=selBranches(); const now=new Date(), hr=now.getHours();
   const fn_=(st.profile&&(st.profile.full_name||st.profile.username)||'').trim(); const nm=/^(مدير|فرع|حساب)/.test(fn_)?fn_:fn_.split(' ')[0];
@@ -1212,6 +1222,154 @@ document.addEventListener('change',async e=>{ const s=e.target.closest&&e.target
 document.addEventListener('submit',async e=>{ if(e.target.id!=='wsForm') return; e.preventDefault(); const f=new FormData(e.target);
   if(await wsSave(d=>{ d.warn=Math.max(0,+f.get('warn')||0)/100; WS_G.forEach(g=>{ const x=d.groups[g.k]; x.kw=(f.get('kw_'+g.k)||'').trim(); x.unit=(f.get('unit_'+g.k)||'').trim(); x.fu=(f.get('fu_'+g.k)||'').trim()||g.fu;
     x.cats=x.cats==='all'?'all':{...x.cats}; x.f={...(x.f||{})}; st.branches.forEach(b=>{ if(!f.has('has_'+g.k+'_'+b.id)) return; if(x.cats!=='all') x.cats[b.id]=f.getAll('cat_'+g.k+'_'+b.id); const v=f.get('f_'+g.k+'_'+b.id); x.f[b.id]=v===''||v==null?null:+v; }); }); })){ toast('تم حفظ الإعدادات ✓'); render(); } });
+
+// ----- الموارد البشرية: وثائق المنشأة + الإقامات وكروت العمل + الطلبات -----
+const HR_K={cr:['السجل التجاري','🏢'],muni:['رخصة بلدية','🏪'],tm:['علامة تجارية','®️'],civil:['رخصة الدفاع المدني','🧯'],chamber:['اشتراك الغرفة التجارية','🏛️'],other:['وثيقة أخرى','📄']};
+const HR_ENT={shaden:'مطاعم الشادن',pacino:'بروست الباتشينو',wafra:'وفرة المدينة',other:'أخرى'};
+const HR_EK={iqama:['الإقامة','🪪'],work_card:['كرت العمل','💼'],passport:['الجواز','🛂']};
+const HR_RQ={iqama_renew:'تجديد إقامة',work_card_renew:'تجديد كرت عمل',passport_renew:'تجديد جواز',exit_reentry:'خروج وعودة',final_exit:'خروج نهائي',transfer:'نقل كفالة',other:'طلب آخر'};
+const HR_RS={new:['جديد','#C9A227'],progress:['قيد التنفيذ','#3C6FB0'],done:['تم','#1FA16B'],rejected:['مرفوض','#C0392B']};
+const hrFull=()=>isAdmin()||st.mySections.includes('hr');
+const hrDays=d=>d?Math.round((new Date(d+'T12:00:00')-new Date(todayIso()+'T12:00:00'))/864e5):null;
+const hrHij=d=>{ try{ return new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura',{day:'numeric',month:'long',year:'numeric'}).format(new Date(d+'T12:00:00')); }catch(e){ return ''; } };
+const hrWin=t=>t==='co'?60:30;
+function hrBadge(d,win=30){ const n=hrDays(d); if(n==null) return '<span class="hr-b mut">بدون تاريخ</span>';
+  if(n<0) return `<span class="hr-b bad">منتهية منذ ${-n} يوم</span>`; if(n===0) return '<span class="hr-b bad">تنتهي اليوم</span>';
+  return `<span class="hr-b ${n<=win?'warn':n<=win*2?'soon':'ok'}">${n<=win*2?'باقي '+n+' يوم':esc(dLbl(d))}</span>`; }
+const HR_NONCIT=e=>e.id_type!=='citizen';
+async function hrLoad(force){ if(st._hr&&!force&&Date.now()-st._hr.at<60000) return st._hr; const F=hrFull();
+  const [D,E,X,R]=await Promise.all([F?sb.from('hr_docs').select('*').order('expiry',{ascending:true,nullsFirst:false}):Promise.resolve({data:[]}),
+    sb.from('employees').select('id,name,branch,job,nationality,id_type,status,iqama').neq('status','left'),
+    sb.from('hr_emp_docs').select('*'), sb.from('hr_requests').select('*').order('created_at',{ascending:false}).limit(300)]);
+  const err=[D,E,X,R].find(r=>r.error); if(err&&/hr_|relation|does not exist|schema cache/i.test(err.error.message||'')) return st._hr={at:Date.now(),missing:true};
+  const emps=(E.data||[]).filter(e=>st.branches.some(b=>b.id===e.branch)); const xd={}; (X.data||[]).forEach(x=>{(xd[x.emp_id]=xd[x.emp_id]||{})[x.kind]=x;});
+  return st._hr={at:Date.now(),docs:D.data||[],emps,xd,reqs:R.data||[]}; }
+function hrItems(H){ const L=[];
+  H.docs.forEach(d=>L.push({t:'co',id:d.id,ic:(HR_K[d.kind]||HR_K.other)[1],name:d.title||(HR_K[d.kind]||HR_K.other)[0],sub:`${(HR_K[d.kind]||HR_K.other)[0]}${d.entity?' · '+(HR_ENT[d.entity]||d.entity):''}${d.branch?' · '+brById(d.branch).name:''}`,exp:d.expiry}));
+  H.emps.filter(HR_NONCIT).forEach(e=>{ const x=H.xd[e.id]||{}; ['iqama','work_card','passport'].forEach(k=>{ const v=x[k]; if(v&&v.expiry) L.push({t:'emp',id:e.id,k,ic:HR_EK[k][1],name:e.name,sub:`${HR_EK[k][0]} · ${brById(e.branch).name}${e.job?' · '+e.job:''}`,exp:v.expiry}); }); });
+  return L; }
+V.hr=async()=>{
+  const H=await hrLoad(); const F=hrFull();
+  if(H.missing) return `<div class="card"><h3>الموارد البشرية</h3><p>القسم يحتاج تفعيل قاعدة البيانات مرة وحدة: افتح Supabase ← SQL Editor والصق محتوى الملف:</p><p><a href="tools/hr-setup.txt" target="_blank" class="btn">hr-setup.txt</a></p></div>`;
+  const bs=selBranches(); const all=hrItems(H).filter(i=>i.t==='co'||bs.includes((H.emps.find(e=>e.id===i.id)||{}).branch));
+  const exp=all.filter(i=>hrDays(i.exp)<0), soon=all.filter(i=>{const n=hrDays(i.exp);return n>=0&&n<=hrWin(i.t);});
+  const open=H.reqs.filter(r=>['new','progress'].includes(r.status)&&bs.includes(r.branch));
+  const tab=st.hrT||'soon';
+  let h=`<div class="bar-row">${branchChips()}</div>
+   <div class="hr-kp"><button data-hrt="soon" class="card ${exp.length?'bad':''}"><span>منتهية</span><b class="num">${exp.length}</b></button><button data-hrt="soon" class="card ${soon.length?'warn':''}"><span>تنتهي قريباً</span><b class="num">${soon.length}</b></button>${F?`<button data-hrt="co" class="card"><span>وثائق المنشأة</span><b class="num">${H.docs.length}</b></button>`:''}<button data-hrt="req" class="card ${open.length?'info':''}"><span>طلبات مفتوحة</span><b class="num">${open.length}</b></button></div>
+   <div class="chips hr-tabs">${[['soon','🔔 تنبيهات التجديد'],...(F?[['co','🏢 وثائق المنشأة']]:[]),['emp','🪪 الإقامات وكروت العمل'],['req','📝 الطلبات']].map(([k,n])=>`<button data-hrt="${k}" aria-pressed="${tab===k}">${n}</button>`).join('')}</div>`;
+  if(tab==='soon'){ const L=all.filter(i=>{const n=hrDays(i.exp);return n!=null&&n<=hrWin(i.t)*2;}).sort((a,b)=>a.exp<b.exp?-1:1);
+    h+=`<div class="card">${L.length?`<div class="muted" style="font-size:12px;margin-bottom:6px">المنتهي والقريب من الانتهاء خلال ${F?'120 يوم لوثائق المنشأة و':''}60 يوم للإقامات وكروت العمل — الأقرب أولاً.</div>${L.map(hrRow).join('')}`:'<div class="empty">✅ ما فيه وثائق منتهية أو قريبة الانتهاء</div>'}</div>`;
+    const miss=H.emps.filter(e=>HR_NONCIT(e)&&bs.includes(e.branch)&&!(H.xd[e.id]&&H.xd[e.id].iqama&&H.xd[e.id].iqama.expiry));
+    if(miss.length) h+=`<div class="card"><h3>إقامات بدون تاريخ انتهاء <span class="tag">${miss.length}</span></h3><div class="muted" style="font-size:12px;margin-bottom:6px">${F?'اضغط على الموظف وسجّل تاريخ انتهاء إقامته عشان تجيك التنبيهات.':'قسم الموارد البشرية يسجّل التواريخ.'}</div>${miss.slice(0,40).map(e=>`<button class="hr-row" data-hremp="${e.id}"><span class="hr-ic">🪪</span><span class="hr-m"><b>${esc(e.name)}</b><small>${esc(brById(e.branch).name)}${e.job?' · '+esc(e.job):''}${e.nationality?' · '+esc(e.nationality):''}</small></span><span class="hr-b mut">بدون تاريخ</span></button>`).join('')}</div>`; }
+  if(tab==='co'&&F){ const ent=st.hrEnt||'all'; const ents=[...new Set(H.docs.map(d=>d.entity).filter(Boolean))];
+    h+=`<div class="bar-row"><div class="chips">${[['all','الكل']].concat(ents.map(e=>[e,HR_ENT[e]||e])).map(([k,n])=>`<button data-hrent="${k}" aria-pressed="${ent===k}">${esc(n)}</button>`).join('')}</div><button class="btn sm" data-hrnew="co">＋ وثيقة</button></div>`;
+    const D=H.docs.filter(d=>ent==='all'||d.entity===ent);
+    if(!D.length) h+=`<div class="card empty">ما فيه وثائق بعد — أضف السجلات التجارية والرخص البلدية والعلامات التجارية مع صورها وتواريخ انتهائها.</div>`;
+    Object.keys(HR_K).forEach(k=>{ const L=D.filter(d=>d.kind===k); if(!L.length) return;
+      h+=`<div class="card"><h3>${HR_K[k][1]} ${HR_K[k][0]} <span class="tag">${L.length}</span></h3>${L.map(d=>hrRow({t:'co',id:d.id,ic:HR_K[k][1],name:d.title||HR_K[k][0],sub:`${d.number?'رقم '+d.number:''}${d.entity?' · '+(HR_ENT[d.entity]||d.entity):''}${d.branch?' · '+brById(d.branch).name:''}`,exp:d.expiry,ph:!!d.photo})).join('')}</div>`; }); }
+  if(tab==='emp'){ const f=st.hrEF||'all', q=(st.hrQ||'').trim();
+    let E=H.emps.filter(e=>HR_NONCIT(e)&&bs.includes(e.branch)&&(!q||[e.name,e.job,e.nationality,e.iqama].some(v=>String(v||'').includes(q))));
+    const st_=e=>{const ns=['iqama','work_card'].map(k=>H.xd[e.id]&&H.xd[e.id][k]&&H.xd[e.id][k].expiry).filter(Boolean).map(hrDays);return !ns.length?'none':Math.min(...ns)<0?'exp':Math.min(...ns)<=30?'soon':'ok';};
+    const cnt=k=>E.filter(e=>st_(e)===k).length;
+    if(f!=='all') E=E.filter(e=>st_(e)===f);
+    E.sort((a,b)=>{const o={exp:0,soon:1,none:2,ok:3};return o[st_(a)]-o[st_(b)]||a.name.localeCompare(b.name,'ar');});
+    h+=`<div class="usr-top"><div class="usr-s"><input class="inp" id="hrQ" placeholder="بحث بالاسم أو الجنسية أو رقم الإقامة" value="${esc(q)}"></div>${F?'':`<button class="btn sm" data-hrnew="req">＋ طلب</button>`}</div>
+      <div class="chips">${[['all','الكل'],['exp','منتهية · '+cnt('exp')],['soon','قريبة · '+cnt('soon')],['none','بدون تاريخ · '+cnt('none')]].map(([k,n])=>`<button data-href="${k}" aria-pressed="${f===k}">${n}</button>`).join('')}</div>
+      <div class="card">${E.length?E.map(e=>{const x=H.xd[e.id]||{};return `<button class="hr-row" data-hremp="${e.id}"><span class="hr-ic">👤</span><span class="hr-m"><b>${esc(e.name)}</b><small>${esc(brById(e.branch).name)}${e.job?' · '+esc(e.job):''}${e.nationality?' · '+esc(e.nationality):''}</small></span><span class="hr-bs"><span class="hr-l">إقامة</span>${hrBadge(x.iqama&&x.iqama.expiry)}<span class="hr-l">كرت عمل</span>${hrBadge(x.work_card&&x.work_card.expiry)}</span></button>`;}).join(''):'<div class="empty">ما فيه موظفين</div>'}</div>
+      <div class="muted" style="font-size:11.5px">الموظفين السعوديين ما يظهرون هنا. الشهادات الصحية في قسم الموظفين.</div>`; }
+  if(tab==='req'){ const rf=st.hrRF||'open'; const R=H.reqs.filter(r=>bs.includes(r.branch)&&(rf==='all'||(rf==='open'?['new','progress'].includes(r.status):['done','rejected'].includes(r.status))));
+    h+=`<div class="bar-row"><div class="chips">${[['open','مفتوحة'],['closed','منتهية'],['all','الكل']].map(([k,n])=>`<button data-hrrf="${k}" aria-pressed="${rf===k}">${n}</button>`).join('')}</div><button class="btn sm" data-hrnew="req">＋ طلب جديد</button></div>
+      <div class="card">${R.length?R.map(r=>`<button class="hr-row" data-hrreq="${r.id}"><span class="hr-ic">📝</span><span class="hr-m"><b>${esc(HR_RQ[r.kind]||r.kind)} · ${esc(r.emp_name)}</b><small>#${r.no} · ${esc(brById(r.branch).name)} · ${esc(r.requested_name||'')} · ${esc(dLbl(r.created_at.slice(0,10)))}${r.result_note?' · '+esc(r.result_note):''}</small></span><span class="hr-b" style="background:${HR_RS[r.status][1]}1f;color:${HR_RS[r.status][1]}">${HR_RS[r.status][0]}</span></button>`).join(''):'<div class="empty">ما فيه طلبات</div>'}</div>`; }
+  return h;
+};
+function hrRow(i){ return `<button class="hr-row" ${i.t==='co'?`data-hrdoc="${i.id}"`:`data-hremp="${i.id}"`}><span class="hr-ic">${i.ic}</span><span class="hr-m"><b>${esc(i.name)}</b><small>${esc(i.sub)}${i.exp?' · '+esc(dLbl(i.exp)):''}</small></span>${hrBadge(i.exp,hrWin(i.t))}</button>`; }
+function hrModal(html){ const m=document.createElement('div'); m.className='cu-modal'; m.innerHTML=html; document.body.appendChild(m); const ov=document.body.style.overflow; document.body.style.overflow='hidden';
+  const close=()=>{m.remove();document.body.style.overflow=ov;}; m.addEventListener('click',e=>{if(e.target===m||e.target.closest('[data-x]'))close();}); return {m,close}; }
+const hrDate=(name,v,lbl)=>`<div class="field"><label>${lbl}</label><input class="inp" type="date" name="${name}" value="${v||''}" data-hij><small class="muted hr-hij">${v?hrHij(v):''}</small></div>`;
+function hrPhotoField(v){ return `<label class="cu-cam sm hr-ph"><input type="file" accept="image/*" hidden><div class="cu-camin"><span>📷</span><b>${v?'تغيير الصورة':'صورة الوثيقة'}</b><small class="muted">اختياري</small></div><img alt="" hidden></label>${v?`<button type="button" class="btn ghost sm" data-hrview="${esc(v)}">عرض الصورة الحالية</button>`:''}`; }
+function hrWire(m,onImg){ m.querySelectorAll('[data-hij]').forEach(i=>i.addEventListener('input',()=>{const s=i.parentNode.querySelector('.hr-hij');if(s)s.textContent=i.value?hrHij(i.value):'';}));
+  m.querySelectorAll('.hr-ph input').forEach(inp=>inp.addEventListener('change',async()=>{const fl=inp.files[0];if(!fl)return;const lab=inp.closest('.cu-cam');lab.classList.add('busy');try{const d=await flImg(fl,1600,.75);onImg(lab,d);const im=lab.querySelector('img');im.src=d;im.hidden=false;lab.querySelector('.cu-camin').hidden=true;}catch(e){toast('ما قدرت أقرأ الصورة');}lab.classList.remove('busy');})); }
+async function hrView(v){ const {m}=hrModal(`<div class="card" style="max-width:560px;width:100%;padding:10px"><div class="bar-row" style="margin-bottom:8px"><b>صورة الوثيقة</b><button class="icb" data-x="1">✕</button></div><div class="cu-phbox"><div class="muted">جارِ التحميل…</div></div></div>`);
+  const u=await mediaSrc(v); m.querySelector('.cu-phbox').innerHTML=u?`<img src="${esc(u)}" alt="">`:'<div class="muted">ما قدرت أفتح الصورة</div>'; }
+function hrDocForm(d){ const isNew=!d; d=d||{kind:'cr',entity:'shaden'}; let img=null;
+  const {m,close}=hrModal(`<form class="card cu-form"><div class="bar-row"><h3 style="margin:0">${isNew?'وثيقة جديدة':'تعديل الوثيقة'}</h3><button type="button" class="icb" data-x="1">✕</button></div>
+    <div class="field"><label>نوع الوثيقة</label><select class="inp" name="kind">${Object.entries(HR_K).map(([k,v])=>`<option value="${k}" ${d.kind===k?'selected':''}>${v[1]} ${v[0]}</option>`).join('')}</select></div>
+    <div class="cu-row2"><div class="field"><label>المنشأة</label><select class="inp" name="entity">${Object.entries(HR_ENT).map(([k,v])=>`<option value="${k}" ${d.entity===k?'selected':''}>${v}</option>`).join('')}</select></div>
+      <div class="field"><label>الفرع <small class="muted">اختياري</small></label><select class="inp" name="branch"><option value="">—</option>${st.branches.map(b=>`<option value="${b.id}" ${d.branch===b.id?'selected':''}>${esc(b.name)}</option>`).join('')}</select></div></div>
+    <div class="field"><label>الاسم / الوصف</label><input class="inp" name="title" value="${esc(d.title||'')}" placeholder="مثال: سجل فرع العزيزية"></div>
+    <div class="field"><label>الرقم</label><input class="inp num" name="number" value="${esc(d.number||'')}" inputmode="numeric"></div>
+    <div class="cu-row2">${hrDate('issue_date',d.issue_date,'تاريخ الإصدار')}${hrDate('expiry',d.expiry,'تاريخ الانتهاء')}</div>
+    ${hrPhotoField(d.photo)}
+    <div class="field"><label>ملاحظات</label><input class="inp" name="notes" value="${esc(d.notes||'')}"></div>
+    <div class="cu-err" hidden></div>
+    <button class="btn" type="submit">${isNew?'إضافة':'حفظ'}</button>${!isNew&&isOwner()?`<button type="button" class="btn ghost sm" data-hrdel="${d.id}" style="color:var(--down)">حذف الوثيقة</button>`:''}</form>`);
+  hrWire(m,(lab,x)=>{img=x;});
+  m.querySelector('form').addEventListener('submit',async e=>{ e.preventDefault(); const f=e.target, g=n=>f.elements[n].value.trim(), er=m.querySelector('.cu-err');
+    const rec={kind:g('kind'),entity:g('entity'),branch:g('branch')||null,title:g('title'),number:toEnD(g('number')),issue_date:g('issue_date')||null,expiry:g('expiry')||null,notes:g('notes')};
+    if(!rec.title&&!rec.number){er.textContent='اكتب اسم الوثيقة أو رقمها';er.hidden=false;return;}
+    const b=f.querySelector('button[type=submit]'); b.disabled=true;
+    if(img) rec.photo=await mediaPut('hr',rec.branch||'co',img);
+    const r=isNew?await sb.from('hr_docs').insert(rec):await sb.from('hr_docs').update(rec).eq('id',d.id);
+    if(r.error){er.textContent=/row-level|policy/i.test(r.error.message)?'ما عندك صلاحية':r.error.message;er.hidden=false;b.disabled=false;return;}
+    close(); toast('تم الحفظ ✓'); await hrLoad(true); render(); }); }
+const toEnD=s=>String(s||'').replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+function hrEmpForm(e){ const H=st._hr, F=hrFull(), x=(H.xd[e.id]||{}); const imgs={};
+  const blk=k=>{ const v=x[k]||{}; return `<div class="hr-blk"><h4>${HR_EK[k][1]} ${HR_EK[k][0]} ${v.expiry?hrBadge(v.expiry):''}</h4>
+    ${F?`<div class="cu-row2"><div class="field"><label>الرقم</label><input class="inp num" name="n_${k}" value="${esc(v.number||(k==='iqama'?e.iqama||'':''))}" inputmode="numeric"></div>${hrDate('e_'+k,v.expiry,'تاريخ الانتهاء')}</div>
+      <label class="cu-cam sm hr-ph" data-k="${k}"><input type="file" accept="image/*" hidden><div class="cu-camin"><span>📷</span><b>${v.photo?'تغيير الصورة':'صورة '+HR_EK[k][0]}</b><small class="muted">اختياري</small></div><img alt="" hidden></label>`
+     :`<div class="mtd-kv"><div><span>الرقم</span><b class="num">${esc(v.number||'—')}</b></div><div><span>الانتهاء</span><b>${v.expiry?esc(dLbl(v.expiry)):'—'}</b><small class="muted" style="display:block">${v.expiry?hrHij(v.expiry):''}</small></div></div>`}
+    ${v.photo?`<button type="button" class="btn ghost sm" data-hrview="${esc(v.photo)}">عرض الصورة</button>`:''}</div>`; };
+  const reqs=H.reqs.filter(r=>r.emp_id===e.id).slice(0,5);
+  const {m,close}=hrModal(`<form class="card cu-form"><div class="bar-row"><h3 style="margin:0">${esc(e.name)}</h3><button type="button" class="icb" data-x="1">✕</button></div>
+    <div class="muted" style="font-size:12px;margin-top:-4px">${esc(brById(e.branch).name)}${e.job?' · '+esc(e.job):''}${e.nationality?' · '+esc(e.nationality):''}</div>
+    ${['iqama','work_card','passport'].map(blk).join('')}
+    ${reqs.length?`<div class="hr-blk"><h4>📝 الطلبات</h4>${reqs.map(r=>`<div class="hr-mini">${esc(HR_RQ[r.kind])} · <b style="color:${HR_RS[r.status][1]}">${HR_RS[r.status][0]}</b> · ${esc(dLbl(r.created_at.slice(0,10)))}</div>`).join('')}</div>`:''}
+    <div class="cu-err" hidden></div>
+    ${F?'<button class="btn" type="submit">حفظ</button>':''}<button type="button" class="btn ghost" data-hrreqfor="${e.id}">📝 طلب تجديد / خروج وعودة</button></form>`);
+  hrWire(m,(lab,d)=>{imgs[lab.dataset.k]=d;});
+  m.querySelector('form').addEventListener('submit',async ev=>{ ev.preventDefault(); if(!F) return; const f=ev.target, er=m.querySelector('.cu-err'); const b=f.querySelector('button[type=submit]'); b.disabled=true;
+    const rows=[]; for(const k of ['iqama','work_card','passport']){ const n=toEnD(f.elements['n_'+k].value.trim()), ex=f.elements['e_'+k].value||null, old=x[k];
+      if(!n&&!ex&&!imgs[k]&&!old) continue; const r={emp_id:e.id,kind:k,number:n,expiry:ex}; if(imgs[k]) r.photo=await mediaPut('hr',e.branch,imgs[k],e.id); rows.push(r); }
+    if(rows.length){ const r=await sb.from('hr_emp_docs').upsert(rows,{onConflict:'emp_id,kind'}); if(r.error){er.textContent=/row-level|policy/i.test(r.error.message)?'ما عندك صلاحية':r.error.message;er.hidden=false;b.disabled=false;return;} }
+    close(); toast('تم الحفظ ✓'); await hrLoad(true); render(); }); }
+function hrReqForm(empId){ const H=st._hr; const E=H.emps.filter(e=>HR_NONCIT(e)&&selBranches().includes(e.branch)).sort((a,b)=>a.name.localeCompare(b.name,'ar'));
+  const {m,close}=hrModal(`<form class="card cu-form"><div class="bar-row"><h3 style="margin:0">طلب جديد</h3><button type="button" class="icb" data-x="1">✕</button></div>
+    <div class="field"><label>الموظف</label><select class="inp" name="emp" required><option value="">اختر الموظف…</option>${E.map(e=>`<option value="${e.id}" ${e.id===empId?'selected':''}>${esc(e.name)} — ${esc(brById(e.branch).name)}</option>`).join('')}</select></div>
+    <div class="field"><label>نوع الطلب</label><select class="inp" name="kind">${Object.entries(HR_RQ).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></div>
+    <div class="field"><label>ملاحظة <small class="muted">اختياري</small></label><input class="inp" name="note" placeholder="مثال: السفر بعد أسبوعين"></div>
+    <div class="cu-err" hidden></div><button class="btn" type="submit">إرسال الطلب</button></form>`);
+  m.querySelector('form').addEventListener('submit',async ev=>{ ev.preventDefault(); const f=ev.target, er=m.querySelector('.cu-err'); if(!f.elements.emp.value){er.textContent='اختر الموظف';er.hidden=false;return;}
+    const r=await sb.rpc('hr_request_add',{p_emp:f.elements.emp.value,p_kind:f.elements.kind.value,p_note:f.elements.note.value.trim()}); if(r.error){er.textContent=r.error.message;er.hidden=false;return;}
+    close(); toast('تم إرسال الطلب ✓ — وصل إشعار للموارد البشرية'); st.hrT='req'; await hrLoad(true); render(); }); }
+function hrReqDetail(r){ const F=hrFull(); const ren=/_renew$/.test(r.kind);
+  const {m,close}=hrModal(`<form class="card cu-form"><div class="bar-row"><h3 style="margin:0">${esc(HR_RQ[r.kind]||r.kind)} · #${r.no}</h3><button type="button" class="icb" data-x="1">✕</button></div>
+    <div class="mtd-kv"><div><span>الموظف</span><b>${esc(r.emp_name)}</b></div><div><span>الفرع</span><b>${esc(brById(r.branch).name)}</b></div><div><span>مقدّم الطلب</span><b>${esc(r.requested_name||'—')}</b></div><div><span>التاريخ</span><b>${esc(dLbl(r.created_at.slice(0,10)))}</b></div><div><span>الحالة</span><b style="color:${HR_RS[r.status][1]}">${HR_RS[r.status][0]}</b></div><div><span>بواسطة</span><b>${esc(r.handled_name||'—')}</b></div></div>
+    ${r.note?`<div class="mtd-txt">${esc(r.note)}</div>`:''}${r.result_note?`<div class="mtd-txt"><b>الرد:</b> ${esc(r.result_note)}</div>`:''}${r.new_expiry?`<div class="muted">الانتهاء الجديد: <b>${esc(dLbl(r.new_expiry))}</b> · ${hrHij(r.new_expiry)}</div>`:''}
+    ${F?`<div class="field"><label>تحديث الحالة</label><div class="seg2 hr-seg">${['progress','done','rejected'].map(s=>`<button type="button" data-v="${s}" class="${r.status===s?'on':''}">${HR_RS[s][0]}</button>`).join('')}</div><input type="hidden" name="status" value="${r.status}"></div>
+      ${ren?`<div class="hr-nx" ${r.status==='done'?'':'hidden'}>${hrDate('nx',r.new_expiry,'تاريخ الانتهاء الجديد (يتحدّث تلقائياً في ملف الموظف)')}</div>`:''}
+      <div class="field"><label>ملاحظة</label><input class="inp" name="note" value="${esc(r.result_note||'')}"></div><div class="cu-err" hidden></div><button class="btn" type="submit">حفظ</button>`:''}
+    ${isOwner()?`<button type="button" class="btn ghost sm" data-hrdelreq="${r.id}" style="color:var(--down)">حذف الطلب</button>`:''}</form>`);
+  hrWire(m,()=>{});
+  const sg=m.querySelector('.hr-seg'); if(sg) sg.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;sg.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));m.querySelector('[name=status]').value=b.dataset.v;const nx=m.querySelector('.hr-nx');if(nx)nx.hidden=b.dataset.v!=='done';});
+  m.querySelector('form').addEventListener('submit',async ev=>{ ev.preventDefault(); if(!F) return; const f=ev.target, er=m.querySelector('.cu-err'); const s=f.elements.status.value; const nx=f.elements.nx&&f.elements.nx.value||null;
+    if(s==='done'&&ren&&!nx){er.textContent='حدد تاريخ الانتهاء الجديد';er.hidden=false;return;}
+    const x=await sb.rpc('hr_request_set',{p_id:r.id,p_status:s,p_note:f.elements.note.value.trim(),p_new_expiry:s==='done'?nx:null}); if(x.error){er.textContent=x.error.message;er.hidden=false;return;}
+    close(); toast('تم ✓'); await hrLoad(true); render(); }); }
+document.addEventListener('click',async e=>{
+  const t=e.target.closest('[data-hrt],[data-hrent],[data-href],[data-hrrf],[data-hrnew],[data-hrdoc],[data-hremp],[data-hrreq],[data-hrview],[data-hrdel],[data-hrdelreq],[data-hrreqfor]'); if(!t) return; const d=t.dataset;
+  if(d.hrt){st.hrT=d.hrt;render();return;} if(d.hrent){st.hrEnt=d.hrent;render();return;} if(d.href){st.hrEF=d.href;render();return;} if(d.hrrf){st.hrRF=d.hrrf;render();return;}
+  if(d.hrview){e.preventDefault();hrView(d.hrview);return;}
+  if(!st._hr) await hrLoad();
+  if(d.hrnew==='co'){hrDocForm(null);return;} if(d.hrnew==='req'){hrReqForm(null);return;}
+  if(d.hrreqfor){const w=t.closest('.cu-modal');if(w)w.remove();document.body.style.overflow='';hrReqForm(d.hrreqfor);return;}
+  if(d.hrdoc){const x=st._hr.docs.find(z=>z.id===d.hrdoc);if(x)hrDocForm(x);return;}
+  if(d.hremp){const x=st._hr.emps.find(z=>z.id===d.hremp);if(x)hrEmpForm(x);return;}
+  if(d.hrreq){const x=st._hr.reqs.find(z=>z.id===d.hrreq);if(x)hrReqDetail(x);return;}
+  if(d.hrdel){if(!confirm('حذف الوثيقة نهائياً؟'))return;const r=await sb.from('hr_docs').delete().eq('id',d.hrdel);if(r.error){toast(r.error.message);return;}const w=t.closest('.cu-modal');if(w)w.remove();document.body.style.overflow='';toast('تم الحذف');await hrLoad(true);render();return;}
+  if(d.hrdelreq){if(!confirm('حذف الطلب؟'))return;const r=await sb.from('hr_requests').delete().eq('id',d.hrdelreq);if(r.error){toast(r.error.message);return;}const w=t.closest('.cu-modal');if(w)w.remove();document.body.style.overflow='';await hrLoad(true);render();return;}
+});
+let hrQT; document.addEventListener('input',e=>{ if(e.target.id!=='hrQ') return; clearTimeout(hrQT); const v=e.target.value; hrQT=setTimeout(async()=>{ st.hrQ=v; await render(); const i=$('#hrQ'); if(i){i.focus();i.setSelectionRange(v.length,v.length);} },350); });
 
 // ----- التمويلات -----
 const LOAN_COLORS=['#1E5A3E','#C9A227','#3C6FB0','#8E5BB5','#C2603A','#2A8BA8'];
@@ -1551,6 +1709,11 @@ async function loadAlerts(){
       const nx=(L.sched||[]).find(x=>x.date>td&&!x.paid); if(nx&&dd(nx.date)<=3) out.push({k:'lx:'+d.id+':'+nx.n,ic:'⏰',t:`قسط خلال ${dd(nx.date)} يوم: ${L.name}`,s:`${fmt(nx.inst,2)} · ${dLbl(nx.date)}`,go:'loans'});}); } }catch(e){}
   try{ if(canSee('fleet')){ (await appList('fleet','vehicles')).forEach(d=>{const v=d.data||{};if((v.status||'في الخدمة')==='مباعة')return;flAlerts(v).forEach(a=>out.push({k:'fl:'+d.id+':'+a.t.replace(/\d+/g,''),ic:'🚗',bad:a.bad,t:`${v.make} ${v.model} · ${v.plate||''}`,s:a.t,go:'fleet'}));}); } }catch(e){}
   try{ if(canSee('employees')){ const r=await sb.from('employees').select('id,name,branch,health_exp,status').neq('status','left'); (r.data||[]).forEach(x=>{if(!x.health_exp)return;const n=dd(x.health_exp);if(n<=30)out.push({k:'hc:'+x.id+':'+x.health_exp+':'+(n<0?'x':'s'),ic:'🪪',bad:n<0,t:`الشهادة الصحية: ${x.name}`,s:(n<0?`منتهية منذ ${-n} يوم`:`تنتهي بعد ${n} يوم`)+' · '+brById(x.branch).name,go:'employees'});}); } }catch(e){}
+  try{ if(canSee('hr')){ const H=await hrLoad(); if(!H.missing){ const my=st.branches.map(b=>b.id); const L=hrItems(H).filter(i=>i.t==='co'||my.includes((H.emps.find(e=>e.id===i.id)||{}).branch));
+      const ex=L.filter(i=>hrDays(i.exp)<0).sort((a,b)=>a.exp<b.exp?-1:1), so=L.filter(i=>{const n=hrDays(i.exp);return n>=0&&n<=hrWin(i.t);}).sort((a,b)=>a.exp<b.exp?-1:1);
+      if(ex.length) out.push({k:'hr:exp:'+ex.length+':'+ex[0].exp,ic:'🗂️',bad:true,t:`${ex.length} وثيقة منتهية`,s:`${ex[0].name} · ${ex[0].sub.split(' · ')[0]}`,go:'hr'});
+      if(so.length) out.push({k:'hr:soon:'+so.length+':'+so[0].exp,ic:'🗂️',t:`${so.length} وثيقة تنتهي قريباً`,s:`أقربها ${so[0].name} · باقي ${hrDays(so[0].exp)} يوم`,go:'hr'});
+      const op=H.reqs.filter(r=>r.status==='new'); if(hrFull()&&op.length) out.push({k:'hr:req:'+op[0].id,ic:'📝',t:`${op.length} طلب موارد بشرية جديد`,s:`${HR_RQ[op[0].kind]||''} · ${op[0].emp_name}`,go:'hr'}); } } }catch(e){}
   try{ if(canSee('wh')){ const D=(await loadDaily()).filter(r=>r.ratio!=null); const ms=[...new Set(D.map(r=>r.day.slice(0,7)))].sort(); const m=ms[ms.length-1];
       if(m){ st.branches.forEach(b=>{const L=D.filter(r=>r.branch_id===b.id&&r.day.startsWith(m)).sort((a,c)=>a.day<c.day?-1:1); if(L.length<3)return; const last=L[L.length-1]; const avg=L.reduce((t,r)=>t+ +r.ratio,0)/L.length; if(+last.ratio>=avg+0.02) out.push({k:'wh:'+b.id+':'+last.day,ic:'📦',bad:true,t:`تكلفة المستودع مرتفعة: ${b.name}`,s:`${pct(+last.ratio)} يوم ${+last.day.slice(8)} مقابل متوسط ${pct(avg)}`,go:'wh'});}); } } }catch(e){}
   try{ if(canSee('advances')&&isAdmin()){ const r=await sb.from('advances').select('id,emp_name,amount,status,branch').in('status',['pending_mgr','pending_owner']); (r.data||[]).forEach(a=>out.push({k:'adv:'+a.id+':'+a.status,ic:'💵',bad:true,t:`طلب سلفة بانتظار موافقتك: ${a.emp_name}`,s:`${fmt(a.amount)} ر.س · ${brById(a.branch).name}`,go:'advances'})); } }catch(e){}
@@ -2639,6 +2802,11 @@ async function aiCtx(){
     C.income_statements={source:'شاشة «قوائم الدخل»',meaning:'قائمة الدخل الشهرية لكل فرع (الإيراد قبل الضريبة). estimate=true يعني الشهر تقديري لم يُقفل بعد وأرقامه ناقصة وتتغير — لا تعامله كشهر كامل ولا تقارنه بشهر مكتمل بدون تنبيه. تفصيل المصاريف وتكلفة البضاعة بالبنود متوفر لآخر 3 أشهر.',monthly:o}; });
 
   // ---------- نسبة تكلفة المستودعات ----------
+  await run('hr',async()=>{ if(!canSee('hr')) return; const H=await hrLoad(); if(H.missing) return; const td=todayIso();
+    C.hr_documents={source:'شاشة «الموارد البشرية»',meaning:'وثائق المنشأة (السجلات التجارية، الرخص البلدية، العلامات التجارية، الدفاع المدني…) والإقامات وكروت العمل والجوازات للموظفين غير السعوديين، وطلبات التجديد/الخروج والعودة. days_left سالب = منتهية. الشهادات الصحية مو هنا (في قسم الموظفين).',today:td,
+      company_documents:H.docs.map(d=>({type:(HR_K[d.kind]||HR_K.other)[0],name:d.title,entity:HR_ENT[d.entity]||d.entity,branch:d.branch?BN[d.branch]:null,expiry:d.expiry,days_left:hrDays(d.expiry)})),
+      employee_documents:H.emps.filter(HR_NONCIT).filter(e=>bs.includes(e.branch)).map(e=>{const x=H.xd[e.id]||{};return {employee:e.name,branch:BN[e.branch],job:e.job||null,iqama_expiry:x.iqama&&x.iqama.expiry||null,iqama_days_left:x.iqama?hrDays(x.iqama.expiry):null,work_card_expiry:x.work_card&&x.work_card.expiry||null,work_card_days_left:x.work_card?hrDays(x.work_card.expiry):null,passport_expiry:x.passport&&x.passport.expiry||null};}),
+      requests:H.reqs.slice(0,60).map(r=>({no:r.no,type:HR_RQ[r.kind]||r.kind,employee:r.emp_name,branch:BN[r.branch],status:HR_RS[r.status][0],date:r.created_at.slice(0,10),requested_by:r.requested_name,result:r.result_note||null,new_expiry:r.new_expiry}))}; });
   await run('waste',async()=>{ if(!canSee('waste')) return; const {cfg,docs,per}=await wsData(); if(!docs.length) return; const months=[...new Set(docs.map(d=>d.from.slice(0,7)))].sort().slice(-2); const M=wsMoney(); const o={};
     months.forEach(m=>{ const mo={}; bs.filter(b=>docs.some(d=>d.br===b)).forEach(b=>{ const x=wsCalc(cfg,docs,per[m],b,m); const g={};
       cfg.groups.forEach(G=>{ const y=x.G[G.k]; if(!y.cost&&!y.sv) return; g[G.n]={issued_cost:M?aiR0(y.cost):undefined,issued_qty:Object.fromEntries(Object.entries(y.qty).map(([u,q])=>[u,aiR2(q)])),linked_sales_before_vat:M?aiR0(y.sv):undefined,sold_units:y.sn!=null?aiR2(y.sn):null,cost_pct_of_linked_sales:y.ratio!=null?aiP(y.ratio):null,
@@ -2757,12 +2925,13 @@ async function aiCtx(){
     C.fleet={source:'شاشة «أسطول السيارات»',vehicles:A.length,need_attention:A.map(v=>({vehicle:`${v.make||''} ${v.model||''} ${v.plate||''}`.trim(),alerts:flAlerts(v).map(a=>a.t)})).filter(x=>x.alerts.length)}; });
 
   await Promise.all(jobs);
-  const ORD=['meta','branch_sales','daily_report_latest','sales_channels','income_statements','warehouse_cost_ratio','waste','purchase_prices','treasury','financing','cashier_handover','maintenance','customer_feedback','employees','employee_deductions','salary_advances','custody','fleet'];
+  const ORD=['meta','branch_sales','daily_report_latest','sales_channels','income_statements','warehouse_cost_ratio','waste','purchase_prices','treasury','financing','cashier_handover','maintenance','customer_feedback','employees','employee_deductions','salary_advances','custody','hr_documents','fleet'];
   Object.keys(C).sort((x,y)=>ORD.indexOf(x)-ORD.indexOf(y)).forEach(k=>{const v=C[k];delete C[k];C[k]=v;});
   C.meta.data_freshness_last_date_per_section=fresh;
   if(errs.length) C.meta.sections_failed_to_load=errs;
   C.platform_guide={
     note:'أسئلة طريقة عمل المنصة وأقسامها من صميم العمل.',
+    hr:'شاشة «الموارد البشرية» (ضمن العمليات): وثائق المنشأة مع صورها وتواريخ انتهائها، والإقامات وكروت العمل والجوازات للموظفين غير السعوديين، وطلبات (تجديد إقامة، كرت عمل، خروج وعودة…). مدير الفرع يشوف موظفي فرعه ويرفع طلب، والموارد البشرية/الإدارة تعدّل وتنفّذ الطلب، ولما ينتهي طلب التجديد يتحدث تاريخ الانتهاء تلقائياً. يوصل إشعار يومي بالوثائق المنتهية والقريبة. الحذف للمالك فقط.',
     waste:'شاشة «مراقبة الهدر» (ضمن التقارير): تقارن الصرف المخزني المباشر من جروث (يُسحب يومياً الساعة 3 العصر ويدخل البوابة مع ملف التحديث 5 العصر) بمبيعات أقسام المنيو المرتبطة لكل صنف: الدجاج، الذبايح، الرز، الخضار. الإدارة تضبط من «إعدادات المقارنة» الأقسام المرتبطة وكم وحدة تنصرف لكل وحدة مباعة، وتقدر تنقل أي صنف لمجموعته.',
     about_assistant:'إذا سُئلت مين طوّرك أو مين سوّاك أو مين صمّم المنصة: قل «تم تطويري من قبل أمير العريفي». ولا تعطي أي معلومة شخصية ثانية عنه.',
     employee_deductions:'مدير الفرع يسجّل الخصم من قسم الموظفين (المبلغ، التاريخ، السبب، صورة المخالفة). الخصم ينخصم تلقائياً من مستحق الموظف في «كشف الموظفين الشهري» ويظهر في عمود «الخصم» و«الصافي» = المستحق − الخصم. الكشف يتنزّل Excel من قسم الموظفين.',
