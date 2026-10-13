@@ -515,6 +515,8 @@ body.hasnav .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 .br-ic{width:42px;height:42px;border-radius:12px;background:linear-gradient(140deg,#1E5A3E,#143F2A);display:grid;place-items:center;font-size:20px;flex:none}
 .br-head{display:block;font-size:14px;line-height:1.6;margin-top:2px}.br-more{display:block;font-size:12px;color:var(--gold-ink);font-weight:700;margin-top:4px}
 .br-days{flex-wrap:nowrap;overflow-x:auto}
+.umn{display:flex;flex-direction:column;gap:4px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:8px 0;margin:4px 0}.umn button{border:0;background:none;font:inherit;font-size:13.5px;font-weight:600;text-align:start;padding:8px 6px;border-radius:10px;cursor:pointer;color:inherit}.umn button:hover{background:var(--chip)}
+.br-sheet{padding:16px}.br-top{display:flex;gap:12px;align-items:center;padding-bottom:12px;margin-bottom:10px;border-bottom:1px solid var(--line)}.br-body{font-size:14.5px}.br-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
 .cu-hero{background:linear-gradient(140deg,#1E5A3E,#143F2A);color:#fff;border:0}
 .cu-hg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;border-top:1px solid rgba(255,255,255,.15);padding-top:10px;text-align:center}.cu-hg span{display:block;font-size:11px;opacity:.75}
 .cu-tabs{display:flex;gap:6px;background:var(--chip);padding:4px;border-radius:12px}.cu-tabs button{flex:1;border:0;background:transparent;border-radius:9px;padding:9px 6px;font:inherit;font-weight:700;font-size:13px;color:var(--muted);cursor:pointer}.cu-tabs button[aria-selected=true]{background:var(--card);color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.08)}
@@ -618,7 +620,7 @@ if(seen){s.remove();return;}if(ever)s.classList.add('quick');s.addEventListener(
     <div class="top">
       <div class="brand"><div><h1 style="font-size:17px;line-height:1.2">منصة الإدارة الموحّدة</h1><div style="font-size:12px;color:var(--gold-ink);font-weight:600">تطوير بواسطة أمير العريفي</div></div></div>
       <div class="who"><button class="hbtn" id="bell" type="button" aria-label="التنبيهات" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="bd" id="bellN" hidden></span></button><div class="npanel" id="npanel" hidden></div><button class="avb" id="av" type="button" aria-haspopup="true" aria-expanded="false" aria-label="الحساب">؟</button>
-        <div class="umenu" id="umenu" hidden><div><b id="uname"></b><div class="muted" style="font-size:12px" id="urole"></div></div><div class="scope" id="scope"></div><button class="btn ghost sm" id="logout" style="width:100%">تسجيل الخروج</button></div></div>
+        <div class="umenu" id="umenu" hidden><div><b id="uname"></b><div class="muted" style="font-size:12px" id="urole"></div></div><div class="scope" id="scope"></div><div id="uadmin"></div><button class="btn ghost sm" id="logout" style="width:100%">تسجيل الخروج</button></div></div>
     </div>
     <div class="tkr" id="tkr" hidden role="marquee" aria-label="أهم المستجدات"><span class="tkr-lbl"><i></i>مستجدات</span><div class="tkr-vp"><div class="tkr-track" id="tkrT"></div></div></div>
     <nav class="tabs" id="tabs" aria-label="الأقسام"></nav>
@@ -643,6 +645,7 @@ const sb=window.supabase.createClient(CFG.url,CFG.key,{auth:{persistSession:true
 const SECTIONS=[
   {id:'home',name:'الرئيسية'},
   {id:'ai',name:'المساعد الذكي'},
+  {id:'brief',name:'التقرير المسائي',admin:true},
   {id:'sales',name:'مبيعات الفروع',app:'sales'},
   {id:'daily',name:'التقرير اليومي',page:'daily',perm:'sales'},
   {id:'channels',name:'منافذ المبيعات',app:'channels'},
@@ -669,11 +672,11 @@ const NAV_ICONS={
   ops:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg>',
   fin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/><path d="M6.5 15h4"/></svg>',
   more:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>'};
-const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'ai',name:'المساعد الذكي',secs:['ai']},{id:'rep',name:'التقارير',secs:['sales','daily','channels','income','wh','chicken']},{id:'ops',name:'العمليات',secs:['handover','maint','feedback','employees','advances','fleet']},{id:'fin',name:'المالية',secs:['treasury','loans','custody']},{id:'more',name:'الإدارة',secs:['users','data']}];
+const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'ai',name:'المساعد الذكي',secs:['ai']},{id:'rep',name:'التقارير',secs:['brief','sales','daily','channels','income','wh','chicken']},{id:'ops',name:'العمليات',secs:['handover','maint','feedback','employees','advances','fleet']},{id:'fin',name:'المالية',secs:['treasury','loans','custody']},{id:'more',name:'الإدارة',secs:['users','data'],nav:false}];
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup','feedback','custody'];
-const APP_VER='79';
+const APP_VER='80';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -743,8 +746,8 @@ async function boot(){
   st.branches=b.data||[]; st.mySections=(us.data||[]).map(x=>x.section);
   $('#login').hidden=true; $('#app').hidden=false;
   if(isEmp()) st.tab='me'; else { try{ const t=localStorage.getItem('tab'); if(t&&allowed(t)) st.tab=t; }catch(e){} }
-  try{ const qb=new URLSearchParams(location.search).get('brief'); if(qb&&/^\d{4}-\d\d-\d\d$/.test(qb)) st.brDay=qb; }catch(e){}
-  try{ const qt=new URLSearchParams(location.search).get('tab'); if(qt&&allowed(qt)) st.tab=qt; if(qt) history.replaceState(null,'',location.pathname); }catch(e){}
+  try{ const qb=new URLSearchParams(location.search).get('brief'); if(qb&&/^\d{4}-\d\d-\d\d$/.test(qb)) st.brSel=qb; }catch(e){}
+  try{ const qt=new URLSearchParams(location.search).get('tab'); if(qt&&allowed(qt)) st.tab=qt; if(st.brSel&&isAdmin()) st.tab='brief'; if(qt) history.replaceState(null,'',location.pathname); }catch(e){}
   renderShell(); pushSync();
 }
 
@@ -754,9 +757,10 @@ function renderShell(){
   $('#urole').textContent=ROLE_NAME[p.role]+' · '+p.username;
   $('#scope').innerHTML=isEmp()?'<span class="muted">حساب موظف</span>':st.branches.length?'<span class="muted">يظهر لك:</span>'+st.branches.map(dotTag).join(''):'<span class="muted">لا توجد فروع مسموحة</span>';
   $('#av').textContent=((p.full_name||p.username||'?').trim().replace(/^(مدير|فرع)\s+/,'').charAt(0)||'؟');
+  $('#uadmin').innerHTML=isAdmin()?`<div class="umn"><button data-um="users">🔐 المستخدمين والصلاحيات</button><button data-um="data">⬆️ إدخال البيانات</button></div>`:'';
   if(!canSee(st.tab)) st.tab='home';
   const g=groupOf(st.tab); st.lastIn=st.lastIn||{}; st.lastIn[g]=st.tab;
-  const gs=GROUPS.filter(x=>x.secs.some(canSee));
+  const gs=GROUPS.filter(x=>x.nav!==false&&x.secs.some(canSee));
   $('#bnav').innerHTML=gs.map(x=>`<button data-g="${x.id}" aria-pressed="${x.id===g}"><span class="bi">${NAV_ICONS[x.id]}</span><span class="bl">${x.name}</span></button>`).join('');
   document.body.classList.toggle('hasnav',gs.length>1); $('#bnav').hidden=gs.length<=1;
   const subs=(GROUPS.find(x=>x.id===g)||{secs:[]}).secs.filter(canSee);
@@ -764,6 +768,7 @@ function renderShell(){
   loadAlerts();
   render();
 }
+document.addEventListener('click',e=>{const b=e.target.closest('[data-um]');if(!b)return;$('#umenu').hidden=true;st.tab=b.dataset.um;window.scrollTo({top:0});renderShell();});
 $('#bnav').onclick=e=>{const b=e.target.closest('[data-g]');if(!b)return;const G=GROUPS.find(x=>x.id===b.dataset.g);const last=st.lastIn&&st.lastIn[G.id];st.tab=last&&canSee(last)?last:G.secs.find(canSee);try{localStorage.setItem('tab',st.tab);}catch(e){} window.scrollTo({top:0});renderShell();};
 $('#tabs').onclick=e=>{const b=e.target.closest('[data-t]');if(!b)return;st.tab=b.dataset.t;try{localStorage.setItem('tab',st.tab);}catch(e){} renderShell();};
 document.addEventListener('click',e=>{const b=e.target.closest('#view [data-t]');if(!b)return;st.tab=b.dataset.t;try{localStorage.setItem('tab',st.tab);}catch(e){} window.scrollTo({top:0});renderShell();const tb=document.querySelector('#tabs [aria-pressed="true"]');if(tb)tb.scrollIntoView({inline:'center',block:'nearest'});});
@@ -877,7 +882,7 @@ function spark(vals,{w=120,h=34,col='#E9CF7A',fill=true,sw=1.8}={}){
   return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="direction:ltr;display:block"><defs><linearGradient id="${gid}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".35"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>${fill?`<path d="${d} L${X(v.length-1)},${h} L${X(0)},${h} Z" fill="url(#${gid})"/>`:''}<path d="${d}" fill="none" stroke="${col}" stroke-width="${sw}" stroke-linecap="round"/><circle cx="${X(v.length-1)}" cy="${Y(v[v.length-1])}" r="2.8" fill="${col}"/></svg>`;
 }
 const DAYN=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
-const SC_ICON={sales:'📈',daily:'🧾',channels:'🛵',income:'📊',wh:'📦',chicken:'🍗',treasury:'🏦',loans:'💳',fleet:'🚗',maint:'🛠️',feedback:'⭐',ai:'✦',advances:'💵',custody:'💼',handover:'🔁',employees:'👥',users:'🔐',data:'⬆️'};
+const SC_ICON={sales:'📈',daily:'🧾',channels:'🛵',income:'📊',wh:'📦',chicken:'🍗',treasury:'🏦',loans:'💳',fleet:'🚗',maint:'🛠️',feedback:'⭐',ai:'✦',advances:'💵',custody:'💼',brief:'📊',handover:'🔁',employees:'👥',users:'🔐',data:'⬆️'};
 V.home=async()=>{
   const bs=selBranches(); const now=new Date(), hr=now.getHours();
   const fn_=(st.profile&&(st.profile.full_name||st.profile.username)||'').trim(); const nm=/^(مدير|فرع|حساب)/.test(fn_)?fn_:fn_.split(' ')[0];
@@ -942,7 +947,6 @@ V.home=async()=>{
     h+=`<div class="hx-hero"><div class="hx-glow"></div><div class="hx-top"><div><div class="hx-date">${dateTxt}</div><div class="hx-hi">${greet}${nm?'، '+esc(nm):''} 👋</div></div>${brTag}</div><div style="position:relative;margin-top:10px;opacity:.85;font-size:14px">أهلاً بك في منصة الإدارة الموحّدة</div></div>`;
   }
   try{ h+=await brCard(); }catch(e){}
-  if(st.brDay){ const d=st.brDay; st.brDay=null; setTimeout(async()=>{ if(!st._br) await brLoad(); brOpen(d); },300); }
   // ===== المؤشرات =====
   const tile=(ic,bg,l,v,sub,go)=>`<button class="hx-tile" ${go?`data-t="${go}"`:''}><span class="hx-ic" style="background:${bg}">${ic}</span><span class="hx-tl">${l}</span><b class="num">${v}</b>${sub?`<span class="hx-ts">${sub}</span>`:''}</button>`;
   if(allowed('income')){ const I=(await loadIncome()).filter(r=>bs.includes(r.branch_id)&&!r.is_estimate); const ms=[...new Set(I.map(r=>r.month))].sort();
@@ -1708,11 +1712,25 @@ function brOpen(day){ const L=st._br||[]; const b=L.find(x=>x.day===day)||L[0]; 
     <button class="btn ghost sm" data-brre="${b.day}" style="align-self:center">🔄 إعادة كتابة التقرير بآخر الأرقام</button>
     <div class="muted" style="font-size:11.5px;text-align:center">يُكتب تلقائياً أول ما ينرفع التقرير اليومي، ويوصلك إشعار.</div></div>`;
   document.body.appendChild(w); }
-document.addEventListener('click',async e=>{ const t=e.target.closest('[data-bropen],[data-brre]'); if(!t) return;
-  if(t.dataset.bropen){ if(!st._br) await brLoad(); brOpen(t.dataset.bropen); return; }
-  if(t.dataset.brre){ t.disabled=true; const r=await sb.rpc('brief_request',{p_day:t.dataset.brre}); if(r.error){toast(r.error.message);t.disabled=false;return;} toast('جارِ كتابة التقرير — يوصلك إشعار خلال دقيقة'); const day=t.dataset.brre; setTimeout(async()=>{ await brLoad(); if($('#cudet')&&document.querySelector('[data-brre]')) brOpen(day); },45000); }
+document.addEventListener('click',async e=>{ const t=e.target.closest('[data-bropen],[data-brre],[data-brsel],[data-brcopy]'); if(!t) return;
+  if(t.dataset.brsel){ st.brSel=t.dataset.brsel; render(); return; }
+  if(t.dataset.brcopy){ const b=(st._br||[]).find(x=>x.day===t.dataset.brcopy); if(b){ const tx=b.text.replace(/\*\*/g,''); try{ if(navigator.share) await navigator.share({title:'التقرير المسائي',text:tx}); else { await navigator.clipboard.writeText(tx); toast('تم النسخ ✓'); } }catch(_){ try{ await navigator.clipboard.writeText(tx); toast('تم النسخ ✓'); }catch(__){} } } return; }
+  if(t.dataset.bropen){ st.brSel=t.dataset.bropen; st.tab='brief'; window.scrollTo({top:0}); renderShell(); return; }
+  if(t.dataset.brre){ t.disabled=true; const r=await sb.rpc('brief_request',{p_day:t.dataset.brre}); if(r.error){toast(r.error.message);t.disabled=false;return;} toast('جارِ كتابة التقرير — يوصلك إشعار خلال دقيقة'); const day=t.dataset.brre; setTimeout(async()=>{ if(st.tab==='brief'){ st.brSel=day; render(); } },45000); }
 });
 
+V.brief=async()=>{
+  let L; try{ L=await brLoad(); }catch(e){ L=null; }
+  if(L===null) return `<div class="card empty">التقرير المسائي يحتاج تشغيل ملف brief-setup في Supabase أولاً</div>`;
+  if(!L.length) return `<div class="card empty">📊 أول تقرير مسائي ينكتب تلقائياً بعد رفع التقرير اليومي، ويوصلك إشعار.</div>`;
+  const b=L.find(x=>x.day===st.brSel)||L[0]; st.brSel=b.day;
+  const dn=DAYN[new Date(b.day+'T12:00:00').getDay()];
+  return `<div class="chips br-days">${L.slice(0,21).map(x=>`<button data-brsel="${x.day}" aria-pressed="${x.day===b.day}">${esc(+x.day.slice(8)+' '+MONTHS[+x.day.slice(5,7)-1])}</button>`).join('')}</div>
+    <div class="card br-sheet"><div class="br-top"><span class="br-ic">📊</span><div><b style="font-size:16px">التقرير المسائي</b><div class="muted" style="font-size:12px">${esc(dn)} ${esc(dLbl(b.day))} · كُتب ${new Date(b.updated_at).toLocaleString('ar-SA-u-ca-gregory-nu-latn',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div></div></div>
+      <div class="ai-llm br-body">${aiMd(b.text)}</div>
+      <div class="br-acts"><button class="btn ghost sm" data-brcopy="${b.day}">📋 نسخ التقرير</button><button class="btn ghost sm" data-brre="${b.day}">🔄 إعادة الكتابة بآخر الأرقام</button></div></div>
+    <div class="muted" style="font-size:11.5px;text-align:center">يُكتب تلقائياً أول ما ينرفع التقرير اليومي، ويوصلك إشعار على الجوال.</div>`;
+};
 // ----- العُهد النقدية -----
 const CU_CAT=['مشتريات مواد','خضار وفواكه','لحوم ودواجن','مستلزمات تشغيل','صيانة وإصلاح','نقل وتوصيل','رسوم حكومية','ضيافة','أخرى'];
 const CU_K={fund:['💵','مبلغ مستلم'],expense:['🧾','فاتورة'],return:['↩️','مبلغ مُرجع']};
