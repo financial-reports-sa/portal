@@ -669,7 +669,7 @@ const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'ai',na
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup','feedback','custody'];
-const APP_VER='77';
+const APP_VER='78';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -1412,7 +1412,7 @@ async function loadAlerts(){
   try{ if(canSee('employees')){ const r=await sb.from('employees').select('id,name,branch,health_exp,status').neq('status','left'); (r.data||[]).forEach(x=>{if(!x.health_exp)return;const n=dd(x.health_exp);if(n<=30)out.push({k:'hc:'+x.id+':'+x.health_exp+':'+(n<0?'x':'s'),ic:'🪪',bad:n<0,t:`الشهادة الصحية: ${x.name}`,s:(n<0?`منتهية منذ ${-n} يوم`:`تنتهي بعد ${n} يوم`)+' · '+brById(x.branch).name,go:'employees'});}); } }catch(e){}
   try{ if(canSee('wh')){ const D=(await loadDaily()).filter(r=>r.ratio!=null); const ms=[...new Set(D.map(r=>r.day.slice(0,7)))].sort(); const m=ms[ms.length-1];
       if(m){ st.branches.forEach(b=>{const L=D.filter(r=>r.branch_id===b.id&&r.day.startsWith(m)).sort((a,c)=>a.day<c.day?-1:1); if(L.length<3)return; const last=L[L.length-1]; const avg=L.reduce((t,r)=>t+ +r.ratio,0)/L.length; if(+last.ratio>=avg+0.02) out.push({k:'wh:'+b.id+':'+last.day,ic:'📦',bad:true,t:`تكلفة المستودع مرتفعة: ${b.name}`,s:`${pct(+last.ratio)} يوم ${+last.day.slice(8)} مقابل متوسط ${pct(avg)}`,go:'wh'});}); } } }catch(e){}
-  try{ if(canSee('advances')){ const r=await sb.from('advances').select('id,emp_name,amount,status,branch').in('status',isAdmin()?['pending_mgr','pending_owner']:['pending_mgr']); (r.data||[]).forEach(a=>out.push({k:'adv:'+a.id+':'+a.status,ic:'💵',bad:true,t:`طلب سلفة بانتظار موافقتك: ${a.emp_name}`,s:`${fmt(a.amount)} ر.س · ${brById(a.branch).name}`,go:'advances'})); } }catch(e){}
+  try{ if(canSee('advances')&&isAdmin()){ const r=await sb.from('advances').select('id,emp_name,amount,status,branch').in('status',['pending_mgr','pending_owner']); (r.data||[]).forEach(a=>out.push({k:'adv:'+a.id+':'+a.status,ic:'💵',bad:true,t:`طلب سلفة بانتظار موافقتك: ${a.emp_name}`,s:`${fmt(a.amount)} ر.س · ${brById(a.branch).name}`,go:'advances'})); } }catch(e){}
   try{ if(isEmp()){ const r=await sb.from('advances').select('id,amount,status').in('status',['approved','rejected']).order('created_at',{ascending:false}).limit(5); (r.data||[]).forEach(a=>out.push({k:'myadv:'+a.id+':'+a.status,ic:a.status==='approved'?'✅':'❌',bad:a.status!=='approved',t:a.status==='approved'?'تمت الموافقة على سلفتك':'تم رفض طلب السلفة',s:fmt(a.amount)+' ر.س',go:'me'})); } }catch(e){}
   try{ if(canSee('maint')){ const R=mtRole(); const r=await sb.from('maint_requests').select('id,no,branch,title,status,priority,created_at,done_at,reject_reason').in('status',['new','assigned','progress','hold','done','rejected']).order('created_at',{ascending:false}).limit(300); (r.data||[]).forEach(m=>{
       if(R!=='mgr'&&m.status==='new') out.push({k:'mt:'+m.id+':new',ic:'🛠️',bad:m.priority==='urgent',t:`طلب صيانة${m.priority==='urgent'?' عاجل':''} بانتظار المراجعة: ${m.title}`,s:brById(m.branch).name+' · '+mtRef(m),go:'maint'});
@@ -1495,13 +1495,13 @@ document.addEventListener('click',e=>{
 
 
 // ----- السلف وبوابة الموظف -----
-const ADV_ST={pending_mgr:{t:'بانتظار مدير الفرع',c:'flat'},pending_owner:{t:'بانتظار الاعتماد',c:'flat'},approved:{t:'معتمدة',c:'up'},rejected:{t:'مرفوضة',c:'down'},cancelled:{t:'ملغاة',c:'muted'}};
+const ADV_ST={pending_mgr:{t:'بانتظار مدير الفرع',c:'flat'},pending_owner:{t:'بانتظار اعتماد الإدارة',c:'flat'},approved:{t:'معتمدة',c:'up'},rejected:{t:'مرفوضة',c:'down'},cancelled:{t:'ملغاة',c:'muted'}};
 const curMon=()=>todayIso().slice(0,7);
 const monDiff=(a,b)=>{const [y1,m1]=a.split('-').map(Number),[y2,m2]=b.split('-').map(Number);return (y2-y1)*12+(m2-m1);};
 function advCalc(a){ const mo=+a.amount/a.months; if(a.status!=='approved'||!a.start_month) return {mo,done:0,rem:a.status==='approved'?+a.amount:0};
   const done=Math.max(0,Math.min(a.months,monDiff(a.start_month,curMon()))); return {mo,done,rem:Math.max(0,+a.amount-mo*done)}; }
 const advPill=a=>{const x=ADV_ST[a.status]||{t:a.status,c:''};const bg={up:'rgba(31,161,107,.12)',down:'rgba(208,69,58,.12)',flat:'var(--gold-soft)',muted:'var(--chip)'}[x.c]||'var(--chip)';const fg={up:'var(--up)',down:'var(--down)',flat:'var(--gold-ink)',muted:'var(--muted)'}[x.c]||'inherit';return `<span class="tag" style="background:${bg};color:${fg};font-weight:700">${x.t}</span>`;};
-function advSteps(a){const s=[['الطلب',a.requested_by,a.created_at,true],['مدير الفرع',a.mgr_by,a.mgr_at,!!a.mgr_at],['الاعتماد',a.own_by,a.own_at,!!a.own_at]];
+function advSteps(a){const s=[['الطلب',a.requested_by,a.created_at,true]].concat(a.mgr_at?[['مدير الفرع',a.mgr_by,a.mgr_at,true]]:[]).concat([['اعتماد الإدارة',a.own_by,a.own_at,!!a.own_at]]);
   return `<div style="display:flex;gap:6px;margin-top:8px">${s.map(([n,b,t,ok])=>`<div style="flex:1;text-align:center;font-size:10.5px"><div style="height:4px;border-radius:99px;background:${ok?(a.status==='rejected'&&t===(a.own_at||a.mgr_at)?'var(--down)':'var(--up)'):'var(--chip)'};margin-bottom:4px"></div><b>${n}</b>${b?`<div class="muted">${esc(b)}</div>`:''}</div>`).join('')}</div>`;}
 const advRef=a=>'ADV-'+String(a.created_at||'').slice(2,7).replace('-','')+'-'+String(a.id).replace(/-/g,'').slice(0,5).toUpperCase();
 const advEnt=b=>({az:'مطاعم الشادن',sh:'مطاعم الشادن',pc:'بروست الباتشينو'})[b]||brById(b).name;
@@ -1575,7 +1575,7 @@ table{width:100%;border-collapse:collapse}td,th{border:1px solid #dcdcd4;padding
 <h2>ثالثاً: جدول الخصم من الراتب</h2><table class="sch"><tr><th>القسط</th><th>راتب شهر</th><th>المبلغ (ر.س)</th><th>الحالة</th></tr>${sch}
 <tr><th colspan="2">الإجمالي</th><th class="n">${fmt(a.amount)}</th><th>${st==='approved'?'المتبقي '+fmt(c.rem):''}</th></tr></table>
 <h2>رابعاً: إقرار الموظف</h2><div class="ack">أقر أنا الموظف المذكور أعلاه بأن المبلغ الموضح سلفة على راتبي، وأوافق على خصمه من راتبي الشهري وفق الجدول أعلاه، وفي حال انتهاء خدمتي لأي سبب قبل اكتمال السداد يحق للشركة خصم المبلغ المتبقي من مستحقاتي النهائية.</div>
-<h2>خامساً: الاعتمادات</h2><div class="sgs">${sign('مقدّم الطلب',a.requested_by||a.emp_name,a.created_at,true)}${sign('مدير الفرع',a.mgr_by,a.mgr_at,!!a.mgr_at)}${sign('الاعتماد النهائي',a.own_by,a.own_at,!!a.own_at)}</div>
+<h2>خامساً: الاعتمادات</h2><div class="sgs">${sign('مقدّم الطلب',a.requested_by||a.emp_name,a.created_at,true)}${a.mgr_at?sign('مدير الفرع',a.mgr_by,a.mgr_at,true):''}${sign('الاعتماد النهائي',a.own_by,a.own_at,!!a.own_at)}</div>
 ${a.mgr_note||a.own_note?`<div style="margin-top:8px;font-size:11.5px;color:#555">ملاحظات: ${esc([a.mgr_note,a.own_note].filter(Boolean).join(' — '))}</div>`:''}
 <div class="ft"><span>مستند إلكتروني صادر من منصة الإدارة الموحّدة · unifiedplatform.app</span><span>${advRef(a)}</span></div></div></body></html>`;
 }
@@ -1607,7 +1607,7 @@ V.me=async()=>{
   if(act.length) h+=`<div class="card"><h3>سلفي القائمة <small>يُخصم ${fmt(mo)} شهرياً</small></h3>${act.map(a=>{const c=advCalc(a);return `<div style="padding:8px 0;border-bottom:1px solid var(--line)"><div class="bar-row"><b class="num">${fmt(a.amount)} ر.س</b><span class="muted" style="font-size:12px">${c.done} من ${a.months} قسط</span></div><div class="meter" style="margin:6px 0"><i style="width:${(c.done/a.months*100).toFixed(0)}%;background:var(--green)"></i></div><div class="bar-row" style="font-size:12px"><span class="muted">يبدأ الخصم من راتب ${monLbl(a.start_month)}</span><span>متبقي <b class="num">${fmt(c.rem)}</b></span></div><button class="btn ghost sm" data-advdoc="${a.id}" style="margin-top:6px">📄 النموذج</button></div>`;}).join('')}</div>`;
   const past=adv.filter(a=>a!==pend&&!act.includes(a));
   if(past.length) h+=`<div class="card"><h3>سجل الطلبات</h3>${past.map(a=>`<div class="bar-row" style="padding:8px 0;border-bottom:1px solid var(--line)" data-advdoc="${a.id}"><span><span class="advref">${advRef(a)}</span><br><b class="num">${fmt(a.amount)}</b> <span class="muted" style="font-size:12px">· ${dLbl(String(a.created_at).slice(0,10))}</span>${a.own_note||a.mgr_note?`<div class="muted" style="font-size:11.5px">${esc(a.own_note||a.mgr_note)}</div>`:''}</span>${advPill(a)}</div>`).join('')}</div>`;
-  h+=`<div class="muted" style="font-size:12px;text-align:center">الطلب يمر على مدير الفرع ثم الاعتماد النهائي، ويوصلك إشعار بالنتيجة.</div>`;
+  h+=`<div class="muted" style="font-size:12px;text-align:center">طلبك يروح للإدارة مباشرة للاعتماد، ويوصلك إشعار بالنتيجة.</div>`;
   return h;
 };
 V.advances=async()=>{
@@ -1616,13 +1616,13 @@ V.advances=async()=>{
   st._advList=A.data||[]; st._advEmps=E.data||[];
   const adv=A.data||[], emps=E.data||[], acc=Object.fromEntries((AC.data||[]).map(x=>[x.emp_id,x.phone]));
   const fb=st.advF||'all'; const inB=x=>fb==='all'||x.branch===fb;
-  const mine=adv.filter(a=>inB(a)&&(a.status==='pending_mgr'||(isAdmin()&&a.status==='pending_owner')));
+  const mine=isAdmin()?adv.filter(a=>inB(a)&&(a.status==='pending_mgr'||a.status==='pending_owner')):[];
   const act=adv.filter(a=>inB(a)&&a.status==='approved'&&advCalc(a).rem>0);
   const rem=act.reduce((t,a)=>t+advCalc(a).rem,0), mo=act.reduce((t,a)=>t+advCalc(a).mo,0);
   const brs=[...new Set(emps.map(e=>e.branch))];
   let h=brs.length>1?`<div class="chips">${[['all','كل الفروع']].concat(brs.map(b=>[b,brById(b).name])).map(([k,n])=>`<button data-advf="${k}" aria-pressed="${fb===k}">${k!=='all'?`<i class="dot" style="background:${brById(k).color}"></i>`:''}${esc(n)}</button>`).join('')}</div>`:'';
   const AD=isAdmin();
-  if(!AD) h+=`<div class="card" style="background:linear-gradient(140deg,#1E5A3E,#143F2A);color:#fff;border:0;display:flex;align-items:center;justify-content:space-between"><div><div style="font-size:12.5px;opacity:.8">طلبات السلف بانتظار موافقتك</div><div class="muted" style="font-size:11.5px;color:#cfe0d6">بعد موافقتك يروح الطلب للاعتماد النهائي</div></div><b class="num" style="font-size:27px;color:${mine.length?'#FFB4A8':'#F6E7B0'}">${mine.length}</b></div>`;
+  if(!AD) h+=`<div class="note">💵 طلبات السلف تروح من الموظف للإدارة مباشرة للقبول أو الرفض. دورك هنا تفعيل حسابات الموظفين عشان يقدرون يطلبون.</div>`;
   else h+=`<div class="card" style="background:linear-gradient(140deg,#1E5A3E,#143F2A);color:#fff;border:0"><div style="font-size:12.5px;opacity:.8">السلف القائمة على الموظفين</div><div class="num" style="font-size:27px;font-weight:700;color:#F6E7B0">${fmt(rem)} <small style="font-size:12px;color:#fff;opacity:.8">ر.س</small></div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;border-top:1px solid rgba(255,255,255,.15);padding-top:10px;text-align:center"><div><div style="font-size:11px;opacity:.75">موظفين عليهم سلف</div><b class="num">${new Set(act.map(a=>a.emp_id)).size}</b></div><div><div style="font-size:11px;opacity:.75">خصم شهري</div><b class="num">${fmt(mo)}</b></div><div><div style="font-size:11px;opacity:.75">بانتظارك</div><b class="num" style="color:${mine.length?'#FFB4A8':'#fff'}">${mine.length}</b></div></div></div>`;
   h+=`<div class="muted" style="font-size:12px;margin:-4px 2px 4px">طلب السلفة يكون من الموظف نفسه من حسابه في التطبيق — فعّل له حساب من القائمة تحت.</div>`;
@@ -2578,7 +2578,7 @@ async function aiCtx(){
     about_assistant:'إذا سُئلت مين طوّرك أو مين سوّاك أو مين صمّم المنصة: قل «تم تطويري من قبل أمير العريفي». ولا تعطي أي معلومة شخصية ثانية عنه.',
     employee_deductions:'مدير الفرع يسجّل الخصم من قسم الموظفين (المبلغ، التاريخ، السبب، صورة المخالفة). الخصم ينخصم تلقائياً من مستحق الموظف في «كشف الموظفين الشهري» ويظهر في عمود «الخصم» و«الصافي» = المستحق − الخصم. الكشف يتنزّل Excel من قسم الموظفين.',
     monthly_payroll_sheet:'المستحق = الراتب كامل للشهر الكامل، والمباشر أو المنتهية خدماته خلال الشهر = (الراتب ÷ 30) × أيام العمل.',
-    salary_advances:'الموظف يطلب السلفة من حسابه ← موافقة مدير الفرع ← اعتماد المالك ← تبدأ الأقساط من شهر الخصم المحدد.',
+    salary_advances:'الموظف يطلب السلفة من حسابه ← تروح للإدارة مباشرة (المالك/الآدمن) للقبول أو الرفض — مدير الفرع ما له قرار فيها ← تبدأ الأقساط من شهر الخصم المحدد.',
     maintenance:'مدير الفرع يرفع الطلب ← المشرف يقبل ويسند أو يرفض ← التنفيذ ← الإنجاز مع التكلفة والصورة ← مدير الفرع يؤكد الاستلام ويقيّم.',
     customer_feedback:'العميل يقيّم من QR ← إشعار لمدير الفرع والإدارة ← مراجعة ← تواصل ← حل وتعويض ← إغلاق.',
     cashier_handover:'الكاشير يسلّم الوردية من رابط التسليم برمزه الشخصي، والمحاسب يراجع ويسجّل العجز أو الزيادة. الإدارة ترسل للكاشير تنبيه أو إنذار ويرد بالسبب.',
