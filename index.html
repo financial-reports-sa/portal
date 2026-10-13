@@ -681,7 +681,7 @@ const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'ai',na
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup','feedback','custody'];
-const APP_VER='81';
+const APP_VER='82';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -1333,7 +1333,7 @@ function flAlertInfo(v,ix){
   m.addEventListener('click',async ev=>{ if(ev.target===m||ev.target.closest('[data-x]')){m.remove();return;} if(ev.target.closest('[data-go]')){m.remove();st.flOpen=v.id;await render();const el=$('#flDetail');if(el)el.scrollIntoView({behavior:'smooth'});flLoadPhotos();} });
   document.body.appendChild(m);
 }
-async function flLoadPhotos(){const box=document.getElementById('flPhotos');if(!box)return;const r=await sb.rpc('fleet_photos',{p_id:box.dataset.id});if(r.error||!Array.isArray(r.data)||!r.data.length)return;box.innerHTML=r.data.map(src=>`<img src="${src}" style="height:190px;border-radius:12px;flex:none">`).join('');}
+async function flLoadPhotos(){const box=document.getElementById('flPhotos');if(!box)return;const r=await sb.rpc('fleet_photos',{p_id:box.dataset.id});if(r.error||!Array.isArray(r.data)||!r.data.length)return;const srcs=await Promise.all(r.data.map(mediaSrc));box.innerHTML=srcs.filter(Boolean).map(src=>`<img src="${src}" style="height:190px;border-radius:12px;flex:none">`).join('');}
 let flNewImgs=null;
 document.addEventListener('click',async e=>{
   const t=e.target.closest('[data-falall],[data-fal],[data-fadd],[data-fcancel],[data-fopen],[data-fclose],[data-fedit],[data-fdel],[data-ff],[data-fs]'); if(!t||!$('#view').contains(t)) return;
@@ -1367,7 +1367,8 @@ document.addEventListener('submit',async e=>{
   if(!old&&!flNewImgs){ $('#flErr').textContent='صوّر السيارة أولاً (صورة واحدة على الأقل)'; return; }
   v.valueDate=todayIso();
   const b=$('#flSave'); b.disabled=true; b.textContent='جارِ الحفظ…'; $('#flErr').textContent='';
-  const r=await sb.rpc('fleet_save',{p_id:id,p_data:v,p_imgs:flNewImgs?[...flNewImgs]:null});
+  const pimgs=flNewImgs?await Promise.all([...flNewImgs].map(x=>mediaPut('fleet',v.br,x))):null;
+  const r=await sb.rpc('fleet_save',{p_id:id,p_data:v,p_imgs:pimgs});
   b.disabled=false; b.textContent='حفظ السيارة';
   if(r.error){ $('#flErr').textContent=/fleet_save|function|schema cache/i.test(r.error.message)?'الميزة تحتاج تشغيل ملف fleet.sql في Supabase أولاً':r.error.message; return; }
   st.flEdit=null; flNewImgs=null; st.flOpen=id; delete st.cache['fleet/vehicles']; toast('تم حفظ السيارة ✓'); await render(); flLoadPhotos();
@@ -1705,6 +1706,13 @@ document.addEventListener('submit',async e=>{
 });
 
 
+// ----- الصور في مساحة الملفات (مع رجوع تلقائي للطريقة القديمة) -----
+const MEDIA_BKT='media';
+async function mediaPut(kind,branch,dataUrl,sub){ if(!dataUrl||!String(dataUrl).startsWith('data:')||!branch) return dataUrl;
+  try{ const b=await (await fetch(dataUrl)).blob(); const id=(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2)); const path=kind+'/'+branch+'/'+(sub?sub+'/':'')+id+'.jpg';
+    if(!sb.storage) throw new Error('nostorage'); const r=await sb.storage.from(MEDIA_BKT).upload(path,b,{contentType:'image/jpeg',upsert:false}); if(r.error) throw r.error; return 'sb:'+path; }
+  catch(e){ console.warn('media fallback',e&&e.message); return dataUrl; } }
+async function mediaSrc(v){ if(!v||!String(v).startsWith('sb:')) return v; try{ const r=await sb.storage.from(MEDIA_BKT).createSignedUrl(String(v).slice(3),3600); return r.data&&r.data.signedUrl||''; }catch(e){ return ''; } }
 // ----- التقرير المسائي -----
 async function brLoad(){ const r=await sb.from('daily_briefs').select('day,text,updated_at').order('day',{ascending:false}).limit(30); if(r.error) return null; st._br=r.data||[]; return st._br; }
 async function brCard(){ if(!isAdmin()) return ''; let L; try{ L=await brLoad(); }catch(e){ return ''; } if(!L||!L.length) return '';
@@ -1811,7 +1819,7 @@ function cuForm(kind,c,{emps}={}){ return new Promise(res=>{
 });}
 
 async function cuAdd(c,kind){ const o=await cuForm(kind,c); if(!o) return false;
-  toast('جارِ الحفظ…'); const r=await sb.rpc('custody_add',{p_custody:c.id,p_kind:kind,p_amount:o.amount,p_date:o.date,p_method:o.method||null,p_vendor:o.vendor||'',p_category:o.category||'',p_taxable:kind==='expense'?o.taxable:null,p_vat:o.vat??null,p_invoice:o.invoice||'',p_note:o.note||'',p_img:o.img||null});
+  toast('جارِ الحفظ…'); const r=await sb.rpc('custody_add',{p_custody:c.id,p_kind:kind,p_amount:o.amount,p_date:o.date,p_method:o.method||null,p_vendor:o.vendor||'',p_category:o.category||'',p_taxable:kind==='expense'?o.taxable:null,p_vat:o.vat??null,p_invoice:o.invoice||'',p_note:o.note||'',p_img:o.img?await mediaPut('custody',c.branch,o.img,c.emp_id):null});
   if(r.error){toast(r.error.message);return false;} toast(kind==='expense'?(isEmp()?'تم رفع الفاتورة ✓ — بانتظار المحاسب':'تم تسجيل الفاتورة ✓'):'تم الحفظ ✓'); st._alertsAt=0; return true; }
 
 function cuStatement(c,tx,staff){ const k=cuCalc(tx);
@@ -1871,7 +1879,7 @@ async function cuRefresh(id){ try{ await cuLoad(); }catch(e){} if(id&&$('#cudet'
 
 function cuPhoto(id){ const m=document.createElement('div'); m.className='cu-modal'; m.innerHTML=`<div class="card" style="max-width:520px;width:100%;padding:10px"><div class="bar-row" style="margin-bottom:8px"><b>صورة الفاتورة</b><button class="icb" data-x="1">✕</button></div><div class="cu-phbox"><div class="muted">جارِ التحميل…</div></div></div>`;
   m.addEventListener('click',e=>{if(e.target===m||e.target.closest('[data-x]'))m.remove();}); document.body.appendChild(m);
-  sb.rpc('custody_photo',{p_tx:id}).then(r=>{const b=m.querySelector('.cu-phbox'); if(r.error||!r.data){b.innerHTML='<div class="muted">ما قدرت أحمّل الصورة</div>';return;} b.innerHTML=`<img src="${r.data}" alt="فاتورة"><a class="btn ghost sm" href="${r.data}" download="فاتورة-عهدة.jpg" style="margin-top:8px">تنزيل الصورة</a>`;}); }
+  sb.rpc('custody_photo',{p_tx:id}).then(async r=>{const b=m.querySelector('.cu-phbox'); if(r.data) r.data=await mediaSrc(r.data); if(r.error||!r.data){b.innerHTML='<div class="muted">ما قدرت أحمّل الصورة</div>';return;} b.innerHTML=`<img src="${r.data}" alt="فاتورة"><a class="btn ghost sm" href="${r.data}" download="فاتورة-عهدة.jpg" style="margin-top:8px">تنزيل الصورة</a>`;}); }
 
 let cuXlLoad=null;
 function cuExcelJS(){ if(window.ExcelJS) return Promise.resolve(); return cuXlLoad||(cuXlLoad=new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';s.onload=res;s.onerror=()=>{cuXlLoad=null;rej(new Error('lib'));};document.head.appendChild(s);})); }
@@ -1913,7 +1921,7 @@ async function cuSettle(id){ const D=st._cu; const c=D.C.find(x=>x.id===id); con
 
 async function cuNew(){ const r=await sb.rpc('custody_emps'); if(r.error){toast(cuMissing(r.error)?'شغّل ملف custody.sql أولاً':r.error.message);return;}
   const o=await cuForm('new',null,{emps:r.data||[]}); if(!o) return;
-  const x=await sb.rpc('custody_open',{p_emp:o.emp,p_title:o.title||'',p_amount:o.amount||null,p_method:o.method||'transfer',p_date:o.date,p_note:o.note||'',p_img:o.img||null});
+  const x=await sb.rpc('custody_open',{p_emp:o.emp,p_title:o.title||'',p_amount:o.amount||null,p_method:o.method||'transfer',p_date:o.date,p_note:o.note||'',p_img:o.img?await mediaPut('custody',((r.data||[]).find(e=>e.id===o.emp)||{}).branch,o.img,o.emp):null});
   if(x.error){toast(x.error.message);return;} toast('تم فتح العهدة ✓'); await cuRefresh(x.data); }
 
 // بطاقة «عهدتي» في بوابة الموظف
@@ -2716,7 +2724,7 @@ function mtDetail(m){
     ${lg?`<div class="card"><h3 style="font-size:14px">سجل الإجراءات</h3><ul class="mtd-log">${lg}</ul></div>`:''}
   </div>${acts?`<div class="mtd-act">${acts}</div>`:''}`;
   document.body.appendChild(w);
-  if(m.has_photo) sb.rpc('maint_photos',{p_id:m.id}).then(r=>{const p=r.data||{};const el=$('#mtdph');if(!el)return;const ims=[[p.photo,'صورة المشكلة'],[p.done_photo,'بعد الإصلاح']].filter(x=>x[0]);
+  if(m.has_photo) sb.rpc('maint_photos',{p_id:m.id}).then(async r=>{const p=r.data||{};p.photo=await mediaSrc(p.photo);p.done_photo=await mediaSrc(p.done_photo);const el=$('#mtdph');if(!el)return;const ims=[[p.photo,'صورة المشكلة'],[p.done_photo,'بعد الإصلاح']].filter(x=>x[0]);
     el.innerHTML=ims.length?ims.map(([s,l])=>`<figure><img src="${s}" alt="${l}" data-mtzoom="1"><figcaption>${l}</figcaption></figure>`).join(''):'<div class="muted" style="font-size:12.5px">📷 لم يُرفق صورة مع هذا الطلب</div>';});
   w.addEventListener('click',ev=>{const z=ev.target.closest('[data-mtzoom]');if(!z)return;const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:95;background:rgba(0,0,0,.92);display:grid;place-items:center;padding:12px';o.innerHTML=`<img src="${z.src}" style="max-width:100%;max-height:92vh;border-radius:10px">`;o.onclick=()=>o.remove();document.body.appendChild(o);});
 }
@@ -2780,9 +2788,9 @@ document.addEventListener('click',async e=>{
     else if(s==='closed'){o=await mtAsk('تأكيد استلام الصيانة',[{name:'rt',label:'تقييمك للخدمة',type:'stars'},{name:'note',label:'ملاحظة (اختياري)',type:'area'}],'بالتأكيد يُغلق أمر العمل نهائياً');if(!o)return;}
     else if(s==='progress'&&m.status==='done'){o=await mtAsk('رفض الإنجاز',[{name:'note',label:'وش المشكلة اللي باقية؟',type:'area',req:1}],'يرجع الطلب للتنفيذ عند مشرف الصيانة');if(!o)return;}
     else if(s==='cancelled'){if(!confirm('إلغاء طلب الصيانة؟'))return;}
-    t.disabled=true;const r=await sb.rpc('maint_update',{p_id:d.id,p_status:s,p_note:o.note||null,p_cost:o.cost?+o.cost:null,p_done_photo:o.ph||null,p_assignee:o.as||null,p_due:o.due||null,p_rating:o.rt?+o.rt:null});t.disabled=false;
+    t.disabled=true;if(o.ph) o.ph=await mediaPut('maint',m.branch,o.ph);const r=await sb.rpc('maint_update',{p_id:d.id,p_status:s,p_note:o.note||null,p_cost:o.cost?+o.cost:null,p_done_photo:o.ph||null,p_assignee:o.as||null,p_due:o.due||null,p_rating:o.rt?+o.rt:null});t.disabled=false;
     if(r.error){toast('تعذّر: '+r.error.message);return;} st._alertsAt=0; toast({assigned:'تم القبول والإسناد ✓',rejected:'تم رفض الطلب',progress:m.status==='done'?'رجع الطلب للتنفيذ':'بدأ التنفيذ',done:'تم الإنجاز ✓ — بانتظار تأكيد الفرع',hold:'تم تعليق الطلب',closed:'تم إغلاق أمر العمل ✓',cancelled:'تم الإلغاء'}[s]); render(); return;}
-  if(d.mtph){const r=await sb.rpc('maint_photos',{p_id:d.mtph});const p=r.data||{};const ims=[[p.photo,'قبل الإصلاح'],[p.done_photo,'بعد الإصلاح']].filter(x=>x[0]);if(!ims.length){toast('ما فيه صور');return;}
+  if(d.mtph){const r=await sb.rpc('maint_photos',{p_id:d.mtph});const p=r.data||{};p.photo=await mediaSrc(p.photo);p.done_photo=await mediaSrc(p.done_photo);const ims=[[p.photo,'قبل الإصلاح'],[p.done_photo,'بعد الإصلاح']].filter(x=>x[0]);if(!ims.length){toast('ما فيه صور');return;}
     const m=document.createElement('div');m.style.cssText='position:fixed;inset:0;z-index:85;background:rgba(0,0,0,.85);display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;padding:16px;overflow:auto';
     m.innerHTML=ims.map(([s,l])=>`<figure style="margin:0;text-align:center;color:#fff"><img src="${s}" style="max-width:100%;max-height:70vh;border-radius:12px"><figcaption style="font-size:13px;margin-top:4px">${l}</figcaption></figure>`).join('');m.onclick=()=>m.remove();document.body.appendChild(m);return;}
   if(d.mtdel){if(!confirm('حذف الطلب نهائياً؟'))return;const r=await sb.rpc('maint_delete',{p_id:d.mtdel});if(r.error){toast('تعذّر: '+r.error.message);return;}toast('تم الحذف');render();}
@@ -2792,6 +2800,7 @@ document.addEventListener('submit',async e=>{
   if(!f.br.value){er.textContent='اختر الفرع';return;} if(!f.cat.value){er.textContent='اختر نوع الصيانة';return;} if(!f.title.value.trim()){er.textContent='اكتب وصف المشكلة';return;}
   const b=$('#mtSend'); b.disabled=true; b.textContent='جارِ الرفع…';
   let ph=null; try{ if(f.ph.files[0]) ph=await flImg(f.ph.files[0],1100,.72); }catch(_){}
+  if(ph) ph=await mediaPut('maint',f.br.value,ph);
   const r=await sb.rpc('maint_create',{p_branch:f.br.value,p_category:f.cat.value,p_title:f.title.value.trim(),p_details:f.details.value.trim()||null,p_priority:f.pr.value,p_photo:ph});
   b.disabled=false; b.textContent='رفع الطلب';
   if(r.error){er.textContent=/function|schema cache/i.test(r.error.message)?'الميزة تحتاج تشغيل ملف maint.sql أولاً':r.error.message;return;}

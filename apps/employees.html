@@ -181,6 +181,13 @@ button{cursor:pointer;border:0;background:0 0}
 <script>
 'use strict';
 const SBC=window.supabase.createClient(window.PORTAL_CONFIG.url,window.PORTAL_CONFIG.key,{auth:{persistSession:true,autoRefreshToken:true}});
+const MEDIA_BKT='media';
+async function mediaPut(kind,branch,dataUrl,sub){ if(!dataUrl||!String(dataUrl).startsWith('data:')||!branch) return dataUrl;
+  try{ const b=await (await fetch(dataUrl)).blob(); const id=(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2)); const path=kind+'/'+branch+'/'+(sub?sub+'/':'')+id+'.jpg';
+    if(!SBC.storage) throw new Error('nostorage'); const r=await SBC.storage.from(MEDIA_BKT).upload(path,b,{contentType:'image/jpeg',upsert:false}); if(r.error) throw r.error; return 'sb:'+path; }
+  catch(e){ console.warn('media fallback',e&&e.message); return dataUrl; } }
+async function mediaSrc(v){ if(!v||!String(v).startsWith('sb:')) return v; try{ const r=await SBC.storage.from(MEDIA_BKT).createSignedUrl(String(v).slice(3),3600); return r.data&&r.data.signedUrl||''; }catch(e){ return ''; } }
+
 const AUTHOR='إعداد أمير العريفي';
 const BR_FALLBACK=[{id:'az',name:'العزيزية',color:'#D4AF37'},{id:'sh',name:'شوران',color:'#5B8FD0'},{id:'pc',name:'الباتشينو',color:'#A07BE6'}];
 const JOBS=['مدير فرع','مشرف','كاشير','طباخ','مساعد طباخ','معلم بروست','معلم شاورما','عامل تحضير','عامل نظافة','مباشر صالة','سائق','محاسب'];
@@ -237,7 +244,7 @@ async function load(){
 const avOf=(r,b,sz)=>`<span class="av" style="background:${b.color}${sz?`;width:${sz}px;height:${sz}px`:''}">${S.th&&S.th[r.id]?`<img src="${S.th[r.id]}" alt="">`:esc((r.name||'?').trim().charAt(0))}</span>`;
 function shrinkImg(file,max,q){return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=rej;fr.onload=()=>{const im=new Image();im.onerror=rej;im.onload=()=>{const k=Math.min(1,max/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',q))};im.src=fr.result};fr.readAsDataURL(file)})}
 async function showPhoto(r){const m=document.createElement('div');m.className='modal';m.innerHTML=`<div class="sheet"><h3>${esc(r.name)}</h3><div class="empty">جاري التحميل…</div><div class="acts"><button class="btn ghost" data-a="0">إغلاق</button></div></div>`;m.addEventListener('click',e=>{if(e.target===m||e.target.closest('[data-a]'))m.remove()});document.body.appendChild(m);
-  const {data}=await SBC.from('employee_photos').select('img').eq('emp_id',r.id).maybeSingle();const box=m.querySelector('.empty');if(box)box.outerHTML=data&&data.img?`<img class="bigph" src="${data.img}" alt="">`:'<div class="empty">ما فيه صورة</div>'}
+  const {data}=await SBC.from('employee_photos').select('img').eq('emp_id',r.id).maybeSingle();if(data&&data.img)data.img=await mediaSrc(data.img);const box=m.querySelector('.empty');if(box)box.outerHTML=data&&data.img?`<img class="bigph" src="${data.img}" alt="">`:'<div class="empty">ما فيه صورة</div>'}
 function hcOf(r){if(!(r.has_health||r.health_exp))return'none';const s=docState(r.health_exp);if(!s)return'ok';return s.n<0?'exp':s.n<=30?'soon':'ok'}
 const dedOf=(id,m)=>S.ded.filter(d=>d.emp_id===id&&(!m||String(d.date).slice(0,7)===m));
 const dsum=a=>Math.round(a.reduce((x,d)=>x+(+d.amount||0),0)*100)/100;
@@ -401,7 +408,7 @@ function dedBox(r){
   <button class="btn sm ghost" data-a="ded" style="width:100%;margin-top:8px">➖ تسجيل خصم على الموظف</button></div>`;
 }
 async function showDedPhoto(id){const m=document.createElement('div');m.className='modal';m.style.zIndex=70;m.innerHTML=`<div class="sheet"><h3>صورة المخالفة</h3><div class="empty">جاري التحميل…</div><div class="acts"><button class="btn ghost" data-a="0">إغلاق</button></div></div>`;m.addEventListener('click',e=>{if(e.target===m||e.target.closest('[data-a]'))m.remove()});document.body.appendChild(m);
-  const {data}=await SBC.from('employee_deduction_photos').select('img').eq('ded_id',id).maybeSingle();const box=m.querySelector('.empty');if(box)box.outerHTML=data&&data.img?`<img class="bigph" src="${data.img}" alt="" style="width:100%;border-radius:12px">`:'<div class="empty">ما فيه صورة</div>'}
+  const {data}=await SBC.from('employee_deduction_photos').select('img').eq('ded_id',id).maybeSingle();if(data&&data.img)data.img=await mediaSrc(data.img);const box=m.querySelector('.empty');if(box)box.outerHTML=data&&data.img?`<img class="bigph" src="${data.img}" alt="" style="width:100%;border-radius:12px">`:'<div class="empty">ما فيه صورة</div>'}
 function openDed(r){
   const m=document.createElement('div');m.className='modal';let reason='',ph=null;
   m.innerHTML=`<div class="sheet"><h3>خصم على ${esc(r.name)}</h3>
@@ -427,7 +434,7 @@ function openDed(r){
     a.disabled=true;a.textContent='جاري الحفظ…';
     const res=await SBC.from('employee_deductions').insert({emp_id:r.id,date:dt,amount:amt,reason,notes:m.querySelector('#dN').value.trim()}).select('id').single();
     if(res.error){a.disabled=false;a.textContent='تسجيل الخصم';m.querySelector('#dE').textContent=/relation|schema cache/i.test(res.error.message)?'لازم يتشغّل ملف قاعدة البيانات (employee_deductions.sql) أول':/row-level|policy/i.test(res.error.message)?'ما عندك صلاحية على هذا الفرع':'تعذّر الحفظ: '+res.error.message;return}
-    if(ph&&res.data){const pr=await SBC.from('employee_deduction_photos').insert({ded_id:res.data.id,img:ph});if(pr.error)toast('انحفظ الخصم لكن الصورة ما انرفعت',1)}
+    if(ph&&res.data){const pr=await SBC.from('employee_deduction_photos').insert({ded_id:res.data.id,img:await mediaPut('ded',r.branch,ph)});if(pr.error)toast('انحفظ الخصم لكن الصورة ما انرفعت',1)}
     m.remove();toast(`تم تسجيل خصم ${fmt(amt)} ر.س على ${r.name}`);await load();openDetail(r.id);
   });
   document.body.appendChild(m);setTimeout(()=>m.querySelector('#dA').focus(),60);
@@ -532,7 +539,7 @@ function openForm(r){
     a.disabled=true;a.textContent='جاري الحفظ…';
     const res=isNew?await SBC.from('employees').insert(rec).select('id').single():await SBC.from('employees').update(rec).eq('id',r.id);
     if(res.error){a.disabled=false;a.textContent=isNew?'إضافة الموظف':'حفظ التعديل';m.querySelector('#fe').textContent=/row-level|policy|permission/i.test(res.error.message)?'ما عندك صلاحية على هذا الفرع':/id_type|has_iqama|has_health|health_no/.test(res.error.message)?'لازم يتشغّل ملف قاعدة البيانات المحدّث أول':'تعذّر الحفظ: '+res.error.message;return}
-    if(ph){const eid=isNew?(res.data&&res.data.id):r.id;if(eid){const pr=await SBC.from('employee_photos').upsert({emp_id:eid,thumb:ph.thumb,img:ph.img});if(pr.error)toast(/relation|schema cache|does not exist/i.test(pr.error.message)?'البيانات انحفظت، والصورة تحتاج تشغيل ملف صور الموظفين في قاعدة البيانات':'البيانات انحفظت لكن تعذّر رفع الصورة: '+pr.error.message,1)}}
+    if(ph){const eid=isNew?(res.data&&res.data.id):r.id;if(eid){const pr=await SBC.from('employee_photos').upsert({emp_id:eid,thumb:ph.thumb,img:await mediaPut('emp',rec.branch,ph.img)});if(pr.error)toast(/relation|schema cache|does not exist/i.test(pr.error.message)?'البيانات انحفظت، والصورة تحتاج تشغيل ملف صور الموظفين في قاعدة البيانات':'البيانات انحفظت لكن تعذّر رفع الصورة: '+pr.error.message,1)}}
     m.remove();toast(isNew?'تمت إضافة '+rec.name:'تم حفظ التعديل');load();
   });
   document.body.appendChild(m);setTimeout(()=>{if(isNew)m.querySelector('[name=name]').focus()},60);
