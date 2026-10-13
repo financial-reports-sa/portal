@@ -713,7 +713,7 @@ const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'ai',na
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup','feedback','custody','custody_holder','hr'];
-const APP_VER='95';
+const APP_VER='96';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.custody_holder='مسؤول العهدة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -1132,12 +1132,13 @@ const wsCatName=(b,c)=>(b==='pc'?WS_CP:WS_CN)[c]||('قسم '+c);
 const WS_G=[
   {k:'chicken',n:'الدجاج',ic:'🍗',c:'#C9A227',kw:'دجاج|فروج|فراريج|صدور|افخاذ|أفخاذ|اجنحة|أجنحة|بروست',cats:{az:['127'],sh:['127'],pc:['107']},unit:'حب',f:{az:1,sh:1,pc:1},fu:'حبة'},
   {k:'meat',n:'الذبايح',ic:'🐑',c:'#B5563C',kw:'ذبيح|ذبائح|ذبايح|حاشي|غنم|نعيمي|نجدي|حري|سواكني|خروف|تيس|عجل|لحم',cats:{az:['112'],sh:['112'],pc:[]},unit:'ذبيح',f:{az:1,sh:1,pc:null},fu:'ذبيحة'},
-  {k:'rice',n:'الرز',ic:'🍚',c:'#3A9BB5',kw:'رز|ارز|أرز|بسمتي',cats:{az:['121','127','112'],sh:['121','127','112'],pc:[]},unit:'',f:{},fu:'كيلو'},
+  {k:'rice',n:'الرز',ic:'🍚',c:'#3A9BB5',kw:'رز|ارز|أرز|بسمتي',cats:{az:['121','127','112'],sh:['121','127','112'],pc:[]},unit:'',f:{az:0.2,sh:0.2,pc:null},fu:'كيلو',conv:'كيس=40',w:{'121':1,'127':4,'112':20},su:'نفر'},
   {k:'veg',n:'الخضار',ic:'🥬',c:'#1FA16B',kw:'طماطم|بندوره|بندورة|بصل|خيار|خس|بطاطس|بطاطا|فلفل|جزر|ليمون|كوسا|باذنجان|بقدونس|كزبره|كزبرة|نعناع|ثوم|ملفوف|زهره|زهرة|شمندر|خضار|فاصوليا|بامية|بامي|جرجير|فجل|شبت|كرفس|بروكلي',cats:'all',unit:'',f:{},fu:'كيلو'}];
 let WS_CFG=null;
 async function wsCfg(){ if(WS_CFG&&st.cache['wh/cfg']) return WS_CFG; let saved={}; try{ const d=(await appList('wh','cfg')).find(x=>x.id==='waste'); saved=(d&&d.data)||{}; }catch(e){}
-  const G=WS_G.map(g=>{const s=(saved.groups||{})[g.k]||{};return {...g,kw:s.kw!=null?s.kw:g.kw,cats:s.cats||g.cats,unit:s.unit!=null?s.unit:g.unit,f:s.f||g.f,fu:s.fu||g.fu};});
+  const G=WS_G.map(g=>{const s=(saved.groups||{})[g.k]||{};return {...g,kw:s.kw!=null?s.kw:g.kw,cats:s.cats||g.cats,unit:s.unit!=null?s.unit:g.unit,f:s.f&&Object.values(s.f).some(v=>v!=null)?s.f:g.f,fu:s.fu||g.fu,conv:s.conv!=null?s.conv:(g.conv||''),w:s.w||g.w||{}};});
   return WS_CFG={groups:G,map:saved.map||{},warn:saved.warn!=null?+saved.warn:0.05}; }
+function wsConv(t){ return String(t||'').split(/[;,،\n]/).map(x=>x.split('=')).filter(x=>x.length===2&&x[0].trim()&&+x[1]>0).map(([a,b])=>{try{return [new RegExp(a.trim()),+b];}catch(e){return null;}}).filter(Boolean); }
 function wsGroupOf(cfg,it){ const m=cfg.map[it.code]; if(m) return m==='none'?null:m; const t=(it.name||'')+' '+(it.group||'');
   for(const g of cfg.groups){ if(g.kw&&new RegExp(g.kw).test(t)) return g.k; } return null; }
 const wsDays=(a,b)=>{const o=[];let d=new Date(a+'T12:00:00');const e=new Date(b+'T12:00:00');while(d<=e){o.push(d.toISOString().slice(0,10));d=new Date(d.getTime()+864e5);}return o;};
@@ -1153,9 +1154,9 @@ function wsCalc(cfg,docs,per,b,m){
   const share=catDays&&cover.size?Math.min(1,cover.size/catDays):1;
   const out={b,cover:cover.size,catDays,asOf,share,from:[...cover].sort()[0]||null,G:{},other,total:sum(Object.values(G).map(x=>x.cost))+other.cost};
   cfg.groups.forEach(g=>{ const x=G[g.k]; const codes=g.cats==='all'?(cs?Object.keys(cs):[]):(g.cats[b]||[]);
-    const sv=cs?sum(codes.map(c=>cs[c]&&cs[c].v)):0, sn=g.cats==='all'?null:(cs?sum(codes.map(c=>cs[c]&&cs[c].n)):0);
+    const sv=cs?sum(codes.map(c=>cs[c]&&cs[c].v)):0, sn=g.cats==='all'?null:(cs?sum(codes.map(c=>(cs[c]&&cs[c].n||0)*((g.w||{})[c]!=null?+(g.w||{})[c]:1))):0);
     const svA=sv*share, snA=sn==null?null:sn*share; const f=g.f&&g.f[b];
-    let uq=null; if(f&&snA){ const re=g.unit?new RegExp(g.unit):null; const its=Object.values(x.items).filter(i=>!re||re.test(i.unit)); const q=sum(its.map(i=>i.qty)), c=sum(its.map(i=>i.cost));
+    let uq=null; if(f&&snA){ const re=g.unit?new RegExp(g.unit):null; const CV=wsConv(g.conv); const mul=u=>{const m=CV.find(([r])=>r.test(u||''));return m?m[1]:1;}; const its=Object.values(x.items).filter(i=>!re||re.test(i.unit)); const q=sum(its.map(i=>i.qty*mul(i.unit))), c=sum(its.map(i=>i.cost));
       if(q){ const exp=snA*f; uq={q,exp,diff:q-exp,p:exp?(q-exp)/exp:null,unitCost:c/q,val:(q-exp)*(c/q)}; } }
     out.G[g.k]={cost:x.cost,qty:x.qty,items:Object.values(x.items).sort((p,q)=>q.cost-p.cost),codes,sv:svA,sn:snA,ratio:svA?x.cost/svA:null,perDish:snA?x.cost/snA:null,uq}; });
   return out;
@@ -1186,7 +1187,7 @@ function wsCard(g,x,prev,M,one){
     ${x.uq?`<div class="ws-big num ${x.uq.p>WS_CFG.warn?'down':x.uq.p<0?'up':''}">${wsSg(x.uq.diff,Math.abs(x.uq.diff)<10?1:0)} <small>${esc(g.fu)}</small></div>
       <div class="ws-s">المصروف <b class="num">${fmt(x.uq.q,0)}</b> · المفروض حسب المبيعات <b class="num">${fmt(x.uq.exp,0)}</b> · الفرق <b class="num">${wsSp(x.uq.p)}</b>${M?` ≈ <b class="num">${wsSg(x.uq.val)}</b> ر.س`:''}</div>`
      :`<div class="ws-big num">${x.ratio!=null?pct(x.ratio):'—'}</div><div class="ws-s">${x.ratio!=null?'تكلفة المصروف من مبيعات '+(g.cats==='all'?'الفرع':'الأقسام المرتبطة'):'ما فيه مبيعات مرتبطة'}</div>`}
-    <div class="ws-s">${M?`الصرف <b class="num">${fmt(x.cost)}</b> ر.س · المبيعات <b class="num">${fmt(x.sv)}</b>`:''}${x.sn?` · المباع <b class="num">${fmt(x.sn,x.sn%1?1:0)}</b>`:''}</div>
+    <div class="ws-s">${M?`الصرف <b class="num">${fmt(x.cost)}</b> ر.س · المبيعات <b class="num">${fmt(x.sv)}</b>`:''}${x.sn?` · المباع <b class="num">${fmt(x.sn,x.sn%1?1:0)}</b>${g.su?' '+esc(g.su):''}`:''}</div>
     ${qs?`<div class="ws-s muted">الكمية المصروفة: ${qs}</div>`:''}${x.uq&&x.ratio!=null?`<div class="ws-s muted">تكلفته من المبيعات ${pct(x.ratio)}</div>`:''}${dl?`<div class="ws-s">${dl}</div>`:''}</div>`;
 }
 V.waste=async()=>{
@@ -1227,18 +1228,19 @@ function wsSettings(cfg,per){
     <label class="ws-f">كلمات تميّز أصنافه (مفصولة بـ |)<input name="kw_${g.k}" value="${esc(g.kw)}"></label>
     ${BR.map(b=>`<input type="hidden" name="has_${g.k}_${b.id}" value="1">`).join('')}${g.cats==='all'?'<div class="muted" style="font-size:12px">يقارن بكل مبيعات الفرع.</div>':BR.map(b=>`<div class="ws-f"><span>أقسام المبيعات المرتبطة · ${esc(b.name)}</span><div class="chips ws-cats">${codes(b.id).map(c=>`<label><input type="checkbox" name="cat_${g.k}_${b.id}" value="${c}" ${(g.cats[b.id]||[]).includes(c)?'checked':''}><span>${esc(wsCatName(b.id,c))}</span></label>`).join('')}</div></div>`).join('')}
     <div class="ws-row"><label class="ws-f">وحدة الصنف في المستودع (تحتوي)<input name="unit_${g.k}" value="${esc(g.unit)}" placeholder="مثل: حب أو كيلو"></label><label class="ws-f">اسم الوحدة<input name="fu_${g.k}" value="${esc(g.fu)}"></label></div>
-    <div class="ws-row">${BR.map(b=>`<label class="ws-f">كم ${esc(g.fu)} لكل وحدة مباعة · ${esc(b.name)}<input name="f_${g.k}_${b.id}" type="number" step="0.001" min="0" value="${g.f&&g.f[b.id]!=null?g.f[b.id]:''}" placeholder="فاضي = بالنسبة فقط"></label>`).join('')}</div></div>`).join('')}
+    <div class="ws-row"><label class="ws-f">تحويل الوحدات إلى ${esc(g.fu)} <small class="muted">مثل: كيس=40</small><input name="conv_${g.k}" value="${esc(g.conv||'')}" placeholder="فاضي = بدون تحويل"></label>${g.cats==='all'?'':`<label class="ws-f">${esc(g.su||'وحدة')} لكل وحدة مباعة من كل قسم <small class="muted">مثل: 121=1، 127=4</small><input name="w_${g.k}" value="${esc(Object.entries(g.w||{}).map(([c,v])=>c+'='+v).join('، '))}" placeholder="فاضي = 1 لكل قسم"></label>`}</div>
+    <div class="ws-row">${BR.map(b=>`<label class="ws-f">كم ${esc(g.fu)} لكل ${esc(g.su||'وحدة مباعة')} · ${esc(b.name)}<input name="f_${g.k}_${b.id}" type="number" step="0.001" min="0" value="${g.f&&g.f[b.id]!=null?g.f[b.id]:''}" placeholder="فاضي = بالنسبة فقط"></label>`).join('')}</div></div>`).join('')}
   <button class="btn" type="submit">حفظ الإعدادات</button></form></details>`;
 }
 async function wsSave(patch){
-  const cfg=await wsCfg(); const data={warn:cfg.warn,map:{...cfg.map},groups:Object.fromEntries(cfg.groups.map(g=>[g.k,{kw:g.kw,cats:g.cats,unit:g.unit,f:g.f,fu:g.fu}]))}; patch(data);
+  const cfg=await wsCfg(); const data={warn:cfg.warn,map:{...cfg.map},groups:Object.fromEntries(cfg.groups.map(g=>[g.k,{kw:g.kw,cats:g.cats,unit:g.unit,f:g.f,fu:g.fu,conv:g.conv||'',w:g.w||{}}]))}; patch(data);
   const r=await sb.from('app_docs').upsert({app:'wh',coll:'cfg',id:'waste',data,branches:[]},{onConflict:'app,coll,id'}); if(r.error){toast('تعذّر الحفظ: '+r.error.message);return false;}
   WS_CFG=null; delete st.cache['wh/cfg']; return true;
 }
 document.addEventListener('change',async e=>{ const s=e.target.closest&&e.target.closest('[data-wsmap]'); if(!s) return;
   const code=s.dataset.wsmap, v=s.value; if(await wsSave(d=>{ d.map[code]=v||'none'; })){ toast('تم ✓'); render(); } });
 document.addEventListener('submit',async e=>{ if(e.target.id!=='wsForm') return; e.preventDefault(); const f=new FormData(e.target);
-  if(await wsSave(d=>{ d.warn=Math.max(0,+f.get('warn')||0)/100; WS_G.forEach(g=>{ const x=d.groups[g.k]; x.kw=(f.get('kw_'+g.k)||'').trim(); x.unit=(f.get('unit_'+g.k)||'').trim(); x.fu=(f.get('fu_'+g.k)||'').trim()||g.fu;
+  if(await wsSave(d=>{ d.warn=Math.max(0,+f.get('warn')||0)/100; WS_G.forEach(g=>{ const x=d.groups[g.k]; x.kw=(f.get('kw_'+g.k)||'').trim(); x.unit=(f.get('unit_'+g.k)||'').trim(); x.fu=(f.get('fu_'+g.k)||'').trim()||g.fu; x.conv=(f.get('conv_'+g.k)||'').trim(); if(f.has('w_'+g.k)){ x.w={}; String(f.get('w_'+g.k)||'').replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).split(/[;,،\s]+/).forEach(p=>{const [c,v]=p.split('=');if(c&&v!==undefined&&!isNaN(+v))x.w[c.trim()]=+v;}); }
     x.cats=x.cats==='all'?'all':{...x.cats}; x.f={...(x.f||{})}; st.branches.forEach(b=>{ if(!f.has('has_'+g.k+'_'+b.id)) return; if(x.cats!=='all') x.cats[b.id]=f.getAll('cat_'+g.k+'_'+b.id); const v=f.get('f_'+g.k+'_'+b.id); x.f[b.id]=v===''||v==null?null:+v; }); }); })){ toast('تم حفظ الإعدادات ✓'); render(); } });
 
 // ----- الموارد البشرية: وثائق المنشأة + الإقامات وكروت العمل + الطلبات -----
