@@ -706,7 +706,7 @@ const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'ai',na
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup','feedback','custody','hr'];
-const APP_VER='88';
+const APP_VER='90';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -2811,19 +2811,19 @@ async function aiCtx(){
 
   // ---------- قوائم الدخل ----------
   await run('income',async()=>{ if(!canSee('income')) return; const I=(await loadIncome()).filter(r=>bs.includes(r.branch_id)); if(!I.length) return;
-    const months=[...new Set(I.map(r=>r.month))].sort().slice(-13); const o={};
+    const months=[...new Set(I.map(r=>r.month))].sort().slice(-13); const o={}; const acct={};
     const pack=t=>({revenue:aiR0(t.rev),cogs:aiR0(t.cogs),gross_profit:aiR0(t.gross),opex:aiR0(t.opex),net_profit:aiR0(t.net),gross_margin_pct:t.rev?aiP(t.gross/t.rev):null,net_margin_pct:t.rev?aiP(t.net/t.rev):null,cogs_ratio_pct:t.rev?aiP(t.cogs/t.rev):null});
     months.forEach((m,mi)=>{ const L=I.filter(r=>r.month===m); const mo={by_branch:{}}; const detail=mi>=months.length-3;
       L.forEach(r=>{ const t=stmtTotals(r); const x=pack(t); x.estimate=!!r.is_estimate;
         const lines=[]; (r.groups||[]).forEach(g=>{if(g.cat==='opex'||g.cat==='cogs')(g.a||[]).forEach(a=>{if(Math.abs(+a.v||0)>=1)lines.push([a.n,+a.v,g.cat]);});});
-        if(detail) x.top_expenses=lines.filter(l=>l[2]==='opex').sort((p,q)=>q[1]-p[1]).slice(0,8).map(l=>({item:l[0],amount:aiR0(l[1])}));
-        if(detail) x.cogs_breakdown=lines.filter(l=>l[2]==='cogs').sort((p,q)=>q[1]-p[1]).slice(0,6).map(l=>({item:l[0],amount:aiR0(l[1])}));
+        (r.groups||[]).forEach(g=>{ (g.a||[]).filter(a=>Math.abs(+a.v||0)>=0.5).forEach(a=>{ const k=a.n; const e=acct[k]=acct[k]||{group:(g.n||g.c)+(g.cat==='rev'?' (إيرادات)':g.cat==='cogs'?' (تكلفة المبيعات)':''),total:0,months:{}}; const mm=e.months[m]=e.months[m]||{}; mm[BN[r.branch_id]]=aiR2((mm[BN[r.branch_id]]||0)+(+a.v||0)); e.total+=(+a.v||0); }); });
         mo.by_branch[BN[r.branch_id]]=x; });
       const all=aggTotals(L); mo.all_branches=pack(all); mo.any_estimate=all.est;
       const sh=L.filter(r=>AI_ENT[r.branch_id]==='مطاعم الشادن'); if(sh.length) mo.shaden=pack(aggTotals(sh));
       o[m]=mo; });
     fresh['قوائم الدخل']=months[months.length-1];
-    C.income_statements={source:'شاشة «قوائم الدخل»',meaning:'قائمة الدخل الشهرية لكل فرع (الإيراد قبل الضريبة). estimate=true يعني الشهر تقديري لم يُقفل بعد وأرقامه ناقصة وتتغير — لا تعامله كشهر كامل ولا تقارنه بشهر مكتمل بدون تنبيه. تفصيل المصاريف وتكلفة البضاعة بالبنود متوفر لآخر 3 أشهر.',monthly:o}; });
+    Object.values(acct).forEach(v=>{v.total=aiR2(v.total);});
+    C.income_statements={source:'شاشة «قوائم الدخل»',meaning:'قائمة الدخل الشهرية لكل فرع (الإيراد قبل الضريبة). estimate=true يعني الشهر تقديري لم يُقفل بعد وأرقامه ناقصة وتتغير — لا تعامله كشهر كامل ولا تقارنه بشهر مكتمل بدون تنبيه. accounts_detail = كل حسابات قائمة الدخل بالتفصيل (إيرادات وتكلفة ومصاريف): لكل حساب مجموعته، ومبلغه لكل شهر ولكل فرع، وإجماليه لكل الأشهر والفروع. أي مصروف يسأل عنه المستخدم (مثل ديوان المظالم، الكهرباء، الإيجار، الرواتب، استقطاع سيارة، مخالفات…) ابحث عنه في أسماء الحسابات بالاسم أو بجزء منه أو بمعناه قبل ما تقول ما فيه بيانات، واذكر اسم الحساب كما هو. إذا طابق أكثر من حساب اذكرها كلها.',monthly:o,accounts_detail:acct}; });
 
   // ---------- نسبة تكلفة المستودعات ----------
   await run('hr',async()=>{ if(!canSee('hr')) return; const H=await hrLoad(); if(H.missing) return; const td=todayIso();
