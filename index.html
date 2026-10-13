@@ -562,6 +562,7 @@ body.hasnav .toast{bottom:calc(100px + env(safe-area-inset-bottom,0px))}
 .cu-cam{display:block;border:2px dashed var(--gold);border-radius:14px;cursor:pointer;overflow:hidden;background:var(--gold-soft);text-align:center}.cu-cam.sm{border-width:1.5px;border-color:var(--line);background:var(--bg)}
 .cu-camin{display:flex;flex-direction:column;align-items:center;gap:2px;padding:18px 10px}.cu-cam.sm .cu-camin{flex-direction:row;justify-content:center;gap:8px;padding:10px}.cu-cam img{display:block;width:100%;max-height:240px;object-fit:contain;background:#000}.cu-cam.busy{opacity:.6}
 .seg2{display:flex;gap:6px}.seg2 button{flex:1;border:1.5px solid var(--line);background:var(--card);border-radius:10px;padding:10px;font:inherit;font-weight:700;color:var(--muted);cursor:pointer}.seg2 button.on{border-color:var(--green,#1E5A3E);color:var(--green,#1E5A3E);background:rgba(30,90,62,.07)}
+.cu-brs{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px;font-size:12px}.cu-brseg{flex-wrap:wrap}.cu-brseg button{flex:1 1 30%}
 .cu-err{color:var(--down);font-size:12.5px;font-weight:700;background:rgba(208,69,58,.07);border-radius:8px;padding:7px 10px}
 .cu-phbox{display:flex;flex-direction:column;align-items:center}.cu-phbox img{max-width:100%;max-height:70vh;border-radius:10px}
 .mtd-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--card);border-bottom:1px solid var(--line);font-family:var(--f-disp)}
@@ -706,7 +707,7 @@ const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'ai',na
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup','feedback','custody','custody_holder','hr'];
-const APP_VER='92';
+const APP_VER='93';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.custody_holder='مسؤول العهدة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -734,7 +735,7 @@ const isAdmin=()=>st.profile&&['owner','admin'].includes(st.profile.role);
 const isOwner=()=>st.profile&&st.profile.role==='owner';
 const isEmp=()=>st.profile&&st.profile.role==='employee';
 const allowed=id=>{ if(isEmp()) return id==='me'; if(id==='me') return false; if(isAdmin()||id==='home'||id==='ai') return true; if(id==='daily') return st.mySections.includes('sales')&&st.allBranches; if(id==='maint') return st.mySections.includes('maint')||st.mySections.includes('maint_sup'); if(id==='hr') return st.mySections.includes('hr')||st.mySections.includes('employees'); if(id==='custody') return st.mySections.includes('custody')||st.mySections.includes('custody_holder'); const x=SECTIONS.find(q=>q.id===id); return st.mySections.includes(x&&x.perm?x.perm:id); };
-const brById=id=>st.branches.find(b=>b.id===id)||{id,name:id,color:'#888'};
+const brById=id=>st.branches.find(b=>b.id===id)||(st._cuBr||[]).find(b=>b.id===id)||{id,name:id,color:'#888'};
 const selBranches=()=>st.f==='all'?st.branches.map(b=>b.id):[st.f];
 
 async function q(key,fn){ if(st.cache[key]) return st.cache[key]; const r=await fn(); if(r.error) throw r.error; st.cache[key]=r.data||[]; return st.cache[key]; }
@@ -2066,6 +2067,9 @@ function cuCalc(tx){ const A=tx.filter(t=>t.status==='approved'), P=tx.filter(t=
   const f=sum(A.filter(t=>t.kind==='fund').map(t=>t.amount)), e=sum(A.filter(t=>t.kind==='expense').map(t=>t.amount)), r=sum(A.filter(t=>t.kind==='return').map(t=>t.amount));
   return {funds:f,exp:e,ret:r,bal:Math.round((f-e-r)*100)/100,pend:P.length,pendEmp:P.filter(t=>t.side==='emp'),pendAcc:P.filter(t=>t.side==='acc'),pendExp:sum(P.filter(t=>t.kind==='expense').map(t=>t.amount)),
     nonTax:sum(tx.filter(t=>t.kind==='expense'&&t.status!=='rejected'&&t.taxable===false).map(t=>t.amount)),vat:sum(A.filter(t=>t.kind==='expense').map(t=>+t.vat||0)),n:tx.length}; }
+const cuBrN=b=>b?brById(b).name:'بدون فرع محدد';
+async function cuBranches(){ if(st._cuBr) return st._cuBr; try{ const r=await sb.rpc('custody_branches'); if(!r.error&&r.data&&r.data.length) return st._cuBr=r.data; }catch(e){} return st._cuBr=st.branches.map(b=>({id:b.id,name:b.name})); }
+function cuByBranch(tx){ const o={}; tx.filter(t=>t.kind==='expense'&&t.status!=='rejected'&&t.branch).forEach(t=>{o[t.branch]=(o[t.branch]||0)+(+t.amount||0);}); return Object.entries(o).sort((a,b)=>b[1]-a[1]); }
 const cuStaff=()=>isAdmin()||st.mySections.includes('custody');
 const cuHolder=()=>!isEmp()&&st.mySections.includes('custody_holder');
 const cuIsMine=c=>isEmp()?true:!!(c&&st.user&&c.holder_user===st.user.id);
@@ -2078,7 +2082,7 @@ const cuMissing=e=>e&&/relation|schema cache|does not exist|custod/i.test(e.mess
 const cuPill=s=>{const x=CU_ST[s]||[s,'var(--chip)','inherit'];return `<span class="tag" style="background:${x[1]};color:${x[2]};font-weight:700">${x[0]}</span>`;};
 function cuTxRow(t,ctx){ // ctx: {staff, me, open}
   const k=CU_K[t.kind]||['•',t.kind]; const sign=t.kind==='fund'?'+':'−';
-  const meta=[t.kind==='expense'?(t.vendor||'بدون اسم مورد'):(t.method==='cash'?'نقداً':'حوالة بنكية'),t.category,t.invoice_no?'فاتورة '+t.invoice_no:'',dLbl(t.date)].filter(Boolean).map(esc).join(' · ');
+  const meta=[t.kind==='expense'?(t.vendor||'بدون اسم مورد'):(t.method==='cash'?'نقداً':'حوالة بنكية'),t.kind==='expense'&&t.branch?'📍 '+brById(t.branch).name:'',t.category,t.invoice_no?'فاتورة '+t.invoice_no:'',dLbl(t.date)].filter(Boolean).map(esc).join(' · ');
   const tax=t.kind==='expense'?(t.taxable?`<span class="tag" style="background:rgba(91,143,208,.14);color:#2F67B0">ضريبية${t.vat?' · '+fmt(t.vat,2):''}</span>`:`<span class="tag" style="background:rgba(208,69,58,.1);color:var(--down);font-weight:700">غير ضريبية</span>`):'';
   const waitWho=t.status==='pending'?(t.side==='emp'?'بانتظار مراجعة المحاسب':'بانتظار تأكيد مسؤول العهدة'):'';
   const canRev=ctx.open&&t.status==='pending'&&((t.side==='emp'&&ctx.staff)||(t.side==='acc'&&(ctx.me||isAdmin())));
@@ -2093,20 +2097,22 @@ function cuTxRow(t,ctx){ // ctx: {staff, me, open}
     ${canRev||canDel?`<div style="display:flex;gap:6px;margin-top:8px">${canRev?`<button class="btn sm" data-curev="${t.id}" data-ok="1" style="flex:1">${t.side==='acc'?'✓ تأكيد الاستلام':'✓ اعتماد'}</button><button class="btn ghost sm" data-curev="${t.id}" data-ok="0" style="flex:1;color:var(--down)">${t.side==='acc'?'ما استلمت':'✕ رفض'}</button>`:''}${canDel?`<button class="btn ghost sm" data-cudel="${t.id}" aria-label="حذف" style="flex:none">🗑</button>`:''}</div>`:''}
   </div></div>`; }
 
-function cuForm(kind,c,{emps}={}){ return new Promise(res=>{
+function cuForm(kind,c,{emps,brs}={}){ return new Promise(res=>{
   const isNew=kind==='new', exp=kind==='expense';
   const m=document.createElement('div'); m.className='cu-modal';
   const today=todayIso();
   const title=isNew?'عهدة جديدة':exp?'رفع فاتورة':kind==='fund'?'تسجيل مبلغ مستلم':'تسجيل مبلغ مُرجع';
   m.innerHTML=`<form class="card cu-form"><div class="bar-row"><h3 style="margin:0">${title}</h3><button type="button" class="icb" data-x="1" aria-label="إغلاق">✕</button></div>
     ${c?`<div class="muted" style="font-size:12px;margin-top:-4px">${esc(c.emp_name)} · ${cuRef(c)}</div>`:''}
-    ${isNew?`<div class="field"><label>مسؤول العهدة</label><select class="inp" name="emp" required><option value="">اختر مسؤول العهدة…</option>${(emps||[]).map(e=>`<option value="${e.id}">${esc(e.name)} — ${esc(brById(e.branch).name)}${e.job?' · '+esc(e.job):''}${e.has_account?'':' (بدون حساب)'}</option>`).join('')}</select></div>
-      <div class="field"><label>الغرض من العهدة</label><input class="inp" name="title" placeholder="مثال: مشتريات الفرع اليومية"></div>`:''}
+    ${isNew?`<div class="field"><label>مسؤول العهدة</label><select class="inp" name="emp" required><option value="">اختر مسؤول العهدة…</option>${(emps||[]).map(e=>`<option value="${e.id}">${esc(e.name)}${e.branch?' — '+esc(brById(e.branch).name):''}${e.job?' · '+esc(e.job):''}${e.has_account?'':' (بدون حساب)'}</option>`).join('')}</select></div>
+      <div class="field"><label>الغرض من العهدة</label><input class="inp" name="title" placeholder="مثال: مشتريات الفرع اليومية"></div>
+      <div class="field"><label>الفرع <small class="muted">اختياري — مسؤول العهدة يحدد فرع كل فاتورة</small></label><select class="inp" name="branch"><option value="">بدون فرع محدد</option>${st.branches.map(b=>`<option value="${b.id}">${esc(b.name)}</option>`).join('')}</select></div>`:''}
     ${exp?`<label class="cu-cam"><input type="file" name="img" accept="image/*" capture="environment" hidden><div class="cu-camin"><span style="font-size:30px">📸</span><b>صوّر الفاتورة</b><small class="muted">إلزامي — بدون صورة ما تنقبل</small></div><img alt="" hidden></label>`:''}
     <div class="cu-row2"><div class="field"><label>${isNew?'المبلغ الأول (اختياري)':'المبلغ'} <small class="muted">ر.س</small></label><input class="inp num" name="amount" inputmode="decimal" placeholder="0.00"></div>
       <div class="field"><label>التاريخ</label><input class="inp" type="date" name="date" value="${today}" max="${today}" required></div></div>
     ${exp?`<div class="field"><label>هل الفاتورة ضريبية؟</label><div class="seg2" data-n="taxable"><button type="button" data-v="1">ضريبية</button><button type="button" data-v="0">غير ضريبية</button></div><input type="hidden" name="taxable" value=""></div>
       <div class="cu-row2 cu-vat" hidden><div class="field"><label>مبلغ الضريبة <small class="muted">اختياري</small></label><input class="inp num" name="vat" inputmode="decimal" placeholder="يُحسب تلقائياً"></div><div class="field"><label>رقم الفاتورة</label><input class="inp" name="invoice" inputmode="numeric"></div></div>
+      <div class="field"><label>الفرع اللي انصرفت له الفاتورة <em style="color:var(--down)">*</em></label><div class="seg2 cu-brseg" data-n="branch">${(brs||[]).map(b=>`<button type="button" data-v="${b.id}" class="${c&&c.branch===b.id?'on':''}">${esc(b.name)}</button>`).join('')}</div><input type="hidden" name="branch" value="${c&&c.branch||''}"></div>
       <div class="field"><label>المورد / المحل</label><input class="inp" name="vendor" placeholder="اسم المحل أو المورد" list="cu_vendors"><datalist id="cu_vendors">${[...new Set(((st._cu&&st._cu.T)||[]).map(t=>t.vendor).filter(Boolean))].slice(0,40).map(v=>`<option value="${esc(v)}">`).join('')}</datalist></div>
       <div class="field"><label>البند</label><select class="inp" name="category">${CU_CAT.map(x=>`<option>${x}</option>`).join('')}</select></div>`
     :`<div class="field"><label>طريقة الاستلام</label><div class="seg2" data-n="method"><button type="button" data-v="transfer" class="on">حوالة بنكية</button><button type="button" data-v="cash">نقداً</button></div><input type="hidden" name="method" value="transfer"></div>
@@ -2123,6 +2129,8 @@ function cuForm(kind,c,{emps}={}){ return new Promise(res=>{
     const num=v=>{const x=parseFloat(String(v||'').replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[,،\s]/g,'').replace('٫','.'));return isNaN(x)?null:x;};
     const o={amount:num(f.elements.amount.value),date:f.elements.date.value,note:f.elements.note.value.trim(),img};
     if(exp&&!img) return showErr('صورة الفاتورة إلزامية — اضغط «صوّر الفاتورة»');
+    if(f.elements.branch) o.branch=f.elements.branch.value||null;
+    if(exp&&!o.branch) return showErr('اختر الفرع اللي انصرفت له الفاتورة');
     if(isNew){o.emp=f.elements.emp.value;o.title=f.elements.title.value.trim();o.method=f.elements.method.value;if(!o.emp)return showErr('اختر مسؤول العهدة');}
     else if(!o.amount||o.amount<=0) return showErr('اكتب المبلغ');
     if(exp){ if(!img) return showErr('صورة الفاتورة إلزامية — اضغط «صوّر الفاتورة»'); const tv=f.elements.taxable.value; if(tv==='') return showErr('حدد هل الفاتورة ضريبية أو غير ضريبية');
@@ -2132,20 +2140,21 @@ function cuForm(kind,c,{emps}={}){ return new Promise(res=>{
   st._cuOv=document.body.style.overflow; document.body.style.overflow='hidden'; document.body.appendChild(m);
 });}
 
-async function cuAdd(c,kind){ const o=await cuForm(kind,c); if(!o) return false;
-  toast('جارِ الحفظ…'); const r=await sb.rpc('custody_add',{p_custody:c.id,p_kind:kind,p_amount:o.amount,p_date:o.date,p_method:o.method||null,p_vendor:o.vendor||'',p_category:o.category||'',p_taxable:kind==='expense'?o.taxable:null,p_vat:o.vat??null,p_invoice:o.invoice||'',p_note:o.note||'',p_img:o.img?await mediaPut('custody',c.branch,o.img,c.holder_user||c.emp_id):null});
+async function cuAdd(c,kind){ const brs=kind==='expense'?await cuBranches():null; const o=await cuForm(kind,c,{brs}); if(!o) return false;
+  toast('جارِ الحفظ…'); const r=await sb.rpc('custody_add',{p_custody:c.id,p_kind:kind,p_amount:o.amount,p_date:o.date,p_method:o.method||null,p_vendor:o.vendor||'',p_category:o.category||'',p_taxable:kind==='expense'?o.taxable:null,p_vat:o.vat??null,p_invoice:o.invoice||'',p_note:o.note||'',p_img:o.img?await mediaPut('custody',o.branch||c.branch||'all',o.img,c.holder_user||c.emp_id):null,p_branch:o.branch||null});
   if(r.error){toast(r.error.message);return false;} toast(kind==='expense'?(isEmp()?'تم رفع الفاتورة ✓ — بانتظار المحاسب':'تم تسجيل الفاتورة ✓'):'تم الحفظ ✓'); st._alertsAt=0; return true; }
 
 function cuStatement(c,tx,staff){ const k=cuCalc(tx);
   return `<div class="cu-sum"><div><span>المستلم</span>${cuMoney(k.funds)}</div><div><span>المصروف المعتمد</span>${cuMoney(k.exp)}</div>${k.ret?`<div><span>المُرجع</span>${cuMoney(k.ret)}</div>`:''}<div class="cu-bal ${k.bal<0?'neg':''}"><span>${k.bal<0?'مستحق للموظف':'الرصيد عند مسؤول العهدة'}</span>${cuMoney(Math.abs(k.bal))}</div></div>
     ${k.pend?`<div class="note" style="margin-top:8px">⏳ ${k.pendEmp.length?`${k.pendEmp.length} حركة بانتظار ${staff?'مراجعتك':'مراجعة المحاسب'}`:''}${k.pendEmp.length&&k.pendAcc.length?' · ':''}${k.pendAcc.length?`${k.pendAcc.length} بانتظار ${staff?'تأكيد الموظف':'تأكيدك'}`:''}${k.pendExp?` — فواتير معلّقة ${fmt(k.pendExp,2)} ر.س`:''}</div>`:''}
+    ${(()=>{const L=cuByBranch(tx); return L.length?`<div class="cu-brs"><span class="muted">المصروف حسب الفرع:</span>${L.map(([b,v])=>`<span class="tag"><i class="dot" style="background:${brById(b).color}"></i>${esc(brById(b).name)} <b class="num">${fmt(v,2)}</b></span>`).join('')}</div>`:'';})()}
     ${k.nonTax?`<div class="muted" style="font-size:12px;margin-top:6px">🧾 فواتير غير ضريبية: <b class="num" style="color:var(--down)">${fmt(k.nonTax,2)}</b> ر.س${k.vat?` · ضريبة مدخلات معتمدة ${fmt(k.vat,2)}`:''}</div>`:''}`; }
 
 V.custody=async()=>{
   if(!cuStaff()){ let mine=''; try{ mine=await cuMine(); }catch(e){} return mine||`<div class="card empty">ما عندك عهدة مفتوحة حالياً — لما تنفتح لك عهدة يوصلك إشعار وتظهر هنا.</div>`; }
   let D; try{ D=await cuLoad(); }catch(e){ if(cuMissing(e)) return `<div class="card empty">ميزة العُهد تحتاج تشغيل ملف custody.sql في Supabase أولاً</div>`; throw e; }
   const myTop=cuHolder()&&D.C.some(c=>cuIsMine(c)&&c.status==='open')?await cuMine():'';
-  const fb=st.cuF||'all', tab=st.cuT||'review', inB=x=>fb==='all'||x.branch===fb;
+  const fb=st.cuF||'all', tab=st.cuT||'review', inB=x=>fb==='all'||x.branch===fb||!x.branch;
   const C=D.C.filter(inB), open=C.filter(c=>c.status==='open'), closed=C.filter(c=>c.status==='closed');
   const ks=Object.fromEntries(C.map(c=>[c.id,cuCalc(D.by[c.id]||[])]));
   const toRev=D.T.filter(t=>inB(t)&&t.status==='pending'&&t.side==='emp'&&open.some(c=>c.id===t.custody_id));
@@ -2160,13 +2169,13 @@ V.custody=async()=>{
   const cOf=id=>D.C.find(c=>c.id===id)||{};
   if(tab==='review'){
     if(!toRev.length&&!waitEmp.length) h+=`<div class="card empty">✅ ما فيه شي بانتظار المراجعة</div>`;
-    if(toRev.length) h+=`<div class="card"><h3>بانتظار مراجعتك <small>${fmt(sum(toRev.map(t=>t.amount)),2)} ر.س</small></h3>${toRev.map(t=>{const c=cOf(t.custody_id);return `<div class="cu-who" data-cuopen="${c.id}">${esc(c.emp_name)} · ${esc(brById(c.branch).name)} · ${cuRef(c)} ‹</div>`+cuTxRow(t,{staff:true,open:true});}).join('')}</div>`;
+    if(toRev.length) h+=`<div class="card"><h3>بانتظار مراجعتك <small>${fmt(sum(toRev.map(t=>t.amount)),2)} ر.س</small></h3>${toRev.map(t=>{const c=cOf(t.custody_id);return `<div class="cu-who" data-cuopen="${c.id}">${esc(c.emp_name)} · ${esc(cuBrN(c.branch))} · ${cuRef(c)} ‹</div>`+cuTxRow(t,{staff:true,open:true});}).join('')}</div>`;
     if(waitEmp.length) h+=`<div class="card"><h3>بانتظار تأكيد مسؤول العهدة</h3>${waitEmp.map(t=>{const c=cOf(t.custody_id);return `<div class="cu-who" data-cuopen="${c.id}">${esc(c.emp_name)} · ${cuRef(c)} ‹</div>`+cuTxRow(t,{staff:true,open:true});}).join('')}</div>`;
   } else {
     const L=tab==='open'?open:closed;
     if(!L.length) h+=`<div class="card empty">${tab==='open'?'لا توجد عهد مفتوحة — افتح عهدة من الزر فوق':'لا توجد عهد مصفّاة بعد'}</div>`;
     h+=L.map(c=>{const k=ks[c.id]; const age=Math.floor((Date.now()-new Date(c.created_at))/864e5);
-      return `<button class="card cu-card" data-cuopen="${c.id}"><div class="bar-row"><div style="min-width:0"><div class="advref">${cuRef(c)} · ${esc(brById(c.branch).name)}</div><b style="font-size:15.5px">${esc(c.emp_name)}</b><div class="muted" style="font-size:12px">${esc(c.title||'')}</div></div>
+      return `<button class="card cu-card" data-cuopen="${c.id}"><div class="bar-row"><div style="min-width:0"><div class="advref">${cuRef(c)} · ${esc(cuBrN(c.branch))}</div><b style="font-size:15.5px">${esc(c.emp_name)}</b><div class="muted" style="font-size:12px">${esc(c.title||'')}</div></div>
         <div style="text-align:left;flex:none"><div class="muted" style="font-size:11px">${c.status==='open'?(k.bal<0?'مستحق له':'الرصيد'):'أُقفلت'}</div><b class="num ${k.bal<0?'down':''}" style="font-size:17px">${c.status==='open'?fmt(Math.abs(k.bal),2):dLbl(String(c.closed_at).slice(0,10))}</b></div></div>
         <div class="cu-mini"><span>مستلم <b class="num">${fmt(k.funds)}</b></span><span>مصروف <b class="num">${fmt(k.exp)}</b></span>${k.pend?`<span class="cu-pend">⏳ ${k.pend} معلّقة</span>`:''}${c.status==='open'&&age>=30?`<span class="cu-pend" style="color:var(--down)">مفتوحة من ${age} يوم</span>`:''}</div></button>`;}).join('');
   }
@@ -2181,7 +2190,7 @@ function cuDetail(id){
   const settleBlock=!staff||!open?'':k.pend?`<div class="muted" style="font-size:12px">🔒 التصفية تنفتح بعد مراجعة كل الحركات المعلّقة (${k.pend}).</div>`:`<button class="btn" data-cusettle="${c.id}" style="width:100%">📁 تصفية العهدة</button>`;
   w.innerHTML=`<div class="mtd-bar"><button class="icb" data-cuclose="1" aria-label="رجوع">›</button><b>${cuRef(c)}</b>${staff?`<button class="icb" data-cuxl="${c.id}" aria-label="تنزيل Excel" title="تنزيل كشف Excel" style="font-size:17px">⬇</button>`:'<span style="width:36px"></span>'}</div>
   <div class="mtd-body">
-    <div class="card"><div class="bar-row"><div><div class="advref">${esc(brById(c.branch).name)} · فُتحت ${dLbl(String(c.created_at).slice(0,10))}${c.opened_by?' · '+esc(c.opened_by):''}</div><b style="font-size:18px">${esc(c.emp_name)}</b><div class="muted" style="font-size:12.5px">${esc(c.title||'')}</div></div>${open?'<span class="tag" style="background:rgba(31,161,107,.12);color:var(--up);font-weight:700">مفتوحة</span>':'<span class="tag" style="font-weight:700">مصفّاة</span>'}</div>
+    <div class="card"><div class="bar-row"><div><div class="advref">${esc(cuBrN(c.branch))} · فُتحت ${dLbl(String(c.created_at).slice(0,10))}${c.opened_by?' · '+esc(c.opened_by):''}</div><b style="font-size:18px">${esc(c.emp_name)}</b><div class="muted" style="font-size:12.5px">${esc(c.title||'')}</div></div>${open?'<span class="tag" style="background:rgba(31,161,107,.12);color:var(--up);font-weight:700">مفتوحة</span>':'<span class="tag" style="font-weight:700">مصفّاة</span>'}</div>
       ${cuStatement(c,tx,staff)}
       ${!open&&c.summary?`<div class="note" style="margin-top:8px">📁 صُفّيت ${dLbl(String(c.closed_at).slice(0,10))} بواسطة ${esc(c.closed_by||'')}${c.summary.mode==='carry'?' — والرصيد انرحّل لعهدة جديدة':''}${c.close_note?` · «${esc(c.close_note)}»`:''}</div>`:''}</div>
     ${open?`<div class="cu-acts"><button class="btn" data-cuadd="expense" data-cid="${c.id}">📸 ${me?'رفع فاتورة':'إضافة فاتورة'}</button><button class="btn ghost" data-cuadd="fund" data-cid="${c.id}">💵 ${me?'استلمت مبلغ':'إضافة مبلغ'}</button><button class="btn ghost" data-cuadd="return" data-cid="${c.id}">↩️ ${me?'رجّعت مبلغ':'مبلغ مُرجع'}</button></div>`:''}
@@ -2207,15 +2216,15 @@ async function cuExcel(id){ const D=st._cu; const c=D.C.find(x=>x.id===id); if(!
   const F={name:'Arial',size:10}, B={...F,bold:true}, thin={style:'thin',color:{argb:'FF000000'}}, box={top:thin,bottom:thin,left:thin,right:thin};
   ws.columns=[{width:5},{width:12},{width:13},{width:26},{width:16},{width:12},{width:11},{width:11},{width:13},{width:13},{width:13},{width:12},{width:16},{width:16}];
   ws.mergeCells('A1:N1'); ws.getCell('A1').value='كشف عهدة نقدية — '+cuRef(c); ws.getCell('A1').font={name:'Arial',size:14,bold:true}; ws.getCell('A1').alignment={horizontal:'center'};
-  const info=[['الموظف',c.emp_name,'الفرع',brById(c.branch).name],['الغرض',c.title||'—','الحالة',c.status==='open'?'مفتوحة':'مصفّاة'],['تاريخ الفتح',String(c.created_at).slice(0,10),'تاريخ الكشف',todayIso()]];
+  const info=[['مسؤول العهدة',c.emp_name,'الفرع',cuBrN(c.branch)],['الغرض',c.title||'—','الحالة',c.status==='open'?'مفتوحة':'مصفّاة'],['تاريخ الفتح',String(c.created_at).slice(0,10),'تاريخ الكشف',todayIso()]];
   info.forEach((r,i)=>{const row=ws.getRow(3+i); row.getCell(1).value=r[0]; ws.mergeCells(3+i,2,3+i,5); row.getCell(2).value=r[1]; row.getCell(7).value=r[2]; ws.mergeCells(3+i,8,3+i,10); row.getCell(8).value=r[3]; [1,7].forEach(n=>row.getCell(n).font=B); [2,8].forEach(n=>row.getCell(n).font=F);});
-  const hd=['#','التاريخ','النوع','البيان / المورد','البند','رقم الفاتورة','ضريبية','الضريبة','وارد','منصرف','الرصيد','الحالة','سجّلها','راجعها'];
+  const hd=['#','التاريخ','النوع','البيان / المورد','البند · الفرع','رقم الفاتورة','ضريبية','الضريبة','وارد','منصرف','الرصيد','الحالة','سجّلها','راجعها'];
   const hr=ws.getRow(7); hd.forEach((t,i)=>{const cl=hr.getCell(i+1);cl.value=t;cl.font=B;cl.border=box;cl.alignment={horizontal:'center',vertical:'middle',wrapText:true};cl.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFEDEDED'}};}); hr.height=22;
   let bal=0, rn=8;
   tx.forEach((t,i)=>{ const ok=t.status==='approved'; if(ok) bal+=t.kind==='fund'?+t.amount:-t.amount;
-    const v=[i+1,t.date,(CU_K[t.kind]||['',''])[1],t.kind==='expense'?(t.vendor||'')+(t.note?' — '+t.note:''):(t.method==='cash'?'نقداً':'حوالة بنكية')+(t.note?' — '+t.note:''),t.category||'',t.invoice_no||'',t.kind==='expense'?(t.taxable?'نعم':'لا'):'',t.kind==='expense'&&t.vat?+t.vat:null,t.kind==='fund'?+t.amount:null,t.kind!=='fund'?+t.amount:null,ok?Math.round(bal*100)/100:null,(CU_ST[t.status]||[t.status])[0],t.created_by||'',t.reviewed_by||''];
+    const v=[i+1,t.date,(CU_K[t.kind]||['',''])[1],t.kind==='expense'?(t.vendor||'')+(t.note?' — '+t.note:''):(t.method==='cash'?'نقداً':'حوالة بنكية')+(t.note?' — '+t.note:''),[t.category,t.kind==='expense'&&t.branch?brById(t.branch).name:''].filter(Boolean).join(' · '),t.invoice_no||'',t.kind==='expense'?(t.taxable?'نعم':'لا'):'',t.kind==='expense'&&t.vat?+t.vat:null,t.kind==='fund'?+t.amount:null,t.kind!=='fund'?+t.amount:null,ok?Math.round(bal*100)/100:null,(CU_ST[t.status]||[t.status])[0],t.created_by||'',t.reviewed_by||''];
     const row=ws.getRow(rn++); v.forEach((x,j)=>{const cl=row.getCell(j+1);cl.value=x;cl.font=F;cl.border=box;cl.alignment={vertical:'middle',wrapText:j===3,horizontal:[0,1,6].includes(j)?'center':undefined};if([7,8,9,10].includes(j))cl.numFmt='#,##0.00';}); });
-  rn++; const tot=[['إجمالي المستلم المعتمد',k.funds],['إجمالي المصروف المعتمد',k.exp],['إجمالي المُرجع',k.ret],[k.bal<0?'المستحق للموظف':'الرصيد المتبقي عند مسؤول العهدة',Math.abs(k.bal)],['منها فواتير غير ضريبية',k.nonTax],['ضريبة المدخلات المعتمدة',k.vat]];
+  rn++; const tot=[['إجمالي المستلم المعتمد',k.funds],['إجمالي المصروف المعتمد',k.exp],['إجمالي المُرجع',k.ret],[k.bal<0?'المستحق للموظف':'الرصيد المتبقي عند مسؤول العهدة',Math.abs(k.bal)],['منها فواتير غير ضريبية',k.nonTax],['ضريبة المدخلات المعتمدة',k.vat],...cuByBranch(tx).map(([b,v])=>['مصروف '+brById(b).name,v])];
   tot.forEach(([a,b])=>{const row=ws.getRow(rn++); ws.mergeCells(row.number,8,row.number,10); row.getCell(8).value=a; row.getCell(8).font=B; row.getCell(8).border=box; row.getCell(11).value=b; row.getCell(11).numFmt='#,##0.00'; row.getCell(11).font=B; row.getCell(11).border=box;});
   rn+=2; const sg=ws.getRow(rn); sg.getCell(2).value='توقيع الموظف: ____________'; sg.getCell(7).value='توقيع المحاسب: ____________'; sg.getCell(11).value='اعتماد الإدارة: ____________'; [2,7,11].forEach(n=>sg.getCell(n).font=F);
   const buf=await wb.xlsx.writeBuffer(); const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})); a.download=`كشف-عهدة-${cuRef(c)}-${c.emp_name}.xlsx`; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500); toast('تم تنزيل الكشف ✓'); }
@@ -2236,10 +2245,10 @@ async function cuSettle(id){ const D=st._cu; const c=D.C.find(x=>x.id===id); con
   document.body.appendChild(m); }
 
 async function cuNew(){ const r=await sb.rpc('custody_holders'); if(r.error){toast(cuMissing(r.error)||/custody_holders/.test(r.error.message)?'شغّل ملف «مسؤول العهدة» في Supabase أولاً':r.error.message);return;}
-  const opts=[]; (r.data||[]).forEach(u=>{ const bs=(u.branches||[]).filter(b=>st.branches.some(x=>x.id===b)); (bs.length?bs:[]).forEach(b=>opts.push({id:u.id+'|'+b,name:u.name,branch:b,job:'',has_account:true})); });
+  const opts=(r.data||[]).map(u=>({id:u.id,name:u.name,branch:null,job:'',has_account:true}));
   if(!opts.length){ toast('ما فيه مستخدم عنده صلاحية «مسؤول العهدة» — أعطها من شاشة المستخدمين'); return; }
-  const o=await cuForm('new',null,{emps:opts}); if(!o) return; const [uid,br]=o.emp.split('|');
-  const x=await sb.rpc('custody_open_user',{p_user:uid,p_branch:br,p_title:o.title||'',p_amount:o.amount||null,p_method:o.method||'transfer',p_date:o.date,p_note:o.note||'',p_img:o.img?await mediaPut('custody',br,o.img,uid):null});
+  const o=await cuForm('new',null,{emps:opts}); if(!o) return; const uid=o.emp, br=o.branch||null;
+  const x=await sb.rpc('custody_open_user',{p_user:uid,p_branch:br,p_title:o.title||'',p_amount:o.amount||null,p_method:o.method||'transfer',p_date:o.date,p_note:o.note||'',p_img:o.img?await mediaPut('custody',br||'all',o.img,uid):null});
   if(x.error){toast(x.error.message);return;} toast('تم فتح العهدة ✓ — وصل إشعار لمسؤول العهدة'); await cuRefresh(x.data); }
 
 // بطاقة «عهدتي» في بوابة الموظف
