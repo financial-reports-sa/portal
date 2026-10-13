@@ -706,7 +706,7 @@ const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'ai',na
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup','feedback','custody','hr'];
-const APP_VER='87';
+const APP_VER='88';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -788,7 +788,7 @@ function renderShell(){
   $('#urole').textContent=ROLE_NAME[p.role]+' · '+p.username;
   $('#scope').innerHTML=isEmp()?'<span class="muted">حساب موظف</span>':st.branches.length?'<span class="muted">يظهر لك:</span>'+st.branches.map(dotTag).join(''):'<span class="muted">لا توجد فروع مسموحة</span>';
   $('#av').textContent=((p.full_name||p.username||'?').trim().replace(/^(مدير|فرع)\s+/,'').charAt(0)||'؟');
-  $('#uadmin').innerHTML=isAdmin()?`<div class="umn"><button data-um="users">🔐 المستخدمين والصلاحيات</button><button data-um="data">⬆️ إدخال البيانات</button></div>`:'';
+  $('#uadmin').innerHTML=isAdmin()?`<div class="umn"><button data-um="users">🔐 المستخدمين والصلاحيات</button><button data-um="data">⬆️ إدخال البيانات</button><button data-share="1">🔗 مشاركة التطبيق</button></div>`:'';
   if(!canSee(st.tab)) st.tab='home';
   const g=groupOf(st.tab); st.lastIn=st.lastIn||{}; st.lastIn[g]=st.tab;
   const gs=GROUPS.filter(x=>x.nav!==false&&x.secs.some(canSee));
@@ -799,6 +799,9 @@ function renderShell(){
   loadAlerts();
   render();
 }
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-share]');if(!b)return;$('#umenu').hidden=true;const url='https://unifiedplatform.app/';const text='منصة الإدارة الموحّدة — التقارير والعمليات والموارد البشرية في مكان واحد';
+  try{ if(navigator.share){ await navigator.share({title:'منصة الإدارة الموحّدة',text,url}); return; } }catch(err){ if(err&&err.name==='AbortError') return; }
+  try{ await navigator.clipboard.writeText(url); toast('تم نسخ رابط التطبيق ✓'); }catch(err){ prompt('انسخ رابط التطبيق:',url); } });
 document.addEventListener('click',e=>{const b=e.target.closest('[data-um]');if(!b)return;$('#umenu').hidden=true;st.tab=b.dataset.um;window.scrollTo({top:0});renderShell();});
 $('#bnav').onclick=e=>{const b=e.target.closest('[data-g]');if(!b)return;const G=GROUPS.find(x=>x.id===b.dataset.g);const last=st.lastIn&&st.lastIn[G.id];st.tab=last&&canSee(last)?last:G.secs.find(canSee);try{localStorage.setItem('tab',st.tab);}catch(e){} window.scrollTo({top:0});renderShell();};
 $('#tabs').onclick=e=>{const b=e.target.closest('[data-t]');if(!b)return;st.tab=b.dataset.t;try{localStorage.setItem('tab',st.tab);}catch(e){} renderShell();};
