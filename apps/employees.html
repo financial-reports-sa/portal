@@ -45,6 +45,7 @@ button{cursor:pointer;border:0;background:0 0}
 .kpi[data-go],.cmp td[data-go]{cursor:pointer}
 .kpi[data-go]:active,.mini [data-go]:active{transform:scale(.98)}
 .cmp td[data-go] b{border-bottom:1px dashed currentColor}
+.conf{display:flex;grid-column:1/-1;align-items:flex-start;gap:10px;background:var(--soft);border-radius:12px;padding:10px 12px;cursor:pointer}.conf input{margin:2px 0 0;width:20px!important;height:20px;min-height:0!important;flex:none;padding:0!important}.conf span{flex:1;font-size:12.5px;line-height:1.6;color:var(--ink)}.hidn{font-size:11px;color:var(--mut);font-weight:600;background:var(--soft);border-radius:99px;padding:2px 8px;margin-inline-start:6px}
 .setsum{display:flex;gap:8px;margin:-4px 0 10px;flex-wrap:wrap}
 .setsum span{background:var(--soft);border-radius:999px;padding:4px 10px;font-size:12px;color:var(--mut)}
 .setsum b{color:var(--ink);font-family:"Readex Pro"}
@@ -237,6 +238,7 @@ async function load(){
     if(e.error)throw e.error;
     S.rows=e.data||[];S.log=l.error?[]:(l.data||[]);S.err='';
     try{const since=new Date();since.setMonth(since.getMonth()-13);const dd=await SBC.from('employee_deductions').select('*').gte('date',iso(since)).order('date',{ascending:false});S.dedOK=!dd.error;S.ded=dd.error?[]:(dd.data||[]);}catch(_){S.ded=[];S.dedOK=false}
+    try{S.hid={};if(!S.writer){const hd=await SBC.rpc('employees_hidden');(hd.data||[]).forEach(x=>S.hid[x.branch]=x.n);}}catch(_){S.hid={}}
     try{const ph=await SBC.from('employee_photos').select('emp_id,thumb');S.th={};S.phOK=!ph.error;(ph.data||[]).forEach(x=>S.th[x.emp_id]=x.thumb);}catch(_){S.th={};S.phOK=false}
   }catch(x){S.err=/relation|schema cache|does not exist/i.test(x.message||'')?'جدول الموظفين لم يُفعّل بعد في قاعدة البيانات':'تعذّر تحميل البيانات — تأكد من الإنترنت';console.error(x)}
   S.loaded=true;render();
@@ -279,7 +281,7 @@ function renderDash(){
   const vac=on.filter(r=>r.status==='vacation');
   let h=branchChips();
   h+=`<div class="kpis">
-    <div class="kpi big" data-go="*|sal"><small>إجمالي الرواتب الشهرية${S.f==='all'&&S.branches.length>1?' · كل الفروع':' · '+esc(brById(S.f==='all'?(S.branches[0]||{}).id:S.f).name)}</small><b class="num">${fmt(sal)} <span style="font-size:13px">ر.س</span></b><span class="s">${on.length} موظف على الكشف${vac.length?' · منهم '+vac.length+' بإجازة':''}</span></div>
+    <div class="kpi big" data-go="*|sal"><small>إجمالي الرواتب الشهرية${S.f==='all'&&S.branches.length>1?' · كل الفروع':' · '+esc(brById(S.f==='all'?(S.branches[0]||{}).id:S.f).name)}</small><b class="num">${fmt(sal)} <span style="font-size:13px">ر.س</span></b><span class="s">${on.length} موظف على الكشف${vac.length?' · منهم '+vac.length+' بإجازة':''}${(()=>{const n=scopeBr().reduce((t,x)=>t+((S.hid||{})[x.id]||0),0);return n?' · ＋ '+n+' إداري (عند الإدارة)':'';})()}</span></div>
     <div class="kpi" data-go="*|on"><small>على رأس العمل</small><b class="num">${on.length-vac.length}</b><span class="s">${vac.length?vac.length+' بإجازة':'لا يوجد إجازات'}</span></div>
     <div class="kpi" data-go="*|sal"><small>متوسط الراتب</small><b class="num">${on.length?fmt(Math.round(sal/on.length)):'—'}</b><span class="s">ر.س</span></div>
     <div class="kpi" data-go="*|new"><small>مباشرين هذا الشهر</small><b class="num" style="color:var(--up)">${newM.length}</b><span class="s">${esc(mLong(m))}</span></div>
@@ -355,9 +357,9 @@ function renderList(){
   scopeBr().forEach(b=>{
     const br=rows.filter(r=>r.branch===b.id).sort((x,y)=>(x.status==='left')-(y.status==='left')||x.name.localeCompare(y.name,'ar'));
     if(!br.length)return;
-    h+=`<div class="card">${S.branches.length>1?`<div class="grp"><i style="background:${b.color}"></i>${esc(b.name)} · ${br.length}</div>`:''}${br.map(r=>{
+    h+=`<div class="card">${S.branches.length>1||(S.hid&&S.hid[b.id])?`<div class="grp"><i style="background:${b.color}"></i>${esc(b.name)} · ${br.length}${S.hid&&S.hid[b.id]?` <span class="hidn">＋ ${S.hid[b.id]} موظف إداري</span>`:''}</div>`:''}${br.map(r=>{
       const w=[docState(r.health_exp)].filter(s=>s&&s.n<=30&&r.status!=='left');
-      return `<button class="emp ${r.status==='left'?'left':''}" data-open="${r.id}">${avOf(r,b)}<span class="nm"><b>${esc(r.name)}</b><small>${esc(r.job||'—')} · ${r.status==='left'?'انتهت '+dShort(r.left_date)+(r.end_reason?' · '+esc(r.end_reason):''):'من '+dShort(r.start_date)}</small></span><span class="v"><b class="num">${fmt(r.salary)}</b>${(()=>{const dd=dsum(dedOf(r.id,curMonth()));return dd?`<span class="pill p-bad" style="display:block;margin-bottom:2px">خصم ${fmt(dd)}</span>`:''})()}${r.status!=='active'?`<span class="pill ${ST[r.status].cl}">${ST[r.status].t}</span>`:S.phOK&&!S.th[r.id]?`<span class="pill p-warn">بدون صورة</span>`:w.length?`<span class="pill ${w.some(s=>s.n<0)?'p-bad':'p-warn'}">وثيقة</span>`:''}</span></button>`}).join('')}</div>`;
+      return `<button class="emp ${r.status==='left'?'left':''}" data-open="${r.id}">${avOf(r,b)}<span class="nm"><b>${r.confidential?'🔒 ':''}${esc(r.name)}</b><small>${esc(r.job||'—')} · ${r.status==='left'?'انتهت '+dShort(r.left_date)+(r.end_reason?' · '+esc(r.end_reason):''):'من '+dShort(r.start_date)}</small></span><span class="v"><b class="num">${fmt(r.salary)}</b>${(()=>{const dd=dsum(dedOf(r.id,curMonth()));return dd?`<span class="pill p-bad" style="display:block;margin-bottom:2px">خصم ${fmt(dd)}</span>`:''})()}${r.status!=='active'?`<span class="pill ${ST[r.status].cl}">${ST[r.status].t}</span>`:S.phOK&&!S.th[r.id]?`<span class="pill p-warn">بدون صورة</span>`:w.length?`<span class="pill ${w.some(s=>s.n<0)?'p-bad':'p-warn'}">وثيقة</span>`:''}</span></button>`}).join('')}</div>`;
   });
   el.innerHTML=h;
 }
@@ -512,6 +514,7 @@ function openForm(r){
     <label class="fld ${S.branches.length>1?'':'full'}"><span>المسمى الوظيفي <em>*</em></span><input name="job" list="jobs" value="${esc(r.job||'')}" autocomplete="off"></label>
     <label class="fld"><span>تاريخ المباشرة <em>*</em></span><input type="date" name="start_date" value="${esc(r.start_date||'')}"></label>
     <label class="fld"><span>الراتب المتفق عليه <em>*</em></span><input name="salary" class="ltr num" inputmode="decimal" value="${r.salary!=null?esc(r.salary):''}" placeholder="0"></label>
+    ${S.writer?`<label class="full conf"><input type="checkbox" name="confidential" ${(isNew||r.confidential)?'checked':''}><span>🔒 موظف إداري — بياناته وراتبه مخفية عن مدير الفرع (يشوفه في العدد فقط)</span></label>`:''}
     <label class="fld">الجنسية<input name="nationality" value="${esc(r.nationality||'')}"></label>
     <label class="fld">الجوال<input name="phone" class="ltr num" inputmode="tel" value="${esc(r.phone||'')}" placeholder="05xxxxxxxx"></label>
     <div class="fld full">الحالة<div class="seg" id="stSeg">${Object.entries(ST).filter(([k])=>r.status==='left'||k!=='left').map(([k,v])=>`<button type="button" data-s="${k}" class="${r.status===k?'on':''}">${v.t}</button>`).join('')}</div></div>
@@ -532,7 +535,7 @@ function openForm(r){
     if(!a||a.dataset.a!=='1')return;
     const f=new FormData(m.querySelector('#ef'));const g=k=>String(f.get(k)||'').trim();
     const sal=toEn(g('salary')).replace(/[,،\s]/g,'').replace('٫','.');
-    const rec={name:g('name'),branch:g('branch'),job:g('job'),start_date:g('start_date'),salary:sal===''?null:Number(sal),nationality:g('nationality'),phone:toEn(g('phone')),id_type:yi,has_iqama:yi!=='none',iqama:yi!=='none'?toEn(g('iqama')):'',iqama_exp:null,has_health:!!yh,health_no:yh?toEn(g('health_no')):'',health_exp:yh?(g('health_exp')||null):null,status,left_date:status==='left'?(g('left_date')||null):null,notes:g('notes')};if(!isNew)rec.end_reason=status==='left'?g('end_reason'):'';
+    const rec={...(S.writer?{confidential:f.get('confidential')==='on'}:{}),name:g('name'),branch:g('branch'),job:g('job'),start_date:g('start_date'),salary:sal===''?null:Number(sal),nationality:g('nationality'),phone:toEn(g('phone')),id_type:yi,has_iqama:yi!=='none',iqama:yi!=='none'?toEn(g('iqama')):'',iqama_exp:null,has_health:!!yh,health_no:yh?toEn(g('health_no')):'',health_exp:yh?(g('health_exp')||null):null,status,left_date:status==='left'?(g('left_date')||null):null,notes:g('notes')};if(!isNew)rec.end_reason=status==='left'?g('end_reason'):'';
     const err=!rec.name?'اكتب اسم الموظف':!rec.branch?'اختر الفرع':!rec.job?'اكتب المسمى الوظيفي':!rec.start_date?'حدد تاريخ المباشرة':(rec.salary==null||isNaN(rec.salary)||rec.salary<0)?'اكتب الراتب المتفق عليه بالأرقام':yi==null?'اختر نوع الهوية':(yi!=='none'&&!rec.iqama)?'اكتب '+IDT[yi].n:yh==null?'حدد: هل يوجد شهادة صحية؟':(yh&&!rec.health_no)?'اكتب رقم الشهادة الصحية':(yh&&!rec.health_exp)?'حدد تاريخ انتهاء الشهادة الصحية':(status==='left'&&!rec.left_date)?'حدد تاريخ انتهاء الخدمة':(rec.left_date&&rec.left_date<rec.start_date)?'تاريخ انتهاء الخدمة قبل تاريخ المباشرة':'';
     const err2=err||(isNew&&S.phOK&&!ph?'أرفق صورة الموظف':'');
     if(err2){m.querySelector('#fe').textContent=err2;return}
