@@ -30,11 +30,12 @@ Deno.serve(async (req) => {
   const { day, token, sb_url, apikey, facts } = b;
   if (!day || !token || !sb_url || !apikey || !/^https:\/\/[a-z0-9]+\.supabase\.co$/.test(sb_url)) return json({ error: "bad_request" }, 400);
   const rpc = async (fn: string, args: unknown) => {
-    const r = await fetch(`${sb_url}/rest/v1/rpc/${fn}`, { method: "POST", headers: { apikey, Authorization: `Bearer ${apikey}`, "Content-Type": "application/json" }, body: JSON.stringify(args) });
+    const r = await fetch(`${sb_url}/rest/v1/rpc/${fn}`, { method: "POST", headers: { apikey, "Content-Type": "application/json" }, body: JSON.stringify(args) });
     const t = await r.text(); if (!r.ok) throw new Error(`${fn} ${r.status} ${t.slice(0, 200)}`); return t ? JSON.parse(t) : null;
   };
-  try {
-    if (!(await rpc("brief_auth", { p_token: token }))) return json({ error: "unauthorized" }, 401);
+  const work = async () => {
+    console.log("brief start", day);
+    if (!(await rpc("brief_auth", { p_token: token }))) { console.error("unauthorized"); return; }
     let model = MODEL, text = "";
     for (let i = 0; i < 3 && !text; i++) {
       const r = await fetch("https://api.anthropic.com/v1/messages", {
@@ -48,11 +49,14 @@ Deno.serve(async (req) => {
       else if ([429, 500, 502, 503, 529].includes(r.status)) await new Promise((ok) => setTimeout(ok, 2000 * (i + 1)));
       else break;
     }
-    if (!text) return json({ error: "no_text" }, 502);
+    if (!text) { console.error("no_text"); return; }
     await rpc("brief_save", { p_token: token, p_day: day, p_text: text, p_facts: facts });
-    return json({ ok: true });
-  } catch (e) {
-    console.error(e);
-    return json({ error: String((e as Error).message || e) }, 500);
-  }
+    console.log("brief saved", day, text.length);
+  };
+  // يرد فوراً ويكمل الكتابة بالخلفية (عشان القاعدة ما تنتظر)
+  const p = work().catch((e) => console.error("brief failed", String((e as Error).message || e)));
+  // deno-lint-ignore no-explicit-any
+  const ER = (globalThis as any).EdgeRuntime;
+  if (ER && typeof ER.waitUntil === "function") { ER.waitUntil(p); return json({ ok: true, queued: true }, 202); }
+  await p; return json({ ok: true });
 });
