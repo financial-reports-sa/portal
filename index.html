@@ -292,6 +292,13 @@ tr.sub td{font-weight:600;background:var(--bg)}
 .bc .head{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .meter{height:6px;border-radius:99px;background:var(--chip);overflow:hidden}
 .meter i{display:block;height:100%;background:var(--c)}
+.ws-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.ws-c{border-top:3px solid var(--line)}.ws-c.ok{border-top-color:#1FA16B}.ws-c.warn{border-top-color:#D4AF37}.ws-c.bad{border-top-color:#C0392B}
+.ws-h{display:flex;align-items:center;gap:8px;margin-bottom:6px}.ws-ic{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;font-size:18px}.ws-bad{background:#FDECEA;color:#C0392B;margin-inline-start:auto}
+.ws-big{font-size:26px;font-weight:800;line-height:1.2}.ws-big small{font-size:13px;font-weight:600}.ws-s{font-size:12.5px;margin-top:4px;line-height:1.6}
+.ws-d{border-top:1px solid var(--line);padding:8px 0}.ws-d summary{cursor:pointer;font-weight:700}.ws-sel{font:inherit;font-size:12px;padding:2px 4px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:inherit}
+.ws-set summary{cursor:pointer}.ws-gset{border-top:1px solid var(--line);padding-top:10px;margin-top:10px}.ws-gset h4{margin:0 0 6px}.ws-f{display:flex;flex-direction:column;gap:4px;font-size:12.5px;margin:6px 0;flex:1;min-width:140px}.ws-f input:not([type=checkbox]){font:inherit;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:inherit}.ws-row{display:flex;gap:8px;flex-wrap:wrap}
+.ws-cats label{position:relative}.ws-cats input{position:absolute;opacity:0}.ws-cats span{display:inline-block;padding:5px 10px;border:1px solid var(--line);border-radius:999px;font-size:12px;cursor:pointer}.ws-cats input:checked+span{background:#EAF3EE;border-color:#1E5A3E;color:#1E5A3E;font-weight:700}
 .note{font-size:13px;border-inline-start:3px solid var(--gold);padding-inline-start:10px}
 .note.bad{border-color:var(--down)}
 .empty{padding:28px 12px;text-align:center;color:var(--muted)}
@@ -656,6 +663,7 @@ const SECTIONS=[
   {id:'channels',name:'منافذ المبيعات',app:'channels'},
   {id:'income',name:'قوائم الدخل',app:'income'},
   {id:'wh',name:'نسبة تكلفة المستودعات'},
+  {id:'waste',name:'مراقبة الهدر',perm:'wh'},
   {id:'chicken',name:'أسعار المشتريات',page:'prices'},
   {id:'treasury',name:'خزينة الأرصدة',app:'treasury'},
   {id:'loans',name:'التمويلات'},
@@ -677,11 +685,11 @@ const NAV_ICONS={
   ops:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg>',
   fin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/><path d="M6.5 15h4"/></svg>',
   more:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>'};
-const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'ai',name:'المساعد الذكي',secs:['ai']},{id:'rep',name:'التقارير',secs:['brief','sales','daily','channels','income','wh','chicken']},{id:'ops',name:'العمليات',secs:['handover','maint','feedback','employees','advances','fleet']},{id:'fin',name:'المالية',secs:['treasury','loans','custody']},{id:'more',name:'الإدارة',secs:['users','data'],nav:false}];
+const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'ai',name:'المساعد الذكي',secs:['ai']},{id:'rep',name:'التقارير',secs:['brief','sales','daily','channels','income','wh','waste','chicken']},{id:'ops',name:'العمليات',secs:['handover','maint','feedback','employees','advances','fleet']},{id:'fin',name:'المالية',secs:['treasury','loans','custody']},{id:'more',name:'الإدارة',secs:['users','data'],nav:false}];
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup','feedback','custody'];
-const APP_VER='82';
+const APP_VER='83';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -1088,6 +1096,122 @@ V.wh=async()=>{
   return h;
 };
 
+
+// ----- مراقبة الهدر: الصرف المخزني المباشر مقابل مبيعات الأقسام -----
+const WS_CN={102:'المعجنات',103:'الصحون',104:'المقبلات',105:'الحلويات',106:'العصائر',112:'الذبائح',115:'الإيدامات',117:'الكوكتيل',118:'المشروبات الباردة',120:'بوفيات خارجية',121:'أرز الدجاج',123:'طبخ الذبائح',126:'الأصناف المضافة حديثاً',127:'دجاج المطعم',129:'اللحوم',131:'المشويات'};
+const WS_CP={101:'المشروبات الباردة',107:'بروست الباتشينو',108:'الاستربس والجمبري',109:'البرجر والساندوتش',110:'وجبات الأطفال',111:'المقبلات',113:'الصوصات',114:'الخبز',116:'المسحب'};
+const wsCatName=(b,c)=>(b==='pc'?WS_CP:WS_CN)[c]||('قسم '+c);
+const WS_G=[
+  {k:'chicken',n:'الدجاج',ic:'🍗',c:'#C9A227',kw:'دجاج|فروج|فراريج|صدور|افخاذ|أفخاذ|اجنحة|أجنحة|بروست',cats:{az:['127'],sh:['127'],pc:['107']},unit:'حب',f:{az:1,sh:1,pc:1},fu:'حبة'},
+  {k:'meat',n:'الذبايح',ic:'🐑',c:'#B5563C',kw:'ذبيح|ذبائح|ذبايح|حاشي|غنم|نعيمي|نجدي|حري|سواكني|خروف|تيس|عجل|لحم',cats:{az:['112'],sh:['112'],pc:[]},unit:'ذبيح',f:{az:1,sh:1,pc:null},fu:'ذبيحة'},
+  {k:'rice',n:'الرز',ic:'🍚',c:'#3A9BB5',kw:'رز|ارز|أرز|بسمتي',cats:{az:['121','127','112'],sh:['121','127','112'],pc:[]},unit:'',f:{},fu:'كيلو'},
+  {k:'veg',n:'الخضار',ic:'🥬',c:'#1FA16B',kw:'طماطم|بندوره|بندورة|بصل|خيار|خس|بطاطس|بطاطا|فلفل|جزر|ليمون|كوسا|باذنجان|بقدونس|كزبره|كزبرة|نعناع|ثوم|ملفوف|زهره|زهرة|شمندر|خضار|فاصوليا|بامية|بامي|جرجير|فجل|شبت|كرفس|بروكلي',cats:'all',unit:'',f:{},fu:'كيلو'}];
+let WS_CFG=null;
+async function wsCfg(){ if(WS_CFG&&st.cache['wh/cfg']) return WS_CFG; let saved={}; try{ const d=(await appList('wh','cfg')).find(x=>x.id==='waste'); saved=(d&&d.data)||{}; }catch(e){}
+  const G=WS_G.map(g=>{const s=(saved.groups||{})[g.k]||{};return {...g,kw:s.kw!=null?s.kw:g.kw,cats:s.cats||g.cats,unit:s.unit!=null?s.unit:g.unit,f:s.f||g.f,fu:s.fu||g.fu};});
+  return WS_CFG={groups:G,map:saved.map||{},warn:saved.warn!=null?+saved.warn:0.05}; }
+function wsGroupOf(cfg,it){ const m=cfg.map[it.code]; if(m) return m==='none'?null:m; const t=(it.name||'')+' '+(it.group||'');
+  for(const g of cfg.groups){ if(g.kw&&new RegExp(g.kw).test(t)) return g.k; } return null; }
+const wsDays=(a,b)=>{const o=[];let d=new Date(a+'T12:00:00');const e=new Date(b+'T12:00:00');while(d<=e){o.push(d.toISOString().slice(0,10));d=new Date(d.getTime()+864e5);}return o;};
+// تجميع بيانات فرع لشهر
+function wsCalc(cfg,docs,per,b,m){
+  const cs=per&&per.cats&&per.cats[b]||null, asOf=per&&per.asOf&&per.asOf[b]||null, catDays=+(per&&per.catDays&&per.catDays[b])||0;
+  const D=docs.filter(d=>d.br===b&&(d.from||'').slice(0,7)===m&&(!asOf||d.from<=asOf));
+  const cover=new Set(); D.forEach(d=>wsDays(d.from,d.to||d.from).forEach(x=>{ if(!asOf||x<=asOf) cover.add(x); }));
+  const G={}; cfg.groups.forEach(g=>G[g.k]={cost:0,qty:{},items:{}}); const other={cost:0,items:{}};
+  D.forEach(d=>(d.items||[]).forEach(it=>{ const k=wsGroupOf(cfg,it); const t=k?G[k]:other; const c=+it.cost||0,q=+it.qty||0; t.cost+=c;
+    const key=it.code||it.name; const x=t.items[key]=t.items[key]||{code:it.code,name:it.name,unit:it.unit||'',qty:0,cost:0}; x.qty+=q; x.cost+=c;
+    if(k){ const u=(it.unit||'').trim()||'—'; t.qty[u]=(t.qty[u]||0)+q; } }));
+  const share=catDays&&cover.size?Math.min(1,cover.size/catDays):1;
+  const out={b,cover:cover.size,catDays,asOf,share,from:[...cover].sort()[0]||null,G:{},other,total:sum(Object.values(G).map(x=>x.cost))+other.cost};
+  cfg.groups.forEach(g=>{ const x=G[g.k]; const codes=g.cats==='all'?(cs?Object.keys(cs):[]):(g.cats[b]||[]);
+    const sv=cs?sum(codes.map(c=>cs[c]&&cs[c].v)):0, sn=g.cats==='all'?null:(cs?sum(codes.map(c=>cs[c]&&cs[c].n)):0);
+    const svA=sv*share, snA=sn==null?null:sn*share; const f=g.f&&g.f[b];
+    let uq=null; if(f&&snA){ const re=g.unit?new RegExp(g.unit):null; const its=Object.values(x.items).filter(i=>!re||re.test(i.unit)); const q=sum(its.map(i=>i.qty)), c=sum(its.map(i=>i.cost));
+      if(q){ const exp=snA*f; uq={q,exp,diff:q-exp,p:exp?(q-exp)/exp:null,unitCost:c/q,val:(q-exp)*(c/q)}; } }
+    out.G[g.k]={cost:x.cost,qty:x.qty,items:Object.values(x.items).sort((p,q)=>q.cost-p.cost),codes,sv:svA,sn:snA,ratio:svA?x.cost/svA:null,perDish:snA?x.cost/snA:null,uq}; });
+  return out;
+}
+function wsMerge(cfg,list){ // دمج عدة فروع
+  const o={cover:Math.min(...list.map(x=>x.cover)),catDays:Math.max(...list.map(x=>x.catDays)),from:list.map(x=>x.from).filter(Boolean).sort().pop()||null,total:sum(list.map(x=>x.total)),G:{},other:{cost:sum(list.map(x=>x.other.cost)),items:{}}};
+  list.forEach(x=>Object.values(x.other.items).forEach(i=>{const k=i.code||i.name;const y=o.other.items[k]=o.other.items[k]||{...i,qty:0,cost:0};y.qty+=i.qty;y.cost+=i.cost;}));
+  cfg.groups.forEach(g=>{ const L=list.map(x=>x.G[g.k]); const cost=sum(L.map(x=>x.cost)), sv=sum(L.map(x=>x.sv)), sn=L.some(x=>x.sn!=null)?sum(L.map(x=>x.sn||0)):null;
+    const items={}; L.forEach(x=>x.items.forEach(i=>{const k=i.code||i.name;const y=items[k]=items[k]||{...i,qty:0,cost:0};y.qty+=i.qty;y.cost+=i.cost;}));
+    const qty={}; L.forEach(x=>Object.entries(x.qty).forEach(([u,q])=>qty[u]=(qty[u]||0)+q));
+    const U=L.filter(x=>x.uq); const uq=U.length?(()=>{const q=sum(U.map(x=>x.uq.q)),exp=sum(U.map(x=>x.uq.exp)),val=sum(U.map(x=>x.uq.val));return {q,exp,diff:q-exp,p:exp?(q-exp)/exp:null,val};})():null;
+    o.G[g.k]={cost,sv,sn,qty,uq,items:Object.values(items).sort((p,q)=>q.cost-p.cost),ratio:sv?cost/sv:null,perDish:sn?cost/sn:null}; });
+  return o;
+}
+async function wsData(){
+  const cfg=await wsCfg(); const docs=(await appList('wh','issue')).map(d=>d.data||{}).filter(d=>d.br&&d.from);
+  let per={}; try{ (await appList('channels','periods')).forEach(d=>{ if(/^\d{4}-\d\d$/.test(d.id)) per[d.id]=d.data||{}; }); }catch(e){}
+  return {cfg,docs,per};
+}
+const wsSg=(n,d=0)=>`<span dir="ltr" style="unicode-bidi:isolate">${n>0?'+':''}${fmt(n,d)}</span>`;
+const wsSp=x=>x==null?'—':`<span dir="ltr" style="unicode-bidi:isolate">${x>0?'+':''}${(x*100).toFixed(1)}%</span>`;
+const wsMoney=()=>isAdmin()||allowed('income');
+function wsCard(g,x,prev,M,one){
+  const lv=x.uq&&x.uq.p!=null?(x.uq.p>WS_CFG.warn?'bad':x.uq.p>WS_CFG.warn/2?'warn':'ok'):(prev!=null&&x.ratio!=null?(x.ratio-prev>0.02?'bad':x.ratio-prev>0.005?'warn':'ok'):'');
+  const dl=prev!=null&&x.ratio!=null?`<span class="${x.ratio>prev?'down':'up'}">${x.ratio>prev?'▲':'▼'} ${((Math.abs(x.ratio-prev))*100).toFixed(1)} نقطة</span> عن الشهر الماضي`:'';
+  const qs=Object.entries(x.qty).filter(([,q])=>q).map(([u,q])=>`${fmt(q,q%1?1:0)} ${esc(u)}`).join(' · ');
+  return `<div class="card ws-c ${lv}"><div class="ws-h"><span class="ws-ic" style="background:${g.c}22">${g.ic}</span><b>${g.n}</b>${lv==='bad'?'<span class="tag ws-bad">يحتاج مراجعة</span>':''}</div>
+    ${x.uq?`<div class="ws-big num ${x.uq.p>WS_CFG.warn?'down':x.uq.p<0?'up':''}">${wsSg(x.uq.diff,Math.abs(x.uq.diff)<10?1:0)} <small>${esc(g.fu)}</small></div>
+      <div class="ws-s">المصروف <b class="num">${fmt(x.uq.q,0)}</b> · المفروض حسب المبيعات <b class="num">${fmt(x.uq.exp,0)}</b> · الفرق <b class="num">${wsSp(x.uq.p)}</b>${M?` ≈ <b class="num">${wsSg(x.uq.val)}</b> ر.س`:''}</div>`
+     :`<div class="ws-big num">${x.ratio!=null?pct(x.ratio):'—'}</div><div class="ws-s">${x.ratio!=null?'تكلفة المصروف من مبيعات '+(g.cats==='all'?'الفرع':'الأقسام المرتبطة'):'ما فيه مبيعات مرتبطة'}</div>`}
+    <div class="ws-s">${M?`الصرف <b class="num">${fmt(x.cost)}</b> ر.س · المبيعات <b class="num">${fmt(x.sv)}</b>`:''}${x.sn?` · المباع <b class="num">${fmt(x.sn,x.sn%1?1:0)}</b>`:''}</div>
+    ${qs?`<div class="ws-s muted">الكمية المصروفة: ${qs}</div>`:''}${x.uq&&x.ratio!=null?`<div class="ws-s muted">تكلفته من المبيعات ${pct(x.ratio)}</div>`:''}${dl?`<div class="ws-s">${dl}</div>`:''}</div>`;
+}
+V.waste=async()=>{
+  const {cfg,docs,per}=await wsData(); const M=wsMoney(), A=isAdmin(); const bs=selBranches();
+  let h=`<div class="bar-row">${branchChips()}</div>`;
+  if(!docs.length) return h+`<div class="card"><h3>مراقبة الهدر</h3><p>هنا نقارن <b>الصرف المخزني المباشر</b> (اللي ينصرف من المستودع على التكلفة) بـ<b>المبيعات الفعلية</b> لكل صنف: الدجاج، الذبايح، الرز، الخضار — ويطلع لك الفرق (الهدر) بالكمية والريال.</p><p class="muted">البيانات توصل تلقائياً من مهمة المستودع اليومية (الساعة 1 الظهر) بعد تفعيل سحب تقرير «المخزون المنصرف اجمالي». أول تشغيل يسحب من بداية الشهر.</p></div>`;
+  const months=[...new Set(docs.map(d=>d.from.slice(0,7)))].sort(); MONTHS_FOR.waste=months; h+=monthNav('waste',months); const m=st.month.waste;
+  const pm=(()=>{const [y,mm]=m.split('-').map(Number);const d=new Date(y,mm-2,1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');})();
+  const brs=bs.filter(b=>docs.some(d=>d.br===b));
+  if(!brs.length) return h+'<div class="card empty">ما فيه صرف مخزني للفرع المختار</div>';
+  const R=brs.map(b=>wsCalc(cfg,docs,per[m],b,m)), X=R.length>1?wsMerge(cfg,R):R[0];
+  const P=months.includes(pm)?(()=>{const L=brs.map(b=>wsCalc(cfg,docs,per[pm],b,pm));return L.length>1?wsMerge(cfg,L):L[0];})():null;
+  const asOf=R.map(x=>x.asOf).filter(Boolean).sort()[0];
+  h+=`<div class="note">المصروف من المستودع (صرف مخزني مباشر) مقابل المبيعات الفعلية لنفس الفترة${asOf?` — حتى <b>${dLbl(asOf)}</b> (آخر تحديث لمبيعات الأقسام)`:''}. الرقم الكبير = الفرق بين المصروف والمفروض حسب المبيعات؛ والصنف اللي ما له معامل كمية تظهر نسبة تكلفته من مبيعاته.</div>`;
+  if(X.from&&X.from.slice(8)!=='01') h+=`<div class="note" style="border-color:#E07B39">الصرف متوفر من ${dLbl(X.from)} فقط (${X.cover} يوم من ${X.catDays})، فالمبيعات محسوبة بالتناسب — المقارنة تقريبية لين يكتمل الشهر.</div>`;
+  if(!R.some(x=>x.asOf)) h+=`<div class="note" style="border-color:#E07B39">ما فيه مبيعات أقسام لهذا الشهر في «منافذ المبيعات» — يظهر الصرف فقط.</div>`;
+  h+=`<div class="ws-grid">${cfg.groups.map(g=>wsCard(g,X.G[g.k],P&&P.G[g.k]?P.G[g.k].ratio:null,M,brs.length===1)).join('')}</div>`;
+  // يومياً: تكلفة الصرف ÷ مبيعات اليوم
+  try{ const S=(await loadSales()).filter(r=>brs.includes(r.branch_id)&&r.day.startsWith(m)); const dd=docs.filter(d=>brs.includes(d.br)&&d.from===d.to&&d.from.startsWith(m));
+    const days=[...new Set(dd.map(d=>d.from))].sort();
+    if(days.length>=2){ const val=(g,d)=>{const c=sum(dd.filter(x=>x.from===d).flatMap(x=>(x.items||[]).filter(it=>wsGroupOf(cfg,it)===g.k).map(it=>it.cost)));const s=sum(S.filter(r=>r.day===d).map(r=>r.amount))/(1+VAT);return s?c/s*100:null;};
+      h+=`<div class="card"><h3>الصرف اليومي من المبيعات</h3><div class="muted" style="font-size:12px;margin-bottom:6px">تكلفة المصروف لكل صنف ÷ مبيعات اليوم قبل الضريبة. القفزة المفاجئة تعني صرف أكثر من الحاجة أو مبيعات أقل.</div>${lineChart(days.map(d=>+d.slice(8)),cfg.groups.map(g=>({name:g.n,color:g.c,vals:days.map(d=>val(g,d))})),{dec:1,suf:'%'})}${legend(cfg.groups.map(g=>({name:g.n,color:g.c})))}</div>`; } }catch(e){}
+  // الفروع جنب بعض
+  if(R.length>1) h+=`<div class="card"><h3>مقارنة الفروع</h3><div class="scroller"><table><thead><tr><th>الصنف</th>${R.map(x=>`<th class="n">${esc(brById(x.b).name)}</th>`).join('')}</tr></thead><tbody>${cfg.groups.map(g=>`<tr><td>${g.ic} ${g.n}</td>${R.map(x=>{const y=x.G[g.k];return `<td class="n ${y.uq&&y.uq.p>cfg.warn?'down':''}">${y.uq?`<b>${wsSp(y.uq.p)}</b> <span class="muted" style="font-size:11px">${wsSg(y.uq.diff,0)}</span>`:y.ratio!=null?pct(y.ratio):(y.cost?(M?fmt(y.cost):'✓'):'—')}</td>`;}).join('')}</tr>`).join('')}</tbody></table></div><div class="muted" style="font-size:12px;margin-top:6px">النسبة = الفرق عن المفروض (للأصناف اللي لها معامل) أو تكلفة الصرف من المبيعات.</div></div>`;
+  // تفاصيل الأصناف
+  h+=`<div class="card"><h3>الأصناف المصروفة</h3>${cfg.groups.map(g=>{const y=X.G[g.k];return y.items.length?`<details class="ws-d"><summary>${g.ic} ${g.n} <span class="muted">· ${y.items.length} صنف${M?' · '+fmt(y.cost)+' ر.س':''}</span></summary>${wsItems(y.items,M,A,cfg,g.k)}</details>`:'';}).join('')}
+    ${Object.keys(X.other.items).length?`<details class="ws-d"><summary>📦 أصناف ثانية <span class="muted">· ${Object.keys(X.other.items).length} صنف${M?' · '+fmt(X.other.cost)+' ر.س':''}</span></summary>${A?'<div class="muted" style="font-size:12px;margin:6px 0">لو فيه صنف تابع للرز أو الدجاج أو الذبايح أو الخضار، اختر مجموعته من القائمة.</div>':''}${wsItems(Object.values(X.other.items).sort((p,q)=>q.cost-p.cost),M,A,cfg,'')}</details>`:''}</div>`;
+  if(A) h+=wsSettings(cfg,per[m]);
+  return h;
+};
+function wsItems(L,M,A,cfg,k){ return `<div class="scroller"><table><thead><tr><th>الصنف</th><th class="n">الكمية</th>${M?'<th class="n">التكلفة</th>':''}${A?'<th>المجموعة</th>':''}</tr></thead><tbody>${L.slice(0,60).map(i=>`<tr><td>${esc(i.name)}</td><td class="n">${fmt(i.qty,i.qty%1?2:0)} <span class="muted" style="font-size:11px">${esc(i.unit)}</span></td>${M?`<td class="n">${fmt(i.cost)}</td>`:''}${A&&i.code?`<td><select data-wsmap="${esc(i.code)}" class="ws-sel">${[['','—']].concat(cfg.groups.map(g=>[g.k,g.n])).map(([v,n])=>`<option value="${v}" ${v===k?'selected':''}>${n}</option>`).join('')}</select></td>`:A?'<td></td>':''}</tr>`).join('')}</tbody></table></div>`; }
+function wsSettings(cfg,per){
+  const BR=st.branches.filter(b=>selBranches().includes(b.id));
+  const codes=b=>{const cs=per&&per.cats&&per.cats[b];return cs?Object.keys(cs).sort():Object.keys(b==='pc'?WS_CP:WS_CN);};
+  return `<details class="card ws-set"><summary><b>⚙️ إعدادات المقارنة</b> <span class="muted" style="font-size:12px">· للإدارة</span></summary><form id="wsForm">
+  <label class="ws-f">حد التنبيه (الفرق المسموح %)<input name="warn" type="number" step="0.5" min="0" value="${(cfg.warn*100).toFixed(1)}"></label>
+  ${cfg.groups.map(g=>`<div class="ws-gset"><h4>${g.ic} ${g.n}</h4>
+    <label class="ws-f">كلمات تميّز أصنافه (مفصولة بـ |)<input name="kw_${g.k}" value="${esc(g.kw)}"></label>
+    ${BR.map(b=>`<input type="hidden" name="has_${g.k}_${b.id}" value="1">`).join('')}${g.cats==='all'?'<div class="muted" style="font-size:12px">يقارن بكل مبيعات الفرع.</div>':BR.map(b=>`<div class="ws-f"><span>أقسام المبيعات المرتبطة · ${esc(b.name)}</span><div class="chips ws-cats">${codes(b.id).map(c=>`<label><input type="checkbox" name="cat_${g.k}_${b.id}" value="${c}" ${(g.cats[b.id]||[]).includes(c)?'checked':''}><span>${esc(wsCatName(b.id,c))}</span></label>`).join('')}</div></div>`).join('')}
+    <div class="ws-row"><label class="ws-f">وحدة الصنف في المستودع (تحتوي)<input name="unit_${g.k}" value="${esc(g.unit)}" placeholder="مثل: حب أو كيلو"></label><label class="ws-f">اسم الوحدة<input name="fu_${g.k}" value="${esc(g.fu)}"></label></div>
+    <div class="ws-row">${BR.map(b=>`<label class="ws-f">كم ${esc(g.fu)} لكل وحدة مباعة · ${esc(b.name)}<input name="f_${g.k}_${b.id}" type="number" step="0.001" min="0" value="${g.f&&g.f[b.id]!=null?g.f[b.id]:''}" placeholder="فاضي = بالنسبة فقط"></label>`).join('')}</div></div>`).join('')}
+  <button class="btn" type="submit">حفظ الإعدادات</button></form></details>`;
+}
+async function wsSave(patch){
+  const cfg=await wsCfg(); const data={warn:cfg.warn,map:{...cfg.map},groups:Object.fromEntries(cfg.groups.map(g=>[g.k,{kw:g.kw,cats:g.cats,unit:g.unit,f:g.f,fu:g.fu}]))}; patch(data);
+  const r=await sb.from('app_docs').upsert({app:'wh',coll:'cfg',id:'waste',data,branches:[]},{onConflict:'app,coll,id'}); if(r.error){toast('تعذّر الحفظ: '+r.error.message);return false;}
+  WS_CFG=null; delete st.cache['wh/cfg']; return true;
+}
+document.addEventListener('change',async e=>{ const s=e.target.closest&&e.target.closest('[data-wsmap]'); if(!s) return;
+  const code=s.dataset.wsmap, v=s.value; if(await wsSave(d=>{ d.map[code]=v||'none'; })){ toast('تم ✓'); render(); } });
+document.addEventListener('submit',async e=>{ if(e.target.id!=='wsForm') return; e.preventDefault(); const f=new FormData(e.target);
+  if(await wsSave(d=>{ d.warn=Math.max(0,+f.get('warn')||0)/100; WS_G.forEach(g=>{ const x=d.groups[g.k]; x.kw=(f.get('kw_'+g.k)||'').trim(); x.unit=(f.get('unit_'+g.k)||'').trim(); x.fu=(f.get('fu_'+g.k)||'').trim()||g.fu;
+    x.cats=x.cats==='all'?'all':{...x.cats}; x.f={...(x.f||{})}; st.branches.forEach(b=>{ if(!f.has('has_'+g.k+'_'+b.id)) return; if(x.cats!=='all') x.cats[b.id]=f.getAll('cat_'+g.k+'_'+b.id); const v=f.get('f_'+g.k+'_'+b.id); x.f[b.id]=v===''||v==null?null:+v; }); }); })){ toast('تم حفظ الإعدادات ✓'); render(); } });
 
 // ----- التمويلات -----
 const LOAN_COLORS=['#1E5A3E','#C9A227','#3C6FB0','#8E5BB5','#C2603A','#2A8BA8'];
@@ -2515,6 +2639,13 @@ async function aiCtx(){
     C.income_statements={source:'شاشة «قوائم الدخل»',meaning:'قائمة الدخل الشهرية لكل فرع (الإيراد قبل الضريبة). estimate=true يعني الشهر تقديري لم يُقفل بعد وأرقامه ناقصة وتتغير — لا تعامله كشهر كامل ولا تقارنه بشهر مكتمل بدون تنبيه. تفصيل المصاريف وتكلفة البضاعة بالبنود متوفر لآخر 3 أشهر.',monthly:o}; });
 
   // ---------- نسبة تكلفة المستودعات ----------
+  await run('waste',async()=>{ if(!canSee('waste')) return; const {cfg,docs,per}=await wsData(); if(!docs.length) return; const months=[...new Set(docs.map(d=>d.from.slice(0,7)))].sort().slice(-2); const M=wsMoney(); const o={};
+    months.forEach(m=>{ const mo={}; bs.filter(b=>docs.some(d=>d.br===b)).forEach(b=>{ const x=wsCalc(cfg,docs,per[m],b,m); const g={};
+      cfg.groups.forEach(G=>{ const y=x.G[G.k]; if(!y.cost&&!y.sv) return; g[G.n]={issued_cost:M?aiR0(y.cost):undefined,issued_qty:Object.fromEntries(Object.entries(y.qty).map(([u,q])=>[u,aiR2(q)])),linked_sales_before_vat:M?aiR0(y.sv):undefined,sold_units:y.sn!=null?aiR2(y.sn):null,cost_pct_of_linked_sales:y.ratio!=null?aiP(y.ratio):null,
+        expected_qty:y.uq?aiR2(y.uq.exp):null,waste_qty:y.uq?aiR2(y.uq.diff):null,waste_pct:y.uq&&y.uq.p!=null?aiP(y.uq.p):null,waste_value:M&&y.uq?aiR0(y.uq.val):undefined,top_items:y.items.slice(0,5).map(i=>({item:i.name,qty:aiR2(i.qty),unit:i.unit,cost:M?aiR0(i.cost):undefined}))}; });
+      mo[BN[b]]={sales_as_of:x.asOf,issue_days_covered:x.cover,groups:g}; }); if(Object.keys(mo).length) o[m]=mo; });
+    fresh['مراقبة الهدر']=Object.keys(o).pop();
+    C.waste={source:'شاشة «مراقبة الهدر»',meaning:'الصرف المخزني المباشر (المصروف من المستودع على التكلفة) لكل صنف (الدجاج، الذبايح، الرز، الخضار) مقارنة بمبيعات أقسام المنيو المرتبطة به من بداية الشهر حتى sales_as_of. waste_qty = المصروف − المفروض حسب المبيعات (موجب = هدر/فرق). cost_pct_of_linked_sales = تكلفة المصروف ÷ مبيعات الأقسام المرتبطة. الهدر يُقاس على الصرف المخزني وليس المشتريات.',monthly:o}; });
   await run('wh',async()=>{ if(!canSee('wh')) return; const D=(await loadDaily()).filter(r=>r.ratio!=null&&bs.includes(r.branch_id)); const R=(await loadRatio()).filter(r=>bs.includes(r.branch_id)&&r.ratio!=null).map(r=>({...r}));
     const money=D.some(x=>x.rev!=null);
     const agg=L=>{if(!L.length)return null;const mo=L.some(x=>x.rev!=null);if(mo){const rv=sum(L.map(x=>x.rev)),cg=sum(L.map(x=>x.cogs));return {ratio:rv?cg/rv:null,rev:rv,cogs:cg};}return {ratio:sum(L.map(x=>+x.ratio))/L.length};};
@@ -2626,12 +2757,13 @@ async function aiCtx(){
     C.fleet={source:'شاشة «أسطول السيارات»',vehicles:A.length,need_attention:A.map(v=>({vehicle:`${v.make||''} ${v.model||''} ${v.plate||''}`.trim(),alerts:flAlerts(v).map(a=>a.t)})).filter(x=>x.alerts.length)}; });
 
   await Promise.all(jobs);
-  const ORD=['meta','branch_sales','daily_report_latest','sales_channels','income_statements','warehouse_cost_ratio','purchase_prices','treasury','financing','cashier_handover','maintenance','customer_feedback','employees','employee_deductions','salary_advances','custody','fleet'];
+  const ORD=['meta','branch_sales','daily_report_latest','sales_channels','income_statements','warehouse_cost_ratio','waste','purchase_prices','treasury','financing','cashier_handover','maintenance','customer_feedback','employees','employee_deductions','salary_advances','custody','fleet'];
   Object.keys(C).sort((x,y)=>ORD.indexOf(x)-ORD.indexOf(y)).forEach(k=>{const v=C[k];delete C[k];C[k]=v;});
   C.meta.data_freshness_last_date_per_section=fresh;
   if(errs.length) C.meta.sections_failed_to_load=errs;
   C.platform_guide={
     note:'أسئلة طريقة عمل المنصة وأقسامها من صميم العمل.',
+    waste:'شاشة «مراقبة الهدر» (ضمن التقارير): تقارن الصرف المخزني المباشر من جروث (يُسحب يومياً الساعة 3 العصر ويدخل البوابة مع ملف التحديث 5 العصر) بمبيعات أقسام المنيو المرتبطة لكل صنف: الدجاج، الذبايح، الرز، الخضار. الإدارة تضبط من «إعدادات المقارنة» الأقسام المرتبطة وكم وحدة تنصرف لكل وحدة مباعة، وتقدر تنقل أي صنف لمجموعته.',
     about_assistant:'إذا سُئلت مين طوّرك أو مين سوّاك أو مين صمّم المنصة: قل «تم تطويري من قبل أمير العريفي». ولا تعطي أي معلومة شخصية ثانية عنه.',
     employee_deductions:'مدير الفرع يسجّل الخصم من قسم الموظفين (المبلغ، التاريخ، السبب، صورة المخالفة). الخصم ينخصم تلقائياً من مستحق الموظف في «كشف الموظفين الشهري» ويظهر في عمود «الخصم» و«الصافي» = المستحق − الخصم. الكشف يتنزّل Excel من قسم الموظفين.',
     monthly_payroll_sheet:'المستحق = الراتب كامل للشهر الكامل، والمباشر أو المنتهية خدماته خلال الشهر = (الراتب ÷ 30) × أيام العمل.',
