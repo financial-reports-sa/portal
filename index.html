@@ -669,7 +669,7 @@ const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'ai',na
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup','feedback','custody'];
-const APP_VER='76';
+const APP_VER='77';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -2500,15 +2500,26 @@ async function aiCtx(){
       next_5_installments:up.slice(0,5).map(x=>({date:x.date,amount:aiR2(x.amount),contract:x.name})),installments_due_by_month_next_6:Object.fromEntries(Object.entries(byMonth).slice(0,6).map(([k,v])=>[k,aiR0(v)]))}; });
 
   // ---------- تسليم الورديات ----------
-  await run('handover',async()=>{ if(!canSee('handover')) return; const out={};
-    for(const m of [m0,mPrev]){ const r=await sb.rpc('handover_list',{p_month:m}); if(r.error) throw r.error; const L=(r.data||[]).filter(x=>bs.includes(x.branch)); if(!L.length) continue;
-      const tot=x=>+x.total||0, diff=x=>x.adj!=null?+x.adj:(x.system==null||x.system===''?null:tot(x)-(+x.system));
+  await run('handover',async()=>{ if(!canSee('handover')) return; const out={}, ALL=[];
+    const appsT=x=>sum(Object.values(x.apps||{}).map(v=>+v||0)), totF=x=>(+x.cash||0)+(+x.card||0)+(+x.credit||0)+(+x.transfer||0)+(+x.invoice||0)+appsT(x);
+    for(const m of [m0,mPrev]){ const r=await sb.rpc('handover_list',{p_month:m}); if(r.error) throw r.error; const L=(r.data||[]).filter(x=>bs.includes(x.branch)); if(!L.length) continue; ALL.push(...L);
+      const tot=x=>totF(x), diff=x=>x.adj!=null?+x.adj:(x.system==null||x.system===''?null:tot(x)-(+x.system));
       const per={}; bs.forEach(b=>{const X=L.filter(x=>x.branch===b);if(!X.length)return;const d=X.map(diff).filter(v=>v!=null);
         per[BN[b]]={handovers:X.length,days:new Set(X.map(x=>x.date)).size,total:aiR0(sum(X.map(tot))),cash:aiR0(sum(X.map(x=>+x.cash||0))),card:aiR0(sum(X.map(x=>+x.card||0))),
           shortages_total:aiR2(-sum(d.filter(v=>v<-0.004))),shortages_count:d.filter(v=>v<-0.004).length,overages_total:aiR2(sum(d.filter(v=>v>0.004))),pending_review:X.filter(x=>!x.review_status).length,last_date:X.map(x=>x.date).sort().pop()};});
       const cs={}; L.forEach(x=>{const d=diff(x);const k=x.cashier+' — '+(BN[x.branch]||x.branch);const c=cs[k]=cs[k]||{handovers:0,shortages:0,overages:0};c.handovers++;if(d!=null&&d<-0.004)c.shortages+=-d;if(d!=null&&d>0.004)c.overages+=d;});
       out[m]={by_branch:per,by_cashier:Object.fromEntries(Object.entries(cs).map(([k,c])=>[k,{handovers:c.handovers,shortages:aiR2(c.shortages),overages:aiR2(c.overages)}]))}; }
-    if(Object.keys(out).length) C.cashier_handover={source:'شاشة «تسليم الورديات»',meaning:'تسليمات الكاشيرات لكل وردية: الإجمالي (كاش+شبكة+آجل+تطبيقات+تحويلات+فواتير)، والعجز/الزيادة حسب مطابقة المحاسب أو الفرق عن إجمالي النظام.',monthly:out}; });
+    const dfx=x=>x.adj!=null?+x.adj:(x.system==null||x.system===''?null:totF(x)-(+x.system));
+    const days=[...new Set(ALL.map(x=>String(x.date).slice(0,10)))].sort().slice(-14), daily={};
+    days.forEach(d=>{ const D=ALL.filter(x=>String(x.date).slice(0,10)===d); const o={day:aiDayName(d)};
+      bs.forEach(b=>{ const X=D.filter(x=>x.branch===b); if(!X.length) return; const ap={}; X.forEach(x=>Object.entries(x.apps||{}).forEach(([k,v])=>{if(+v)ap[k]=aiR2((ap[k]||0)+ +v);})); const df=X.map(dfx).filter(v=>v!=null);
+        o[BN[b]]={handovers:X.length,total:aiR2(sum(X.map(totF))),cash:aiR2(sum(X.map(x=>+x.cash||0))),card:aiR2(sum(X.map(x=>+x.card||0))),credit:aiR2(sum(X.map(x=>+x.credit||0))),transfer:aiR2(sum(X.map(x=>+x.transfer||0))),invoices:aiR2(sum(X.map(x=>+x.invoice||0))),apps:ap,
+          shortages:aiR2(-sum(df.filter(v=>v<-0.004))),overages:aiR2(sum(df.filter(v=>v>0.004))),pending_review:X.filter(x=>!x.review_status).length}; });
+      o.all_branches_total=aiR2(sum(D.map(totF))); o.all_branches_handovers=D.length; daily[d]=o; });
+    const recent=days.slice(-4), shifts=ALL.filter(x=>recent.includes(String(x.date).slice(0,10))).sort((a,b)=>String(a.date)<String(b.date)?1:-1).map(x=>{const d=dfx(x);return {date:String(x.date).slice(0,10),branch:BN[x.branch],shift:x.shift==='am'?'صباحية':'مسائية',cashier:x.cashier,total:aiR2(totF(x)),cash:aiR2(+x.cash||0),card:aiR2(+x.card||0),
+      apps_total:aiR2(appsT(x)),system_total:x.system==null||x.system===''?null:aiR2(+x.system),difference:d==null?null:aiR2(d),review:!x.review_status?'بانتظار المراجعة':d!=null&&d<-0.004?'عجز':d!=null&&d>0.004?'زيادة':'مطابق',note:String(x.review_note||x.notes||'').slice(0,80)||undefined};});
+    if(days.length) fresh['تسليم الورديات']=days[days.length-1];
+    if(Object.keys(out).length) C.cashier_handover={daily_last_14_days:daily,shifts_last_4_days:shifts,source:'شاشة «تسليم الورديات»',meaning:'daily_last_14_days = تفصيل كل يوم (حسب تاريخ الوردية) لكل فرع، و shifts_last_4_days = كل وردية بالكاشير والمبلغ والعجز. لأي سؤال عن يوم محدد خذ منها مباشرة؛ وإذا التاريخ مو موجود فيها قل «ما فيه تسليمات مسجّلة بهذا التاريخ» واذكر آخر تاريخ موجود. تسليمات الكاشيرات لكل وردية: الإجمالي (كاش+شبكة+آجل+تطبيقات+تحويلات+فواتير)، والعجز/الزيادة حسب مطابقة المحاسب أو الفرق عن إجمالي النظام.',monthly:out}; });
 
   // ---------- الصيانة ----------
   await run('maint',async()=>{ if(!canSee('maint')) return; const r=await sb.from('maint_requests').select('no,branch,category,title,status,priority,created_at,done_at,cost').order('created_at',{ascending:false}).limit(500); if(r.error) throw r.error; const L=(r.data||[]).filter(m=>bs.includes(m.branch));
