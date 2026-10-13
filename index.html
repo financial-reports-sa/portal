@@ -329,6 +329,7 @@ tr.sub td{font-weight:600;background:var(--bg)}
 .ucard{display:flex;flex-direction:column;gap:10px}
 .uhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .tgrid{display:flex;flex-wrap:wrap;gap:6px}
+.pgrp{border:1px solid var(--line,#e5e7eb);border-radius:12px;padding:8px 10px;margin-bottom:8px}.pgh{display:flex;align-items:center;gap:8px;margin-bottom:6px}.pgh b{font-size:13.5px}.pgh .btn{margin-inline-start:auto}
 .tg{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:5px 10px;font-size:13px;display:inline-flex;gap:6px;align-items:center}
 .tg[aria-pressed="true"]{background:var(--up);border-color:var(--up);color:#fff}
 .tg:disabled{opacity:.55;cursor:not-allowed}
@@ -681,11 +682,11 @@ const SECTIONS=[
   {id:'ai',name:'المساعد الذكي'},
   {id:'brief',name:'التقرير المسائي',admin:true},
   {id:'sales',name:'مبيعات الفروع',app:'sales'},
-  {id:'daily',name:'التقرير اليومي',page:'daily',perm:'sales'},
+  {id:'daily',name:'التقرير اليومي',page:'daily'},
   {id:'channels',name:'منافذ المبيعات',app:'channels'},
   {id:'income',name:'قوائم الدخل',app:'income'},
   {id:'wh',name:'نسبة تكلفة المستودعات'},
-  {id:'waste',name:'مراقبة الهدر',perm:'wh'},
+  {id:'waste',name:'مراقبة الهدر'},
   {id:'chicken',name:'أسعار المشتريات',page:'prices'},
   {id:'treasury',name:'خزينة الأرصدة',app:'treasury'},
   {id:'loans',name:'التمويلات'},
@@ -694,7 +695,7 @@ const SECTIONS=[
   {id:'feedback',name:'تقييم العملاء'},
   {id:'hr',name:'الموارد البشرية'},
   {id:'employees',name:'الموظفين',app:'employees'},
-  {id:'advances',name:'السلف',perm:'employees'},
+  {id:'advances',name:'السلف'},
   {id:'custody',name:'العُهد'},
   {id:'me',name:'بوابتي'},
   {id:'handover',name:'تسليم الورديات',app:'handover'},
@@ -712,8 +713,9 @@ const NAV_ICONS={
 const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'ai',name:'المساعد الذكي',secs:['ai']},{id:'rep',name:'التقارير',secs:['brief','sales','daily','channels','income','wh','waste','chicken']},{id:'ops',name:'العمليات',secs:['handover','maint','feedback','fleet']},{id:'hrg',name:'الموارد البشرية',secs:['hr','employees','advances']},{id:'fin',name:'المالية',secs:['treasury','loans','custody']},{id:'more',name:'الإدارة',secs:['users','data'],nav:false}];
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
-const PERM_SECTIONS=['sales','channels','income','wh','chicken','treasury','loans','fleet','handover','employees','maint','maint_sup','feedback','custody','custody_holder','hr'];
-const APP_VER='96';
+const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['handover','maint','maint_sup','feedback','fleet']},{name:'الموارد البشرية',secs:['hr','employees','advances']},{name:'المالية',secs:['treasury','loans','custody','custody_holder']}];
+const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
+const APP_VER='97';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.custody_holder='مسؤول العهدة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -740,7 +742,7 @@ const st={user:null,profile:null,branches:[],myBranches:[],mySections:[],tab:'ho
 const isAdmin=()=>st.profile&&['owner','admin'].includes(st.profile.role);
 const isOwner=()=>st.profile&&st.profile.role==='owner';
 const isEmp=()=>st.profile&&st.profile.role==='employee';
-const allowed=id=>{ if(isEmp()) return id==='me'; if(id==='me') return false; if(isAdmin()||id==='home'||id==='ai') return true; if(id==='daily') return st.mySections.includes('sales')&&st.allBranches; if(id==='maint') return st.mySections.includes('maint')||st.mySections.includes('maint_sup'); if(id==='hr') return st.mySections.includes('hr')||st.mySections.includes('employees'); if(id==='custody') return st.mySections.includes('custody')||st.mySections.includes('custody_holder'); const x=SECTIONS.find(q=>q.id===id); return st.mySections.includes(x&&x.perm?x.perm:id); };
+const allowed=id=>{ if(isEmp()) return id==='me'; if(id==='me') return false; if(isAdmin()||id==='home'||id==='ai') return true; if(id==='daily') return st.mySections.includes('daily')&&st.allBranches; if(id==='maint') return st.mySections.includes('maint')||st.mySections.includes('maint_sup'); if(id==='custody') return st.mySections.includes('custody')||st.mySections.includes('custody_holder'); const x=SECTIONS.find(q=>q.id===id); return st.mySections.includes(x&&x.perm?x.perm:id); };
 const brById=id=>st.branches.find(b=>b.id===id)||(st._cuBr||[]).find(b=>b.id===id)||{id,name:id,color:'#888'};
 const selBranches=()=>st.f==='all'?st.branches.map(b=>b.id):[st.f];
 
@@ -3231,7 +3233,7 @@ V.users=async()=>{
     <div class="muted" style="font-size:12px">بعد الإنشاء حدّد فروعه وأقسامه من القائمة تحت. المستخدم الجديد لا يرى أي شيء حتى تعطيه صلاحية.</div><div class="err" id="nue"></div></div>`;
   h+=P.data.map(u=>{const m=canManage(u),adminLike=u.role!=='user';
     const bn=st.branches.filter(b=>ub.some(x=>x.user_id===u.id&&x.branch_id===b.id)).map(b=>b.name), sn=us.filter(x=>x.user_id===u.id).length;
-    const sum=adminLike?(u.role==='sync'?'مهام تلقائية':'كل الفروع والأقسام'):(bn.length?bn.join('، '):'بدون فرع')+' · '+(sn?sn+' قسم':'بدون أقسام');
+    const sum=adminLike?(u.role==='sync'?'مهام تلقائية':'كل الفروع والأقسام'):(bn.length?bn.join('، '):'بدون فرع')+' · '+(sn?sn+' شاشة':'بدون صلاحيات');
     const qq=(u.full_name||'')+' '+u.username, open=!!st.uOpen[u.id];
     return `<div class="card ucard usr" data-q="${esc(qq.toLowerCase())}" ${q&&!qq.toLowerCase().includes(q)?'hidden':''}><button class="utop" type="button" data-uo="${u.id}" aria-expanded="${open}"><span class="uav">${esc((u.full_name||u.username).trim().charAt(0))}</span><div style="flex:1;min-width:0;text-align:right"><b>${esc(u.full_name||u.username)}</b> <span class="role ${u.role}">${ROLE_NAME[u.role]}</span> ${u.active?'':'<span class="tag" style="color:var(--down)">موقوف</span>'}<div class="usum"><span dir="ltr">${esc(u.username)}</span> · ${esc(sum)}</div></div><span class="uchev">⌄</span></button><div class="ubody" ${open?'':'hidden'}><div class="uhead">
       <div style="display:flex;flex-wrap:wrap;gap:6px">${isOwner()&&['admin','user'].includes(u.role)?`<button class="btn ghost sm" data-role="${u.id}" data-to="${u.role==='admin'?'user':'admin'}">${u.role==='admin'?'تحويل لمستخدم':'ترقية لآدمن'}</button>`:''}${u.role!=='sync'&&(m||(u.id===st.user.id&&u.role==='owner'))?`<button class="btn ghost sm" data-nmt="${u.id}">تعديل اسم المستخدم</button>`:''}${m?`<button class="btn ghost sm" data-pwt="${u.id}">تغيير كلمة المرور</button><button class="btn ghost sm" data-act="${u.id}" data-to="${u.active?0:1}">${u.active?'إيقاف':'تفعيل'}</button>`:''}</div></div>
@@ -3239,7 +3241,7 @@ V.users=async()=>{
       ${m?`<form class="row pwf" data-uid="${u.id}" hidden autocomplete="off"><div class="field"><label for="pw_${u.id}">كلمة المرور الجديدة لـ ${esc(u.full_name||u.username)}</label><input class="inp" id="pw_${u.id}" dir="ltr" minlength="8" required autocomplete="new-password"></div><div class="field" style="justify-content:flex-end;flex:none"><button class="btn sm" type="submit">حفظ</button></div></form>`:''}
       ${adminLike?`<div class="muted" style="font-size:13px">${u.role==='owner'?'المالك يرى كل شيء، ولا يمكن تعديل حسابه.':u.role==='sync'?'حساب المهام التلقائية: يكتب أرقام التقارير فقط، ولا يدير المستخدمين.':'الآدمن يرى كل الفروع والأقسام، ويدير المستخدمين.'}</div>`:
       `<div><div class="muted" style="font-size:12px;margin-bottom:4px">الفروع</div><div class="tgrid">${st.branches.map(b=>{const on=ub.some(x=>x.user_id===u.id&&x.branch_id===b.id);return `<button class="tg" data-tb="${u.id}" data-k="b:${b.id}" aria-pressed="${on}" ${m?'':'disabled'}><i class="dot" style="background:${b.color}"></i>${esc(b.name)}</button>`;}).join('')}</div></div>
-      <div><div class="muted" style="font-size:12px;margin-bottom:4px">الأقسام</div><div class="tgrid">${PERM_SECTIONS.map(s=>{const on=us.some(x=>x.user_id===u.id&&x.section===s);return `<button class="tg" data-tb="${u.id}" data-k="s:${s}" aria-pressed="${on}" ${m?'':'disabled'}>${SEC_NAME[s]}</button>`;}).join('')}</div></div>
+      <div><div class="muted" style="font-size:12px;margin-bottom:6px">الأقسام والشاشات</div>${PERM_GROUPS.map((g,gi)=>{const n=g.secs.filter(s=>us.some(x=>x.user_id===u.id&&x.section===s)).length;return `<div class="pgrp"><div class="pgh"><b>${g.name}</b><span class="muted num" style="font-size:11.5px">${n} من ${g.secs.length}</span>${m?`<button class="btn ghost sm" type="button" data-pga="${u.id}" data-g="${gi}" data-on="${n<g.secs.length?1:0}">${n<g.secs.length?'تحديد الكل':'إلغاء الكل'}</button>`:''}</div><div class="tgrid">${g.secs.map(s=>{const on=us.some(x=>x.user_id===u.id&&x.section===s);return `<button class="tg" data-tb="${u.id}" data-k="s:${s}" aria-pressed="${on}" ${m?'':'disabled'}>${SEC_NAME[s]}</button>`;}).join('')}</div></div>`;}).join('')}</div>
       ${us.some(x=>x.user_id===u.id&&x.section==='income')?'':us.some(x=>x.user_id===u.id&&x.section==='wh')?'<div class="muted" style="font-size:12px">يرى نسبة تكلفة المستودعات فقط، بدون الإيرادات أو المصروفات.</div>':''}`}
     </div></div>`;}).join('');
   h+=`<div class="card usr"><h3 style="font-size:15px">تغيير كلمة المرور الخاصة بك</h3><form class="row" id="cpf"><div class="field"><label for="cpn">كلمة المرور الجديدة</label><input class="inp" id="cpn" type="password" minlength="8" required dir="ltr" autocomplete="new-password"></div><div class="field" style="justify-content:flex-end"><button class="btn" type="submit">تغيير</button></div></form></div>`;
@@ -3248,6 +3250,10 @@ V.users=async()=>{
 document.addEventListener('click',async e=>{
   const uo=e.target.closest('[data-uo]'); if(uo){st.uOpen=st.uOpen||{};const o=!st.uOpen[uo.dataset.uo];st.uOpen[uo.dataset.uo]=o;uo.setAttribute('aria-expanded',o);uo.nextElementSibling.hidden=!o;return;}
   if(e.target.closest('[data-uadd]')){st.uAdd=!st.uAdd;render();return;}
+  const ga=e.target.closest('[data-pga]'); if(ga&&!ga.disabled){
+    const uid=ga.dataset.pga,g=PERM_GROUPS[+ga.dataset.g],on=ga.dataset.on==='1'; ga.disabled=true;
+    let r; if(on){const ex=await sb.from('user_sections').select('section').eq('user_id',uid).in('section',g.secs); const have=(ex.data||[]).map(x=>x.section), add=g.secs.filter(s=>!have.includes(s)); r=ex.error?ex:(add.length?await sb.from('user_sections').insert(add.map(s=>({user_id:uid,section:s}))):{error:null});} else r=await sb.from('user_sections').delete().eq('user_id',uid).in('section',g.secs);
+    ga.disabled=false; if(r.error){toast('تعذّر الحفظ: '+r.error.message);return;} toast('تم الحفظ'); render(); return;}
   const t=e.target.closest('[data-tb]'); if(t&&!t.disabled){
     const uid=t.dataset.tb,[k,id]=t.dataset.k.split(':'),on=t.getAttribute('aria-pressed')==='true';
     const tbl=k==='b'?'user_branches':'user_sections',col=k==='b'?'branch_id':'section';
