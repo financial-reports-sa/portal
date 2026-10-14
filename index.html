@@ -689,7 +689,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['handover','maint','maint_sup','feedback','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','loans','custody','custody_holder']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610142252';
+const APP_VER='202610142315';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.custody_holder='مسؤول العهدة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -3435,11 +3435,9 @@ document.addEventListener('submit',async e=>{
     if(!/^[a-z0-9._-]{3,30}$/.test(u)){$('#nue').textContent='اسم المستخدم بالإنجليزي (حروف وأرقام فقط، 3 أحرف على الأقل)';return;}
     if(p.length<8){$('#nue').textContent='كلمة المرور 8 أحرف على الأقل';return;}
     $('#nub').disabled=true;$('#nue').textContent='';
-    const tmp=window.supabase.createClient(CFG.url,CFG.key,{auth:{persistSession:false,autoRefreshToken:false,storageKey:'tmp-signup'}});
-    const {data,error}=await tmp.auth.signUp({email:u+'@'+DOMAIN,password:p,options:{data:{username:u,full_name:name}}});
+    const {error}=await sb.rpc('admin_create_user',{p_username:u,p_password:p,p_full_name:name});
     $('#nub').disabled=false;
-    if(error){$('#nue').textContent=/registered|exists/i.test(error.message)?'اسم المستخدم مستخدم من قبل':'تعذّر الإنشاء: '+error.message;return;}
-    if(data.user&&data.user.identities&&data.user.identities.length===0){$('#nue').textContent='اسم المستخدم مستخدم من قبل';return;}
+    if(error){$('#nue').textContent=/admin_create_user|schema cache|function/i.test(error.message)?'شغّل ملف «إنشاء الحسابات» في Supabase أولاً':'تعذّر الإنشاء: '+error.message;return;}
     toast('تم إنشاء الحساب — حدّد صلاحياته'); render(); }
   if(e.target.classList.contains('pwf')){ e.preventDefault(); const uid=e.target.dataset.uid, inp=$('#pw_'+uid), pw=inp.value;
     if(pw.length<8){toast('كلمة المرور 8 أحرف على الأقل');return;}

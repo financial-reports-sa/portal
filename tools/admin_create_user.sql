@@ -1,0 +1,26 @@
+create or replace function public.admin_create_user(p_username text, p_password text, p_full_name text default '')
+returns uuid language plpgsql security definer set search_path = public, extensions, auth as $$
+declare uid uuid := gen_random_uuid(); u text := lower(btrim(coalesce(p_username, ''))); em text;
+begin
+  if not coalesce(is_admin(), false) then raise exception 'إنشاء الحسابات للمالك والآدمن فقط'; end if;
+  if u !~ '^[a-z0-9._-]{3,30}$' then raise exception 'اسم المستخدم بالإنجليزي (حروف وأرقام فقط، 3 أحرف على الأقل)'; end if;
+  if length(coalesce(p_password, '')) < 8 then raise exception 'كلمة المرور 8 أحرف على الأقل'; end if;
+  em := u || '@myreportshub.report';
+  if exists (select 1 from auth.users where lower(email) = em) then raise exception 'اسم المستخدم مستخدم من قبل'; end if;
+  insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+                          raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+                          confirmation_token, recovery_token, email_change_token_new, email_change)
+  values ('00000000-0000-0000-0000-000000000000', uid, 'authenticated', 'authenticated', em,
+          crypt(p_password, gen_salt('bf')), now(),
+          '{"provider":"email","providers":["email"]}'::jsonb,
+          jsonb_build_object('username', u, 'full_name', btrim(coalesce(p_full_name, ''))),
+          now(), now(), '', '', '', '');
+  insert into auth.identities (id, user_id, provider_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+  values (gen_random_uuid(), uid, uid::text, jsonb_build_object('sub', uid::text, 'email', em, 'email_verified', true),
+          'email', now(), now(), now());
+  return uid;
+end $$;
+revoke all on function public.admin_create_user(text, text, text) from public, anon;
+grant execute on function public.admin_create_user(text, text, text) to authenticated;
+
+select 'تم: إنشاء حسابات المدراء صار من داخل المنصة ✓' as result;
