@@ -1,0 +1,206 @@
+do $$
+declare lst text[];
+begin
+  select array(select distinct x from unnest(
+           array['sales','channels','income','wh','chicken','carcass','treasury','handover','employees','loans','fleet','maint','maint_sup','feedback','custody','hr','custody_holder','att']
+           || coalesce((select array_agg(distinct section) from public.user_sections), '{}')) x) into lst;
+  alter table public.user_sections drop constraint if exists user_sections_section_check;
+  execute format('alter table public.user_sections add constraint user_sections_section_check check (section = any (%L::text[]))', lst);
+end $$;
+
+create or replace function public.att_ok(p_emp uuid) returns boolean
+language sql stable security definer set search_path = public as $$
+  select coalesce(emp_ok(p_emp), false) or exists (select 1 from employees e where e.id = p_emp and not e.confidential
+    and exists (select 1 from user_sections us join profiles p on p.id = us.user_id where us.user_id = auth.uid() and us.section = 'att' and p.active)
+    and e.branch = any(my_branches()))
+$$;
+grant execute on function public.att_ok(uuid) to authenticated;
+
+create or replace function public.att_branch_ok(p_branch text) returns boolean
+language sql stable security definer set search_path = public as $$
+  select coalesce(is_admin(), false) or coalesce(employees_can(p_branch), false)
+    or (exists (select 1 from user_sections us join profiles p on p.id = us.user_id where us.user_id = auth.uid() and us.section = 'att' and p.active)
+        and p_branch = any(my_branches()))
+$$;
+grant execute on function public.att_branch_ok(text) to authenticated;
+
+create table if not exists public.att_branch (
+  branch text primary key,
+  lat double precision not null,
+  lng double precision not null,
+  radius int not null default 150 check (radius between 30 and 2000),
+  updated_by text not null default '',
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.att_shift (
+  emp_id uuid primary key references public.employees(id) on delete cascade,
+  start_t time not null default '09:00',
+  end_t time not null default '17:00',
+  off_days int[] not null default '{}',
+  grace int not null default 10 check (grace between 0 and 120),
+  updated_by text not null default '',
+  updated_at timestamptz not null default now()
+);
+
+alter table public.att_shift add column if not exists created_at timestamptz not null default now();
+
+create table if not exists public.attendance (
+  id uuid primary key default gen_random_uuid(),
+  emp_id uuid not null references public.employees(id) on delete cascade,
+  branch text not null,
+  day date not null,
+  in_at timestamptz,
+  in_lat double precision, in_lng double precision, in_dist int, in_photo text,
+  out_at timestamptz,
+  out_lat double precision, out_lng double precision, out_dist int, out_photo text,
+  manual boolean not null default false,
+  edited_by text not null default '',
+  note text not null default '',
+  created_at timestamptz not null default now(),
+  unique (emp_id, day)
+);
+create index if not exists attendance_branch_day_idx on public.attendance (branch, day);
+
+alter table public.att_branch enable row level security;
+alter table public.att_shift enable row level security;
+alter table public.attendance enable row level security;
+drop policy if exists atb_sel on public.att_branch;
+create policy atb_sel on public.att_branch for select to authenticated using (true);
+drop policy if exists ats_sel on public.att_shift;
+create policy ats_sel on public.att_shift for select to authenticated using (att_ok(emp_id) or emp_id = my_emp_id());
+drop policy if exists att_sel on public.attendance;
+create policy att_sel on public.attendance for select to authenticated using (att_ok(emp_id) or emp_id = my_emp_id());
+drop policy if exists att_del on public.attendance;
+create policy att_del on public.attendance for delete to authenticated using (is_owner());
+revoke all on public.att_branch, public.att_shift, public.attendance from anon;
+grant select on public.att_branch, public.att_shift, public.attendance to authenticated;
+grant delete on public.attendance to authenticated;
+
+create or replace function public.att_dist(a_lat double precision, a_lng double precision, b_lat double precision, b_lng double precision) returns int
+language sql immutable as $$
+  select round(6371000 * 2 * asin(sqrt(power(sin(radians(b_lat - a_lat) / 2), 2)
+    + cos(radians(a_lat)) * cos(radians(b_lat)) * power(sin(radians(b_lng - a_lng) / 2), 2))))::int
+$$;
+
+create or replace function public.att_who() returns text
+language sql stable security definer set search_path = public as $$
+  select coalesce((select coalesce(nullif(full_name, ''), username) from profiles where id = auth.uid()), '')
+$$;
+
+create or replace function public.att_me() returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare e employees; g att_branch; s att_shift; r attendance; o attendance; today date := (now() at time zone 'Asia/Riyadh')::date;
+begin
+  select * into e from employees where id = my_emp_id();
+  if e.id is null then return null; end if;
+  select * into g from att_branch where branch = e.branch;
+  select * into s from att_shift where emp_id = e.id;
+  select * into o from attendance where emp_id = e.id and out_at is null and in_at > now() - interval '20 hours' order by in_at desc limit 1;
+  select * into r from attendance where emp_id = e.id and day = today;
+  return jsonb_build_object('emp', e.id, 'branch', e.branch, 'today', today,
+    'geo', case when g.branch is null then null else jsonb_build_object('lat', g.lat, 'lng', g.lng, 'radius', g.radius) end,
+    'shift', case when s.emp_id is null then null else jsonb_build_object('start', s.start_t, 'end', s.end_t, 'off', s.off_days, 'grace', s.grace) end,
+    'open', case when o.id is null then null else to_jsonb(o) end,
+    'rec', case when r.id is null then null else to_jsonb(r) end,
+    'recent', coalesce((select jsonb_agg(to_jsonb(x) order by x.day desc) from (select * from attendance where emp_id = e.id order by day desc limit 10) x), '[]'));
+end $$;
+grant execute on function public.att_me() to authenticated;
+
+create or replace function public.att_check(p_kind text, p_lat double precision, p_lng double precision, p_acc double precision default null, p_photo text default null)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare e employees; g att_branch; d int; ph text := nullif(btrim(coalesce(p_photo, '')), ''); o attendance; today date := (now() at time zone 'Asia/Riyadh')::date; rid uuid;
+begin
+  select * into e from employees where id = my_emp_id();
+  if e.id is null then raise exception 'حسابك غير مرتبط بموظف'; end if;
+  if e.status = 'left' then raise exception 'خدمتك منتهية'; end if;
+  select * into g from att_branch where branch = e.branch;
+  if g.branch is null then raise exception 'موقع الفرع غير محدد — بلّغ مدير الفرع يحدده'; end if;
+  if p_lat is null or p_lng is null then raise exception 'ما قدرنا نحدد موقعك — فعّل الموقع في الجوال'; end if;
+  d := att_dist(p_lat, p_lng, g.lat, g.lng);
+  if d > g.radius + least(coalesce(p_acc, 0), 100) then
+    raise exception 'أنت بعيد عن الفرع (% متر) — سجّل وأنت داخل الفرع', d;
+  end if;
+  if ph is null then raise exception 'صورة السيلفي إلزامية'; end if;
+  if length(ph) > 900000 then raise exception 'الصورة كبيرة — صوّر مرة ثانية'; end if;
+  if p_kind = 'in' then
+    if exists (select 1 from attendance where emp_id = e.id and out_at is null and in_at > now() - interval '20 hours') then
+      raise exception 'حضورك مسجّل — سجّل الانصراف أولاً';
+    end if;
+    if exists (select 1 from attendance where emp_id = e.id and day = today and in_at is not null) then
+      raise exception 'سجّلت حضور وانصراف اليوم';
+    end if;
+    insert into attendance (emp_id, branch, day, in_at, in_lat, in_lng, in_dist, in_photo)
+    values (e.id, e.branch, today, now(), p_lat, p_lng, d, ph)
+    on conflict (emp_id, day) do update set in_at = excluded.in_at, in_lat = excluded.in_lat, in_lng = excluded.in_lng, in_dist = excluded.in_dist, in_photo = excluded.in_photo
+    returning id into rid;
+  elsif p_kind = 'out' then
+    select * into o from attendance where emp_id = e.id and out_at is null and in_at > now() - interval '20 hours' order by in_at desc limit 1;
+    if o.id is null then raise exception 'ما فيه حضور مفتوح — سجّل الحضور أولاً'; end if;
+    update attendance set out_at = now(), out_lat = p_lat, out_lng = p_lng, out_dist = d, out_photo = ph where id = o.id returning id into rid;
+  else raise exception 'نوع غير صحيح'; end if;
+  return jsonb_build_object('id', rid, 'dist', d, 'at', now());
+end $$;
+grant execute on function public.att_check(text, double precision, double precision, double precision, text) to authenticated;
+
+create or replace function public.att_set_branch(p_branch text, p_lat double precision, p_lng double precision, p_radius int default 150) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not att_branch_ok(p_branch) then raise exception 'ليس لديك صلاحية على هذا الفرع'; end if;
+  insert into att_branch (branch, lat, lng, radius, updated_by) values (p_branch, p_lat, p_lng, greatest(30, least(2000, coalesce(p_radius, 150))), att_who())
+  on conflict (branch) do update set lat = excluded.lat, lng = excluded.lng, radius = excluded.radius, updated_by = excluded.updated_by, updated_at = now();
+end $$;
+grant execute on function public.att_set_branch(text, double precision, double precision, int) to authenticated;
+
+create or replace function public.att_set_shift(p_emp uuid, p_start time, p_end time, p_off int[] default '{}', p_grace int default 10) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not att_ok(p_emp) then raise exception 'ليس لديك صلاحية على هذا الموظف'; end if;
+  insert into att_shift (emp_id, start_t, end_t, off_days, grace, updated_by) values (p_emp, p_start, p_end, coalesce(p_off, '{}'), coalesce(p_grace, 10), att_who())
+  on conflict (emp_id) do update set start_t = excluded.start_t, end_t = excluded.end_t, off_days = excluded.off_days, grace = excluded.grace, updated_by = excluded.updated_by, updated_at = now();
+end $$;
+grant execute on function public.att_set_shift(uuid, time, time, int[], int) to authenticated;
+
+create or replace function public.att_manual(p_emp uuid, p_day date, p_in time, p_out time, p_note text default '') returns void
+language plpgsql security definer set search_path = public as $$
+declare e employees; tin timestamptz; tout timestamptz;
+begin
+  select * into e from employees where id = p_emp;
+  if e.id is null or not att_ok(p_emp) then raise exception 'ليس لديك صلاحية على هذا الموظف'; end if;
+  if p_day is null or p_day > (now() at time zone 'Asia/Riyadh')::date then raise exception 'التاريخ غير صحيح'; end if;
+  if nullif(btrim(coalesce(p_note, '')), '') is null then raise exception 'اكتب سبب التصحيح'; end if;
+  tin := case when p_in is null then null else (p_day + p_in) at time zone 'Asia/Riyadh' end;
+  tout := case when p_out is null then null else (p_day + p_out + case when p_in is not null and p_out < p_in then interval '1 day' else interval '0' end) at time zone 'Asia/Riyadh' end;
+  if tin is null and tout is null then
+    delete from attendance where emp_id = p_emp and day = p_day; return;
+  end if;
+  insert into attendance (emp_id, branch, day, in_at, out_at, manual, edited_by, note)
+  values (p_emp, e.branch, p_day, tin, tout, true, att_who(), left(p_note, 300))
+  on conflict (emp_id, day) do update set in_at = excluded.in_at, out_at = excluded.out_at, manual = true, edited_by = excluded.edited_by, note = excluded.note;
+end $$;
+grant execute on function public.att_manual(uuid, date, time, time, text) to authenticated;
+
+create or replace function public.media_ok(p_name text, p_write boolean) returns boolean
+language plpgsql stable security definer set search_path = public as $$
+declare p text[] := string_to_array(coalesce(p_name, ''), '/'); k text; br text;
+begin
+  k := p[1]; br := p[2];
+  if k is null or br is null then return false; end if;
+  if k = 'custody' then
+    return coalesce(custody_can(br), false) or coalesce(p[3] = my_emp_id()::text, false) or coalesce(p[3] = auth.uid()::text, false);
+  elsif k = 'maint' then
+    return coalesce(maint_role() in ('admin', 'sup') or (maint_role() = 'mgr' and br = any(my_branches())), false);
+  elsif k = 'fleet' then
+    return coalesce(is_writer(), false) or coalesce(has_section('fleet') and br = any(my_branches()), false);
+  elsif k in ('ded', 'emp') then
+    return coalesce(employees_can(br), false);
+  elsif k = 'hr' then
+    return coalesce(hr_can(), false) or (not p_write and br <> 'co' and coalesce(employees_can(br), false));
+  elsif k = 'att' then
+    return coalesce(p[3] = my_emp_id()::text, false) or (not p_write and (coalesce(att_branch_ok(br), false) or coalesce(hr_can(), false)));
+  end if;
+  return false;
+exception when others then return false;
+end $$;
+
+select 'تم تفعيل الحضور والانصراف ✓' as result;
