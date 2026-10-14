@@ -78,6 +78,14 @@ create table if not exists public.att_emp (
   updated_at timestamptz not null default now()
 );
 alter table public.att_emp enable row level security;
+alter table public.att_branch add column if not exists created_at timestamptz not null default now();
+create table if not exists public.att_cfg (
+  branch text primary key,
+  count_from date,
+  updated_by text not null default '',
+  updated_at timestamptz not null default now()
+);
+alter table public.att_cfg enable row level security;
 
 create or replace function public.att_bday() returns date
 language sql stable as $$ select ((now() at time zone 'Asia/Riyadh') - interval '5 hours')::date $$;
@@ -89,6 +97,10 @@ drop policy if exists atb_sel on public.att_branch;
 create policy atb_sel on public.att_branch for select to authenticated using (true);
 drop policy if exists ats_sel on public.att_shift;
 create policy ats_sel on public.att_shift for select to authenticated using (att_ok(emp_id) or emp_id = my_emp_id());
+drop policy if exists atc_sel on public.att_cfg;
+create policy atc_sel on public.att_cfg for select to authenticated using (true);
+revoke all on public.att_cfg from anon;
+grant select on public.att_cfg to authenticated;
 drop policy if exists ate_sel on public.att_emp;
 create policy ate_sel on public.att_emp for select to authenticated using (att_ok(emp_id) or emp_id = my_emp_id());
 revoke all on public.att_emp from anon;
@@ -176,6 +188,15 @@ begin
   return jsonb_build_object('id', rid, 'dist', d, 'at', now());
 end $$;
 grant execute on function public.att_check(text, double precision, double precision, double precision, text, text) to authenticated;
+
+create or replace function public.att_set_start(p_branch text, p_date date) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not att_branch_ok(p_branch) then raise exception 'ليس لديك صلاحية على هذا الفرع'; end if;
+  insert into att_cfg (branch, count_from, updated_by) values (p_branch, p_date, att_who())
+  on conflict (branch) do update set count_from = excluded.count_from, updated_by = excluded.updated_by, updated_at = now();
+end $$;
+grant execute on function public.att_set_start(text, date) to authenticated;
 
 create or replace function public.att_set_opt(p_emp uuid, p_no_selfie boolean, p_reset_device boolean default false) returns void
 language plpgsql security definer set search_path = public as $$

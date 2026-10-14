@@ -561,8 +561,9 @@ function aEval(r,s){const o={late:0,early:0};const sh=aFor(s,r);if(!sh||!r.in_at
 async function loadAtt(month){
   if(S.att&&S.att[month])return S.att[month];S.att=S.att||{};
   const N=daysIn(month),a=month+'-01',z=month+'-'+pad(N);
-  const [sh,rc,...fs]=await Promise.all([SBC.from('att_shift').select('*'),SBC.from('attendance').select('emp_id,branch,day,seq,in_at,out_at').gte('day',a).lte('day',z).limit(10000)].concat(S.branches.map(b=>SBC.from('attendance').select('day').eq('branch',b.id).order('day').limit(1))));
-  const o={ok:!rc.error&&!sh.error,sh:{},by:{},first:{}};
+  const [sh,rc,gb,cfq,...fs]=await Promise.all([SBC.from('att_shift').select('*'),SBC.from('attendance').select('emp_id,branch,day,seq,in_at,out_at').gte('day',a).lte('day',z).limit(10000),SBC.from('att_branch').select('*'),SBC.from('att_cfg').select('*')].concat(S.branches.map(b=>SBC.from('attendance').select('day').eq('branch',b.id).order('day').limit(1))));
+  const o={ok:!rc.error&&!sh.error,sh:{},by:{},first:{},geo:{},cfg:{}};
+  (gb.data||[]).forEach(x=>o.geo[x.branch]=x); ((cfq&&cfq.data)||[]).forEach(x=>o.cfg[x.branch]=x);
   (sh.data||[]).forEach(x=>o.sh[x.emp_id]=x);
   (rc.data||[]).forEach(r=>{((o.by[r.emp_id]=o.by[r.emp_id]||{})[r.day]=o.by[r.emp_id][r.day]||[]).push(r)});
   S.branches.forEach((b,i)=>{const d=fs[i]&&fs[i].data&&fs[i].data[0];if(d)o.first[b.id]=d.day});
@@ -572,11 +573,11 @@ async function loadAtt(month){
 function attDed(r,month,A){
   const s=A&&A.ok?A.sh[r.id]:null,sal=+r.salary||0;if(!s||!sal)return null;
   const L=aShifts(s),dm=L.reduce((x,q)=>x+aLen(q),0)||480,day=sal/30,mr=day/dm;
-  const N=daysIn(month),since=[month+'-01',r.start_date,s.created_at?String(s.created_at).slice(0,10):null,A.first[r.branch]||'9999'].filter(Boolean).sort().pop();
+  const g=A.geo[r.branch]; if(!g) return null; const N=daysIn(month),since=[month+'-01',r.start_date,s.created_at?String(s.created_at).slice(0,10):null,g.created_at?String(g.created_at).slice(0,10):null,(A.cfg[r.branch]||{}).count_from||null,A.first[r.branch]||'9999'].filter(Boolean).sort().pop();
   const endD=[month+'-'+pad(N),(r.status==='left'&&r.left_date)?r.left_date:null].filter(Boolean).sort()[0],bt=aBday();
   const by=A.by[r.id]||{};let abs=0,missMin=0,late=0;
   for(let i=1;i<=N;i++){const d=month+'-'+pad(i);const R=(by[d]||[]).filter(x=>x.in_at);
-    R.forEach(x=>{const e=aEval(x,s);late+=e.late+e.early});
+    if(d>=since) R.forEach(x=>{const e=aEval(x,s);late+=e.late+e.early});
     if(d<since||d>endD||d>=bt||(s.off_days||[]).includes(new Date(d+'T12:00:00').getDay()))continue;
     if(!R.length){abs++;continue}
     if(R.length<L.length){const got=new Set(R.map(x=>x.seq||1));L.forEach((q,k)=>{if(!got.has(k+1))missMin+=aLen(q)})}}
