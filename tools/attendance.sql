@@ -61,6 +61,14 @@ create table if not exists public.attendance (
   unique (emp_id, day)
 );
 create index if not exists attendance_branch_day_idx on public.attendance (branch, day);
+alter table public.att_shift add column if not exists start2_t time;
+alter table public.att_shift add column if not exists end2_t time;
+alter table public.attendance add column if not exists seq int not null default 1;
+alter table public.attendance drop constraint if exists attendance_emp_id_day_key;
+create unique index if not exists attendance_emp_day_seq on public.attendance (emp_id, day, seq);
+
+create or replace function public.att_bday() returns date
+language sql stable as $$ select ((now() at time zone 'Asia/Riyadh') - interval '5 hours')::date $$;
 
 alter table public.att_branch enable row level security;
 alter table public.att_shift enable row level security;
@@ -90,26 +98,25 @@ $$;
 
 create or replace function public.att_me() returns jsonb
 language plpgsql stable security definer set search_path = public as $$
-declare e employees; g att_branch; s att_shift; r attendance; o attendance; today date := (now() at time zone 'Asia/Riyadh')::date;
+declare e employees; g att_branch; s att_shift; o attendance; today date := att_bday();
 begin
   select * into e from employees where id = my_emp_id();
   if e.id is null then return null; end if;
   select * into g from att_branch where branch = e.branch;
   select * into s from att_shift where emp_id = e.id;
   select * into o from attendance where emp_id = e.id and out_at is null and in_at > now() - interval '20 hours' order by in_at desc limit 1;
-  select * into r from attendance where emp_id = e.id and day = today;
   return jsonb_build_object('emp', e.id, 'branch', e.branch, 'today', today,
     'geo', case when g.branch is null then null else jsonb_build_object('lat', g.lat, 'lng', g.lng, 'radius', g.radius) end,
-    'shift', case when s.emp_id is null then null else jsonb_build_object('start', s.start_t, 'end', s.end_t, 'off', s.off_days, 'grace', s.grace) end,
+    'shift', case when s.emp_id is null then null else jsonb_build_object('start', s.start_t, 'end', s.end_t, 'start2', s.start2_t, 'end2', s.end2_t, 'off', s.off_days, 'grace', s.grace) end,
     'open', case when o.id is null then null else to_jsonb(o) end,
-    'rec', case when r.id is null then null else to_jsonb(r) end,
+    'recs', coalesce((select jsonb_agg(to_jsonb(x) order by x.seq) from attendance x where x.emp_id = e.id and x.day = today), '[]'),
     'recent', coalesce((select jsonb_agg(to_jsonb(x) order by x.day desc) from (select * from attendance where emp_id = e.id order by day desc limit 10) x), '[]'));
 end $$;
 grant execute on function public.att_me() to authenticated;
 
 create or replace function public.att_check(p_kind text, p_lat double precision, p_lng double precision, p_acc double precision default null, p_photo text default null)
 returns jsonb language plpgsql security definer set search_path = public as $$
-declare e employees; g att_branch; d int; ph text := nullif(btrim(coalesce(p_photo, '')), ''); o attendance; today date := (now() at time zone 'Asia/Riyadh')::date; rid uuid;
+declare e employees; g att_branch; d int; ph text := nullif(btrim(coalesce(p_photo, '')), ''); o attendance; today date := att_bday(); rid uuid; n int;
 begin
   select * into e from employees where id = my_emp_id();
   if e.id is null then raise exception 'حسابك غير مرتبط بموظف'; end if;
@@ -127,12 +134,11 @@ begin
     if exists (select 1 from attendance where emp_id = e.id and out_at is null and in_at > now() - interval '20 hours') then
       raise exception 'حضورك مسجّل — سجّل الانصراف أولاً';
     end if;
-    if exists (select 1 from attendance where emp_id = e.id and day = today and in_at is not null) then
-      raise exception 'سجّلت حضور وانصراف اليوم';
-    end if;
-    insert into attendance (emp_id, branch, day, in_at, in_lat, in_lng, in_dist, in_photo)
-    values (e.id, e.branch, today, now(), p_lat, p_lng, d, ph)
-    on conflict (emp_id, day) do update set in_at = excluded.in_at, in_lat = excluded.in_lat, in_lng = excluded.in_lng, in_dist = excluded.in_dist, in_photo = excluded.in_photo
+    select coalesce(max(seq), 0) into n from attendance where emp_id = e.id and day = today and in_at is not null;
+    if n >= 2 then raise exception 'سجّلت شفتين اليوم'; end if;
+    insert into attendance (emp_id, branch, day, seq, in_at, in_lat, in_lng, in_dist, in_photo)
+    values (e.id, e.branch, today, n + 1, now(), p_lat, p_lng, d, ph)
+    on conflict (emp_id, day, seq) do update set in_at = excluded.in_at, in_lat = excluded.in_lat, in_lng = excluded.in_lng, in_dist = excluded.in_dist, in_photo = excluded.in_photo
     returning id into rid;
   elsif p_kind = 'out' then
     select * into o from attendance where emp_id = e.id and out_at is null and in_at > now() - interval '20 hours' order by in_at desc limit 1;
@@ -152,33 +158,36 @@ begin
 end $$;
 grant execute on function public.att_set_branch(text, double precision, double precision, int) to authenticated;
 
-create or replace function public.att_set_shift(p_emp uuid, p_start time, p_end time, p_off int[] default '{}', p_grace int default 10) returns void
+drop function if exists public.att_set_shift(uuid, time, time, int[], int);
+create or replace function public.att_set_shift(p_emp uuid, p_start time, p_end time, p_off int[] default '{}', p_grace int default 10, p_start2 time default null, p_end2 time default null) returns void
 language plpgsql security definer set search_path = public as $$
 begin
   if not att_ok(p_emp) then raise exception 'ليس لديك صلاحية على هذا الموظف'; end if;
-  insert into att_shift (emp_id, start_t, end_t, off_days, grace, updated_by) values (p_emp, p_start, p_end, coalesce(p_off, '{}'), coalesce(p_grace, 10), att_who())
-  on conflict (emp_id) do update set start_t = excluded.start_t, end_t = excluded.end_t, off_days = excluded.off_days, grace = excluded.grace, updated_by = excluded.updated_by, updated_at = now();
+  if (p_start2 is null) <> (p_end2 is null) then raise exception 'حدد بداية ونهاية الشفت الثاني'; end if;
+  insert into att_shift (emp_id, start_t, end_t, start2_t, end2_t, off_days, grace, updated_by) values (p_emp, p_start, p_end, p_start2, p_end2, coalesce(p_off, '{}'), coalesce(p_grace, 10), att_who())
+  on conflict (emp_id) do update set start_t = excluded.start_t, end_t = excluded.end_t, start2_t = excluded.start2_t, end2_t = excluded.end2_t, off_days = excluded.off_days, grace = excluded.grace, updated_by = excluded.updated_by, updated_at = now();
 end $$;
-grant execute on function public.att_set_shift(uuid, time, time, int[], int) to authenticated;
+grant execute on function public.att_set_shift(uuid, time, time, int[], int, time, time) to authenticated;
 
-create or replace function public.att_manual(p_emp uuid, p_day date, p_in time, p_out time, p_note text default '') returns void
+drop function if exists public.att_manual(uuid, date, time, time, text);
+create or replace function public.att_manual(p_emp uuid, p_day date, p_in time, p_out time, p_note text default '', p_seq int default 1) returns void
 language plpgsql security definer set search_path = public as $$
-declare e employees; tin timestamptz; tout timestamptz;
+declare e employees; tin timestamptz; tout timestamptz; sq int := greatest(1, least(2, coalesce(p_seq, 1)));
 begin
   select * into e from employees where id = p_emp;
   if e.id is null or not att_ok(p_emp) then raise exception 'ليس لديك صلاحية على هذا الموظف'; end if;
-  if p_day is null or p_day > (now() at time zone 'Asia/Riyadh')::date then raise exception 'التاريخ غير صحيح'; end if;
+  if p_day is null or p_day > att_bday() then raise exception 'التاريخ غير صحيح'; end if;
   if nullif(btrim(coalesce(p_note, '')), '') is null then raise exception 'اكتب سبب التصحيح'; end if;
-  tin := case when p_in is null then null else (p_day + p_in) at time zone 'Asia/Riyadh' end;
-  tout := case when p_out is null then null else (p_day + p_out + case when p_in is not null and p_out < p_in then interval '1 day' else interval '0' end) at time zone 'Asia/Riyadh' end;
+  tin := case when p_in is null then null else (p_day + p_in + case when p_in < time '05:00' then interval '1 day' else interval '0' end) at time zone 'Asia/Riyadh' end;
+  tout := case when p_out is null then null else (p_day + p_out + case when p_out < time '05:00' or (p_in is not null and p_out < p_in and p_in >= time '05:00') then interval '1 day' else interval '0' end) at time zone 'Asia/Riyadh' end;
   if tin is null and tout is null then
-    delete from attendance where emp_id = p_emp and day = p_day; return;
+    delete from attendance where emp_id = p_emp and day = p_day and seq = sq; return;
   end if;
-  insert into attendance (emp_id, branch, day, in_at, out_at, manual, edited_by, note)
-  values (p_emp, e.branch, p_day, tin, tout, true, att_who(), left(p_note, 300))
-  on conflict (emp_id, day) do update set in_at = excluded.in_at, out_at = excluded.out_at, manual = true, edited_by = excluded.edited_by, note = excluded.note;
+  insert into attendance (emp_id, branch, day, seq, in_at, out_at, manual, edited_by, note)
+  values (p_emp, e.branch, p_day, sq, tin, tout, true, att_who(), left(p_note, 300))
+  on conflict (emp_id, day, seq) do update set in_at = excluded.in_at, out_at = excluded.out_at, manual = true, edited_by = excluded.edited_by, note = excluded.note;
 end $$;
-grant execute on function public.att_manual(uuid, date, time, time, text) to authenticated;
+grant execute on function public.att_manual(uuid, date, time, time, text, int) to authenticated;
 
 create or replace function public.media_ok(p_name text, p_write boolean) returns boolean
 language plpgsql stable security definer set search_path = public as $$
