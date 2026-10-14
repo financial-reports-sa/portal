@@ -413,33 +413,33 @@ body.hasnav .wrap{padding-bottom:calc(104px + env(safe-area-inset-bottom,0px))}
 body.hasnav .toast{bottom:calc(100px + env(safe-area-inset-bottom,0px))}
 .tabs:empty{display:none}
 /* splash — هندسي */
-#splash{--k:1;position:fixed;inset:0;z-index:100;display:grid;place-items:center;overflow:hidden;cursor:pointer;color:#fff;
+#splash{--k:1.4;position:fixed;inset:0;z-index:100;display:grid;place-items:center;overflow:hidden;cursor:pointer;color:#fff;
   background:radial-gradient(120% 85% at 50% 40%,#2F6B49 0%,#1E5A3E 38%,#0F3322 75%,#0A2116 100%);transition:opacity .7s ease,visibility .7s}
-#splash.quick{--k:.42}
+#splash.quick{--k:.6}
 #splash.out{opacity:0;visibility:hidden}
 #splash.out .sg-in{transform:scale(1.08);filter:blur(4px)}
 #splash *{animation-fill-mode:both}
-#splash .sg-lat{position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22120%22%20height%3D%22120%22%20viewBox%3D%220%200%20120%20120%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23E9CF7A%22%20stroke-opacity%3D%22.09%22%20stroke-width%3D%221%22%3E%3Crect%20x%3D%2235%22%20y%3D%2235%22%20width%3D%2250%22%20height%3D%2250%22/%3E%3Crect%20x%3D%2235%22%20y%3D%2235%22%20width%3D%2250%22%20height%3D%2250%22%20transform%3D%22rotate%2845%2060%2060%29%22/%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%2260%22%20r%3D%2218%22/%3E%3Cpath%20d%3D%22M0%2060H25M95%2060H120M60%200V25M60%2095V120%22/%3E%3C/g%3E%3C/svg%3E");background-size:120px 120px;opacity:0;animation:sgFade 1.2s calc(.1s*var(--k)) forwards,sgLat 40s linear infinite}
+#splash .sg-lat{position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22120%22%20height%3D%22120%22%20viewBox%3D%220%200%20120%20120%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23E9CF7A%22%20stroke-opacity%3D%22.09%22%20stroke-width%3D%221%22%3E%3Crect%20x%3D%2235%22%20y%3D%2235%22%20width%3D%2250%22%20height%3D%2250%22/%3E%3Crect%20x%3D%2235%22%20y%3D%2235%22%20width%3D%2250%22%20height%3D%2250%22%20transform%3D%22rotate%2845%2060%2060%29%22/%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%2260%22%20r%3D%2218%22/%3E%3Cpath%20d%3D%22M0%2060H25M95%2060H120M60%200V25M60%2095V120%22/%3E%3C/g%3E%3C/svg%3E");background-size:120px 120px;opacity:0;animation:sgFade calc(1.2s*var(--k)) calc(.1s*var(--k)) forwards,sgLat 40s linear infinite}
 #splash .sg-vig{position:absolute;inset:0;background:radial-gradient(75% 60% at 50% 42%,transparent 55%,rgba(0,0,0,.45) 100%);pointer-events:none}
 #splash .sg-in{position:relative;display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;padding:24px;transition:transform .7s ease,filter .7s ease}
 #splash .sg-art{width:260px;height:260px;overflow:visible}
 #splash .sg-art .d{fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;animation:sgDraw calc(var(--t,1s)*var(--k)) calc(var(--d,0s)*var(--k)) cubic-bezier(.6,.05,.25,1) forwards}
 #splash .sg-rot{transform-box:fill-box;transform-origin:center;animation:sgSpin 40s linear infinite}
 #splash .sg-rot2{transform-box:fill-box;transform-origin:center;animation:sgSpinR 28s linear infinite}
-#splash .sg-tip{transform-box:fill-box;transform-origin:center;transform:scale(0);animation:sgPop .45s calc(var(--d)*var(--k)) cubic-bezier(.2,.9,.3,1.5) forwards}
-#splash .sg-bg{opacity:0;transform-box:fill-box;transform-origin:center;animation:sgLogo .7s calc(1.35s*var(--k)) cubic-bezier(.2,.8,.2,1) forwards}
-#splash .sg-q{opacity:0;animation:sgFly .75s calc(var(--d)*var(--k)) cubic-bezier(.2,.9,.25,1.15) forwards}
-#splash .sg-orb{transform-box:fill-box;transform-origin:center;opacity:0;animation:sgFade .4s calc(2.1s*var(--k)) forwards,sgSpin 3.4s calc(2.1s*var(--k)) linear infinite}
-#splash .sg-ping{transform-box:fill-box;transform-origin:center;opacity:0;animation:sgPing 1.3s calc(2.25s*var(--k)) cubic-bezier(.2,.7,.3,1) forwards}
-#splash .sg-glow{transform-box:fill-box;transform-origin:center;opacity:0;animation:sgPulse 2.8s calc(2.2s*var(--k)) ease-in-out infinite}
+#splash .sg-tip{transform-box:fill-box;transform-origin:center;transform:scale(0);animation:sgPop calc(.45s*var(--k)) calc(var(--d)*var(--k)) cubic-bezier(.2,.9,.3,1.5) forwards}
+#splash .sg-bg{opacity:0;transform-box:fill-box;transform-origin:center;animation:sgLogo calc(.7s*var(--k)) calc(1.35s*var(--k)) cubic-bezier(.2,.8,.2,1) forwards}
+#splash .sg-q{opacity:0;animation:sgFly calc(.75s*var(--k)) calc(var(--d)*var(--k)) cubic-bezier(.2,.9,.25,1.15) forwards}
+#splash .sg-orb{transform-box:fill-box;transform-origin:center;opacity:0;animation:sgFade calc(.4s*var(--k)) calc(2.1s*var(--k)) forwards,sgSpin calc(3.4s*var(--k)) calc(2.1s*var(--k)) linear infinite}
+#splash .sg-ping{transform-box:fill-box;transform-origin:center;opacity:0;animation:sgPing calc(1.3s*var(--k)) calc(2.25s*var(--k)) cubic-bezier(.2,.7,.3,1) forwards}
+#splash .sg-glow{transform-box:fill-box;transform-origin:center;opacity:0;animation:sgPulse calc(2.8s*var(--k)) calc(2.2s*var(--k)) ease-in-out infinite}
 #splash .sg-t{font-family:"Readex Pro",var(--f-disp);font-weight:700;font-size:24px;line-height:1.35;white-space:nowrap;
-  background:linear-gradient(180deg,#FFF6D6,#D9B44A);-webkit-background-clip:text;background-clip:text;color:transparent;clip-path:inset(-20% 0 -20% 100%);animation:sgWipe .9s calc(2.3s*var(--k)) cubic-bezier(.6,.05,.25,1) forwards}
+  background:linear-gradient(180deg,#FFF6D6,#D9B44A);-webkit-background-clip:text;background-clip:text;color:transparent;clip-path:inset(-20% 0 -20% 100%);animation:sgWipe calc(.9s*var(--k)) calc(2.3s*var(--k)) cubic-bezier(.6,.05,.25,1) forwards}
 #splash .sg-orn{display:flex;align-items:center;gap:10px;direction:ltr;margin-top:-6px}
-#splash .sg-orn s{display:block;height:1px;width:0;background:linear-gradient(90deg,transparent,#E9CF7A);animation:sgHair .8s calc(2.85s*var(--k)) cubic-bezier(.6,.05,.25,1) forwards}
+#splash .sg-orn s{display:block;height:1px;width:0;background:linear-gradient(90deg,transparent,#E9CF7A);animation:sgHair calc(.8s*var(--k)) calc(2.85s*var(--k)) cubic-bezier(.6,.05,.25,1) forwards}
 #splash .sg-orn s:last-child{background:linear-gradient(90deg,#E9CF7A,transparent)}
-#splash .sg-orn em{width:6px;height:6px;transform:rotate(45deg) scale(0);background:#E9CF7A;box-shadow:0 0 10px #F6E7B0;animation:sgGem .5s calc(2.75s*var(--k)) cubic-bezier(.2,.9,.3,1.4) forwards}
-#splash .sg-s{font-size:12.5px;color:#DCE6CF;letter-spacing:.3px;opacity:0;animation:sgRise .7s calc(3.0s*var(--k)) ease-out forwards}
-#splash .sg-load{width:160px;display:flex;flex-direction:column;align-items:center;gap:9px;margin-top:6px;opacity:0;animation:sgFade .5s calc(3.1s*var(--k)) ease-out forwards}
+#splash .sg-orn em{width:6px;height:6px;transform:rotate(45deg) scale(0);background:#E9CF7A;box-shadow:0 0 10px #F6E7B0;animation:sgGem calc(.5s*var(--k)) calc(2.75s*var(--k)) cubic-bezier(.2,.9,.3,1.4) forwards}
+#splash .sg-s{font-size:12.5px;color:#DCE6CF;letter-spacing:.3px;opacity:0;animation:sgRise calc(.7s*var(--k)) calc(3.0s*var(--k)) ease-out forwards}
+#splash .sg-load{width:160px;display:flex;flex-direction:column;align-items:center;gap:9px;margin-top:6px;opacity:0;animation:sgFade calc(.5s*var(--k)) calc(3.1s*var(--k)) ease-out forwards}
 #splash .sg-bar{position:relative;width:100%;height:2px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden}
 #splash .sg-bar b{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,#C9A227,#F6E7B0);box-shadow:0 0 8px #E9CF7A;animation:sgFill calc(1.8s*var(--k)) calc(3.2s*var(--k)) cubic-bezier(.4,0,.2,1) forwards}
 #splash .sg-msg{font-size:10.5px;color:rgba(232,238,220,.62);letter-spacing:.4px}
@@ -603,7 +603,7 @@ body.hasnav .toast{bottom:calc(100px + env(safe-area-inset-bottom,0px))}
 </div>
 <script>(function(){var s=document.getElementById('splash');var seen=false,ever=false;try{seen=sessionStorage.getItem('splash')==='1';sessionStorage.setItem('splash','1');ever=localStorage.getItem('splashFull')==='1';localStorage.setItem('splashFull','1');}catch(e){}
 function hide(){if(!s||s.classList.contains('out'))return;s.classList.add('out');setTimeout(function(){s&&s.remove();},800);}
-if(seen){s.remove();return;}if(ever)s.classList.add('quick');s.addEventListener('click',hide);setTimeout(hide,ever?2400:5400);})();</script>
+if(seen){s.remove();return;}if(ever)s.classList.add('quick');s.addEventListener('click',hide);setTimeout(hide,ever?3200:7400);})();</script>
 
 <!-- ============ LOGIN ============ -->
 <section id="login" hidden>
@@ -689,7 +689,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['handover','maint','maint_sup','feedback','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','loans','custody','custody_holder']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610140856';
+const APP_VER='202610140901';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.custody_holder='مسؤول العهدة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
