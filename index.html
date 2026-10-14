@@ -689,7 +689,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['handover','maint','maint_sup','feedback','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','loans','custody','custody_holder']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610141943';
+const APP_VER='202610141949';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.custody_holder='مسؤول العهدة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -1552,7 +1552,7 @@ async function attMapPick(br){ const D=(st._attD||{}).D||{}; const g0=(D.geo||{}
     if(b.dataset.llgo){ const v=f.ll.value.trim(); if(!v) return fail('الصق الإحداثيات أو الرابط أول'); if(/goo\.gl|maps\.app/i.test(v)&&!attParseLL(v)) return fail('الرابط المختصر ما فيه الإحداثيات — في خرائط Google اضغط مطولاً على الفرع وانسخ الأرقام (مثل 24.44045, 39.48378) والصقها هنا.'); const r=attParseLL(v); if(!r) return fail('ما قدرت أقرأ الإحداثيات — الصقها بالشكل: 24.44045, 39.48378'); go(r[0],r[1]); return; }
     if(b.dataset.qgo){ const q=f.q.value.trim(); if(!q) return; b.disabled=true; try{ const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=sa&accept-language=ar&q='+encodeURIComponent(q)); const j=await r.json(); if(j&&j[0]) go(+j[0].lat,+j[0].lon,17); else fail('ما لقيت المكان — جرّب اسم الحي أو حرّك الخريطة يدوياً'); }catch(e){ fail('تعذّر البحث'); } b.disabled=false; return; }
     if(b.dataset.lay){ sat=!sat; layer(); return; }
-    if(b.dataset.attsave){ const r=Math.max(30,Math.min(2000,+f.rad.value||150)); b.disabled=true; const x=await sb.rpc('att_set_branch',{p_branch:br,p_lat:la,p_lng:ln,p_radius:r}); b.disabled=false; if(x.error) return fail(x.error.message); close(); toast('تم حفظ موقع '+brById(br).name+' ✓'); render(); } }); }
+    if(b.dataset.attsave){ const r=Math.max(30,Math.min(2000,+f.rad.value||150)); const km=Math.round(attDist(la,ln,24.4686,39.6142)/1000); if(km>40&&!confirm('⚠️ الموقع المختار بعيد عن المدينة المنورة بحوالي '+km+' كم — متأكد إنه موقع الفرع؟')) return; b.disabled=true; const x=await sb.rpc('att_set_branch',{p_branch:br,p_lat:la,p_lng:ln,p_radius:r}); b.disabled=false; if(x.error) return fail(x.error.message); close(); toast('تم حفظ موقع '+brById(br).name+' ✓'); render(); } }); }
 async function attExcel(){ const {S,m,days,anyMiss}=st._attM; try{ await cuExcelJS(); }catch(e){ toast('تعذّر تحميل أداة Excel'); return; }
   const wb=new ExcelJS.Workbook(); wb.creator='Ameer Alarifi'; const ws=wb.addWorksheet('الحضور',{views:[{rightToLeft:true,state:'frozen',ySplit:3}]});
   const F={name:'Arial',size:10},B={...F,bold:true},thin={style:'thin',color:{argb:'FF000000'}},box={top:thin,bottom:thin,left:thin,right:thin};
