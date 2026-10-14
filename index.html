@@ -689,7 +689,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['handover','maint','maint_sup','feedback','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','loans','custody','custody_holder']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610141949';
+const APP_VER='202610142252';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.custody_holder='مسؤول العهدة';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -1738,7 +1738,7 @@ function flForm(v,id){
   <form id="fleetForm" data-id="${esc(id||'')}" autocomplete="off" style="display:flex;flex-direction:column;gap:10px">
     <div class="field"><label>صور السيارة (حتى 3: أمام، جنب، العداد)</label>
       <label class="btn ghost" style="display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer">📷 التقط أو اختر صور<input type="file" id="flImgs" accept="image/*" multiple hidden></label>
-      <div id="flPrev" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">${v.thumb?`<img src="${v.thumb}" style="width:84px;height:64px;object-fit:cover;border-radius:10px;border:1px solid var(--line)"><span class="muted" style="font-size:10.5px;align-self:center">الصور الحالية تبقى إذا ما اخترت صور جديدة</span>`:''}</div></div>
+      <div id="flPrev" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">${v.thumb?`<img src="${esc(v.thumb)}" style="width:84px;height:64px;object-fit:cover;border-radius:10px;border:1px solid var(--line)"><span class="muted" style="font-size:10.5px;align-self:center">الصور الحالية تبقى إذا ما اخترت صور جديدة</span>`:''}</div></div>
     <div class="row">
       <div class="field"><label for="fl_br">الجهة *</label><select class="inp" id="fl_br" name="br" required>${ents.map(k=>`<option value="${k}" ${v.br===k?'selected':''}>${esc(flEnt(k).name)}</option>`).join('')}</select></div>
       <div class="field"><label for="fl_status">الوضع</label><select class="inp" id="fl_status" name="status">${opt(FL_STATUS,v.status||'في الخدمة')}</select></div></div>
@@ -1786,7 +1786,7 @@ V.fleet=async()=>{
   if(al.length) h+=`<div class="card fl-al"><div class="bar-row"><h3 style="margin:0;font-size:12.5px">⚠️ تنبيهات تحتاج انتباه</h3><span class="muted" style="font-size:10.5px">اضغط على أي تنبيه للتفاصيل</span></div>
     <div class="fl-alist">${al.sort((x,y)=>(y.a.bad-x.a.bad)).filter((o,i)=>st.flAlAll||i<3).map(o=>`<button class="fl-ai ${o.a.bad?'bad':'warn'}" data-fal="${esc(o.v.id)}|${o.i}"><span class="ic">${{reg:'🪪',ins:'🛡️',maint:'🔧'}[o.a.ty]||'⚠️'}</span><span style="flex:1;min-width:0;text-align:right"><b>${esc(o.a.t)}</b><small>${esc(o.v.make+' '+o.v.model)} · <span dir="auto">${esc(o.v.plate||'')}</span>${fe==='all'?' · '+esc(flEnt(o.v.br).name):''}</small></span><span class="chev">‹</span></button>`).join('')}</div>${al.length>3?`<button class="btn ghost sm" data-falall="1" style="align-self:center">${st.flAlAll?'إخفاء':'عرض كل التنبيهات ('+al.length+')'}</button>`:''}</div>`;
   // السيارات مقسّمة حسب الجهة
-  const row=v=>{const a=flAlerts(v),stt=v.status||'في الخدمة';return `<button class="fl-row" data-fopen="${esc(v.id)}"><span class="th">${v.thumb?`<img src="${v.thumb}" alt="">`:'🚗'}</span>
+  const row=v=>{const a=flAlerts(v),stt=v.status||'في الخدمة';return `<button class="fl-row" data-fopen="${esc(v.id)}"><span class="th">${v.thumb?`<img src="${esc(v.thumb)}" alt="">`:'🚗'}</span>
     <span style="flex:1;min-width:0;text-align:right"><b>${esc(v.make)} ${esc(v.model)}</b> <span class="muted">${esc(v.year||'')}</span><small><span dir="auto">${esc(v.plate||'—')}</span>${v.use?' · '+esc(v.use):''}${v.driver?' · '+esc(v.driver):''}</small>
     ${stt!=='في الخدمة'?`<span class="tag" style="font-size:9.5px;margin-top:3px">${esc(stt)}</span>`:''}${a.length?`<span class="fl-badge ${a.some(x=>x.bad)?'bad':'warn'}" data-fal="${esc(v.id)}|0">${a.length===1?esc(a[0].t):a.length+' تنبيهات'}</span>`:''}</span>
     <span class="val num">${fmt(v.value)}<small>ر.س</small></span></button>`;};
@@ -1798,7 +1798,7 @@ V.fleet=async()=>{
   if(sel){const e=flEnt(sel.br),a=flAlerts(sel),can=isAdmin()||(sel.br!=='wafra'&&ents.includes(sel.br));
     const rows=[['الجهة',esc(e.name)],['الوضع',esc(sel.status||'في الخدمة')],['الماركة والموديل',esc(sel.make+' '+sel.model+' '+(sel.year||''))],['رقم اللوحة',`<span dir="auto">${esc(sel.plate||'')}</span>`],['اللون',esc(sel.color||'—')],['الاستخدام',esc(sel.use||'—')],['قراءة العداد',sel.km?fmt(sel.km)+' كم':'—'],['حالة السيارة',esc(sel.cond||'—')],['السائق / المسؤول',esc(sel.driver||'—')],['الملكية',esc(sel.own||'—')],['انتهاء الاستمارة',sel.regExp?dLbl(sel.regExp):'—'],['انتهاء التأمين',sel.insExp?dLbl(sel.insExp):'—'],['رقم الهيكل',sel.vin?`<span dir="ltr">${esc(sel.vin)}</span>`:'—'],['القيمة السوقية التقديرية',`<b>${fmt(sel.value)}</b> ر.س`],['آخر تحديث',(sel.updatedBy?esc(sel.updatedBy)+' · ':'')+(sel.updatedAt?dLbl(String(sel.updatedAt).slice(0,10)):'')]];
     h+=`<div class="card" id="flDetail" style="border-top:4px solid ${e.color}"><div class="bar-row"><h3 style="margin:0">${esc(sel.make)} ${esc(sel.model)} ${esc(sel.year||'')}</h3><button class="icb" data-fclose="1" aria-label="إغلاق">✕</button></div>
-      <div id="flPhotos" data-id="${esc(sel.id)}" style="display:flex;gap:8px;overflow-x:auto;margin:10px 0">${sel.thumb?`<img src="${sel.thumb}" style="height:150px;border-radius:12px">`:'<span class="muted">ما فيه صور</span>'}</div>
+      <div id="flPhotos" data-id="${esc(sel.id)}" style="display:flex;gap:8px;overflow-x:auto;margin:10px 0">${sel.thumb?`<img src="${esc(sel.thumb)}" style="height:150px;border-radius:12px">`:'<span class="muted">ما فيه صور</span>'}</div>
       ${a.length?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">${a.map(x=>`<span class="tag" style="background:${x.bad?'rgba(208,69,58,.12)':'rgba(201,138,12,.15)'};color:${x.bad?'var(--down)':'var(--warn)'};font-weight:600">${esc(x.t)}</span>`).join('')}</div>`:''}
       <table><tbody>${rows.map(([k,v])=>`<tr><td class="muted">${k}</td><td class="n" style="white-space:normal">${v}</td></tr>`).join('')}</tbody></table>
       ${sel.notes?`<div style="font-size:11.5px;margin-top:8px"><span class="muted">ملاحظات:</span> ${esc(sel.notes)}</div>`:''}
@@ -1819,7 +1819,7 @@ function flAlertInfo(v,ix){
   m.addEventListener('click',async ev=>{ if(ev.target===m||ev.target.closest('[data-x]')){m.remove();return;} if(ev.target.closest('[data-go]')){m.remove();st.flOpen=v.id;await render();const el=$('#flDetail');if(el)el.scrollIntoView({behavior:'smooth'});flLoadPhotos();} });
   document.body.appendChild(m);
 }
-async function flLoadPhotos(){const box=document.getElementById('flPhotos');if(!box)return;const r=await sb.rpc('fleet_photos',{p_id:box.dataset.id});if(r.error||!Array.isArray(r.data)||!r.data.length)return;const srcs=await Promise.all(r.data.map(mediaSrc));box.innerHTML=srcs.filter(Boolean).map(src=>`<img src="${src}" style="height:190px;border-radius:12px;flex:none">`).join('');}
+async function flLoadPhotos(){const box=document.getElementById('flPhotos');if(!box)return;const r=await sb.rpc('fleet_photos',{p_id:box.dataset.id});if(r.error||!Array.isArray(r.data)||!r.data.length)return;const srcs=await Promise.all(r.data.map(mediaSrc));box.innerHTML=srcs.filter(Boolean).map(src=>`<img src="${esc(src)}" style="height:190px;border-radius:12px;flex:none">`).join('');}
 let flNewImgs=null;
 document.addEventListener('click',async e=>{
   const t=e.target.closest('[data-falall],[data-fal],[data-fadd],[data-fcancel],[data-fopen],[data-fclose],[data-fedit],[data-fdel],[data-ff],[data-fs]'); if(!t||!$('#view').contains(t)) return;
@@ -1839,7 +1839,7 @@ document.addEventListener('change',async e=>{
   if(e.target.id!=='flImgs') return; const files=[...e.target.files].slice(0,3); if(!files.length) return;
   const pv=$('#flPrev'); pv.innerHTML='<span class="muted">جارِ تجهيز الصور…</span>';
   try{ flNewImgs=await Promise.all(files.map(f=>flImg(f,1100,.72))); const th=await flImg(files[0],320,.62); flNewImgs.thumb=th;
-    pv.innerHTML=flNewImgs.map(src=>`<img src="${src}" style="width:84px;height:64px;object-fit:cover;border-radius:10px;border:1px solid var(--line)">`).join('');
+    pv.innerHTML=flNewImgs.map(src=>`<img src="${esc(src)}" style="width:84px;height:64px;object-fit:cover;border-radius:10px;border:1px solid var(--line)">`).join('');
   }catch(err){ flNewImgs=null; pv.innerHTML='<span class="err">تعذّر قراءة الصورة</span>'; }
 });
 document.addEventListener('submit',async e=>{
@@ -2384,7 +2384,7 @@ async function cuRefresh(id){ try{ await cuLoad(); }catch(e){} if(id&&$('#cudet'
 
 function cuPhoto(id){ const m=document.createElement('div'); m.className='cu-modal'; m.innerHTML=`<div class="card" style="max-width:520px;width:100%;padding:10px"><div class="bar-row" style="margin-bottom:8px"><b>صورة الفاتورة</b><button class="icb" data-x="1">✕</button></div><div class="cu-phbox"><div class="muted">جارِ التحميل…</div></div></div>`;
   m.addEventListener('click',e=>{if(e.target===m||e.target.closest('[data-x]'))m.remove();}); document.body.appendChild(m);
-  sb.rpc('custody_photo',{p_tx:id}).then(async r=>{const b=m.querySelector('.cu-phbox'); if(r.data) r.data=await mediaSrc(r.data); if(r.error||!r.data){b.innerHTML='<div class="muted">ما قدرت أحمّل الصورة</div>';return;} b.innerHTML=`<img src="${r.data}" alt="فاتورة"><a class="btn ghost sm" href="${r.data}" download="فاتورة-عهدة.jpg" style="margin-top:8px">تنزيل الصورة</a>`;}); }
+  sb.rpc('custody_photo',{p_tx:id}).then(async r=>{const b=m.querySelector('.cu-phbox'); if(r.data) r.data=await mediaSrc(r.data); if(r.error||!r.data){b.innerHTML='<div class="muted">ما قدرت أحمّل الصورة</div>';return;} b.innerHTML=`<img src="${esc(r.data)}" alt="فاتورة"><a class="btn ghost sm" href="${r.data}" download="فاتورة-عهدة.jpg" style="margin-top:8px">تنزيل الصورة</a>`;}); }
 
 let cuXlLoad=null;
 function cuExcelJS(){ if(window.ExcelJS) return Promise.resolve(); return cuXlLoad||(cuXlLoad=new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';s.onload=res;s.onerror=()=>{cuXlLoad=null;rej(new Error('lib'));};document.head.appendChild(s);})); }
@@ -3177,6 +3177,7 @@ async function aiLLM(q,onText){
   const ac=new AbortController(); const to=setTimeout(()=>ac.abort(),120000);
   try{
     const r=await fetch(CFG.url+'/functions/v1/'+AI_FN,{method:'POST',signal:ac.signal,headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token,'apikey':CFG.key},body:JSON.stringify({question:q,history:(st.aiConv||[]).slice(-10),context:JSON.stringify(ctx)})});
+    if(r.status===401&&!st._ai401){ st._ai401=1; toast('المساعد الذكي: وصلت حد الأسئلة اليومي أو حسابك غير مفعّل'); }
     if(!r.ok||!r.body){ throw new Error('http '+r.status); }
     const rd=r.body.getReader(), dec=new TextDecoder(); let raw='';
     const vis=()=>raw.split('\u001e').pop().replace(/\u0015/g,'');
@@ -3252,8 +3253,8 @@ function mtDetail(m){
   </div>${acts?`<div class="mtd-act">${acts}</div>`:''}`;
   document.body.appendChild(w);
   if(m.has_photo) sb.rpc('maint_photos',{p_id:m.id}).then(async r=>{const p=r.data||{};p.photo=await mediaSrc(p.photo);p.done_photo=await mediaSrc(p.done_photo);const el=$('#mtdph');if(!el)return;const ims=[[p.photo,'صورة المشكلة'],[p.done_photo,'بعد الإصلاح']].filter(x=>x[0]);
-    el.innerHTML=ims.length?ims.map(([s,l])=>`<figure><img src="${s}" alt="${l}" data-mtzoom="1"><figcaption>${l}</figcaption></figure>`).join(''):'<div class="muted" style="font-size:11px">📷 لم يُرفق صورة مع هذا الطلب</div>';});
-  w.addEventListener('click',ev=>{const z=ev.target.closest('[data-mtzoom]');if(!z)return;const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:95;background:rgba(0,0,0,.92);display:grid;place-items:center;padding:12px';o.innerHTML=`<img src="${z.src}" style="max-width:100%;max-height:92vh;border-radius:10px">`;o.onclick=()=>o.remove();document.body.appendChild(o);});
+    el.innerHTML=ims.length?ims.map(([s,l])=>`<figure><img src="${esc(s)}" alt="${l}" data-mtzoom="1"><figcaption>${l}</figcaption></figure>`).join(''):'<div class="muted" style="font-size:11px">📷 لم يُرفق صورة مع هذا الطلب</div>';});
+  w.addEventListener('click',ev=>{const z=ev.target.closest('[data-mtzoom]');if(!z)return;const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:95;background:rgba(0,0,0,.92);display:grid;place-items:center;padding:12px';o.innerHTML=`<img src="${esc(z.src)}" style="max-width:100%;max-height:92vh;border-radius:10px">`;o.onclick=()=>o.remove();document.body.appendChild(o);});
 }
 function mtDoc(m){
   const dt=x=>x?new Date(x).toLocaleString('ar-SA-u-ca-gregory-nu-latn',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
@@ -3319,7 +3320,7 @@ document.addEventListener('click',async e=>{
     if(r.error){toast('تعذّر: '+r.error.message);return;} st._alertsAt=0; toast({assigned:'تم القبول والإسناد ✓',rejected:'تم رفض الطلب',progress:m.status==='done'?'رجع الطلب للتنفيذ':'بدأ التنفيذ',done:'تم الإنجاز ✓ — بانتظار تأكيد الفرع',hold:'تم تعليق الطلب',closed:'تم إغلاق أمر العمل ✓',cancelled:'تم الإلغاء'}[s]); render(); return;}
   if(d.mtph){const r=await sb.rpc('maint_photos',{p_id:d.mtph});const p=r.data||{};p.photo=await mediaSrc(p.photo);p.done_photo=await mediaSrc(p.done_photo);const ims=[[p.photo,'قبل الإصلاح'],[p.done_photo,'بعد الإصلاح']].filter(x=>x[0]);if(!ims.length){toast('ما فيه صور');return;}
     const m=document.createElement('div');m.style.cssText='position:fixed;inset:0;z-index:85;background:rgba(0,0,0,.85);display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;padding:16px;overflow:auto';
-    m.innerHTML=ims.map(([s,l])=>`<figure style="margin:0;text-align:center;color:#fff"><img src="${s}" style="max-width:100%;max-height:70vh;border-radius:12px"><figcaption style="font-size:11.5px;margin-top:4px">${l}</figcaption></figure>`).join('');m.onclick=()=>m.remove();document.body.appendChild(m);return;}
+    m.innerHTML=ims.map(([s,l])=>`<figure style="margin:0;text-align:center;color:#fff"><img src="${esc(s)}" style="max-width:100%;max-height:70vh;border-radius:12px"><figcaption style="font-size:11.5px;margin-top:4px">${l}</figcaption></figure>`).join('');m.onclick=()=>m.remove();document.body.appendChild(m);return;}
   if(d.mtdel){if(!confirm('حذف الطلب نهائياً؟'))return;const r=await sb.rpc('maint_delete',{p_id:d.mtdel});if(r.error){toast('تعذّر: '+r.error.message);return;}toast('تم الحذف');render();}
 });
 document.addEventListener('submit',async e=>{

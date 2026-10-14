@@ -123,7 +123,7 @@ el.innerHTML=`
 <label class="fld"><span class="lbl">التاريخ</span><input id="fDate" type="date" value="${f.date}" class="num"></label>
 </div>
 <div style="height:12px"></div>
-<label class="fld"><span class="lbl">رمزك الشخصي</span><input id="fPin" value="${esc(f.pin)}" inputmode="numeric" placeholder="٤ أرقام" autocomplete="off" class="num" style="direction:ltr;text-align:right"></label>
+<label class="fld"><span class="lbl">رمزك الشخصي</span><input id="fPin" value="${esc(f.pin)}" inputmode="numeric" placeholder="٦ أرقام" autocomplete="off" class="num" style="direction:ltr;text-align:right"></label>
 <p class="hint">الرمز خاص فيك، لا تعطيه أحد. التسليم اللي بعد منتصف الليل يُسجَّل بتاريخ اليوم اللي قبله.</p>
 </div>
 <div class="card"><h2>المدفوعات في الفرع</h2>${PAY.map(p=>amtRow('p_'+p.k,p.n,p.c,f[p.k])).join('')}</div>

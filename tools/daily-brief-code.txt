@@ -25,8 +25,9 @@ Deno.serve(async (req) => {
   if (!key) return json({ error: "no_key" }, 500);
   let b: { day?: string; token?: string; sb_url?: string; apikey?: string; facts?: unknown };
   try { b = await req.json(); } catch { return json({ error: "bad_json" }, 400); }
-  const { day, token, sb_url, apikey, facts } = b;
-  if (!day || !token || !sb_url || !apikey || !/^https:\/\/[a-z0-9]+\.supabase\.co$/.test(sb_url)) return json({ error: "bad_request" }, 400);
+  const { day, token, apikey, facts } = b;
+  const sb_url = Deno.env.get("SUPABASE_URL");
+  if (!day || !token || !sb_url || !apikey) return json({ error: "bad_request" }, 400);
   const rpc = async (fn: string, args: unknown) => {
     const r = await fetch(`${sb_url}/rest/v1/rpc/${fn}`, { method: "POST", headers: { apikey, "Content-Type": "application/json" }, body: JSON.stringify(args) });
     const t = await r.text(); if (!r.ok) throw new Error(`${fn} ${r.status} ${t.slice(0, 200)}`); return t ? JSON.parse(t) : null;

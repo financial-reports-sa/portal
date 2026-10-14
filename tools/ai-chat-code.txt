@@ -88,6 +88,13 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   const key = Deno.env.get("ANTHROPIC_API_KEY");
   if (!key) return json({ error: "no_key" }, 500);
+  const SB = Deno.env.get("SUPABASE_URL");
+  const AK = req.headers.get("apikey") || Deno.env.get("SUPABASE_ANON_KEY") || "";
+  const authz = req.headers.get("Authorization") || "";
+  if (!SB || !authz.startsWith("Bearer ")) return json({ error: "unauthorized" }, 401);
+  const allowed = await fetch(`${SB}/rest/v1/rpc/ai_allowed`, { method: "POST", headers: { apikey: AK, Authorization: authz, "Content-Type": "application/json" }, body: "{}" })
+    .then((r) => (r.ok ? r.json() : false)).catch(() => false);
+  if (allowed !== true) return json({ error: "unauthorized" }, 401);
   let body: { question?: string; history?: { role: string; content: string }[]; context?: string };
   try { body = await req.json(); } catch { return json({ error: "bad_json" }, 400); }
   const question = String(body.question || "").trim();

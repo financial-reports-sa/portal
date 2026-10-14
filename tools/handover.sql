@@ -16,11 +16,16 @@ create table if not exists public.cashier_codes (
 );
 alter table public.cashier_codes enable row level security;
 revoke all on public.cashier_codes from anon, authenticated;
-insert into public.cashier_codes (pin, code, branch) values
-  ('6528','az1','az'),('6883','az2','az'),('8499','az3','az'),('2457','az4','az'),('9958','az5','az'),
-  ('0640','sh1','sh'),('4320','sh2','sh'),('8700','sh3','sh'),
-  ('6592','pc1','pc'),('4852','pc2','pc'),('0056','pc3','pc')
-on conflict (pin) do nothing;
+-- الرموز ما تنكتب هنا أبداً: تتولّد عشوائياً (6 أرقام) داخل القاعدة، والمالك يشوفها من «تسليم الورديات» ← «رابط ورموز الكاشيرات»
+do $$
+declare c record; np text;
+begin
+  for c in select * from (values ('az1','az'),('az2','az'),('az3','az'),('az4','az'),('az5','az'),('sh1','sh'),('sh2','sh'),('sh3','sh'),('pc1','pc'),('pc2','pc'),('pc3','pc')) v(code, branch)
+           where not exists (select 1 from public.cashier_codes x where x.code = v.code) loop
+    loop np := lpad((floor(random() * 1000000))::int::text, 6, '0'); exit when not exists (select 1 from public.cashier_codes where pin = np); end loop;
+    insert into public.cashier_codes (pin, code, branch) values (np, c.code, c.branch);
+  end loop;
+end $$;
 
 -- 3) التسليمات
 create table if not exists public.handovers (
