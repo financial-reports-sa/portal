@@ -66,6 +66,18 @@ alter table public.att_shift add column if not exists end2_t time;
 alter table public.attendance add column if not exists seq int not null default 1;
 alter table public.attendance drop constraint if exists attendance_emp_id_day_key;
 create unique index if not exists attendance_emp_day_seq on public.attendance (emp_id, day, seq);
+alter table public.attendance add column if not exists in_dev boolean not null default false;
+alter table public.attendance add column if not exists out_dev boolean not null default false;
+
+create table if not exists public.att_emp (
+  emp_id uuid primary key references public.employees(id) on delete cascade,
+  no_selfie boolean not null default false,
+  device text,
+  device_at timestamptz,
+  updated_by text not null default '',
+  updated_at timestamptz not null default now()
+);
+alter table public.att_emp enable row level security;
 
 create or replace function public.att_bday() returns date
 language sql stable as $$ select ((now() at time zone 'Asia/Riyadh') - interval '5 hours')::date $$;
@@ -77,6 +89,10 @@ drop policy if exists atb_sel on public.att_branch;
 create policy atb_sel on public.att_branch for select to authenticated using (true);
 drop policy if exists ats_sel on public.att_shift;
 create policy ats_sel on public.att_shift for select to authenticated using (att_ok(emp_id) or emp_id = my_emp_id());
+drop policy if exists ate_sel on public.att_emp;
+create policy ate_sel on public.att_emp for select to authenticated using (att_ok(emp_id) or emp_id = my_emp_id());
+revoke all on public.att_emp from anon;
+grant select on public.att_emp to authenticated;
 drop policy if exists att_sel on public.attendance;
 create policy att_sel on public.attendance for select to authenticated using (att_ok(emp_id) or emp_id = my_emp_id());
 drop policy if exists att_del on public.attendance;
@@ -98,14 +114,15 @@ $$;
 
 create or replace function public.att_me() returns jsonb
 language plpgsql stable security definer set search_path = public as $$
-declare e employees; g att_branch; s att_shift; o attendance; today date := att_bday();
+declare e employees; g att_branch; s att_shift; o attendance; today date := att_bday(); ae att_emp;
 begin
   select * into e from employees where id = my_emp_id();
   if e.id is null then return null; end if;
+  select * into ae from att_emp where emp_id = e.id;
   select * into g from att_branch where branch = e.branch;
   select * into s from att_shift where emp_id = e.id;
   select * into o from attendance where emp_id = e.id and out_at is null and in_at > now() - interval '20 hours' order by in_at desc limit 1;
-  return jsonb_build_object('emp', e.id, 'branch', e.branch, 'today', today,
+  return jsonb_build_object('emp', e.id, 'branch', e.branch, 'today', today, 'no_selfie', coalesce(ae.no_selfie, false), 'device_set', ae.device is not null,
     'geo', case when g.branch is null then null else jsonb_build_object('lat', g.lat, 'lng', g.lng, 'radius', g.radius) end,
     'shift', case when s.emp_id is null then null else jsonb_build_object('start', s.start_t, 'end', s.end_t, 'start2', s.start2_t, 'end2', s.end2_t, 'off', s.off_days, 'grace', s.grace) end,
     'open', case when o.id is null then null else to_jsonb(o) end,
@@ -114,9 +131,11 @@ begin
 end $$;
 grant execute on function public.att_me() to authenticated;
 
-create or replace function public.att_check(p_kind text, p_lat double precision, p_lng double precision, p_acc double precision default null, p_photo text default null)
+drop function if exists public.att_check(text, double precision, double precision, double precision, text);
+create or replace function public.att_check(p_kind text, p_lat double precision, p_lng double precision, p_acc double precision default null, p_photo text default null, p_device text default null)
 returns jsonb language plpgsql security definer set search_path = public as $$
 declare e employees; g att_branch; d int; ph text := nullif(btrim(coalesce(p_photo, '')), ''); o attendance; today date := att_bday(); rid uuid; n int;
+  x att_emp; dev text := nullif(btrim(coalesce(p_device, '')), ''); bydev boolean := false;
 begin
   select * into e from employees where id = my_emp_id();
   if e.id is null then raise exception 'حسابك غير مرتبط بموظف'; end if;
@@ -128,26 +147,46 @@ begin
   if d > g.radius + least(coalesce(p_acc, 0), 100) then
     raise exception 'أنت بعيد عن الفرع (% متر) — سجّل وأنت داخل الفرع', d;
   end if;
-  if ph is null then raise exception 'صورة السيلفي إلزامية'; end if;
-  if length(ph) > 900000 then raise exception 'الصورة كبيرة — صوّر مرة ثانية'; end if;
+  select * into x from att_emp where emp_id = e.id for update;
+  if coalesce(x.no_selfie, false) then
+    if dev is null or length(dev) < 16 then raise exception 'حدّث التطبيق وحاول مرة ثانية'; end if;
+    if x.device is null then
+      update att_emp set device = dev, device_at = now() where emp_id = e.id;
+    elsif x.device <> dev then
+      raise exception 'هذا مو جوالك المسجّل — التسجيل يكون من جوالك أنت. لو غيّرت جوالك كلّم مدير الفرع يعيد تسجيل الجهاز';
+    end if;
+    bydev := ph is null;
+  elsif ph is null then raise exception 'صورة السيلفي إلزامية'; end if;
+  if ph is not null and length(ph) > 900000 then raise exception 'الصورة كبيرة — صوّر مرة ثانية'; end if;
   if p_kind = 'in' then
     if exists (select 1 from attendance where emp_id = e.id and out_at is null and in_at > now() - interval '20 hours') then
       raise exception 'حضورك مسجّل — سجّل الانصراف أولاً';
     end if;
     select coalesce(max(seq), 0) into n from attendance where emp_id = e.id and day = today and in_at is not null;
     if n >= 2 then raise exception 'سجّلت شفتين اليوم'; end if;
-    insert into attendance (emp_id, branch, day, seq, in_at, in_lat, in_lng, in_dist, in_photo)
-    values (e.id, e.branch, today, n + 1, now(), p_lat, p_lng, d, ph)
-    on conflict (emp_id, day, seq) do update set in_at = excluded.in_at, in_lat = excluded.in_lat, in_lng = excluded.in_lng, in_dist = excluded.in_dist, in_photo = excluded.in_photo
+    insert into attendance (emp_id, branch, day, seq, in_at, in_lat, in_lng, in_dist, in_photo, in_dev)
+    values (e.id, e.branch, today, n + 1, now(), p_lat, p_lng, d, ph, bydev)
+    on conflict (emp_id, day, seq) do update set in_at = excluded.in_at, in_lat = excluded.in_lat, in_lng = excluded.in_lng, in_dist = excluded.in_dist, in_photo = excluded.in_photo, in_dev = excluded.in_dev
     returning id into rid;
   elsif p_kind = 'out' then
     select * into o from attendance where emp_id = e.id and out_at is null and in_at > now() - interval '20 hours' order by in_at desc limit 1;
     if o.id is null then raise exception 'ما فيه حضور مفتوح — سجّل الحضور أولاً'; end if;
-    update attendance set out_at = now(), out_lat = p_lat, out_lng = p_lng, out_dist = d, out_photo = ph where id = o.id returning id into rid;
+    update attendance set out_at = now(), out_lat = p_lat, out_lng = p_lng, out_dist = d, out_photo = ph, out_dev = bydev where id = o.id returning id into rid;
   else raise exception 'نوع غير صحيح'; end if;
   return jsonb_build_object('id', rid, 'dist', d, 'at', now());
 end $$;
-grant execute on function public.att_check(text, double precision, double precision, double precision, text) to authenticated;
+grant execute on function public.att_check(text, double precision, double precision, double precision, text, text) to authenticated;
+
+create or replace function public.att_set_opt(p_emp uuid, p_no_selfie boolean, p_reset_device boolean default false) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not att_ok(p_emp) then raise exception 'ليس لديك صلاحية على هذا الموظف'; end if;
+  insert into att_emp (emp_id, no_selfie, updated_by) values (p_emp, coalesce(p_no_selfie, false), att_who())
+  on conflict (emp_id) do update set no_selfie = excluded.no_selfie, updated_by = excluded.updated_by, updated_at = now(),
+    device = case when p_reset_device then null else att_emp.device end,
+    device_at = case when p_reset_device then null else att_emp.device_at end;
+end $$;
+grant execute on function public.att_set_opt(uuid, boolean, boolean) to authenticated;
 
 create or replace function public.att_set_branch(p_branch text, p_lat double precision, p_lng double precision, p_radius int default 150) returns void
 language plpgsql security definer set search_path = public as $$
