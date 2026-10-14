@@ -229,7 +229,7 @@ const inScope=r=>S.f==='all'||r.branch===S.f;
 const isOn=r=>r.status!=='left';
 
 // ---------- data ----------
-async function load(){
+async function load(){S.att={};
   try{
     const [e,l]=await Promise.all([
       SBC.from('employees').select('*').order('branch').order('start_date'),
@@ -549,17 +549,53 @@ function openForm(r){
 }
 function askYes(title,body,ok,safe){return new Promise(res=>{const m=document.createElement('div');m.className='modal';m.innerHTML=`<div class="sheet"><h3>${title}</h3><p class="hint" style="font-size:14px">${body}</p><div class="acts"><button class="btn ghost" data-a="0">رجوع</button><button class="btn ${safe?'gold':'del'}" data-a="1">${ok}</button></div></div>`;m.addEventListener('click',e=>{const a=e.target.closest('[data-a]');if(a||e.target===m){m.remove();res(a?.dataset.a==='1')}});document.body.appendChild(m)})}
 
+// ---------- خصومات الحضور والانصراف (من شاشة الحضور) ----------
+const aMin=x=>{if(!x)return null;const[h,m]=String(x).split(':').map(Number);return h*60+(m||0)};
+const aLoc=ts=>aMin(new Date(ts).toLocaleTimeString('en-GB',{hour12:false,hour:'2-digit',minute:'2-digit',timeZone:'Asia/Riyadh'}));
+const aBday=()=>new Date(Date.now()-2*36e5).toISOString().slice(0,10);
+const aShifts=s=>!s?[]:[{start_t:s.start_t,end_t:s.end_t,grace:s.grace}].concat(s.start2_t&&s.end2_t?[{start_t:s.start2_t,end_t:s.end2_t,grace:s.grace}]:[]);
+const aLen=x=>{let a=aMin(x.start_t),b=aMin(x.end_t);if(b<=a)b+=1440;return b-a};
+function aFor(s,r){const L=aShifts(s);if(!L.length)return null;if(L.length===1||!r.in_at)return L[(r.seq===2&&L[1])?1:0];let im=aLoc(r.in_at);if(im<300)im+=1440;let best=L[0],bd=1e9;L.forEach(x=>{let st=aMin(x.start_t);if(st<300)st+=1440;const d=Math.abs(im-st);if(d<bd){bd=d;best=x}});return best}
+function aEval(r,s){const o={late:0,early:0};const sh=aFor(s,r);if(!sh||!r.in_at)return o;let st=aMin(sh.start_t),im=aLoc(r.in_at);if(st<300)st+=1440;if(im<300)im+=1440;o.late=Math.max(0,im-st-(+(sh.grace??10)));
+  if(r.out_at){let en=aMin(sh.end_t);if(en<=st%1440||en<300)en+=1440;if(en<st)en+=1440;let om=aLoc(r.out_at);if(om<=360)om+=1440;if(om<st-360)om+=1440;o.early=Math.max(0,en-om)}return o}
+async function loadAtt(month){
+  if(S.att&&S.att[month])return S.att[month];S.att=S.att||{};
+  const N=daysIn(month),a=month+'-01',z=month+'-'+pad(N);
+  const [sh,rc,...fs]=await Promise.all([SBC.from('att_shift').select('*'),SBC.from('attendance').select('emp_id,branch,day,seq,in_at,out_at').gte('day',a).lte('day',z).limit(10000)].concat(S.branches.map(b=>SBC.from('attendance').select('day').eq('branch',b.id).order('day').limit(1))));
+  const o={ok:!rc.error&&!sh.error,sh:{},by:{},first:{}};
+  (sh.data||[]).forEach(x=>o.sh[x.emp_id]=x);
+  (rc.data||[]).forEach(r=>{((o.by[r.emp_id]=o.by[r.emp_id]||{})[r.day]=o.by[r.emp_id][r.day]||[]).push(r)});
+  S.branches.forEach((b,i)=>{const d=fs[i]&&fs[i].data&&fs[i].data[0];if(d)o.first[b.id]=d.day});
+  return S.att[month]=o;
+}
+// أجر اليوم = الراتب ÷ 30 · الغياب يوم كامل · الشفت الناقص بقدر ساعاته · التأخير والخروج المبكر بالدقيقة بعد مدة السماح
+function attDed(r,month,A){
+  const s=A&&A.ok?A.sh[r.id]:null,sal=+r.salary||0;if(!s||!sal)return null;
+  const L=aShifts(s),dm=L.reduce((x,q)=>x+aLen(q),0)||480,day=sal/30,mr=day/dm;
+  const N=daysIn(month),since=[month+'-01',r.start_date,s.created_at?String(s.created_at).slice(0,10):null,A.first[r.branch]||'9999'].filter(Boolean).sort().pop();
+  const endD=[month+'-'+pad(N),(r.status==='left'&&r.left_date)?r.left_date:null].filter(Boolean).sort()[0],bt=aBday();
+  const by=A.by[r.id]||{};let abs=0,missMin=0,late=0;
+  for(let i=1;i<=N;i++){const d=month+'-'+pad(i);const R=(by[d]||[]).filter(x=>x.in_at);
+    R.forEach(x=>{const e=aEval(x,s);late+=e.late+e.early});
+    if(d<since||d>endD||d>=bt||(s.off_days||[]).includes(new Date(d+'T12:00:00').getDay()))continue;
+    if(!R.length){abs++;continue}
+    if(R.length<L.length){const got=new Set(R.map(x=>x.seq||1));L.forEach((q,k)=>{if(!got.has(k+1))missMin+=aLen(q)})}}
+  const r2=v=>Math.round(v*100)/100;
+  return{abs,missMin,late,absDed:r2(abs*day+missMin*mr),lateDed:r2(late*mr)};
+}
+
 // ---------- monthly export ----------
 // الموظف يدخل الكشف إذا كان على رأس العمل في أي يوم من الشهر. المستحق = الراتب كامل للشهر الكامل، وإلا (الراتب ÷ 30) × أيام العمل
 function payroll(month,branch){
+  const A=S.att&&S.att[month];
   const N=daysIn(month),a=month+'-01',z=month+'-'+pad(N);
   return S.rows.filter(r=>r.branch===branch&&r.start_date<=z&&!(r.status==='left'&&r.left_date&&r.left_date<a)).map(r=>{
     const from=r.start_date>a?r.start_date:a;
     const to=(r.status==='left'&&r.left_date&&r.left_date<z)?r.left_date:z;
     const days=Math.max(0,daysBetween(from,to)+1);
     const sal=+r.salary||0;const due=days>=N?sal:Math.min(sal,Math.round(sal/30*days*100)/100);
-    const dl=dedOf(r.id,month),ded=dsum(dl);
-    return{...r,days,due,ded,dl,net:Math.round((due-ded)*100)/100,isNew:r.start_date>=a,isLeft:r.status==='left'&&r.left_date&&r.left_date<=z};
+    const dl=dedOf(r.id,month),ded=dsum(dl),at=attDed(r,month,A),aD=at?Math.round((at.absDed+at.lateDed)*100)/100:0;
+    return{...r,days,due,ded,dl,at,aD,net:Math.round((due-ded-aD)*100)/100,isNew:r.start_date>=a,isLeft:r.status==='left'&&r.left_date&&r.left_date<=z};
   }).sort((x,y)=>(x.start_date<y.start_date?-1:x.start_date>y.start_date?1:x.name.localeCompare(y.name,'ar')));
 }
 function monthsList(){const out=[];const d=new Date();d.setDate(1);for(let i=0;i<12;i++){out.push(iso(d).slice(0,7));d.setMonth(d.getMonth()-1)}return out}
@@ -571,15 +607,16 @@ function renderExp(){
   if(E.branch!=='all'&&!S.branches.some(b=>b.id===E.branch))E.branch='all';
   if(S.branches.length===1)E.branch=S.branches[0].id;
   const brs=E.branch==='all'?S.branches:S.branches.filter(b=>b.id===E.branch);
+  if(!S.att||!S.att[E.month]){loadAtt(E.month).then(()=>{if(S.tab==='exp')renderExp()}).catch(()=>{});}
   let h=`<div class="card"><h2>كشف الموظفين الشهري</h2><div class="row">
     <label class="fld">الشهر<select id="xm">${monthsList().map(m=>`<option value="${m}" ${m===E.month?'selected':''}>${esc(mLong(m))}</option>`).join('')}</select></label>
     ${S.branches.length>1?`<label class="fld">الفرع<select id="xb"><option value="all" ${E.branch==='all'?'selected':''}>كل الفروع</option>${S.branches.map(b=>`<option value="${b.id}" ${E.branch===b.id?'selected':''}>${esc(b.name)}</option>`).join('')}</select></label>`:''}
   </div><button class="btn gold" id="xGo" style="margin-top:12px" ${E.busy?'disabled':''}>${E.busy?'جاري التجهيز…':'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>تصدير Excel'}</button>
-  <p class="hint" style="margin-top:8px">«كل الفروع» يطلع ملف واحد فيه ورقة لكل فرع. المستحق: الشهر الكامل بالراتب كامل، والمباشر أو المنتهية خدماته خلال الشهر يُحسب (الراتب ÷ 30) × أيام العمل.</p></div>`;
+  <p class="hint" style="margin-top:8px">«كل الفروع» يطلع ملف واحد فيه ورقة لكل فرع. المستحق: الشهر الكامل بالراتب كامل، والمباشر أو المنتهية خدماته خلال الشهر يُحسب (الراتب ÷ 30) × أيام العمل. خصم الحضور يُسحب تلقائياً من «الحضور والانصراف»: الغياب أجر يوم (الراتب ÷ 30)، والتأخير والخروج المبكر بالدقيقة بعد مدة السماح.</p></div>`;
   let gT=0,gD=0,gN=0;
-  const tblH=(rows,ended)=>`<div class="tscroll"><table class="tbl"><tr><th>الموظف</th><th>الراتب</th><th>الأيام</th><th>المستحق</th><th>الخصم</th><th>الصافي</th></tr>
-    ${rows.map(r=>`<tr><td>${esc(r.name)}<br><small class="hint">${esc(r.job)}${ended?' · انتهت '+esc(r.left_date)+(r.end_reason?' · '+esc(r.end_reason):''):(r.isNew?' · <b style="color:var(--up)">جديد</b>':'')+(r.status==='vacation'?' · إجازة':'')}</small></td><td class="num">${fmt(r.salary)}</td><td class="num">${r.days}</td><td class="num">${fmt2(r.due)}</td><td class="num" style="color:${r.ded?'var(--down)':'inherit'}">${r.ded?fmt2(r.ded):'—'}</td><td class="num"><b>${fmt2(r.net)}</b></td></tr>`).join('')}
-    <tr class="tot"><td>المجموع</td><td class="num">${fmt(rows.reduce((s,r)=>s+(+r.salary||0),0))}</td><td></td><td class="num">${fmt2(rows.reduce((s,r)=>s+r.due,0))}</td><td class="num">${fmt2(rows.reduce((s,r)=>s+r.ded,0))}</td><td class="num">${fmt2(rows.reduce((s,r)=>s+r.net,0))}</td></tr></table></div>`;
+  const tblH=(rows,ended)=>`<div class="tscroll"><table class="tbl"><tr><th>الموظف</th><th>الراتب</th><th>الأيام</th><th>المستحق</th><th>خصم الحضور</th><th>خصومات أخرى</th><th>الصافي</th></tr>
+    ${rows.map(r=>`<tr><td>${esc(r.name)}<br><small class="hint">${esc(r.job)}${ended?' · انتهت '+esc(r.left_date)+(r.end_reason?' · '+esc(r.end_reason):''):(r.isNew?' · <b style="color:var(--up)">جديد</b>':'')+(r.status==='vacation'?' · إجازة':'')}</small></td><td class="num">${fmt(r.salary)}</td><td class="num">${r.days}</td><td class="num">${fmt2(r.due)}</td><td class="num" style="color:${r.aD?'var(--down)':'inherit'}">${r.at?(r.aD?fmt2(r.aD)+`<br><small class="hint">${r.at.abs?'غياب '+r.at.abs+' يوم':''}${r.at.abs&&r.at.late?' · ':''}${r.at.late?'تأخير '+r.at.late+' د':''}${r.at.missMin&&!r.at.abs?'شفت ناقص':''}</small>`:'—'):'<small class="hint">بدون دوام</small>'}</td><td class="num" style="color:${r.ded?'var(--down)':'inherit'}">${r.ded?fmt2(r.ded):'—'}</td><td class="num"><b>${fmt2(r.net)}</b></td></tr>`).join('')}
+    <tr class="tot"><td>المجموع</td><td class="num">${fmt(rows.reduce((s,r)=>s+(+r.salary||0),0))}</td><td></td><td class="num">${fmt2(rows.reduce((s,r)=>s+r.due,0))}</td><td class="num">${fmt2(rows.reduce((s,r)=>s+r.aD,0))}</td><td class="num">${fmt2(rows.reduce((s,r)=>s+r.ded,0))}</td><td class="num">${fmt2(rows.reduce((s,r)=>s+r.net,0))}</td></tr></table></div>`;
   brs.forEach(b=>{
     const p=payroll(E.month,b.id),act=p.filter(r=>!r.isLeft),end=p.filter(r=>r.isLeft);
     const t=p.reduce((s,r)=>s+(+r.salary||0),0),d=p.reduce((s,r)=>s+r.net,0);gT+=t;gD+=d;gN+=p.length;
@@ -599,7 +636,7 @@ function loadExcelJS(){
 async function doExport(){
   const E=S.exp;if(E.busy)return;E.busy=true;renderExp();
   try{
-    await loadExcelJS();
+    await loadExcelJS();try{await loadAtt(E.month)}catch(e){}
     const brs=E.branch==='all'?S.branches:S.branches.filter(b=>b.id===E.branch);
     const wb=new ExcelJS.Workbook();wb.creator='Ameer Alarifi';wb.created=new Date();
     const thin={style:'thin',color:{argb:'FF000000'}};const box={top:thin,bottom:thin,left:thin,right:thin};
@@ -627,7 +664,11 @@ async function doExport(){
         {h:'الراتب المتفق عليه',w:14,v:r=>+r.salary||0,m:1,sum:1,k:'sal'},
         {h:'أيام العمل',w:9,v:r=>r.days},
         {h:'المستحق للشهر',w:14,v:r=>r.due,m:1,sum:1,k:'due'},
-        {h:'الخصومات',w:12,v:r=>r.ded,m:1,sum:1,k:'ded'},
+        {h:'أيام الغياب',w:9,v:r=>r.at?r.at.abs:'—'},
+        {h:'خصم الغياب',w:12,v:r=>r.at?r.at.absDed:0,m:1,sum:1,k:'absd'},
+        {h:'دقائق التأخير',w:10,v:r=>r.at?r.at.late:'—'},
+        {h:'خصم التأخير',w:12,v:r=>r.at?r.at.lateDed:0,m:1,sum:1,k:'lated'},
+        {h:'خصومات أخرى',w:12,v:r=>r.ded,m:1,sum:1,k:'ded'},
         {h:'صافي المستحق',w:14,v:r=>r.net,m:1,sum:1,k:'net',b:1},
         {h:'ملاحظات',w:26,v:r=>r.notes||'',al:'right',wrap:1}];
       ws.columns=C.map(c=>({width:c.w}));const last=C.length;const firstSum=C.findIndex(c=>c.sum)+1,netCol=C.findIndex(c=>c.k==='net')+1;
@@ -666,9 +707,9 @@ async function doExport(){
         for(let j=1;j<=9;j++){const c=tr.getCell(j);c.font={name:F,bold:true,size:11};c.border={top:{style:'double'},bottom:{style:'medium'},left:thin,right:thin};c.alignment={horizontal:'center',vertical:'middle'}}
         rn+=2;
       }
-      ws.mergeCells(rn,1,rn,last);ws.getCell(rn,1).value='المستحق: الشهر الكامل بالراتب المتفق عليه، والمباشر أو المنتهية خدماته خلال الشهر (الراتب ÷ 30) × أيام العمل. صافي المستحق = المستحق − الخصومات.';ws.getCell(rn,1).font={name:F,size:9,italic:true};
+      ws.mergeCells(rn,1,rn,last);ws.getCell(rn,1).value='المستحق: الشهر الكامل بالراتب المتفق عليه، والمباشر أو المنتهية خدماته خلال الشهر (الراتب ÷ 30) × أيام العمل. خصم الغياب والتأخير من «الحضور والانصراف»: أجر اليوم = الراتب ÷ 30، الغياب أجر يوم كامل، الشفت الناقص بقدر ساعاته، والتأخير والخروج المبكر بالدقيقة (أجر اليوم ÷ دقائق الدوام) بعد مدة السماح. صافي المستحق = المستحق − خصم الغياب − خصم التأخير − الخصومات الأخرى.';ws.getCell(rn,1).font={name:F,size:9,italic:true};
       const sr=rn+3;
-      [['مدير الفرع',2],['المحاسب',8],['الاعتماد',15]].forEach(([t,c])=>{ws.getCell(sr,c).value=t+':';ws.getCell(sr,c).font={name:F,bold:true,size:11};ws.getCell(sr+1,c).value='التوقيع: ____________________';ws.getCell(sr+1,c).font={name:F,size:10}});
+      [['مدير الفرع',2],['المحاسب',8],['الاعتماد',17]].forEach(([t,c])=>{ws.getCell(sr,c).value=t+':';ws.getCell(sr,c).font={name:F,bold:true,size:11};ws.getCell(sr+1,c).value='التوقيع: ____________________';ws.getCell(sr+1,c).font={name:F,size:10}});
       ws.pageSetup.printArea=`A1:${L(last)}${sr+1}`;
     });
     const buf=await wb.xlsx.writeBuffer();
