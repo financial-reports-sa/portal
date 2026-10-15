@@ -412,6 +412,62 @@ body.appmode footer{display:none}
 body.hasnav .wrap{padding-bottom:calc(104px + env(safe-area-inset-bottom,0px))}
 body.hasnav .toast{bottom:calc(100px + env(safe-area-inset-bottom,0px))}
 .tabs:empty{display:none}
+/* المراسلات */
+.mg-ban{display:flex;align-items:center;gap:12px;width:100%;text-align:start;border:1px solid rgba(212,175,55,.45);background:var(--gold-soft);border-radius:16px;padding:12px 14px;margin-bottom:12px;font:inherit;color:inherit;cursor:pointer}
+.mg-ban.urg{border-color:rgba(208,69,58,.45);background:rgba(208,69,58,.07)}
+.mg-ban .ic{font-size:22px;flex:none}.mg-ban b{display:block;font-size:12.5px}.mg-ban small{display:block;font-size:10.5px;color:var(--muted);margin-top:2px}.mg-ban .chev{margin-inline-start:auto;color:var(--muted);font-size:18px}
+.mg-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.mg-new{min-height:36px;padding:6px 14px;font-size:12px}
+.mg-n{display:inline-block;min-width:18px;height:18px;line-height:18px;border-radius:99px;background:var(--down);color:#fff;font-size:10px;font-weight:700;padding:0 5px;margin-inline-start:4px}
+.mg-kf{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;margin-bottom:10px;scrollbar-width:none}.mg-kf::-webkit-scrollbar{display:none}.mg-kf button{flex:none}
+.mg-list{display:flex;flex-direction:column;gap:8px}
+.mg-it{display:block;width:100%;text-align:start;font:inherit;color:inherit;background:var(--card);border:1px solid var(--line);border-inline-start:4px solid var(--c);border-radius:14px;padding:11px 13px;cursor:pointer;box-shadow:var(--shadow);position:relative}
+.mg-it.new{background:linear-gradient(0deg,var(--card),var(--card)) padding-box;border-color:var(--line) var(--line) var(--line) var(--c)}
+.mg-it.new .mg-ttl::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--down);margin-inline-end:6px;vertical-align:middle}
+.mg-h{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.mg-k{font-size:10.5px;font-weight:700;color:var(--c);background:color-mix(in srgb,var(--c) 11%,transparent);border-radius:99px;padding:2px 9px}
+.mg-p{font-size:10px;font-weight:700;color:#fff;background:var(--c);border-radius:99px;padding:2px 8px}
+.mg-t{margin-inline-start:auto;font-size:10.5px;color:var(--muted)}
+.mg-ttl{display:block;font-size:13px;margin-top:6px;line-height:1.5}
+.mg-sn{font-size:11.5px;color:var(--muted);margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.mg-f{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:10.5px;color:var(--muted);margin-top:7px}
+.mg-f .need{color:var(--down);font-weight:700}.mg-f .ok{color:var(--up);font-weight:700}
+.mg-st{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:10.5px;color:var(--muted)}.mg-st .meter{flex:1}
+.mg-back{border:0;background:none;color:var(--green);font:inherit;font-size:12.5px;font-weight:600;padding:4px 0 10px;cursor:pointer}
+.mg-doc{border-top:4px solid var(--c)}
+.mg-dt{font-family:var(--f-disp);font-size:17px;line-height:1.5;margin:10px 0 4px}
+.mg-meta{font-size:11px;color:var(--muted)}
+.mg-body{white-space:pre-wrap;font-size:13.5px;line-height:1.9;margin-top:14px;padding-top:12px;border-top:1px dashed var(--line);overflow-wrap:anywhere}
+.mg-files{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:14px}
+.mg-img img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;border:1px solid var(--line);display:block}
+.mg-pdf{grid-column:1/-1;display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:12px;color:inherit;text-decoration:none;background:var(--bg)}
+.mg-acts{display:flex;gap:8px;margin-top:14px;justify-content:flex-end}
+.mg-ack{width:100%;padding:14px;font-size:13.5px;margin-bottom:12px;background:var(--green)}
+.mg-acked{text-align:center;color:var(--up);font-weight:600;font-size:12.5px}
+.mg-kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:8px;text-align:center}.mg-kp b{display:block;font-size:20px}.mg-kp span{font-size:10.5px;color:var(--muted)}
+.mg-rl{max-height:320px;overflow:auto}
+.mg-r{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:12px}.mg-r:last-child{border-bottom:0}
+.mg-rn{flex:1;min-width:0}.mg-rn small{display:block;font-size:10px;color:var(--muted)}.mg-rt{font-size:10.5px;color:var(--muted);white-space:nowrap}
+.mg-th{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.mg-b{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:8px 11px;font-size:12px;white-space:pre-wrap;max-width:88%}
+.mg-b.me{align-self:flex-end;background:var(--gold-soft);border-color:rgba(212,175,55,.35)}
+.mg-bh{display:flex;gap:6px;align-items:baseline;font-size:10.5px;margin-bottom:3px}.mg-bh>span:last-child{margin-inline-start:auto;color:var(--muted)}
+.mg-rep{display:flex;gap:8px;align-items:flex-end}.mg-rep textarea{flex:1;resize:vertical}
+.mg-form{display:flex;flex-direction:column;gap:12px}
+.mg-kinds{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.mg-kinds button{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:9px 4px;font:inherit;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:3px;color:inherit;cursor:pointer}
+.mg-kinds button span{font-size:19px}
+.mg-kinds button[aria-pressed="true"]{border-color:var(--c);box-shadow:inset 0 0 0 1px var(--c);background:color-mix(in srgb,var(--c) 8%,transparent);font-weight:700;color:var(--c)}
+.mg-att{display:flex;flex-wrap:wrap;gap:8px}
+.mg-af{position:relative;display:flex;align-items:center;gap:4px;border:1px solid var(--line);border-radius:10px;padding:4px;font-size:11px;max-width:100%}
+.mg-af img{width:58px;height:58px;object-fit:cover;border-radius:7px;display:block}
+.mg-af button{position:absolute;top:-7px;inset-inline-end:-7px;width:20px;height:20px;border-radius:50%;border:0;background:var(--down);color:#fff;font-size:13px;line-height:1;cursor:pointer}
+.mg-add{display:flex;align-items:center;justify-content:center;min-width:68px;height:68px;border:1.5px dashed var(--line);border-radius:10px;font-size:11.5px;color:var(--muted);cursor:pointer;padding:0 10px}
+.mg-ppl{max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:4px 10px}
+.mg-pp{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:12px;cursor:pointer}.mg-pp:last-child{border-bottom:0}.mg-pp small{display:block;font-size:10px;color:var(--muted)}
+.mg-pp input,.mg-ackt input{width:18px;height:18px;accent-color:var(--green);flex:none}
+.mg-ackt{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer}.mg-ackt b{display:block;font-size:12px}.mg-ackt small{display:block;font-size:10.5px;color:var(--muted)}
+.mg-cnt{font-size:12px;text-align:center;background:var(--bg);border-radius:10px;padding:9px}
 /* splash — هندسي */
 #splash{--k:1;position:fixed;inset:0;z-index:100;display:grid;place-items:center;overflow:hidden;cursor:pointer;color:#fff;
   background:radial-gradient(120% 85% at 50% 40%,#2F6B49 0%,#1E5A3E 38%,#0F3322 75%,#0A2116 100%);transition:opacity .7s ease,visibility .7s}
@@ -675,6 +731,7 @@ const SECTIONS=[
   {id:'advances',name:'السلف'},
   {id:'custody',name:'العُهد'},
   {id:'me',name:'بوابتي'},
+  {id:'msgs',name:'المراسلات'},
   {id:'handover',name:'تسليم الورديات',app:'handover'},
   {id:'users',name:'المستخدمين والصلاحيات',admin:true},
   {id:'data',name:'إدخال البيانات',admin:true}
@@ -687,13 +744,13 @@ const NAV_ICONS={
   hrg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="9" cy="11" r="2.3"/><path d="M5.8 16.2a3.4 3.4 0 0 1 6.4 0"/><path d="M14.5 10h3.5M14.5 13.5h3.5"/></svg>',
   fin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/><path d="M6.5 15h4"/></svg>',
   more:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>'};
-const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me']},{id:'ai',name:'المساعد الذكي',secs:['ai']},{id:'rep',name:'التقارير',secs:['brief','sales','daily','channels','income','wh','waste','chicken']},{id:'ops',name:'العمليات',secs:['handover','maint','feedback','fleet']},{id:'hrg',name:'الموارد البشرية',secs:['hr','att','employees','advances']},{id:'fin',name:'المالية',secs:['treasury','loans','custody']},{id:'more',name:'الإدارة',secs:['users','data'],nav:false}];
+const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me','msgs']},{id:'ai',name:'المساعد الذكي',secs:['ai']},{id:'rep',name:'التقارير',secs:['brief','sales','daily','channels','income','wh','waste','chicken']},{id:'ops',name:'العمليات',secs:['handover','maint','feedback','fleet']},{id:'hrg',name:'الموارد البشرية',secs:['hr','att','employees','advances']},{id:'fin',name:'المالية',secs:['treasury','loans','custody']},{id:'more',name:'الإدارة',secs:['users','data'],nav:false}];
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
-const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['handover','maint','maint_sup','feedback','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','loans','custody','custody_holder']}];
+const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['handover','maint','maint_sup','feedback','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610150109';
-const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.custody_holder='مسؤول العهدة';
+const APP_VER='202610150658';
+const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 const CH={ajl:'آجل عملاء',shaden:'تطبيق الشادن',meals:'وجبات',family:'قسم العائلات',keeta:'تطبيق كيتا',hs:'تطبيق هانقرستيشن',dlv:'توصيل',tkl:'سفري / محلي',ninja:'تطبيق نينجا',bonat:'تطبيق بونات',awail:'عوائل',sfr:'سفري',mhl:'محلي'};
@@ -719,7 +776,7 @@ const st={user:null,profile:null,branches:[],myBranches:[],mySections:[],tab:'ho
 const isAdmin=()=>st.profile&&['owner','admin'].includes(st.profile.role);
 const isOwner=()=>st.profile&&st.profile.role==='owner';
 const isEmp=()=>st.profile&&st.profile.role==='employee';
-const allowed=id=>{ if(isEmp()) return id==='me'; if(id==='me') return false; if(isAdmin()||id==='home'||id==='ai') return true; if(id==='daily') return st.mySections.includes('daily')&&st.allBranches; if(id==='maint') return st.mySections.includes('maint')||st.mySections.includes('maint_sup'); if(id==='custody') return st.mySections.includes('custody')||st.mySections.includes('custody_holder'); if(id==='att') return st.mySections.includes('att')||st.mySections.includes('hr')||st.mySections.includes('employees'); const x=SECTIONS.find(q=>q.id===id); return st.mySections.includes(x&&x.perm?x.perm:id); };
+const allowed=id=>{ if(isEmp()) return id==='me'||id==='msgs'; if(id==='me') return false; if(isAdmin()||id==='home'||id==='ai'||id==='msgs') return true; if(id==='daily') return st.mySections.includes('daily')&&st.allBranches; if(id==='maint') return st.mySections.includes('maint')||st.mySections.includes('maint_sup'); if(id==='custody') return st.mySections.includes('custody')||st.mySections.includes('custody_holder'); if(id==='att') return st.mySections.includes('att')||st.mySections.includes('hr')||st.mySections.includes('employees'); const x=SECTIONS.find(q=>q.id===id); return st.mySections.includes(x&&x.perm?x.perm:id); };
 const brById=id=>st.branches.find(b=>b.id===id)||(st._cuBr||[]).find(b=>b.id===id)||{id,name:id,color:'#888'};
 const selBranches=()=>st.f==='all'?st.branches.map(b=>b.id):[st.f];
 
@@ -764,6 +821,7 @@ async function boot(){
   if(isEmp()) st.tab='me'; else { try{ const t=localStorage.getItem('tab'); if(t&&allowed(t)) st.tab=t; }catch(e){} }
   try{ const qb=new URLSearchParams(location.search).get('brief'); if(qb&&/^\d{4}-\d\d-\d\d$/.test(qb)) st.brSel=qb; }catch(e){}
   try{ const qh=new URLSearchParams(location.search).get('hrt'); if(qh) st.hrT=qh; }catch(e){}
+  try{ const qm=new URLSearchParams(location.search).get('m'); if(qm&&/^\d+$/.test(qm)) st.mgOpen=+qm; }catch(e){}
   try{ const qt=new URLSearchParams(location.search).get('tab'); if(qt&&allowed(qt)) st.tab=qt; if(st.brSel&&isAdmin()) st.tab='brief'; if(qt) history.replaceState(null,'',location.pathname); }catch(e){}
   renderShell(); pushSync();
 }
@@ -1924,6 +1982,7 @@ async function loadAlerts(){
   try{ if(canSee('wh')){ const D=(await loadDaily()).filter(r=>r.ratio!=null); const ms=[...new Set(D.map(r=>r.day.slice(0,7)))].sort(); const m=ms[ms.length-1];
       if(m){ st.branches.forEach(b=>{const L=D.filter(r=>r.branch_id===b.id&&r.day.startsWith(m)).sort((a,c)=>a.day<c.day?-1:1); if(L.length<3)return; const last=L[L.length-1]; const avg=L.reduce((t,r)=>t+ +r.ratio,0)/L.length; if(+last.ratio>=avg+0.02) out.push({k:'wh:'+b.id+':'+last.day,ic:'📦',bad:true,t:`تكلفة المستودع مرتفعة: ${b.name}`,s:`${pct(+last.ratio)} يوم ${+last.day.slice(8)} مقابل متوسط ${pct(avg)}`,go:'wh'});}); } } }catch(e){}
   try{ if(canSee('advances')&&isAdmin()){ const r=await sb.from('advances').select('id,emp_name,amount,status,branch').in('status',['pending_mgr','pending_owner']); (r.data||[]).forEach(a=>out.push({k:'adv:'+a.id+':'+a.status,ic:'💵',bad:true,t:`طلب سلفة بانتظار موافقتك: ${a.emp_name}`,s:`${fmt(a.amount)} ر.س · ${brById(a.branch).name}`,go:'advances'})); } }catch(e){}
+  try{ const L=await mgInbox(); (L||[]).filter(mgPend).forEach(m=>{const k=MG_K[m.kind]||MG_K.gen; out.push({k:'msg:'+m.id+(m.read?':a':''),ic:k[0],bad:m.prio==='urgent',t:(m.read?'مطلوب إقرارك: ':(m.prio==='urgent'?'مراسلة عاجلة: ':'مراسلة جديدة: '))+m.title,s:k[1]+' · من '+(m.from||''),go:'msgs'});}); }catch(e){}
   try{ if(isEmp()){ const r=await sb.from('advances').select('id,amount,status').in('status',['approved','rejected']).order('created_at',{ascending:false}).limit(5); (r.data||[]).forEach(a=>out.push({k:'myadv:'+a.id+':'+a.status,ic:a.status==='approved'?'✅':'❌',bad:a.status!=='approved',t:a.status==='approved'?'تمت الموافقة على سلفتك':'تم رفض طلب السلفة',s:fmt(a.amount)+' ر.س',go:'me'})); } }catch(e){}
   try{ if(canSee('maint')){ const R=mtRole(); const r=await sb.from('maint_requests').select('id,no,branch,title,status,priority,created_at,done_at,reject_reason').in('status',['new','assigned','progress','hold','done','rejected']).order('created_at',{ascending:false}).limit(300); (r.data||[]).forEach(m=>{
       if(R!=='mgr'&&m.status==='new') out.push({k:'mt:'+m.id+':new',ic:'🛠️',bad:m.priority==='urgent',t:`طلب صيانة${m.priority==='urgent'?' عاجل':''} بانتظار المراجعة: ${m.title}`,s:brById(m.branch).name+' · '+mtRef(m),go:'maint'});
@@ -2001,7 +2060,7 @@ document.addEventListener('click',e=>{
   const b=e.target.closest('#bell'); const pn=$('#npanel'); if(!pn) return;
   if(b){ e.stopPropagation(); $('#umenu').hidden=true; pn.hidden=!pn.hidden; if(!pn.hidden) pn.innerHTML=npanelHtml(); return; }
   const al=e.target.closest('[data-nall]'); if(al){ e.stopPropagation(); seenAdd(liveAlerts().map(x=>x.k).filter(Boolean)); pn.innerHTML=npanelHtml(); paintBell(); return; }
-  const g=e.target.closest('[data-ngo]'); if(g){ if(g.dataset.nk) seenAdd([g.dataset.nk]); paintBell(); pn.hidden=true; st.tab=g.dataset.ngo; try{localStorage.setItem('tab',st.tab);}catch(_){} window.scrollTo({top:0}); renderShell(); return; }
+  const g=e.target.closest('[data-ngo]'); if(g){ if(g.dataset.nk) seenAdd([g.dataset.nk]); if(/^msg:/.test(g.dataset.nk||'')) st.mgOpen=+g.dataset.nk.split(':')[1]; paintBell(); pn.hidden=true; st.tab=g.dataset.ngo; try{localStorage.setItem('tab',st.tab);}catch(_){} window.scrollTo({top:0}); renderShell(); return; }
   if(!pn.hidden&&!e.target.closest('#npanel')) pn.hidden=true;
 });
 
@@ -2123,6 +2182,167 @@ V.me=async()=>{
   h+=`<div class="muted" style="font-size:11px;text-align:center">طلبك يروح للإدارة مباشرة للاعتماد، ويوصلك إشعار بالنتيجة.</div>`;
   return h;
 };
+// ----- المراسلات الداخلية -----
+const MG_K={dec:['⚖️','قرار إداري','#1E5A3E'],circ:['📢','تعميم','#2F5D9E'],offer:['🏷️','عرض / حملة','#C2557A'],shift:['🕒','دوامات وجداول','#8A6BD1'],warn:['⚠️','تنبيه','#D0453A'],gen:['✉️','رسالة عامة','#6B706A']};
+const MG_P={urgent:['عاجل','var(--down)'],high:['مهم','var(--gold-ink)']};
+const mgCanSend=()=>isAdmin()||st.mySections.includes('msgs_send');
+const mgAgo=t=>{const s=(Date.now()-new Date(t))/1000;if(s<60)return 'الآن';if(s<3600)return 'قبل '+Math.floor(s/60)+' د';if(s<86400)return 'قبل '+Math.floor(s/3600)+' س';const d=new Date(t);return d.getDate()+' '+MONTHS[d.getMonth()]+(s>86400*300?' '+d.getFullYear():'');};
+const mgDT=t=>{const d=new Date(t);return d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear()+' · '+d.toLocaleTimeString('ar-SA',{hour:'numeric',minute:'2-digit'});};
+const mgMissing=e=>e&&/function|schema cache|does not exist/i.test(e.message||'');
+const mgPend=m=>!m.read||(m.ack&&!m.acked);
+async function mgInbox(){ if(st._mgIn&&Date.now()-st._mgInAt<20000) return st._mgIn; const r=await sb.rpc('msg_inbox'); if(r.error){ if(mgMissing(r.error)) return null; throw r.error; } st._mgIn=r.data||[]; st._mgInAt=Date.now(); return st._mgIn; }
+async function mgBanner(){ try{ const L=await mgInbox(); if(!L) return ''; const p=L.filter(mgPend); if(!p.length) return ''; const u=p.find(m=>m.prio==='urgent')||p[0]; const k=MG_K[u.kind]||MG_K.gen;
+  return `<button class="mg-ban${p.some(m=>m.prio==='urgent')?' urg':''}" data-mgo="${u.id}"><span class="ic">${k[0]}</span><span><b>${p.length>1?'عندك '+p.length+' مراسلات جديدة':'مراسلة جديدة: '+esc(u.title)}</b><small>${p.length>1?'آخرها: '+esc(u.title):esc(k[1])+' · من '+esc(u.from||'')}${p.some(m=>m.ack&&!m.acked)?' · مطلوب إقرارك':''}</small></span><span class="chev">‹</span></button>`; }catch(e){ return ''; } }
+function mgBadge(m){ const k=MG_K[m.kind]||MG_K.gen, p=MG_P[m.prio]; return `<span class="mg-k" style="--c:${k[2]}">${k[0]} ${k[1]}</span>${p?`<span class="mg-p" style="--c:${p[1]}">${p[0]}</span>`:''}`; }
+function mgTargetTxt(t){ t=t||{}; const who={all:'',mgr:'المدراء',emp:'الموظفين'}[t.who||'all']; if(t.scope==='all') return 'الجميع'+(who?' — '+who:''); if(t.scope==='users') return (t.users||[]).length+' أشخاص محددين'; return (who||'الكل')+' · '+(t.branches||[]).map(b=>brById(b).name).join('، '); }
+
+V.msgs=async()=>{
+  if(st.mgOpen) return mgDetail(st.mgOpen);
+  if(st.mgT==='new'&&mgCanSend()) return mgForm();
+  const tab=st.mgT==='out'&&(mgCanSend()||isAdmin())?'out':'in';
+  const L=await mgInbox(); if(!L) return `<div class="card empty">نظام المراسلات يحتاج تشغيل ملف msgs.sql في Supabase أولاً</div>`;
+  const pend=L.filter(mgPend).length;
+  let h=`<div class="mg-top"><div class="chips"><button data-mgt="in" aria-pressed="${tab==='in'}">📥 الوارد${pend?` <span class="mg-n">${pend}</span>`:''}</button>${mgCanSend()||isAdmin()?`<button data-mgt="out" aria-pressed="${tab==='out'}">📤 ${isAdmin()?'كل المراسلات':'المرسلة'}</button>`:''}</div>${mgCanSend()?`<button class="btn sm mg-new" data-mgt="new">＋ مراسلة جديدة</button>`:''}</div>`;
+  const kf=st.mgK||'all';
+  const kchips=`<div class="chips sc mg-kf"><button data-mgk="all" aria-pressed="${kf==='all'}">الكل</button>${Object.entries(MG_K).map(([k,v])=>`<button data-mgk="${k}" aria-pressed="${kf===k}">${v[0]} ${v[1]}</button>`).join('')}</div>`;
+  if(tab==='in'){
+    const R=L.filter(m=>kf==='all'||m.kind===kf);
+    h+=kchips;
+    if(!R.length) return h+`<div class="card empty">📭 ما فيه مراسلات${kf!=='all'?' من هذا النوع':''}</div>`;
+    h+=`<div class="mg-list">${R.map(m=>{const k=MG_K[m.kind]||MG_K.gen;return `<button class="mg-it${mgPend(m)?' new':''}" data-mgo="${m.id}" style="--c:${k[2]}">
+      <div class="mg-h">${mgBadge(m)}<span class="mg-t">${mgAgo(m.at)}</span></div>
+      <b class="mg-ttl">${esc(m.title)}</b>${m.body?`<div class="mg-sn">${esc(m.body)}</div>`:''}
+      <div class="mg-f"><span>من ${esc(m.from||'')}</span>${m.files?`<span>📎 ${m.files}</span>`:''}${m.ack?(m.acked?'<span class="ok">✓ أقررت</span>':'<span class="need">مطلوب إقرارك</span>'):''}</div></button>`;}).join('')}</div>`;
+    return h;
+  }
+  const r=await sb.rpc('msg_sent'); if(r.error) throw r.error;
+  const S=(r.data||[]).filter(m=>kf==='all'||m.kind===kf);
+  h+=kchips;
+  if(!S.length) return h+`<div class="card empty">ما أرسلت مراسلات للحين${mgCanSend()?' — اضغط «＋ مراسلة جديدة»':''}</div>`;
+  h+=`<div class="mg-list">${S.map(m=>{const k=MG_K[m.kind]||MG_K.gen; const done=m.ack?m.na:m.nr; const pc=m.n?done/m.n:0;
+    return `<button class="mg-it" data-mgo="${m.id}" style="--c:${k[2]}">
+      <div class="mg-h">${mgBadge(m)}<span class="mg-t">${mgAgo(m.at)}</span></div>
+      <b class="mg-ttl">${esc(m.title)}</b>
+      <div class="mg-f"><span>إلى: ${esc(mgTargetTxt(m.target))}</span>${m.mine?'':`<span>من ${esc(m.from||'')}</span>`}${m.nrep?`<span>💬 ${m.nrep}</span>`:''}</div>
+      <div class="mg-st"><div class="meter" style="--c:${pc>=1?'var(--up)':'var(--gold)'}"><i style="width:${Math.round(pc*100)}%"></i></div><span>${m.ack?'أقرّ':'قرأ'} ${done} من ${m.n}</span></div></button>`;}).join('')}</div>`;
+  return h;
+};
+
+async function mgDetail(id){
+  const r=await sb.rpc('msg_get',{p_id:+id});
+  if(r.error){ st.mgOpen=null; if(mgMissing(r.error)) return `<div class="card empty">نظام المراسلات يحتاج تشغيل ملف msgs.sql أولاً</div>`; return `<div class="card empty">${esc(r.error.message)}<br><button class="btn ghost sm" data-mgback="1" style="margin-top:10px">رجوع</button></div>`; }
+  const m=r.data; st._mg=m; st._mgIn=null; const k=MG_K[m.kind]||MG_K.gen;
+  const files=m.files||[]; const srcs=await Promise.all(files.map(f=>mediaSrc(f.p)));
+  let h=`<button class="mg-back" data-mgback="1">‹ رجوع للمراسلات</button>
+  <article class="card mg-doc" style="--c:${k[2]}">
+    <div class="mg-h">${mgBadge(m)}<span class="mg-t">رقم ${m.id}</span></div>
+    <h2 class="mg-dt">${esc(m.title)}</h2>
+    <div class="mg-meta">من <b>${esc(m.from||'')}</b> · ${mgDT(m.at)}${m.boss?` · إلى: ${esc(mgTargetTxt(m.target))}`:''}</div>
+    ${m.body?`<div class="mg-body">${esc(m.body)}</div>`:''}
+    ${files.length?`<div class="mg-files">${files.map((f,i)=>f.t==='pdf'?`<a class="mg-pdf" href="${esc(srcs[i])}" target="_blank" rel="noopener">📄 ${esc(f.n||'ملف PDF')}</a>`:`<a class="mg-img" href="${esc(srcs[i])}" target="_blank" rel="noopener"><img src="${esc(srcs[i])}" alt="" loading="lazy"></a>`).join('')}</div>`:''}
+    <div class="mg-acts"><button class="btn ghost sm" data-mgprint="1">🖨️ طباعة / PDF</button>${isOwner()?`<button class="btn ghost sm" data-mgdel="${m.id}" style="color:var(--down)">حذف</button>`:''}</div>
+  </article>`;
+  if(m.me){
+    if(m.ack&&!m.me.acked) h+=`<button class="btn mg-ack" data-mgack="${m.id}">✅ اطلعت على ${m.kind==='dec'?'القرار':'المراسلة'} وألتزم بما ورد فيها</button>`;
+    else if(m.ack) h+=`<div class="card mg-acked">✅ أقررت بالاطلاع · ${mgDT(m.me.acked)}</div>`;
+  }
+  if(m.boss&&m.rcpt){
+    const R=m.rcpt, n=R.length, nr=R.filter(x=>x.read).length, na=R.filter(x=>x.acked).length; const left=R.filter(x=>m.ack?!x.acked:!x.read).length;
+    const fl=st.mgRF||'all'; const RL=R.filter(x=>fl==='all'||(fl==='no'?(m.ack?!x.acked:!x.read):(m.ack?x.acked:x.read)));
+    h+=`<div class="card"><h3>حالة الاستلام <small>${n} مستلم</small></h3>
+      <div class="mg-kp"><div><b class="num">${nr}</b><span>قرأ</span></div>${m.ack?`<div><b class="num">${na}</b><span>أقرّ</span></div>`:''}<div><b class="num" style="color:${left?'var(--down)':'var(--up)'}">${left}</b><span>${m.ack?'ما أقرّ':'ما قرأ'}</span></div></div>
+      <div class="meter" style="--c:${left?'var(--gold)':'var(--up)'};margin:10px 0"><i style="width:${n?Math.round((n-left)/n*100):0}%"></i></div>
+      <div class="chips" style="margin-bottom:8px"><button data-mgrf="all" aria-pressed="${fl==='all'}">الكل</button><button data-mgrf="no" aria-pressed="${fl==='no'}">${m.ack?'ما أقرّوا':'ما قرأوا'} (${left})</button><button data-mgrf="yes" aria-pressed="${fl==='yes'}">${m.ack?'أقرّوا':'قرأوا'} (${n-left})</button></div>
+      <div class="mg-rl">${RL.map(x=>`<div class="mg-r"><span class="mg-ri">${x.acked?'✅':x.read?'👁️':'⏳'}</span><span class="mg-rn">${esc(x.name||'')}<small>${x.kind==='emp'?'موظف':x.kind==='admin'?'إدارة':'مدير'}</small></span><span class="mg-rt">${x.acked?'أقرّ '+mgAgo(x.acked):x.read?'قرأ '+mgAgo(x.read):'لم يقرأ'}</span></div>`).join('')||'<div class="muted" style="font-size:11.5px">لا يوجد</div>'}</div>
+      ${left?`<button class="btn ghost sm" data-mgrem="${m.id}" style="width:100%;margin-top:10px">🔔 تذكير ${left} ${m.ack?'ما أقرّوا':'ما قرأوا'} (إشعار جوال)</button>`:''}${m.reminded?`<div class="muted" style="font-size:10.5px;text-align:center;margin-top:6px">آخر تذكير ${mgAgo(m.reminded)}</div>`:''}</div>`;
+  }
+  const reps=m.replies||[];
+  const repliers=m.boss?[...new Map(reps.filter(x=>!x.me&&x.uid).map(x=>[x.uid,x.by])).entries()]:[];
+  h+=`<div class="card"><h3>${m.boss?'الردود والاستفسارات':'ردّك واستفسارك'} <small>${m.boss?'كل مستلم يشوف رده فقط':'يوصل للمرسل فقط'}</small></h3>
+    ${reps.length?`<div class="mg-th">${reps.map(x=>`<div class="mg-b${x.me?' me':''}"><div class="mg-bh"><b>${esc(x.me?'أنت':x.by||'')}</b>${m.boss&&x.to?` <span class="muted">← ${esc((m.rcpt||[]).find(r=>r.uid===x.to)?.name||'')}</span>`:''}<span>${mgAgo(x.at)}</span></div><div>${esc(x.body)}</div></div>`).join('')}</div>`:`<div class="muted" style="font-size:11.5px;margin-bottom:8px">${m.boss?'ما فيه ردود للحين':'لو عندك استفسار اكتبه هنا'}</div>`}
+    ${m.boss&&!m.me?(repliers.length?`<select class="inp" id="mgTo" style="margin-bottom:6px">${repliers.map(([u,n])=>`<option value="${u}">الرد على: ${esc(n)}</option>`).join('')}</select>`:''):''}
+    ${!m.boss||m.me||repliers.length?`<div class="mg-rep"><textarea class="inp" id="mgRep" rows="2" placeholder="اكتب ردك…"></textarea><button class="btn" data-mgsend="${m.id}">إرسال</button></div>`:''}</div>`;
+  return h;
+}
+
+async function mgForm(){
+  if(!st._mgPpl){ const r=await sb.rpc('msg_people'); if(r.error){ if(mgMissing(r.error)) return `<div class="card empty">نظام المراسلات يحتاج تشغيل ملف msgs.sql أولاً</div>`; throw r.error; } st._mgPpl=r.data||[]; }
+  const f=st.mgD=st.mgD||{kind:'circ',prio:'normal',title:'',body:'',ack:false,scope:'branches',who:'all',branches:st.branches.map(b=>b.id),users:[],files:[]};
+  const P=st._mgPpl; const q=(st.mgQ||'').trim();
+  const cnt=mgCount();
+  return `<button class="mg-back" data-mgback="1">‹ رجوع</button>
+  <div class="card mg-form"><h3>مراسلة جديدة</h3>
+    <div class="field"><label>نوع المراسلة</label><div class="mg-kinds">${Object.entries(MG_K).map(([k,v])=>`<button data-mgfk="${k}" aria-pressed="${f.kind===k}" style="--c:${v[2]}"><span>${v[0]}</span>${v[1]}</button>`).join('')}</div></div>
+    <div class="field"><label>الأهمية</label><div class="chips"><button data-mgfp="normal" aria-pressed="${f.prio==='normal'}">عادي</button><button data-mgfp="high" aria-pressed="${f.prio==='high'}">⭐ مهم</button><button data-mgfp="urgent" aria-pressed="${f.prio==='urgent'}">🚨 عاجل</button></div></div>
+    <div class="field"><label>العنوان</label><input class="inp" id="mgTitle" maxlength="200" value="${esc(f.title)}" placeholder="${f.kind==='dec'?'مثال: قرار بخصوص مواعيد الدوام':f.kind==='offer'?'مثال: عرض نهاية الأسبوع':f.kind==='shift'?'مثال: جدول دوام الأسبوع القادم':'عنوان واضح ومختصر'}"></div>
+    <div class="field"><label>نص المراسلة</label><textarea class="inp" id="mgBody" rows="6" maxlength="8000" placeholder="اكتب التفاصيل…">${esc(f.body)}</textarea></div>
+    <div class="field"><label>المرفقات <small class="muted">(صور أو PDF — حتى ٤ ملفات)</small></label>
+      <div class="mg-att">${f.files.map((x,i)=>`<span class="mg-af">${x.t==='pdf'?'📄 '+esc(x.n):`<img src="${x.d}" alt="">`}<button data-mgfx="${i}" aria-label="حذف">×</button></span>`).join('')}${f.files.length<4?`<label class="mg-add">＋ إرفاق<input type="file" id="mgFile" accept="image/*,application/pdf" multiple hidden></label>`:''}</div></div>
+    <div class="field"><label>إلى</label><div class="chips">${isAdmin()?`<button data-mgfs="all" aria-pressed="${f.scope==='all'}">🌐 الجميع</button>`:''}<button data-mgfs="branches" aria-pressed="${f.scope==='branches'}">🏪 حسب الفرع</button><button data-mgfs="users" aria-pressed="${f.scope==='users'}">👤 أشخاص محددين</button></div></div>
+    ${f.scope==='branches'?`<div class="chips">${st.branches.map(b=>`<button data-mgfb="${b.id}" aria-pressed="${f.branches.includes(b.id)}"><i class="dot" style="background:${b.color}"></i>${esc(b.name)}</button>`).join('')}</div>`:''}
+    ${f.scope!=='users'?`<div class="chips"><button data-mgfw="all" aria-pressed="${f.who==='all'}">الكل</button><button data-mgfw="mgr" aria-pressed="${f.who==='mgr'}">المدراء فقط</button><button data-mgfw="emp" aria-pressed="${f.who==='emp'}">الموظفين فقط</button></div>`:
+      `<input class="inp" id="mgQ" placeholder="🔍 ابحث بالاسم…" value="${esc(q)}"><div class="mg-ppl">${P.filter(p=>!q||String(p.name).includes(q)).map(p=>`<label class="mg-pp"><input type="checkbox" data-mgfu="${p.id}" ${f.users.includes(p.id)?'checked':''}><span>${esc(p.name)}<small>${p.kind==='emp'?'موظف':p.kind==='admin'?'إدارة':'مدير'} · ${(p.br||[]).slice(0,2).map(b=>brById(b).name).join('، ')}</small></span></label>`).join('')||'<div class="muted" style="font-size:11.5px;padding:8px">لا يوجد</div>'}</div>`}
+    <label class="mg-ackt"><input type="checkbox" id="mgAck" ${f.ack?'checked':''}><span><b>مطلوب إقرار بالاطلاع</b><small>المستلم يضغط «اطلعت وألتزم» وتشوف مين أقرّ ومين لا</small></span></label>
+    <div class="mg-cnt">${cnt?`📨 بتوصل لـ <b>${cnt}</b> ${cnt>2&&cnt<11?'أشخاص':'شخص'} مع إشعار على الجوال`:'⚠️ ما فيه مستلمين بهذا الاختيار'}</div>
+    <div class="err" id="mgErr"></div>
+    <button class="btn" id="mgGo" ${cnt?'':'disabled'}>إرسال المراسلة</button>
+  </div>`;
+}
+function mgCount(){ const f=st.mgD, P=st._mgPpl||[]; if(!f) return 0; if(f.scope==='users') return f.users.length;
+  return P.filter(p=>(f.who==='all'||(f.who==='mgr'&&p.kind!=='emp')||(f.who==='emp'&&p.kind==='emp'))&&(f.scope==='all'||(p.kind!=='admin'&&(p.br||[]).some(b=>f.branches.includes(b))))).length; }
+function mgKeep(){ const f=st.mgD; if(!f) return; const t=$('#mgTitle'),b=$('#mgBody'),a=$('#mgAck'),q=$('#mgQ'); if(t) f.title=t.value; if(b) f.body=b.value; if(a) f.ack=a.checked; if(q) st.mgQ=q.value; }
+function mgPrint(){ const m=st._mg; if(!m) return; const k=MG_K[m.kind]||MG_K.gen; const w=window.open('','_blank'); if(!w){toast('اسمح بالنوافذ المنبثقة للطباعة');return;}
+  w.document.write(`<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>${esc(k[1])} رقم ${m.id}</title><style>body{font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif;color:#111;margin:40px;line-height:1.9}header{display:flex;justify-content:space-between;border-bottom:2px solid #1E5A3E;padding-bottom:12px;margin-bottom:24px}h1{font-size:20px;margin:0 0 6px}.m{font-size:12px;color:#555}.b{white-space:pre-wrap;font-size:14.5px}footer{margin-top:60px;font-size:12px;color:#555;border-top:1px solid #ccc;padding-top:10px}</style></head><body>
+  <header><div><b style="font-size:16px">${esc(k[1])}</b><div class="m">رقم المراسلة: ${m.id}</div></div><div class="m" style="text-align:left">${mgDT(m.at)}<br>الصادر من: ${esc(m.from||'')}</div></header>
+  <h1>${esc(m.title)}</h1><div class="b">${esc(m.body||'')}</div><footer>منصة الإدارة الموحّدة — مستند داخلي</footer><script>onload=()=>setTimeout(()=>print(),300)<\/script></body></html>`); w.document.close(); }
+
+document.addEventListener('click',async e=>{
+  const t=e.target;
+  const o=t.closest('[data-mgo]'); if(o){ st.mgOpen=+o.dataset.mgo; st.mgRF='all'; if(st.tab!=='msgs'){ st.tab='msgs'; window.scrollTo({top:0}); renderShell(); } else { window.scrollTo({top:0}); render(); } return; }
+  if(!t.closest('#view')) return;
+  const tb=t.closest('[data-mgt]'); if(tb){ st.mgT=tb.dataset.mgt; st.mgOpen=null; if(st.mgT==='new'){ st.mgD=null; st.mgQ=''; } render(); return; }
+  if(t.closest('[data-mgback]')){ st.mgOpen=null; if(st.mgT==='new') st.mgT='in'; render(); return; }
+  const kf=t.closest('[data-mgk]'); if(kf){ st.mgK=kf.dataset.mgk; render(); return; }
+  const rf=t.closest('[data-mgrf]'); if(rf){ st.mgRF=rf.dataset.mgrf; render(); return; }
+  if(t.closest('[data-mgprint]')){ mgPrint(); return; }
+  const ak=t.closest('[data-mgack]'); if(ak){ ak.disabled=true; const r=await sb.rpc('msg_ack',{p_id:+ak.dataset.mgack}); if(r.error){ak.disabled=false;toast(r.error.message);return;} st._mgIn=null; st._alertsAt=0; loadAlerts(); toast('تم تسجيل إقرارك ✓'); render(); return; }
+  const rm=t.closest('[data-mgrem]'); if(rm){ rm.disabled=true; const r=await sb.rpc('msg_remind',{p_id:+rm.dataset.mgrem}); if(r.error){rm.disabled=false;toast(r.error.message);return;} toast(r.data?`تم إرسال التذكير لـ ${r.data} ✓`:'الكل اطلع ✓'); render(); return; }
+  const dl=t.closest('[data-mgdel]'); if(dl){ if(!confirm('حذف المراسلة نهائياً من عند الجميع؟')) return; const r=await sb.rpc('msg_delete',{p_id:+dl.dataset.mgdel}); if(r.error){toast(r.error.message);return;} st.mgOpen=null; st._mgIn=null; toast('تم الحذف'); render(); return; }
+  const sd=t.closest('[data-mgsend]'); if(sd){ const tx=$('#mgRep'); const v=(tx&&tx.value||'').trim(); if(!v){toast('اكتب الرد');return;} sd.disabled=true; const to=$('#mgTo'); const r=await sb.rpc('msg_reply',{p_id:+sd.dataset.mgsend,p_body:v,p_to:to?to.value:null}); if(r.error){sd.disabled=false;toast(r.error.message);return;} toast('تم إرسال الرد ✓'); render(); return; }
+  const f=st.mgD; if(!f) return;
+  const fk=t.closest('[data-mgfk]'); if(fk){ mgKeep(); f.kind=fk.dataset.mgfk; if(['dec','shift','warn'].includes(f.kind)) f.ack=true; render(); return; }
+  const fp=t.closest('[data-mgfp]'); if(fp){ mgKeep(); f.prio=fp.dataset.mgfp; render(); return; }
+  const fs=t.closest('[data-mgfs]'); if(fs){ mgKeep(); f.scope=fs.dataset.mgfs; render(); return; }
+  const fb=t.closest('[data-mgfb]'); if(fb){ mgKeep(); const b=fb.dataset.mgfb; f.branches=f.branches.includes(b)?f.branches.filter(x=>x!==b):[...f.branches,b]; render(); return; }
+  const fw=t.closest('[data-mgfw]'); if(fw){ mgKeep(); f.who=fw.dataset.mgfw; render(); return; }
+  const fx=t.closest('[data-mgfx]'); if(fx){ e.preventDefault(); mgKeep(); f.files.splice(+fx.dataset.mgfx,1); render(); return; }
+  if(t.closest('#mgGo')) mgSend();
+});
+document.addEventListener('change',async e=>{
+  const t=e.target; const f=st.mgD; if(!f||!t.closest||!t.closest('#view')) return;
+  if(t.dataset&&t.dataset.mgfu){ mgKeep(); const u=t.dataset.mgfu; f.users=t.checked?[...new Set([...f.users,u])]:f.users.filter(x=>x!==u); const c=document.querySelector('.mg-cnt'); if(c){ const n=mgCount(); c.innerHTML=n?`📨 بتوصل لـ <b>${n}</b> ${n>2&&n<11?'أشخاص':'شخص'} مع إشعار على الجوال`:'⚠️ ما فيه مستلمين بهذا الاختيار'; $('#mgGo').disabled=!n; } return; }
+  if(t.id==='mgFile'){ mgKeep(); for(const file of [...t.files].slice(0,4-f.files.length)){
+      if(file.type==='application/pdf'){ if(file.size>8*1024*1024){toast('ملف PDF أكبر من 8 ميجا');continue;} f.files.push({t:'pdf',n:file.name,file}); }
+      else if(/^image\//.test(file.type)){ try{ f.files.push({t:'img',n:file.name,d:await flImg(file,1600,.82)}); }catch(_){ toast('تعذّر قراءة الصورة'); } } }
+    render(); }
+});
+document.addEventListener('input',e=>{ if(e.target&&e.target.id==='mgQ'){ clearTimeout(st._mgQT); const v=e.target.value; st._mgQT=setTimeout(()=>{ mgKeep(); st.mgQ=v; render().then(()=>{const q=$('#mgQ'); if(q){q.focus(); q.setSelectionRange(q.value.length,q.value.length);}}); },350); } });
+async function mgSend(){
+  mgKeep(); const f=st.mgD, err=$('#mgErr'), b=$('#mgGo');
+  if(!f.title.trim()){err.textContent='اكتب عنوان المراسلة';return;}
+  if(f.scope==='branches'&&!f.branches.length){err.textContent='اختر فرع واحد على الأقل';return;}
+  if(!mgCount()){err.textContent='ما فيه مستلمين';return;}
+  b.disabled=true; b.textContent='جارِ الإرسال…'; err.textContent='';
+  const r=await sb.rpc('msg_send',{p_kind:f.kind,p_prio:f.prio,p_title:f.title.trim(),p_body:f.body.trim(),p_ack:!!f.ack,p_target:{scope:f.scope,who:f.who,branches:f.scope==='branches'?f.branches:[],users:f.scope==='users'?f.users:[]}});
+  if(r.error){ b.disabled=false; b.textContent='إرسال المراسلة'; err.textContent=mgMissing(r.error)?'النظام يحتاج تشغيل ملف msgs.sql أولاً':r.error.message; return; }
+  const id=r.data;
+  if(f.files.length){ b.textContent='جارِ رفع المرفقات…'; const out=[];
+    for(const x of f.files){ try{ const blob=x.t==='pdf'?x.file:await (await fetch(x.d)).blob(); const path='msg/'+id+'/'+(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2))+(x.t==='pdf'?'.pdf':'.jpg');
+        const u=await sb.storage.from(MEDIA_BKT).upload(path,blob,{contentType:x.t==='pdf'?'application/pdf':'image/jpeg',upsert:false}); if(u.error) throw u.error; out.push({p:'sb:'+path,t:x.t,n:x.n}); }catch(e2){ console.warn('msg file',e2); toast('تعذّر رفع أحد المرفقات'); } }
+    if(out.length) await sb.rpc('msg_attach',{p_id:id,p_files:out}); }
+  st.mgD=null; st.mgT='out'; st.mgOpen=id; st._mgIn=null; toast('تم إرسال المراسلة ✓'); window.scrollTo({top:0}); render();
+}
+
 V.advances=async()=>{
   const [A,E,AC]=await Promise.all([sb.from('advances').select('*').order('created_at',{ascending:false}).limit(300),sb.from('employees').select('id,name,branch,salary,phone,status,job').neq('status','left').order('name'),sb.from('emp_accounts').select('emp_id,phone')]);
   if(A.error&&/relation|schema cache|does not exist/i.test(A.error.message)) return `<div class="card empty">ميزة السلف تحتاج تشغيل ملف advances.sql في Supabase أولاً</div>`;
@@ -3478,10 +3698,10 @@ async function render(){
   if(st.branches.length===1) st.f=st.branches[0].id;
   const v=$('#view'); v.innerHTML='<div class="loading">جارِ التحميل…</div>';
   const sec=SECTIONS.find(s=>s.id===st.tab)||{}; document.body.classList.toggle('appmode',!!sec.app); document.body.classList.toggle('aimode',st.tab==='ai');
-  try{ v.innerHTML=(['home','me'].includes(st.tab)?pushBox(false):'')+await V[st.tab](); v.querySelectorAll('.sc-end').forEach(s=>s.scrollLeft=s.scrollWidth); if(sec.app) fitApp(); if(sec.page) mountPage(sec); }
+  try{ v.innerHTML=(['home','me'].includes(st.tab)?pushBox(false)+await mgBanner():'')+await V[st.tab](); v.querySelectorAll('.sc-end').forEach(s=>s.scrollLeft=s.scrollWidth); if(sec.app) fitApp(); if(sec.page) mountPage(sec); }
   catch(err){ console.error(err); v.innerHTML=`<div class="card"><div class="err">تعذّر تحميل البيانات: ${esc(err.message||err)}</div><button class="btn ghost sm" onclick="location.reload()">إعادة المحاولة</button></div>`; }
 }
-document.addEventListener('visibilitychange',()=>{ if(document.visibilityState!=='visible'||!st.profile) return; if(st.tab==='fleet'&&st.flEdit) return; const sec=SECTIONS.find(s=>s.id===st.tab)||{}; st.cache={}; st._aiCtx=null; st._alertsAt=0; loadAlerts(); if(!sec.app&&st.tab!=='data'&&st.tab!=='ai') render(); });
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState!=='visible'||!st.profile) return; if(st.tab==='fleet'&&st.flEdit) return; const sec=SECTIONS.find(s=>s.id===st.tab)||{}; st.cache={}; st._aiCtx=null; st._alertsAt=0; st._mgIn=null; loadAlerts(); if(!sec.app&&st.tab!=='data'&&st.tab!=='ai') render(); });
 sb.auth.onAuthStateChange((ev)=>{ if(ev==='SIGNED_OUT'){ $('#app').hidden=true; $('#login').hidden=false; } });
 boot();
 })();
