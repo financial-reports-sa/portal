@@ -768,7 +768,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['handover','maint','maint_sup','feedback','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610150751';
+const APP_VER='202610152211';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -1539,11 +1539,17 @@ async function attCard(){ let r; try{ r=await sb.rpc('att_me'); }catch(e){ retur
     ${!A.geo?'<div class="note bad" style="margin-top:8px">موقع الفرع ما تحدد بعد — بلّغ مدير الفرع.</div>':done||recs.length>=2?'':`<button class="btn att-btn ${open?'out':''}" data-attgo="${open?'out':'in'}">${open?'🏁 تسجيل انصراف':recs.length?'📍 حضور الشفت الثاني':'📍 تسجيل حضور'}</button><div class="muted" style="font-size:10.5px;text-align:center;margin-top:6px">${A.no_selfie?'لازم تكون داخل الفرع، والتسجيل من جوالك المسجّل فقط.':'لازم تكون داخل الفرع، ويطلب منك صورة سيلفي.'}</div>`}</div>`; }
 function attDev(){ let v=null; try{ v=localStorage.getItem('att_dev'); }catch(e){} if(!v){ const m=document.cookie.match(/(?:^|; )att_dev=([^;]+)/); v=m?m[1]:null; } if(!v){ v=(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2)).replace(/-/g,''); } try{ localStorage.setItem('att_dev',v); }catch(e){} try{ document.cookie='att_dev='+v+'; max-age=315360000; path=/; samesite=lax; secure'; }catch(e){} return v; }
 setInterval(()=>{ const c=document.getElementById('attClock'); if(c) c.textContent=new Date().toLocaleTimeString('ar-SA-u-nu-latn',{hour:'numeric',minute:'2-digit',second:'2-digit',timeZone:'Asia/Riyadh'}); },1000);
+// السيلفي: زر حقيقي يضغطه الموظف (آيفون يمنع فتح الكاميرا تلقائياً بعد انتظار الموقع)
+function attSelfie(){ return new Promise(res=>{ const m=document.createElement('div'); m.className='fl-modal'; m.style.zIndex='90';
+  m.innerHTML=`<div class="card" style="max-width:340px;width:100%;text-align:center;display:flex;flex-direction:column;gap:12px;padding:22px"><div style="font-size:42px">🤳</div><b style="font-size:14px" class="att-sb">✓ موقعك داخل الفرع</b><div class="muted" style="font-size:12px">باقي صورة سيلفي لإثبات الحضور</div><label class="btn" style="display:block;cursor:pointer;padding:14px">📸 صوّر السيلفي<input type="file" accept="image/*" capture="user" hidden></label><button class="btn ghost" type="button">إلغاء</button></div>`;
+  document.body.appendChild(m); const inp=m.querySelector('input'); let fin=false; const done=v=>{ if(fin) return; fin=true; m.remove(); res(v); };
+  inp.addEventListener('change',async()=>{ const f=inp.files&&inp.files[0]; if(!f) return; m.querySelector('.att-sb').textContent='جاري تجهيز الصورة…'; try{ done(await flImg(f,720,.7)); }catch(e){ done(null); } });
+  m.querySelector('button').onclick=()=>done(null); }); }
 async function attGo(kind,btn){ const A=st._attMe; if(!A||!A.geo) return; btn.disabled=true; const old=btn.textContent; btn.textContent='📡 جاري تحديد موقعك…';
   let g; try{ g=await attGeo(); }catch(e){ toast(e.message); btn.disabled=false; btn.textContent=old; return; }
-  const d=attDist(g.lat,g.lng,A.geo.lat,A.geo.lng); if(d>A.geo.radius+Math.min(g.acc||0,100)){ toast(`أنت بعيد عن الفرع (${fmt(d)} متر) — سجّل وأنت داخل الفرع`); btn.disabled=false; btn.textContent=old; return; }
+  const d=attDist(g.lat,g.lng,A.geo.lat,A.geo.lng); if(d>A.geo.radius+Math.min(g.acc||0,100)){ toast((g.acc||0)>300?`الموقع غير دقيق (±${fmt(g.acc)} م) — فعّل «الموقع الدقيق» من إعدادات الجوال وحاول مرة ثانية`:`أنت بعيد عن الفرع (${fmt(d)} متر) — سجّل وأنت داخل الفرع`); btn.disabled=false; btn.textContent=old; return; }
   btn.textContent=old; btn.disabled=false; let ph=null;
-  if(!A.no_selfie){ const img=await new Promise(res=>{ const i=document.createElement('input'); i.type='file'; i.accept='image/*'; i.capture='user'; i.onchange=async()=>{ const f=i.files[0]; if(!f) return res(null); try{ res(await flImg(f,720,.7)); }catch(e){ res(null); } }; i.click(); });
+  if(!A.no_selfie){ const img=await attSelfie();
   if(!img){ toast('صورة السيلفي إلزامية'); return; }
   btn.disabled=true; btn.textContent='جاري التسجيل…'; ph=await mediaPut('att',A.branch,img,A.emp); }
   btn.disabled=true; btn.textContent='جاري التسجيل…';
