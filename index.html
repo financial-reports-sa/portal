@@ -412,6 +412,24 @@ body.appmode footer{display:none}
 body.hasnav .wrap{padding-bottom:calc(104px + env(safe-area-inset-bottom,0px))}
 body.hasnav .toast{bottom:calc(100px + env(safe-area-inset-bottom,0px))}
 .tabs:empty{display:none}
+/* دوام الموظف */
+.sh-card{border-top:4px solid var(--green)}
+.sh-card.new{border-top-color:var(--gold);box-shadow:0 0 0 2px rgba(212,175,55,.35),var(--shadow)}
+.sh-card.none .sh-hd small{line-height:1.6}
+.sh-new{background:var(--gold-soft);color:var(--gold-ink);font-weight:700;font-size:12px;border-radius:10px;padding:8px 10px;margin-bottom:10px;text-align:center}
+.sh-hd{display:flex;align-items:center;gap:10px}.sh-ic{font-size:24px}.sh-hd b{display:block;font-size:14px;font-family:var(--f-disp)}.sh-hd small{display:block;font-size:11px;color:var(--muted)}
+.sh-ls{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.sh-sh{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px;text-align:center}
+.sh-n{display:block;font-size:10.5px;color:var(--muted);margin-bottom:2px}
+.sh-t{display:flex;align-items:center;justify-content:center;gap:14px;direction:rtl}.sh-t b{font-size:20px;color:var(--green-dk)}.sh-t i{font-style:normal;color:var(--gold);font-size:16px}
+.sh-sh small{display:block;font-size:10px;color:var(--warn);margin-top:2px}
+.sh-wk{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:12px}
+.sh-wk span{text-align:center;font-size:10px;border-radius:9px;padding:6px 0;background:rgba(30,90,62,.08);color:var(--green-dk);font-weight:600}
+.sh-wk span small{display:block;font-size:9px;font-weight:400;opacity:.75}
+.sh-wk span.off{background:rgba(208,69,58,.09);color:var(--down)}
+.sh-wk span.td{box-shadow:inset 0 0 0 1.5px currentColor}
+.sh-ft{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;font-size:10.5px;color:var(--muted);margin-top:10px}
+.sh-ok{width:100%;margin-top:10px}
 /* المراسلات */
 .mg-ban{display:flex;align-items:center;gap:12px;width:100%;text-align:start;border:1px solid rgba(212,175,55,.45);background:var(--gold-soft);border-radius:16px;padding:12px 14px;margin-bottom:12px;font:inherit;color:inherit;cursor:pointer}
 .mg-ban.urg{border-color:rgba(208,69,58,.45);background:rgba(208,69,58,.07)}
@@ -749,7 +767,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['handover','maint','maint_sup','feedback','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610150658';
+const APP_VER='202610150705';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -1496,6 +1514,21 @@ function attDed(x){ const sal=+x.e.salary||0; if(!sal||!x.s) return null; const 
 const attIsOff=(sh,day)=>!!(sh&&(sh.off_days||sh.off||[]).includes(new Date(day+'T12:00:00').getDay()));
 const attSince=(sh,D,br)=>{ const g=D.geo&&D.geo[br]; if(!g) return '9999'; const f=(D.recs.filter(r=>r.branch===br).map(r=>r.day).sort()[0])||null; if(!f) return '9999'; const a=sh&&sh.created_at?String(sh.created_at).slice(0,10):null, gc=g.created_at?String(g.created_at).slice(0,10):null, cf=(D.cfg&&D.cfg[br]&&D.cfg[br].count_from)||null; return [a,f,gc,cf].filter(Boolean).sort().pop(); };
 // ===== بطاقة الموظف في «بوابتي» =====
+function attShiftCard(A){ if(!A) return '';
+  if(!A.shift) return `<div class="card sh-card none"><div class="sh-hd"><span class="sh-ic">🗓️</span><div><b>دوامك</b><small>مديرك ما حدد دوامك للحين — أول ما يحدده يوصلك إشعار ويطلع هنا</small></div></div></div>`;
+  const S=A.shift, L=[[S.start,S.end]].concat(S.start2&&S.end2?[[S.start2,S.end2]]:[]);
+  const mins=t=>{const [h,m]=String(t).split(':').map(Number);return h*60+m;}; const dur=([a,b])=>{let d=mins(b)-mins(a);if(d<=0)d+=1440;return d;};
+  const tot=L.reduce((t,x)=>t+dur(x),0); const hrs=Math.floor(tot/60)+(tot%60?':'+String(tot%60).padStart(2,'0'):'');
+  const off=(S.off||[]).map(Number); let seen=''; try{seen=localStorage.getItem('shSeen')||'';}catch(e){}
+  const isNew=S.at&&seen!==String(S.at);
+  const todayOff=off.includes(new Date(A.today+'T12:00:00').getDay());
+  return `<div class="card sh-card${isNew?' new':''}">${isNew?`<div class="sh-new">🆕 مديرك ${seen?'عدّل':'حدد'} دوامك — اطّلع عليه</div>`:''}
+    <div class="sh-hd"><span class="sh-ic">🗓️</span><div><b>دوامك</b><small>${todayOff?'اليوم إجازتك 🌴':L.length>1?'شفتين في اليوم':'شفت واحد في اليوم'} · ${hrs} ساعة يومياً</small></div></div>
+    <div class="sh-ls">${L.map((x,i)=>`<div class="sh-sh">${L.length>1?`<span class="sh-n">${i?'الشفت الثاني':'الشفت الأول'}</span>`:'<span class="sh-n">من — إلى</span>'}<div class="sh-t"><b class="num">${attT(x[0])}</b><i>←</i><b class="num">${attT(x[1])}</b></div>${mins(x[1])<=mins(x[0])?'<small>ينتهي اليوم التالي</small>':''}</div>`).join('')}</div>
+    <div class="sh-wk">${[0,1,2,3,4,5,6].map(d=>`<span class="${off.includes(d)?'off':''}${d===new Date(A.today+'T12:00:00').getDay()?' td':''}">${ATT_DOW[d].replace('ال','')}<small>${off.includes(d)?'إجازة':'دوام'}</small></span>`).join('')}</div>
+    <div class="sh-ft"><span>⏱️ مهلة التأخير ${S.grace||0} دقيقة</span>${S.by?`<span>حدده: ${esc(S.by)}${S.at?' · '+dLbl(String(S.at).slice(0,10)):''}</span>`:''}</div>
+    ${isNew?`<button class="btn sm sh-ok" data-shok="${esc(String(S.at))}">👍 تمام، اطّلعت</button>`:''}</div>`; }
+document.addEventListener('click',e=>{const b=e.target.closest('[data-shok]'); if(!b) return; try{localStorage.setItem('shSeen',b.dataset.shok);}catch(_){} const c=b.closest('.sh-card'); if(c){c.classList.remove('new'); const n=c.querySelector('.sh-new'); if(n) n.remove(); b.remove();} toast('تمام ✓');});
 async function attCard(){ let r; try{ r=await sb.rpc('att_me'); }catch(e){ return ''; } if(r.error||!r.data) return ''; const A=st._attMe=r.data;
   const sh=A.shift?{start_t:A.shift.start,end_t:A.shift.end,start2_t:A.shift.start2,end2_t:A.shift.end2,grace:A.shift.grace,off_days:A.shift.off}:null;
   const recs=(A.recs||[]).filter(x=>x.in_at), open=A.open, nSh=Math.max(1,attShifts(sh).length), done=!open&&recs.length>=nSh;
@@ -2171,7 +2204,7 @@ V.me=async()=>{
       <div><div style="font-size:10px;opacity:.75">السلف المتبقية</div><b class="num" style="font-size:13.5px">${fmt(rem)}</b></div></div></div>`;
   if(e.has_health&&e.health_exp){const d=flDays(e.health_exp); if(d!=null&&d<=30) h+=`<div class="note bad">🪪 شهادتك الصحية ${d<0?'منتهية منذ '+(-d)+' يوم':'تنتهي بعد '+d+' يوم'} (${dLbl(e.health_exp)}) — جدّدها وبلّغ مديرك.</div>`;}
   st._advMe=e; st._advList=adv;
-  try{ h+=await attCard(); }catch(_){ }
+  try{ const ac=await attCard(); h+=attShiftCard(st._attMe)+ac; }catch(_){ }
   try{ h+=await cuMine(); }catch(_){ }
   if(st.advNew) h+=advForm(null,+e.salary||0,e);
   else if(!pend) h+=`<button class="btn" data-advn="1" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:14px">💵 طلب سلفة جديدة</button>`;
