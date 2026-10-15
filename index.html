@@ -430,6 +430,7 @@ body.hasnav .toast{bottom:calc(100px + env(safe-area-inset-bottom,0px))}
 .sh-wk span.td{box-shadow:inset 0 0 0 1.5px currentColor}
 .sh-ft{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;font-size:10.5px;color:var(--muted);margin-top:10px}
 .sh-ok{width:100%;margin-top:10px}
+.cu-flag{margin-top:7px;border:1px solid rgba(201,138,12,.4);background:rgba(201,138,12,.08);border-radius:10px;padding:7px 9px;font-size:10.5px;display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center}.cu-flag b{color:#9A6A00;font-size:11px;margin-inline-end:4px}.cu-flag span{background:rgba(201,138,12,.14);color:#7A5300;border-radius:99px;padding:1px 8px}
 /* المراسلات */
 .mg-ban{display:flex;align-items:center;gap:12px;width:100%;text-align:start;border:1px solid rgba(212,175,55,.45);background:var(--gold-soft);border-radius:16px;padding:12px 14px;margin-bottom:12px;font:inherit;color:inherit;cursor:pointer}
 .mg-ban.urg{border-color:rgba(208,69,58,.45);background:rgba(208,69,58,.07)}
@@ -767,7 +768,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['handover','maint','maint_sup','feedback','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610150741';
+const APP_VER='202610150751';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -2027,6 +2028,11 @@ async function loadAlerts(){
   try{ if(canSee('custody')){ const r=await sb.from('custody_tx').select('id,custody_id,amount,kind,taxable,side,branch,created_at').eq('status','pending').limit(500); const L=(r.data||[]);
       const mine=L.filter(t=>t.side==='emp'); if(mine.length) out.push({k:'cu:p:'+mine.map(t=>t.id).sort().join('').slice(-24),ic:'🧾',bad:true,t:`عُهد بانتظار مراجعتك: ${mine.length} ${mine.length>2&&mine.length<11?'حركات':'حركة'}`,s:`${fmt(sum(mine.map(t=>t.amount)),2)} ر.س${mine.some(t=>t.kind==='expense'&&t.taxable===false)?' · فيها فواتير غير ضريبية':''}`,go:'custody'});
       const c=await sb.from('custodies').select('id,no,emp_name,created_at').eq('status','open'); (c.data||[]).forEach(x=>{const age=Math.floor((Date.now()-new Date(x.created_at))/864e5); if(age>=30) out.push({k:'cuo:'+x.id+':'+Math.floor(age/15),ic:'💼',t:`عهدة مفتوحة من ${age} يوم: ${x.emp_name}`,s:'صفّها أو راجع حركاتها · '+cuRef(x),go:'custody'});}); } }catch(e){}
+  try{ if(canSee('custody')&&cuStaff()){ const D=st._cu&&Date.now()-(st._cuAudAt||0)<300000?st._cu:await cuLoad(); st._cuAudAt=Date.now(); const AU=cuAudit(D); const since=aiShift(todayIso(),-30);
+      const L=(D.T||[]).filter(t=>AU.sc[t.id]>=3&&t.status!=='rejected'&&String(t.created_at).slice(0,10)>=since).sort((a,b)=>AU.sc[b.id]-AU.sc[a.id]);
+      L.slice(0,3).forEach(t=>{const c=(D.C||[]).find(x=>x.id===t.custody_id)||{}; out.push({k:'cusus:'+t.id,ic:'🔎',bad:true,t:`فاتورة عهدة تحتاج تدقيق: ${fmt(t.amount,2)} ر.س — ${t.vendor||'بدون مورد'}`,s:(c.emp_name?c.emp_name+' · ':'')+AU.f[t.id].slice(0,2).join(' · '),go:'custody'});});
+      if(L.length>3) out.push({k:'cusus:n:'+L.length,ic:'🔎',t:`${L.length} فاتورة عهدة عليها مؤشرات تحتاج مراجعة`,s:'اسأل المساعد الذكي: «وش الفواتير المشكوك فيها؟»',go:'ai'});
+      AU.catAlerts.slice(0,2).forEach(x=>out.push({k:'cucat:'+x.category+':'+todayIso().slice(0,7),ic:'📈',bad:true,t:`صنف «${x.category}» في العهد: صرف غير طبيعي`,s:x.reason,go:'custody'})); } }catch(e){}
   try{ if(isEmp()||cuHolder()){ const G=isEmp()?'me':'custody'; let qq=sb.from('custody_tx').select('id,amount,kind,status,side,review_note,reviewed_at').or('and(status.eq.pending,side.eq.acc),and(status.eq.rejected,side.eq.emp)'); if(!isEmp()) qq=qq.eq('holder_user',st.user.id); const r=await qq.order('created_at',{ascending:false}).limit(20); (r.data||[]).forEach(t=>{ if(t.status==='pending') out.push({k:'cuc:'+t.id,ic:'💵',bad:true,t:'أكّد استلام مبلغ العهدة',s:fmt(t.amount,2)+' ر.س',go:G}); else out.push({k:'cur:'+t.id,ic:'❌',bad:true,t:'تم رفض '+(CU_K[t.kind]||['',''])[1]+' في عهدتك',s:fmt(t.amount,2)+' ر.س — '+(t.review_note||''),go:G}); }); } }catch(e){}
   try{ if(canSee('handover')){ const r=await sb.rpc('cmsg_unread'); (r.data||[]).forEach(m=>out.push({k:'cm:'+m.id,ic:'💬',bad:true,t:`رد من الكاشير: ${m.name||m.code}`,s:m.body+' · '+brById(m.branch).name,go:'handover'})); } }catch(e){}
   try{ if(canSee('feedback')){ const r=await sb.from('feedback').select('id,no,branch,rating,comment,status,created_at').in('status',['new','reviewed','contacted']).order('created_at',{ascending:false}).limit(200); (r.data||[]).forEach(f=>{
@@ -2514,6 +2520,39 @@ async function cuLoad(empOnly){
   const [C,T]=await Promise.all([qc,qt]); if(C.error) throw C.error; if(T.error) throw T.error;
   const tx=T.data||[]; const by={}; tx.forEach(t=>(by[t.custody_id]=by[t.custody_id]||[]).push(t));
   st._cu={C:C.data||[],T:tx,by}; return st._cu; }
+// ----- تدقيق العهد: مؤشرات الفواتير والأصناف المشكوك فيها -----
+function cuAudit(D){ if(!D) return {f:{},sc:{},cat:[],catAlerts:[]}; if(D._aud) return D._aud; const td=todayIso(); const T=D.T||[];
+  const cById={}; (D.C||[]).forEach(c=>cById[c.id]=c);
+  const EX=T.filter(t=>t.kind==='expense'&&t.status!=='rejected');
+  const med={};(()=>{const g={};EX.forEach(t=>{const k=t.category||'أخرى';(g[k]=g[k]||[]).push(+t.amount);});for(const k in g){const a=g[k].sort((x,y)=>x-y);med[k]=a[Math.floor(a.length/2)];}})();
+  const iv=t=>String(t.invoice_no||'').replace(/\s+/g,'').replace(/^0+/,''); const vn=t=>String(t.vendor||'').trim();
+  const byInv={},byVen={};EX.forEach(t=>{const k=iv(t);if(k)(byInv[k]=byInv[k]||[]).push(t);const v=vn(t);if(v)(byVen[v]=byVen[v]||[]).push(t);});
+  const f={},sc={};
+  T.filter(t=>t.kind==='expense').forEach(t=>{const R=[];const a=+t.amount||0;const k=iv(t),v=vn(t);const c=cById[t.custody_id];
+    if(k){const d=(byInv[k]||[]).filter(x=>x.id!==t.id&&(!v||!vn(x)||vn(x)===v));if(d.length)R.push('رقم فاتورة مكرر ('+d.map(x=>'#'+x.no).join('، ')+')');}
+    if(v){const L=(byVen[v]||[]).filter(x=>x.id!==t.id);
+      if(L.some(x=>Math.abs(+x.amount-a)<0.01&&Math.abs(new Date(x.date)-new Date(t.date))<=7*864e5))R.push('نفس المورد ونفس المبلغ خلال أسبوع (احتمال تكرار)');
+      if(L.some(x=>x.date===t.date))R.push('أكثر من فاتورة لنفس المورد بنفس اليوم (احتمال تجزئة)');
+      if(a>=800&&!L.some(x=>x.date<t.date))R.push('مورد جديد بمبلغ كبير');}
+    if(!t.has_photo)R.push('بدون صورة فاتورة');
+    if(!k&&a>=100)R.push('بدون رقم فاتورة');
+    if(t.taxable===true){if(t.vat==null||+t.vat<=0)R.push('ضريبية بدون مبلغ ضريبة');else{const e=a*15/115;if(Math.abs(+t.vat-e)>Math.max(1,e*.06))R.push('الضريبة ما تطابق 15% (المفترض '+e.toFixed(2)+')');}}
+    if(t.taxable===false&&a>=1000)R.push('غير ضريبية بمبلغ كبير');
+    if(a>=500&&a%100===0)R.push('مبلغ مقرّب');
+    const m=med[t.category||'أخرى'];if(m&&a>=300&&a>m*3)R.push('أعلى من المعتاد لصنف «'+(t.category||'أخرى')+'» بـ '+(a/m).toFixed(1)+' ضعف');
+    if(t.date>td)R.push('تاريخ في المستقبل');
+    if(c&&t.date<String(c.created_at).slice(0,10))R.push('تاريخها قبل فتح العهدة');
+    const late=Math.round((new Date(String(t.created_at).slice(0,10))-new Date(t.date))/864e5);if(late>30)R.push('سُجّلت بعد '+late+' يوم من تاريخها');
+    if(!v)R.push('بدون اسم مورد');
+    if(R.length){f[t.id]=R;sc[t.id]=R.length+(R.some(x=>/مكرر|تكرار|تجزئة/.test(x))?3:0)+(R.some(x=>/المستقبل|قبل فتح|الضريبة ما تطابق|مورد جديد/.test(x))?2:0)+(a>=1000?1:0);}});
+  // الأصناف: إنفاق كل صنف بالشهر + القفزات
+  const mo=k=>{const d=new Date(td+'T12:00:00');d.setDate(1);d.setMonth(d.getMonth()-k);return d.toISOString().slice(0,7);}; const MS=[mo(3),mo(2),mo(1),mo(0)];
+  const cat={};EX.forEach(t=>{const m=String(t.date).slice(0,7);if(!MS.includes(m))return;const k=t.category||'أخرى';cat[k]=cat[k]||{};cat[k][m]=(cat[k][m]||0)+ +t.amount;});
+  const dayN=+td.slice(8,10), dim=new Date(+td.slice(0,4),+td.slice(5,7),0).getDate();
+  const catRows=Object.entries(cat).map(([k,o])=>{const prev=MS.slice(0,3).map(m=>o[m]||0);const avg=prev.reduce((a,b)=>a+b,0)/3;const cur=o[MS[3]]||0;const proj=dayN>=5?cur/dayN*dim:cur;return {category:k,months:Object.fromEntries(MS.map(m=>[m,Math.round((o[m]||0)*100)/100])),avg_prev_3:Math.round(avg*100)/100,this_month:Math.round(cur*100)/100,projected_month:Math.round(proj*100)/100};});
+  const catAlerts=[];catRows.forEach(r=>{if(r.avg_prev_3>0&&r.projected_month>r.avg_prev_3*1.6&&r.projected_month-r.avg_prev_3>=300)catAlerts.push({category:r.category,reason:'صرف هذا الشهر (متوقع '+Math.round(r.projected_month)+') أعلى من متوسط آخر ٣ أشهر ('+Math.round(r.avg_prev_3)+') بـ '+(r.projected_month/r.avg_prev_3).toFixed(1)+' ضعف'});
+    else if(!r.avg_prev_3&&r.this_month>=500)catAlerts.push({category:r.category,reason:'صنف جديد ما انصرف عليه قبل، وصرفه هذا الشهر '+Math.round(r.this_month)});});
+  return D._aud={f,sc,cat:catRows,catAlerts}; }
 const cuMissing=e=>e&&/relation|schema cache|does not exist|custod/i.test(e.message||'');
 const cuPill=s=>{const x=CU_ST[s]||[s,'var(--chip)','inherit'];return `<span class="tag" style="background:${x[1]};color:${x[2]};font-weight:700">${x[0]}</span>`;};
 function cuTxRow(t,ctx){ // ctx: {staff, me, open}
@@ -2528,6 +2567,7 @@ function cuTxRow(t,ctx){ // ctx: {staff, me, open}
     <div class="muted" style="font-size:11px;margin-top:1px">${meta}</div>
     ${t.note?`<div style="font-size:11px;margin-top:3px">«${esc(t.note)}»</div>`:''}
     <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;align-items:center">${cuPill(t.status)}${tax}${waitWho&&t.status==='pending'?`<span class="muted" style="font-size:10px">${waitWho}</span>`:''}${t.has_photo?`<button class="btn ghost sm cu-sm" data-cuph="${t.id}">📷 الفاتورة</button>`:(t.kind==='expense'?'<span class="tag" style="color:var(--down)">بدون صورة</span>':'')}</div>
+    ${ctx.staff&&t.status!=='rejected'&&st._cu&&cuAudit(st._cu).f[t.id]?`<div class="cu-flag"><b>⚠️ تحتاج تدقيق</b>${cuAudit(st._cu).f[t.id].map(x=>`<span>${esc(x)}</span>`).join('')}</div>`:''}
     ${t.status==='rejected'&&t.review_note?`<div class="cu-rej">سبب الرفض: ${esc(t.review_note)}</div>`:''}
     <div class="muted" style="font-size:9.5px;margin-top:4px">سجّلها ${esc(t.created_by||'')}${t.reviewed_by?` · ${t.status==='rejected'?'رفضها':'اعتمدها'} ${esc(t.reviewed_by)}`:''}</div>
     ${canRev||canDel?`<div style="display:flex;gap:6px;margin-top:8px">${canRev?`<button class="btn sm" data-curev="${t.id}" data-ok="1" style="flex:1">${t.side==='acc'?'✓ تأكيد الاستلام':'✓ اعتماد'}</button><button class="btn ghost sm" data-curev="${t.id}" data-ok="0" style="flex:1;color:var(--down)">${t.side==='acc'?'ما استلمت':'✕ رفض'}</button>`:''}${canDel?`<button class="btn ghost sm" data-cudel="${t.id}" aria-label="حذف" style="flex:none">🗑</button>`:''}</div>`:''}
@@ -3399,29 +3439,12 @@ async function aiCtx(){
   await run('custody',async()=>{ if(!canSee('custody')) return; const D=await cuLoad(); if(!D.C.length) return;
     const inB=b=>!b||bs.includes(b); const cut=aiShift(td,-150);
     const CC=D.C.filter(c=>inB(c.branch)&&(c.status==='open'||String(c.closed_at||c.created_at).slice(0,10)>=cut));
-    const ALL=D.T.filter(t=>t.kind==='expense'&&t.status!=='rejected');
-    const med={};(()=>{const g={};ALL.forEach(t=>{const k=t.category||'أخرى';(g[k]=g[k]||[]).push(+t.amount);});for(const k in g){const a=g[k].sort((x,y)=>x-y);med[k]=a[Math.floor(a.length/2)];}})();
-    const invKey=t=>String(t.invoice_no||'').replace(/\s+/g,'').replace(/^0+/,'');
-    const flags=(t,c)=>{ if(t.kind!=='expense') return []; const R=[]; const a=+t.amount||0; const iv=invKey(t);
-      if(iv){ const dup=D.T.filter(x=>x.id!==t.id&&x.kind==='expense'&&invKey(x)===iv&&(!t.vendor||!x.vendor||x.vendor.trim()===t.vendor.trim())); if(dup.length) R.push('رقم فاتورة مكرر ('+dup.map(x=>'#'+x.no).join('، ')+')'); }
-      const near=D.T.filter(x=>x.id!==t.id&&x.kind==='expense'&&x.status!=='rejected'&&Math.abs(+x.amount-a)<0.01&&t.vendor&&x.vendor&&x.vendor.trim()===t.vendor.trim()&&Math.abs(new Date(x.date)-new Date(t.date))<=7*864e5); if(near.length) R.push('نفس المورد ونفس المبلغ خلال أسبوع (احتمال تكرار)');
-      const sameDay=D.T.filter(x=>x.id!==t.id&&x.kind==='expense'&&x.status!=='rejected'&&x.date===t.date&&t.vendor&&x.vendor&&x.vendor.trim()===t.vendor.trim()); if(sameDay.length) R.push('أكثر من فاتورة لنفس المورد بنفس اليوم (احتمال تجزئة)');
-      if(!t.has_photo) R.push('بدون صورة فاتورة');
-      if(!iv&&a>=100) R.push('بدون رقم فاتورة');
-      if(t.taxable===true){ if(t.vat==null||+t.vat<=0) R.push('ضريبية بدون مبلغ ضريبة'); else { const exp=a*15/115; if(Math.abs(+t.vat-exp)>Math.max(1,exp*.06)) R.push('مبلغ الضريبة ما يطابق 15% (المفترض '+aiR2(exp)+')'); } }
-      if(t.taxable===false&&a>=1000) R.push('فاتورة غير ضريبية بمبلغ كبير');
-      if(a>=500&&a%100===0) R.push('مبلغ مقرّب');
-      const m=med[t.category||'أخرى']; if(m&&a>=300&&a>m*3) R.push('أعلى من المعتاد لفئة «'+(t.category||'أخرى')+'» بـ '+(a/m).toFixed(1)+' ضعف');
-      if(t.date>td) R.push('تاريخ الفاتورة في المستقبل');
-      if(c&&t.date<String(c.created_at).slice(0,10)) R.push('تاريخ الفاتورة قبل فتح العهدة');
-      const late=Math.round((new Date(String(t.created_at).slice(0,10))-new Date(t.date))/864e5); if(late>30) R.push('سُجّلت بعد '+late+' يوم من تاريخها');
-      if(!String(t.vendor||'').trim()) R.push('بدون اسم مورد');
-      return R; };
+    const AU=cuAudit(D); const flags=(t)=>AU.f[t.id]||[];
     const susp=[]; const tx=(c)=>(D.by[c.id]||[]).slice().sort((a,b)=>a.date<b.date?-1:1);
     const out=CC.map(c=>{const k=cuCalc(D.by[c.id]||[]); const L=tx(c);
       const rows=L.slice(-70).map(t=>{const f=flags(t,c); const r={no:'#'+t.no,date:t.date,type:{fund:'استلام مبلغ',expense:'فاتورة',return:'إرجاع'}[t.kind]||t.kind,amount:aiR2(+t.amount),status:{pending:'معلّقة',approved:'معتمدة',rejected:'مرفوضة'}[t.status]||t.status};
         if(t.kind==='expense'){Object.assign(r,{vendor:t.vendor||'',category:t.category||'',invoice_no:t.invoice_no||'',taxable:t.taxable,vat:t.vat==null?null:aiR2(+t.vat),photo:!!t.has_photo});} if(t.method) r.method=t.method==='cash'?'كاش':'تحويل'; if(t.note) r.note=t.note; if(t.review_note) r.review_note=t.review_note; if(t.created_by) r.entered_by=t.created_by;
-        if(f.length){r.flags=f; if(t.status!=='rejected') susp.push({custody:cuRef(c),employee:c.emp_name,no:'#'+t.no,date:t.date,vendor:t.vendor||'',category:t.category||'',amount:aiR2(+t.amount),invoice_no:t.invoice_no||'',status:r.status,reasons:f,score:f.length+(f.some(x=>/مكرر|تكرار|تجزئة/.test(x))?3:0)+(f.some(x=>/المستقبل|قبل فتح|الضريبة ما يطابق/.test(x))?2:0)});}
+        if(f.length){r.flags=f; if(t.status!=='rejected') susp.push({custody:cuRef(c),employee:c.emp_name,no:'#'+t.no,date:t.date,vendor:t.vendor||'',category:t.category||'',amount:aiR2(+t.amount),invoice_no:t.invoice_no||'',status:r.status,reasons:f,score:AU.sc[t.id]||0});}
         return r;});
       return {ref:cuRef(c),employee:c.emp_name,branch:c.branch?BN[c.branch]||c.branch:'بدون فرع',purpose:c.title,status:c.status==='open'?'مفتوحة':'مقفلة',opened:String(c.created_at).slice(0,10),opened_by:c.opened_by||'',closed:c.closed_at?String(c.closed_at).slice(0,10):null,close_note:c.close_note||undefined,
         received:aiR2(k.funds),approved_expenses:aiR2(k.exp),returned:aiR2(k.ret),balance_with_employee:aiR2(k.bal),pending_items:k.pend,pending_expenses_amount:aiR2(k.pendExp),non_tax_invoices_amount:aiR2(k.nonTax),vat_total:aiR2(k.vat),
@@ -3429,8 +3452,9 @@ async function aiCtx(){
         top_vendors:(()=>{const o={};L.filter(t=>t.kind==='expense'&&t.status!=='rejected').forEach(t=>{const v=(t.vendor||'بدون اسم').trim();o[v]=(o[v]||0)+ +t.amount;});return Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([v,a])=>({vendor:v,amount:aiR2(a)}));})(),
         flagged_count:rows.filter(r=>r.flags).length,transactions_count:L.length,transactions:rows};});
     const op=CC.filter(c=>c.status==='open');
-    C.custody={source:'شاشة «العُهد»',meaning:'العهد النقدية عند الموظفين (المفتوحة + المقفلة آخر 5 أشهر) مع كل حركاتها. الرصيد = المستلم المعتمد − الفواتير المعتمدة − المرجع. الفواتير المعلّقة ما تنحسب لين يعتمدها المحاسب. «flags» تنبيهات آلية على الفواتير اللي تحتاج تدقيق (تكرار رقم الفاتورة، نفس المورد والمبلغ، تجزئة، بدون صورة أو رقم، ضريبة ما تطابق 15%، مبلغ أعلى من المعتاد للفئة، تواريخ غير منطقية) — هي مؤشرات للمراجعة وليست إثبات تلاعب. لما يسأل المستخدم عن عهدة شخص: ابحث بالاسم في employee (حتى لو جزء من الاسم) واعرض ملخص العهدة ثم الحركات ثم الفواتير المشكوك فيها مع أسبابها وأرقامها (#).',
+    C.custody={source:'شاشة «العُهد»',meaning:'العهد النقدية عند الموظفين (المفتوحة + المقفلة آخر 5 أشهر) مع كل حركاتها. الرصيد = المستلم المعتمد − الفواتير المعتمدة − المرجع. الفواتير المعلّقة ما تنحسب لين يعتمدها المحاسب. «flags» تنبيهات آلية على الفواتير اللي تحتاج تدقيق (تكرار رقم الفاتورة، نفس المورد والمبلغ، تجزئة، بدون صورة أو رقم، ضريبة ما تطابق 15%، مبلغ أعلى من المعتاد للصنف، مورد جديد بمبلغ كبير، تواريخ غير منطقية). «category_trends» صرف كل صنف بالشهر آخر ٤ أشهر و«category_alerts» الأصناف اللي صرفها قفز بشكل غير طبيعي — هي مؤشرات للمراجعة وليست إثبات تلاعب. لما يسأل المستخدم عن عهدة شخص: ابحث بالاسم في employee (حتى لو جزء من الاسم) واعرض ملخص العهدة ثم الحركات ثم الفواتير المشكوك فيها مع أسبابها وأرقامها (#).',
       custodies:out,total_open_balance:aiR2(sum(op.map(c=>cuCalc(D.by[c.id]||[]).bal))),open_count:op.length,
+      category_trends:AU.cat,category_alerts:AU.catAlerts,
       suspicious_invoices:susp.sort((a,b)=>b.score-a.score||b.amount-a.amount).slice(0,40).map(({score,...x})=>x),
       expenses_by_category_this_month:(()=>{const o={};D.T.filter(t=>t.kind==='expense'&&t.status==='approved'&&t.date.startsWith(m0)&&inB(t.branch)).forEach(t=>{o[t.category||'أخرى']=aiR2((o[t.category||'أخرى']||0)+ +t.amount);});return o;})()}; });
 
