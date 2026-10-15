@@ -554,6 +554,7 @@ const aMin=x=>{if(!x)return null;const[h,m]=String(x).split(':').map(Number);ret
 const aLoc=ts=>aMin(new Date(ts).toLocaleTimeString('en-GB',{hour12:false,hour:'2-digit',minute:'2-digit',timeZone:'Asia/Riyadh'}));
 const aBday=()=>new Date(Date.now()-2*36e5).toISOString().slice(0,10);
 const aShifts=s=>!s?[]:[{start_t:s.start_t,end_t:s.end_t,grace:s.grace}].concat(s.start2_t&&s.end2_t?[{start_t:s.start2_t,end_t:s.end2_t,grace:s.grace}]:[]);
+const aSh=(s,d)=>s&&s.fri_start_t&&new Date(d+'T12:00:00').getDay()===5?{...s,start_t:s.fri_start_t,end_t:s.fri_end_t,start2_t:s.fri_start2_t||null,end2_t:s.fri_end2_t||null}:s;
 const aLen=x=>{let a=aMin(x.start_t),b=aMin(x.end_t);if(b<=a)b+=1440;return b-a};
 function aFor(s,r){const L=aShifts(s);if(!L.length)return null;if(L.length===1||!r.in_at)return L[(r.seq===2&&L[1])?1:0];let im=aLoc(r.in_at);if(im<300)im+=1440;let best=L[0],bd=1e9;L.forEach(x=>{let st=aMin(x.start_t);if(st<300)st+=1440;const d=Math.abs(im-st);if(d<bd){bd=d;best=x}});return best}
 function aEval(r,s){const o={late:0,early:0};const sh=aFor(s,r);if(!sh||!r.in_at)return o;let st=aMin(sh.start_t),im=aLoc(r.in_at);if(st<300)st+=1440;if(im<300)im+=1440;o.late=Math.max(0,im-st-(+(sh.grace??10)));
@@ -561,8 +562,9 @@ function aEval(r,s){const o={late:0,early:0};const sh=aFor(s,r);if(!sh||!r.in_at
 async function loadAtt(month){
   if(S.att&&S.att[month])return S.att[month];S.att=S.att||{};
   const N=daysIn(month),a=month+'-01',z=month+'-'+pad(N);
-  const [sh,rc,gb,cfq,...fs]=await Promise.all([SBC.from('att_shift').select('*'),SBC.from('attendance').select('emp_id,branch,day,seq,in_at,out_at').gte('day',a).lte('day',z).limit(10000),SBC.from('att_branch').select('*'),SBC.from('att_cfg').select('*')].concat(S.branches.map(b=>SBC.from('attendance').select('day').eq('branch',b.id).order('day').limit(1))));
-  const o={ok:!rc.error&&!sh.error,sh:{},by:{},first:{},geo:{},cfg:{}};
+  const [sh,rc,gb,cfq,ae,...fs]=await Promise.all([SBC.from('att_shift').select('*'),SBC.from('attendance').select('emp_id,branch,day,seq,in_at,out_at').gte('day',a).lte('day',z).limit(10000),SBC.from('att_branch').select('*'),SBC.from('att_cfg').select('*'),SBC.from('att_emp').select('*')].concat(S.branches.map(b=>SBC.from('attendance').select('day').eq('branch',b.id).order('day').limit(1))));
+  const o={ok:!rc.error&&!sh.error,sh:{},by:{},first:{},geo:{},cfg:{},ex:{}};
+  ((ae&&ae.data)||[]).forEach(x=>{if(x.exempt)o.ex[x.emp_id]=1});
   (gb.data||[]).forEach(x=>o.geo[x.branch]=x); ((cfq&&cfq.data)||[]).forEach(x=>o.cfg[x.branch]=x);
   (sh.data||[]).forEach(x=>o.sh[x.emp_id]=x);
   (rc.data||[]).forEach(r=>{((o.by[r.emp_id]=o.by[r.emp_id]||{})[r.day]=o.by[r.emp_id][r.day]||[]).push(r)});
@@ -571,16 +573,17 @@ async function loadAtt(month){
 }
 // أجر اليوم = الراتب ÷ 30 · الغياب يوم كامل · الشفت الناقص بقدر ساعاته · التأخير والخروج المبكر بالدقيقة بعد مدة السماح
 function attDed(r,month,A){
-  const s=A&&A.ok?A.sh[r.id]:null,sal=+r.salary||0;if(!s||!sal)return null;
+  const s=A&&A.ok?A.sh[r.id]:null,sal=+r.salary||0;if(!s||!sal||A.ex[r.id])return null;
   const L=aShifts(s),dm=L.reduce((x,q)=>x+aLen(q),0)||480,day=sal/30,mr=day/dm;
   const g=A.geo[r.branch]; if(!g) return null; const N=daysIn(month),since=[month+'-01',r.start_date,s.created_at?String(s.created_at).slice(0,10):null,g.created_at?String(g.created_at).slice(0,10):null,(A.cfg[r.branch]||{}).count_from||null,A.first[r.branch]||'9999'].filter(Boolean).sort().pop();
   const endD=[month+'-'+pad(N),(r.status==='left'&&r.left_date)?r.left_date:null].filter(Boolean).sort()[0],bt=aBday();
   const by=A.by[r.id]||{};let abs=0,missMin=0,late=0;
   for(let i=1;i<=N;i++){const d=month+'-'+pad(i);const R=(by[d]||[]).filter(x=>x.in_at);
-    if(d>=since) R.forEach(x=>{const e=aEval(x,s);late+=e.late+e.early});
+    const sd=aSh(s,d),Ld=aShifts(sd);
+    if(d>=since) R.forEach(x=>{const e=aEval(x,sd);late+=e.late+e.early});
     if(d<since||d>endD||d>=bt||(s.off_days||[]).includes(new Date(d+'T12:00:00').getDay()))continue;
     if(!R.length){abs++;continue}
-    if(R.length<L.length){const got=new Set(R.map(x=>x.seq||1));L.forEach((q,k)=>{if(!got.has(k+1))missMin+=aLen(q)})}}
+    if(R.length<Ld.length){const got=new Set(R.map(x=>x.seq||1));Ld.forEach((q,k)=>{if(!got.has(k+1))missMin+=aLen(q)})}}
   const r2=v=>Math.round(v*100)/100;
   return{abs,missMin,late,absDed:r2(abs*day+missMin*mr),lateDed:r2(late*mr)};
 }
