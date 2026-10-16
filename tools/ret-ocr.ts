@@ -1,0 +1,42 @@
+// قراءة فاتورة المرتجع من الصورة — Supabase → Edge Functions → اسمها: ret-ocr (Verify JWT: OFF)
+// تستخدم نفس المفتاح ANTHROPIC_API_KEY. الكاشير يصوّر الفاتورة ← ترجع رقم الفاتورة والوقت والمبلغ
+const MODEL = Deno.env.get("OCR_MODEL") || "claude-haiku-4-5-20251001";
+const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type", "Access-Control-Allow-Methods": "POST, OPTIONS" };
+const json = (o: unknown, status = 200) => new Response(JSON.stringify(o), { status, headers: { ...CORS, "Content-Type": "application/json" } });
+
+const TOOL = { name: "invoice", description: "بيانات الفاتورة المقروءة من الصورة", input_schema: { type: "object", required: ["inv_no", "time", "amount"], properties: {
+  inv_no: { type: "string", description: "رقم الفاتورة الطويل (عادة 10 إلى 14 رقم، مطبوع تحت «فاتورة ضريبية مبسطة» قبل التاريخ). ليس رقم الطلب الصغير ولا الرقم الضريبي ولا الجوال. أرقام إنجليزية فقط، أو فارغ إذا غير واضح" },
+  time: { type: "string", description: "وقت الفاتورة بصيغة 24 ساعة HH:MM (حوّل ص/م). من سطر التاريخ والوقت وليس وقت التوصيل. فارغ إذا غير واضح" },
+  amount: { type: "number", description: "المبلغ المستحق/الإجمالي شامل الضريبة (Net). صفر إذا غير واضح" },
+} } };
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
+  if (req.method !== "POST") return json({ ok: false }, 405);
+  const key = Deno.env.get("ANTHROPIC_API_KEY"), sb = Deno.env.get("SUPABASE_URL"), anon = Deno.env.get("SUPABASE_ANON_KEY");
+  if (!key || !sb || !anon) return json({ ok: false, message: "no_key" }, 500);
+  let b: { branch?: string; pin?: string; img?: string };
+  try { b = await req.json(); } catch { return json({ ok: false, message: "bad_json" }, 400); }
+  const m = /^data:(image\/(?:jpeg|png|webp));base64,(.+)$/.exec(b.img || "");
+  if (!b.branch || !b.pin || !m || m[2].length > 1600000) return json({ ok: false, message: "bad_request" }, 400);
+  const a = await fetch(`${sb}/rest/v1/rpc/ret_ocr_ok`, { method: "POST", headers: { apikey: anon, Authorization: `Bearer ${anon}`, "Content-Type": "application/json" }, body: JSON.stringify({ p_branch: b.branch, p_pin: b.pin }) });
+  const aj = a.ok ? await a.json() : null;
+  if (!aj || !aj.ok) return json({ ok: false, message: (aj && aj.message) || "auth" }, 200);
+  const r = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+    body: JSON.stringify({ model: MODEL, max_tokens: 400, tools: [TOOL], tool_choice: { type: "tool", name: "invoice" },
+      messages: [{ role: "user", content: [
+        { type: "image", source: { type: "base64", media_type: m[1], data: m[2] } },
+        { type: "text", text: "هذي فاتورة مطعم سعودية (حرارية). اقرأ رقم الفاتورة ووقتها والمبلغ المستحق واحفظها بالأداة invoice. لا تخمّن: إذا شي غير واضح اتركه فارغ." },
+      ] }] }),
+  });
+  if (!r.ok) { console.error("upstream", r.status, (await r.text()).slice(0, 300)); return json({ ok: false, message: "upstream" }, 200); }
+  const j = await r.json();
+  const tu = (j.content || []).find((c: { type: string; name?: string }) => c.type === "tool_use" && c.name === "invoice");
+  const x = (tu && tu.input) || {};
+  const inv = String(x.inv_no || "").replace(/[٠-٩]/g, (d: string) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d))).replace(/\D/g, "").slice(0, 30);
+  const tm = /^([01]?\d|2[0-3]):([0-5]\d)$/.exec(String(x.time || "").trim());
+  const amt = Number(x.amount);
+  return json({ ok: true, inv, time: tm ? `${tm[1].padStart(2, "0")}:${tm[2]}` : "", amount: isFinite(amt) && amt > 0 && amt < 50000 ? Math.round(amt * 100) / 100 : 0 });
+});
