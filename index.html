@@ -436,7 +436,7 @@ body.hasnav .toast{bottom:calc(100px + env(safe-area-inset-bottom,0px))}
 .mk-hd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.mk-hd b{display:block;font-family:var(--f-disp);font-size:15px}.mk-hd small{display:block;font-size:10.5px;color:var(--muted)}
 .mk-load{display:flex;align-items:center;gap:12px}.mk-load b{display:block;font-size:12.5px}.mk-load small{display:block;font-size:10.5px;color:var(--muted)}
 .mk-day{display:flex;flex-direction:column;gap:3px;margin:4px 2px 10px}.mk-day span{font-size:11px;color:var(--muted)}.mk-day b{font-size:13px;color:var(--gold-ink)}
-.mk-it{border-inline-start:4px solid var(--gold)}.mk-it.done{border-inline-start-color:var(--up);opacity:.85}
+.mk-it{border-inline-start:4px solid var(--gold)}.mk-tr h3{margin-bottom:6px}.mk-tri{padding:9px 0;border-bottom:1px solid var(--line);font-size:12px;line-height:1.7}.mk-tri:last-child{border-bottom:0}.mk-tri b{display:block;font-size:12.5px}.mk-use{color:var(--gold-ink);font-size:11.5px}.mk-tri a{font-size:11px;color:var(--green);font-weight:600}.mk-h3{font-size:13px;margin:6px 2px 8px}.mk-it.done{border-inline-start-color:var(--up);opacity:.85}
 .mk-top{display:flex;gap:10px;align-items:flex-start}.mk-ic{font-size:26px;flex:none}.mk-tt b{display:block;font-size:13.5px;line-height:1.5}.mk-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}.mk-tags .tag{font-size:10px;padding:1px 8px}
 .mk-idea{font-size:12.5px;line-height:1.8;margin:10px 0 0}
 .mk-cap{background:var(--gold-soft);border:1px dashed rgba(212,175,55,.5);border-radius:12px;padding:10px 12px;margin-top:10px}.mk-capt{font-size:12px;line-height:1.8;white-space:pre-wrap;margin-bottom:8px}
@@ -780,7 +780,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['handover','maint','maint_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610160908';
+const APP_VER='202610160913';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -2446,12 +2446,13 @@ V.mkt=async()=>{
   if(!L.some(d=>d.day===today)&&!st._mkGen){ st._mkGen=true; mkGenerate(today,false).then(()=>{st._mkGen=false;if(st.tab==='mkt')render();}).catch(e=>{st._mkGen=false;st._mkErr=e.message||String(e);if(st.tab==='mkt')render();}); }
   const sel=st.mkDay&&L.some(d=>d.day===st.mkDay)?st.mkDay:(L.find(d=>d.day===today)?today:(L[0]||{}).day);
   const D=L.find(d=>d.day===sel);
-  let h=`<div class="mk-hd"><div><b>💡 أفكار تسويقية</b><small>تتجدد كل يوم تلقائياً · مبنية على مبيعاتكم والمناسبات</small></div>${isAdmin()?`<button class="btn ghost sm" data-mkre="1" ${st._mkGen?'disabled':''}>🔄 أفكار جديدة</button>`:''}</div>`;
+  let h=`<div class="mk-hd"><div><b>💡 أفكار تسويقية</b><small>تتجدد كل يوم ٨:٢٠ الصبح · ترندات من الإنترنت + مبيعاتكم والمناسبات</small></div>${isAdmin()?`<button class="btn ghost sm" data-mkre="1" ${st._mkGen?'disabled':''}>🔄 أفكار جديدة</button>`:''}</div>`;
   if(L.length>1) h+=`<div class="chips mg-kf">${L.slice(0,10).map(d=>`<button data-mkd="${d.day}" aria-pressed="${d.day===sel}">${d.day===today?'اليوم':ATT_DOW[new Date(d.day+'T12:00:00').getDay()]+' '+dLbl(d.day).split(' ').slice(0,2).join(' ')}</button>`).join('')}</div>`;
   if(st._mkGen&&!L.some(d=>d.day===today)) h+=`<div class="card mk-load"><div class="ai-spin"><i></i><span>✦</span></div><div><b>جارِ تجهيز أفكار اليوم…</b><small>المساعد يحلل مبيعاتكم ومناسبات اليوم</small></div></div>`;
   if(st._mkErr&&!L.some(d=>d.day===today)){ h+=`<div class="card note bad">تعذّر تجهيز أفكار اليوم ${/401/.test(st._mkErr)?'(وصلت حد المساعد اليومي)':''} — <button class="btn ghost sm" data-mkre="1">حاول مرة ثانية</button></div>`; }
   if(!D) return h+(st._mkGen?'':`<div class="card empty">ما فيه أفكار للحين</div>`);
   h+=`<div class="mk-day"><span>${ATT_DOW[new Date(D.day+'T12:00:00').getDay()]} ${dLbl(D.day)} · ${esc(mkHijri(D.day))}</span>${D.occasion?`<b>✨ ${esc(D.occasion)}</b>`:''}</div>`;
+  if((D.trends||[]).length) h+=`<div class="card mk-tr"><h3>🔥 ترندات اليوم <small>من الإنترنت</small></h3>${D.trends.map(t=>`<div class="mk-tri"><b>${esc(t.title)}</b>${t.what?`<div>${esc(t.what)}</div>`:''}${t.use?`<div class="mk-use">💡 ${esc(t.use)}</div>`:''}${t.source?`<a href="${esc(t.source)}" target="_blank" rel="noopener">المصدر ↗</a>`:''}</div>`).join('')}</div><h3 class="mk-h3">💡 أفكار اليوم</h3>`;
   h+=(D.items||[]).map((x,i)=>{const v=(D.votes||{})[i]||{}; return `<div class="card mk-it${v.done?' done':''}">
     <div class="mk-top"><span class="mk-ic">${mkIcon(x.channel)}</span><div class="mk-tt"><b>${esc(x.title)}</b><div class="mk-tags">${x.brand?`<span class="tag">${esc(x.brand)}</span>`:''}${x.channel?`<span class="tag">${esc(x.channel)}</span>`:''}${x.cost?`<span class="tag">💰 ${esc(x.cost)}</span>`:''}${x.when?`<span class="tag">🕒 ${esc(x.when)}</span>`:''}</div></div></div>
     <p class="mk-idea">${esc(x.idea)}</p>
@@ -2463,7 +2464,8 @@ V.mkt=async()=>{
 document.addEventListener('click',async e=>{
   const t=e.target; if(!t.closest||!t.closest('#view')) return;
   const d=t.closest('[data-mkd]'); if(d){ st.mkDay=d.dataset.mkd; render(); return; }
-  const re=t.closest('[data-mkre]'); if(re){ if(st._mkGen) return; st._mkGen=true; st._mkErr=null; st.mkDay=todayIso(); re.disabled=true; re.textContent='⏳ جارِ التجهيز…'; try{ await mkGenerate(todayIso(),isAdmin()&&(st._mk||[]).some(x=>x.day===todayIso())); toast('جهزت أفكار جديدة ✓'); }catch(er){ toast(/401/.test(er.message)?'وصلت حد المساعد اليومي':'تعذّر التجهيز — حاول بعد شوي'); } st._mkGen=false; render(); return; }
+  const re=t.closest('[data-mkre]'); if(re&&isAdmin()&&!st._mkGen){ const k=await sb.rpc('mkt_kick',{p_replace:true}); if(!k.error){ toast('🔎 جارِ البحث عن ترندات اليوم — بيوصلك إشعار خلال دقيقة أو دقيقتين'); re.disabled=true; re.textContent='⏳ جارِ البحث…'; const t0=(st._mk||[]).find(x=>x.day===todayIso()); const was=t0&&t0.at; let n=0; const iv=setInterval(async()=>{ n++; try{ const L=await mkLoad(); const t1=L.find(x=>x.day===todayIso()); if((t1&&t1.at!==was&&t1.src==='web')||n>8){ clearInterval(iv); if(st.tab==='mkt') render(); } }catch(_){ clearInterval(iv); } },20000); return; } if(!/mkt_kick|schema cache|function/i.test(k.error.message)){ toast(k.error.message); return; } }
+  if(re){ if(st._mkGen) return; st._mkGen=true; st._mkErr=null; st.mkDay=todayIso(); re.disabled=true; re.textContent='⏳ جارِ التجهيز…'; try{ await mkGenerate(todayIso(),isAdmin()&&(st._mk||[]).some(x=>x.day===todayIso())); toast('جهزت أفكار جديدة ✓'); }catch(er){ toast(/401/.test(er.message)?'وصلت حد المساعد اليومي':'تعذّر التجهيز — حاول بعد شوي'); } st._mkGen=false; render(); return; }
   const cp=t.closest('[data-mkcp]'); if(cp){ const x=(st._mkSel.items||[])[+cp.dataset.mkcp]; try{ await navigator.clipboard.writeText(x.caption); toast('تم نسخ النص ✓'); }catch(_){ prompt('انسخ النص:',x.caption); } return; }
   const vb=t.closest('[data-mkv]'); if(vb){ const D=st._mkSel, i=+vb.dataset.mkv, v=(D.votes||{})[i]||{}; const nv=v.mine==+vb.dataset.v?0:+vb.dataset.v; const r=await sb.rpc('mkt_vote',{p_day:D.day,p_idx:i,p_vote:nv,p_done:!!v.mdone}); if(r.error) return toast(r.error.message); render(); return; }
   const dn=t.closest('[data-mkdone]'); if(dn){ const D=st._mkSel, i=+dn.dataset.mkdone, v=(D.votes||{})[i]||{}; const r=await sb.rpc('mkt_vote',{p_day:D.day,p_idx:i,p_vote:v.mine||0,p_done:!v.mdone}); if(r.error) return toast(r.error.message); toast(!v.mdone?'ممتاز — انحسبت منفّذة ✓':'تم'); render(); return; }
