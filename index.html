@@ -677,6 +677,8 @@ body.hasnav .toast{bottom:calc(100px + env(safe-area-inset-bottom,0px))}
 .fl-kv{display:flex;justify-content:space-between;font-size:11px;padding:3px 0}.fl-kv span{color:var(--muted)}
 .hx-hero{padding:13px 14px 11px!important;border-radius:20px!important}.hx-main{margin-top:6px!important}.hx-ring{width:64px!important;height:64px!important}.hx-rtx b{font-size:13px!important}.hx-rtx span{font-size:8.5px!important}.hx-big{font-size:clamp(22px,7vw,29px)!important}.hx-spark{display:none}.hx-pace{margin-top:7px!important;padding:5px 9px!important}.hx-stats{margin-top:7px!important}.hx-stats button{padding:6px 8px!important}.hx-hi{font-size:15px!important}
 .mkh{padding:12px 13px!important;margin:10px 0!important;gap:11px!important}.mkh-ic{width:44px!important;height:44px!important;font-size:23px!important;border-radius:13px!important}.mkh-tx b{font-size:14px!important}
+.hx-top1{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:baseline;gap:8px}.hx-top1 .hx-hi{font-size:14px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hx-top1 .hx-date{flex:none;font-size:10.5px}.hx-pc{display:inline-block;font-size:9.5px;padding:1px 7px;border-radius:99px;margin-inline-start:4px;vertical-align:1px}.hx-pc.u{background:rgba(142,227,181,.16);color:#8EE3B5}.hx-pc.d{background:rgba(255,180,168,.16);color:#FFB4A8}.hx-main{margin-top:4px!important}
+.mkh-tx b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:14px!important}.mkh-ch:empty{display:none}.mkh-go{position:relative;flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#D4AF37;color:#0F3322;font-size:16px;font-weight:700;line-height:1}.mkh{margin:10px 0 12px!important}
 </style>
 </head>
 <body>
@@ -783,7 +785,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['handover','maint','maint_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610160934';
+const APP_VER='202610161007';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -1025,14 +1027,14 @@ V.home=async()=>{
     const ahead=pmTot?prog-timeP:null;
     h+=`<div class="hx-hero">
       <div class="hx-glow"></div>
-      <div class="hx-top"><div><div class="hx-date">${dateTxt}</div><div class="hx-hi">${greet}${nm?'، '+esc(nm):''} 👋</div></div>${brTag}</div>
+      <div class="hx-top1"><span class="hx-hi">${greet}${nm?'، '+esc(nm):''} 👋</span><span class="hx-date">${dateTxt}</span></div>
       <div class="hx-main">
-        <div style="min-width:0;flex:1"><div class="hx-lbl">مبيعات ${MONTHS[+m.slice(5,7)-1]} · حتى يوم ${lastDay}</div>
+        <div style="min-width:0;flex:1"><div class="hx-lbl">مبيعات ${MONTHS[+m.slice(5,7)-1]} · حتى يوم ${lastDay}${ahead!=null?` <span class="hx-pc ${ahead>=0?'u':'d'}">${ahead>=0?'▲ متقدمين':'▼ متأخرين'} عن المعدل</span>`:''}</div>
           <div class="hx-big num">${fmt(tot)}<small>ر.س</small></div>
           ${dPct!=null?`<div class="hx-chg"><b class="${dPct>=0?'u':'d'}">${dPct>=0?'▲':'▼'} ${pct(Math.abs(dPct))}</b> عن نفس الفترة من ${MONTHS[+pm.slice(5,7)-1]}</div>`:''}</div>
         <div class="hx-ring">${ring}<div class="hx-rtx"><b class="num">${Math.round(prog*100)}%</b><span>${pmTot?'من '+MONTHS[+pm.slice(5,7)-1]:'من الشهر'}</span></div></div>
       </div>
-      ${ahead!=null?`<div class="hx-pace ${ahead>=0?'u':'d'}"><i></i>${ahead>=0?'متقدمين على المعدل':'متأخرين عن المعدل'} — مضى ${Math.round(timeP*100)}% من الشهر وحققنا ${Math.round(prog*100)}% من مبيعات ${MONTHS[+pm.slice(5,7)-1]}</div>`:''}
+
       <div class="hx-spark">${spark(dayTot,{w:340,h:46})}</div>
       <div class="hx-stats">
         <button data-t="daily"><span>آخر يوم · ${DAYN[new Date(yd+'T12:00:00').getDay()]}</span><b class="num">${fmt(yv)}</b>${wkv?`<em class="${yv>=wkv?'u':'d'}">${yv>=wkv?'▲':'▼'} ${pct(Math.abs(yv/wkv-1))} أسبوعي</em>`:`<em>${dLbl(yd)}</em>`}</button>
@@ -1056,7 +1058,7 @@ V.home=async()=>{
     const best=dayKeys[dayTot.indexOf(Math.max(...dayTot))];
     ins.push({ic:'🏆',t:`أعلى يوم هذا الشهر: <b>${DAYN[new Date(best+'T12:00:00').getDay()]} ${+best.slice(8)}</b> بـ ${fmt(Math.max(...dayTot))}.`,go:'daily'});
   } else {
-    h+=`<div class="hx-hero"><div class="hx-glow"></div><div class="hx-top"><div><div class="hx-date">${dateTxt}</div><div class="hx-hi">${greet}${nm?'، '+esc(nm):''} 👋</div></div>${brTag}</div><div style="position:relative;margin-top:10px;opacity:.85;font-size:12.5px">أهلاً بك في منصة الإدارة الموحّدة</div></div>`;
+    h+=`<div class="hx-hero"><div class="hx-glow"></div><div class="hx-top1"><span class="hx-hi">${greet}${nm?'، '+esc(nm):''} 👋</span><span class="hx-date">${dateTxt}</span></div><div style="position:relative;margin-top:10px;opacity:.85;font-size:12.5px">أهلاً بك في منصة الإدارة الموحّدة</div></div>`;
   }
   try{ h+=await mkHomeCard(); }catch(e){}
   try{ h+=await brCard(); }catch(e){}
@@ -2460,7 +2462,7 @@ async function mkGenerate(day,replace){
 async function mkHomeCard(){ if(!mkCan()) return ''; let L=st._mk;
   if(!L){ try{ L=await Promise.race([mkLoad(),new Promise((_,j)=>setTimeout(()=>j(0),2500))]); }catch(e){ L=[]; } }
   const D=(L||[]).find(d=>d.day===todayIso())||null, n=D?(D.items||[]).length:0, tn=D?(D.trends||[]).length:0, f=D&&D.items&&D.items[0];
-  return `<button class="mkh" data-t="mkt"><span class="mkh-sh"></span><span class="mkh-ic">💡</span><span class="mkh-tx"><span class="mkh-k">أفكار تسويقية · اليوم</span><b>${D?esc(D.occasion||'أفكار اليوم جاهزة'):'افتح وجهّز أفكار اليوم'}</b>${f?`<span class="mkh-f">✦ ${esc(f.title)}</span>`:''}<span class="mkh-ch">${n?`<i>${n} أفكار</i>`:''}${tn?`<i>🔥 ${tn} ترند</i>`:''}<i class="go">افتح ←</i></span></span></button>`; }
+  return `<button class="mkh" data-t="mkt"><span class="mkh-sh"></span><span class="mkh-ic">💡</span><span class="mkh-tx"><span class="mkh-k">أفكار تسويقية · اليوم</span><b>${f?esc(f.title):D?'أفكار اليوم جاهزة':'افتح وجهّز أفكار اليوم'}</b><span class="mkh-ch">${tn?`<i>🔥 ${tn} ترند</i>`:''}${n?`<i>💡 ${n} أفكار</i>`:''}</span></span><span class="mkh-go">←</span></button>`; }
 async function mkLoad(){ const r=await sb.rpc('mkt_get',{p_days:14}); if(r.error) throw r.error; st._mk=r.data||[]; return st._mk; }
 V.mkt=async()=>{
   if(!mkCan()) return `<div class="card empty">ما عندك صلاحية على الأفكار التسويقية</div>`;
