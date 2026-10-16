@@ -780,7 +780,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['handover','maint','maint_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610160913';
+const APP_VER='202610160921';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -2420,6 +2420,13 @@ const mkCan=()=>isAdmin()||st.mySections.includes('mkt');
 const MK_CH={'تيك توك':'🎵','سناب':'👻','انستقرام':'📸','تطبيقات التوصيل':'🛵','داخل الفرع':'🏪','واتساب':'💬','ولاء العملاء':'🎁','مسابقة':'🏆'};
 const mkIcon=c=>{for(const k in MK_CH) if(String(c||'').includes(k)) return MK_CH[k]; return '💡';};
 const mkHijri=d=>{try{return new Date(d+'T12:00:00').toLocaleDateString('ar-SA-u-ca-islamic-umalqura',{day:'numeric',month:'long',year:'numeric'});}catch(e){return '';}};
+function mkParseL(t){ t=String(t||'').replace(/\*\*/g,'').replace(/\r/g,''); const K={'العنوان':'title','المطعم':'brand','القناة':'channel','الفكرة':'idea','النص':'caption','الوقت':'when','التكلفة':'cost','السبب':'why'};
+  const occ=(t.match(/المناسبة\s*[:：]\s*(.+)/)||[])[1]||''; const ideas=[]; let cur=null, last=null;
+  t.split('\n').forEach(line=>{ const l=line.replace(/^\s*[-•\d.)]+\s*/,'').trim(); const m=l.match(/^(العنوان|المطعم|القناة|الفكرة|النص|الوقت|التكلفة|السبب)\s*[:：]\s*(.*)$/);
+    if(m){ const k=K[m[1]]; if(k==='title'){ cur={}; ideas.push(cur); } if(!cur){ cur={}; ideas.push(cur); } cur[k]=(cur[k]?cur[k]+'\n':'')+m[2]; last=k; }
+    else if(cur&&last==='caption'&&l&&!/^(---|المصدر|المناسبة)/.test(l)) cur.caption+='\n'+l; });
+  const out=ideas.map(x=>({title:String(x.title||'').slice(0,120),brand:String(x.brand||'').slice(0,30),channel:String(x.channel||'').slice(0,40),idea:String(x.idea||'').slice(0,700),caption:String(x.caption||'').trim().slice(0,900),when:String(x.when||'').slice(0,80),cost:String(x.cost||'').slice(0,40),why:String(x.why||'').slice(0,300)})).filter(x=>x.title&&x.idea);
+  return out.length?{occasion:occ.trim().slice(0,200),ideas:out.slice(0,8)}:null; }
 function mkParse(t){ t=String(t||''); const a=t.indexOf('{'), b=t.lastIndexOf('}'); if(a<0||b<=a) return null; try{ const j=JSON.parse(t.slice(a,b+1)); if(!Array.isArray(j.ideas)||!j.ideas.length) return null; j.ideas=j.ideas.slice(0,8).map(x=>({title:String(x.title||'').slice(0,120),brand:String(x.brand||'').slice(0,30),channel:String(x.channel||'').slice(0,40),idea:String(x.idea||'').slice(0,700),caption:String(x.caption||'').slice(0,900),when:String(x.when||'').slice(0,80),cost:String(x.cost||'').slice(0,40),why:String(x.why||'').slice(0,300)})).filter(x=>x.title&&x.idea); return j.ideas.length?j:null; }catch(e){ return null; } }
 async function mkGenerate(day,replace){
   const C=await aiCtx(); const L=st._mk||[];
@@ -2429,13 +2436,21 @@ async function mkGenerate(day,replace){
     marketing:{source:'الأفكار التسويقية',city:'المدينة المنورة',brands:{'مطاعم الشادن':'مطعم ومطابخ — فرع العزيزية (فيه قسم عائلات) وفرع شوران (توصيل) — وجبات ورز ومشويات للعائلات والمجموعات','بروست الباتشينو':'بروست ودجاج مقلي — فرع واحد — شباب وتوصيل'},
       channels:{'العزيزية':['تطبيق الشادن','كيتا','هنقرستيشن','قسم العائلات'],'شوران':['قسم التوصيل','كيتا','هنقرستيشن','فرصة'],'الباتشينو':['هنقرستيشن','كيتا','نينجا']},
       today:day,weekday:ATT_DOW[new Date(day+'T12:00:00').getDay()],hijri:mkHijri(day),previous_ideas_do_not_repeat:prev,liked_ideas:liked.slice(0,12),disliked_ideas:disliked.slice(0,12),executed_ideas:done.slice(0,12)}};
-  const q=`مهمة خاصة (تجاهل قواعد التنسيق والمصدر المعتادة): اقترح 6 أفكار تسويقية عملية لليوم ${day} (${ctx.marketing.weekday}، ${ctx.marketing.hijri}) لمطاعم الشادن وبروست الباتشينو في المدينة المنورة، مبنية على قسم «الأفكار التسويقية» وأرقام المبيعات والمنافذ وتقييمات العملاء في البيانات (مثل: فرع أو منفذ مبيعاته نازلة، يوم الأسبوع، مناسبة أو موسم قريب بالهجري أو الميلادي، الطقس المعتاد في المدينة بهالوقت). نوّع بين: سوشيال (تيك توك/سناب/انستقرام)، عرض داخل الفرع، تطبيقات التوصيل، ولاء العملاء، مسابقة/تفاعل، واتساب. خلها قابلة للتنفيذ اليوم بميزانية بسيطة، ولا تكرر الأفكار السابقة، واستفد من الأفكار اللي عجبتهم. رد بـ JSON فقط بدون أي كلام قبله أو بعده:
-{"occasion":"مناسبة أو طابع اليوم بجملة","ideas":[{"title":"عنوان قصير","brand":"الشادن أو الباتشينو أو الكل","channel":"القناة","idea":"وش نسوي بالضبط بجملتين أو ثلاث","caption":"نص منشور جاهز باللهجة السعودية مع إيموجي وهاشتاقات","when":"أفضل وقت للنشر أو التنفيذ","cost":"بدون تكلفة أو منخفضة أو متوسطة","why":"ليش اليوم — مبني على رقم أو مناسبة"}]}`;
+  const q=`مهمة خاصة: اقترح 6 أفكار تسويقية عملية لليوم ${day} (${ctx.marketing.weekday}، ${ctx.marketing.hijri}) لمطاعم الشادن وبروست الباتشينو في المدينة المنورة، مبنية على قسم «الأفكار التسويقية» وأرقام المبيعات والمنافذ وتقييمات العملاء (فرع أو منفذ نازل، يوم الأسبوع، مناسبة أو موسم قريب، طقس المدينة). نوّع بين تيك توك/سناب/انستقرام، عرض داخل الفرع، تطبيقات التوصيل، ولاء العملاء، مسابقة، واتساب. قابلة للتنفيذ اليوم بميزانية بسيطة، ولا تكرر الأفكار السابقة.
+اكتب بهذا الترتيب بالضبط بدون أي مقدمة: أول سطر «المناسبة: ...» ثم لكل فكرة هذه الأسطر وبعدها سطر «---»:
+العنوان: ...
+المطعم: الشادن أو الباتشينو أو الكل
+القناة: ...
+الفكرة: وش نسوي بالضبط بجملتين
+النص: نص منشور جاهز باللهجة مع إيموجي وهاشتاقات
+الوقت: أفضل وقت
+التكلفة: بدون تكلفة أو منخفضة أو متوسطة
+السبب: ليش اليوم`;
   const {data:{session}}=await sb.auth.getSession(); if(!session) throw new Error('nosession');
   const r=await fetch(CFG.url+'/functions/v1/'+AI_FN,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token,'apikey':CFG.key},body:JSON.stringify({question:q.slice(0,1500),history:[],context:JSON.stringify(ctx)})});
   if(!r.ok||!r.body) throw new Error('http '+r.status);
   const raw=await r.text(); const txt=raw.split('\u001e').pop().replace(/\u0015/g,'');
-  const j=mkParse(txt); if(!j) throw new Error('parse');
+  const j=mkParseL(txt)||mkParse(txt); if(!j){ console.warn('mkt raw',txt.slice(0,600)); throw new Error('parse'); }
   const s=await sb.rpc('mkt_save',{p_day:day,p_occasion:j.occasion||'',p_items:j.ideas,p_replace:!!replace}); if(s.error) throw s.error;
   return true; }
 async function mkLoad(){ const r=await sb.rpc('mkt_get',{p_days:14}); if(r.error) throw r.error; st._mk=r.data||[]; return st._mk; }
@@ -2449,7 +2464,7 @@ V.mkt=async()=>{
   let h=`<div class="mk-hd"><div><b>💡 أفكار تسويقية</b><small>تتجدد كل يوم ٨:٢٠ الصبح · ترندات من الإنترنت + مبيعاتكم والمناسبات</small></div>${isAdmin()?`<button class="btn ghost sm" data-mkre="1" ${st._mkGen?'disabled':''}>🔄 أفكار جديدة</button>`:''}</div>`;
   if(L.length>1) h+=`<div class="chips mg-kf">${L.slice(0,10).map(d=>`<button data-mkd="${d.day}" aria-pressed="${d.day===sel}">${d.day===today?'اليوم':ATT_DOW[new Date(d.day+'T12:00:00').getDay()]+' '+dLbl(d.day).split(' ').slice(0,2).join(' ')}</button>`).join('')}</div>`;
   if(st._mkGen&&!L.some(d=>d.day===today)) h+=`<div class="card mk-load"><div class="ai-spin"><i></i><span>✦</span></div><div><b>جارِ تجهيز أفكار اليوم…</b><small>المساعد يحلل مبيعاتكم ومناسبات اليوم</small></div></div>`;
-  if(st._mkErr&&!L.some(d=>d.day===today)){ h+=`<div class="card note bad">تعذّر تجهيز أفكار اليوم ${/401/.test(st._mkErr)?'(وصلت حد المساعد اليومي)':''} — <button class="btn ghost sm" data-mkre="1">حاول مرة ثانية</button></div>`; }
+  if(st._mkErr&&!st._mkGen&&!L.some(d=>d.day===today)){ h+=`<div class="card note bad">تعذّر تجهيز أفكار اليوم ${/401/.test(st._mkErr)?'(وصلت حد المساعد اليومي)':/parse/.test(st._mkErr)?'(رد المساعد ما كان بالشكل المطلوب)':/http/.test(st._mkErr)?'(المساعد ما رد — '+esc(st._mkErr)+')':''} — <button class="btn ghost sm" data-mkre="1">حاول مرة ثانية</button></div>`; }
   if(!D) return h+(st._mkGen?'':`<div class="card empty">ما فيه أفكار للحين</div>`);
   h+=`<div class="mk-day"><span>${ATT_DOW[new Date(D.day+'T12:00:00').getDay()]} ${dLbl(D.day)} · ${esc(mkHijri(D.day))}</span>${D.occasion?`<b>✨ ${esc(D.occasion)}</b>`:''}</div>`;
   if((D.trends||[]).length) h+=`<div class="card mk-tr"><h3>🔥 ترندات اليوم <small>من الإنترنت</small></h3>${D.trends.map(t=>`<div class="mk-tri"><b>${esc(t.title)}</b>${t.what?`<div>${esc(t.what)}</div>`:''}${t.use?`<div class="mk-use">💡 ${esc(t.use)}</div>`:''}${t.source?`<a href="${esc(t.source)}" target="_blank" rel="noopener">المصدر ↗</a>`:''}</div>`).join('')}</div><h3 class="mk-h3">💡 أفكار اليوم</h3>`;
@@ -2465,7 +2480,7 @@ document.addEventListener('click',async e=>{
   const t=e.target; if(!t.closest||!t.closest('#view')) return;
   const d=t.closest('[data-mkd]'); if(d){ st.mkDay=d.dataset.mkd; render(); return; }
   const re=t.closest('[data-mkre]'); if(re&&isAdmin()&&!st._mkGen){ const k=await sb.rpc('mkt_kick',{p_replace:true}); if(!k.error){ toast('🔎 جارِ البحث عن ترندات اليوم — بيوصلك إشعار خلال دقيقة أو دقيقتين'); re.disabled=true; re.textContent='⏳ جارِ البحث…'; const t0=(st._mk||[]).find(x=>x.day===todayIso()); const was=t0&&t0.at; let n=0; const iv=setInterval(async()=>{ n++; try{ const L=await mkLoad(); const t1=L.find(x=>x.day===todayIso()); if((t1&&t1.at!==was&&t1.src==='web')||n>8){ clearInterval(iv); if(st.tab==='mkt') render(); } }catch(_){ clearInterval(iv); } },20000); return; } if(!/mkt_kick|schema cache|function/i.test(k.error.message)){ toast(k.error.message); return; } }
-  if(re){ if(st._mkGen) return; st._mkGen=true; st._mkErr=null; st.mkDay=todayIso(); re.disabled=true; re.textContent='⏳ جارِ التجهيز…'; try{ await mkGenerate(todayIso(),isAdmin()&&(st._mk||[]).some(x=>x.day===todayIso())); toast('جهزت أفكار جديدة ✓'); }catch(er){ toast(/401/.test(er.message)?'وصلت حد المساعد اليومي':'تعذّر التجهيز — حاول بعد شوي'); } st._mkGen=false; render(); return; }
+  if(re){ if(st._mkGen) return; st._mkGen=true; st._mkErr=null; render(); st.mkDay=todayIso(); re.disabled=true; re.textContent='⏳ جارِ التجهيز…'; try{ await mkGenerate(todayIso(),isAdmin()&&(st._mk||[]).some(x=>x.day===todayIso())); toast('جهزت أفكار جديدة ✓'); }catch(er){ toast(/401/.test(er.message)?'وصلت حد المساعد اليومي':'تعذّر التجهيز — حاول بعد شوي'); } st._mkGen=false; render(); return; }
   const cp=t.closest('[data-mkcp]'); if(cp){ const x=(st._mkSel.items||[])[+cp.dataset.mkcp]; try{ await navigator.clipboard.writeText(x.caption); toast('تم نسخ النص ✓'); }catch(_){ prompt('انسخ النص:',x.caption); } return; }
   const vb=t.closest('[data-mkv]'); if(vb){ const D=st._mkSel, i=+vb.dataset.mkv, v=(D.votes||{})[i]||{}; const nv=v.mine==+vb.dataset.v?0:+vb.dataset.v; const r=await sb.rpc('mkt_vote',{p_day:D.day,p_idx:i,p_vote:nv,p_done:!!v.mdone}); if(r.error) return toast(r.error.message); render(); return; }
   const dn=t.closest('[data-mkdone]'); if(dn){ const D=st._mkSel, i=+dn.dataset.mkdone, v=(D.votes||{})[i]||{}; const r=await sb.rpc('mkt_vote',{p_day:D.day,p_idx:i,p_vote:v.mine||0,p_done:!v.mdone}); if(r.error) return toast(r.error.message); toast(!v.mdone?'ممتاز — انحسبت منفّذة ✓':'تم'); render(); return; }
