@@ -679,6 +679,7 @@ body.hasnav .toast{bottom:calc(100px + env(safe-area-inset-bottom,0px))}
 .mkh{padding:12px 13px!important;margin:10px 0!important;gap:11px!important}.mkh-ic{width:44px!important;height:44px!important;font-size:23px!important;border-radius:13px!important}.mkh-tx b{font-size:14px!important}
 .hx-top1{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:baseline;gap:8px}.hx-top1 .hx-hi{font-size:14px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hx-top1 .hx-date{flex:none;font-size:10.5px}.hx-pc{display:inline-block;font-size:9.5px;padding:1px 7px;border-radius:99px;margin-inline-start:4px;vertical-align:1px}.hx-pc.u{background:rgba(142,227,181,.16);color:#8EE3B5}.hx-pc.d{background:rgba(255,180,168,.16);color:#FFB4A8}.hx-main{margin-top:4px!important}
 .mkh-tx b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:14px!important}.mkh-ch:empty{display:none}.mkh-go{position:relative;flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#D4AF37;color:#0F3322;font-size:16px;font-weight:700;line-height:1}.mkh{margin:10px 0 12px!important}
+.rt-hd{margin:4px 2px 10px}.rt-hd h2{font-size:17px}.rt-hd .muted{font-size:11.5px}.rt-day{display:flex;justify-content:space-between;align-items:baseline;margin:14px 4px 6px;font-size:13px}.rt-day span{font-size:11.5px;color:var(--muted)}.rt-list{padding:4px 14px!important}.rt-it{display:flex;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line)}.rt-it:last-child{border-bottom:0}.rt-a{flex:none;min-width:70px;text-align:center;padding:7px 6px;border-radius:12px;background:#FBF3DF}.rt-a b{display:block;font-size:15px}.rt-a small{font-size:9.5px;color:var(--muted)}.rt-a.big{background:#FBE9E7;color:#B23126}.rt-m{flex:1;min-width:0;font-size:12px;line-height:1.6}.rt-t{font-weight:700;font-size:13.5px}.rt-br{font-size:10px;font-weight:600;padding:1px 7px;border-radius:99px;background:color-mix(in srgb,var(--c) 14%,transparent);color:var(--c);margin-inline-start:4px}.rt-n{font-size:11.5px;background:var(--soft,#F6F6F2);border-radius:8px;padding:3px 8px;margin-top:3px}.rt-s{font-size:10.5px}.rt-ph{flex:none;width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-size:20px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -769,6 +770,7 @@ const SECTIONS=[
   {id:'me',name:'بوابتي'},
   {id:'msgs',name:'المراسلات'},
   {id:'handover',name:'تسليم الورديات',app:'handover'},
+  {id:'rets',name:'مرتجعات الكاشيرات'},
   {id:'users',name:'المستخدمين والصلاحيات',admin:true},
   {id:'data',name:'إدخال البيانات',admin:true}
 ];
@@ -780,13 +782,13 @@ const NAV_ICONS={
   hrg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="9" cy="11" r="2.3"/><path d="M5.8 16.2a3.4 3.4 0 0 1 6.4 0"/><path d="M14.5 10h3.5M14.5 13.5h3.5"/></svg>',
   fin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/><path d="M6.5 15h4"/></svg>',
   more:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>'};
-const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me','msgs']},{id:'ai',name:'المساعد الذكي',secs:['ai']},{id:'rep',name:'التقارير',secs:['brief','sales','daily','channels','income','wh','waste','chicken']},{id:'ops',name:'العمليات',secs:['maint','feedback','mkt','fleet']},{id:'hrg',name:'الموارد البشرية',secs:['hr','att','employees','advances']},{id:'fin',name:'المالية',secs:['treasury','handover','loans','custody']},{id:'more',name:'الإدارة',secs:['users','data'],nav:false}];
+const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me','msgs']},{id:'ai',name:'المساعد الذكي',secs:['ai']},{id:'rep',name:'التقارير',secs:['brief','sales','daily','channels','income','wh','waste','chicken']},{id:'ops',name:'العمليات',secs:['maint','feedback','mkt','fleet']},{id:'hrg',name:'الموارد البشرية',secs:['hr','att','employees','advances']},{id:'fin',name:'المالية',secs:['treasury','handover','rets','loans','custody']},{id:'more',name:'الإدارة',secs:['users','data'],nav:false}];
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
-const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['maint','maint_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','handover','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
+const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['maint','maint_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','handover','rets','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610162130';
-const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم';
+const APP_VER='202610162141';
+const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets='تفعيل اشعارات مرتجع الكاشيرات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 const CH={ajl:'آجل عملاء',shaden:'تطبيق الشادن',meals:'وجبات',family:'قسم العائلات',keeta:'تطبيق كيتا',hs:'تطبيق هانقرستيشن',dlv:'توصيل',tkl:'سفري / محلي',ninja:'تطبيق نينجا',bonat:'تطبيق بونات',awail:'عوائل',sfr:'سفري',mhl:'محلي'};
@@ -2740,6 +2742,21 @@ function cuStatement(c,tx,staff){ const k=cuCalc(tx);
     ${(()=>{const L=cuByBranch(tx); return L.length?`<div class="cu-brs"><span class="muted">المصروف حسب الفرع:</span>${L.map(([b,v])=>`<span class="tag"><i class="dot" style="background:${brById(b).color}"></i>${esc(brById(b).name)} <b class="num">${fmt(v,2)}</b></span>`).join('')}</div>`:'';})()}
     ${k.nonTax?`<div class="muted" style="font-size:11px;margin-top:6px">🧾 فواتير غير ضريبية: <b class="num" style="color:var(--down)">${fmt(k.nonTax,2)}</b> ر.س${k.vat?` · ضريبة مدخلات معتمدة ${fmt(k.vat,2)}`:''}</div>`:''}`; }
 
+V.rets=async()=>{
+  const r=await sb.rpc('ret_feed',{p_days:7});
+  if(r.error) return `<div class="card"><h3>↩️ مرتجعات الكاشيرات</h3><p class="muted">${/ret_feed/.test(r.error.message)?'شغّل ملف «إشعارات المرتجعات» في Supabase أول.':'تعذّر التحميل — تأكد من الإنترنت'}</p></div>`;
+  const bs=selBranches(); const L=(r.data||[]).filter(x=>!bs||!bs.length||bs.includes(x.branch));
+  let h=`<div class="rt-hd"><h2>↩️ مرتجعات الكاشيرات</h2><span class="muted">آخر ٧ أيام · يوصلك إشعار مع كل مرتجع</span></div>`;
+  if(!L.length) return h+`<div class="card"><p class="muted" style="text-align:center;padding:18px 0">ما فيه مرتجعات موثّقة في آخر ٧ أيام 👌</p></div>`;
+  const days=[...new Set(L.map(x=>x.bdate))];
+  days.forEach(d=>{ const D=L.filter(x=>x.bdate===d), t=D.reduce((a,x)=>a+ +x.amount,0);
+    h+=`<div class="rt-day"><b>${DAYN[new Date(d+'T12:00:00').getDay()]} ${+d.slice(8)} ${MONTHS[+d.slice(5,7)-1]}</b><span class="num">${D.length} مرتجع · ${fmt(t,2)} ر.س</span></div><div class="card rt-list">`;
+    D.forEach(x=>{ const b=brById(x.branch), tm=new Date(x.at).toLocaleTimeString('ar-SA-u-nu-latn',{hour:'numeric',minute:'2-digit'});
+      h+=`<div class="rt-it"><div class="rt-a ${+x.amount>=100?'big':''}"><b class="num">${fmt(+x.amount,2)}</b><small>ر.س</small></div><div class="rt-m"><div class="rt-t">${esc(x.cashier||'—')} <span class="rt-br" style="--c:${b.color||'#888'}">${esc(b.name)}</span></div><div class="muted">${esc(x.reason)} · فاتورة <span class="num">${esc(x.inv)}</span> · ${tm}</div>${x.note?`<div class="rt-n">${esc(x.note)}</div>`:''}<div class="muted rt-s">وُثّق بعد ${x.mins} دقيقة</div></div><button class="rt-ph" data-retph="${x.id}" aria-label="صورة الفاتورة">🧾</button></div>`; });
+    h+=`</div>`; });
+  return h;
+};
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-retph]');if(!b)return;b.disabled=true;const r=await sb.rpc('ret_photo',{p_id:+b.dataset.retph});b.disabled=false;if(r.error||!r.data){toast('تعذّر فتح الصورة');return;}const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;z-index:95;background:rgba(0,0,0,.92);display:grid;place-items:center;padding:12px';o.innerHTML=`<img src="${r.data}" style="max-width:100%;max-height:92vh;border-radius:10px">`;o.onclick=()=>o.remove();document.body.appendChild(o);});
 V.custody=async()=>{
   if(!cuStaff()){ let mine=''; try{ mine=await cuMine(); }catch(e){} return mine||`<div class="card empty">ما عندك عهدة مفتوحة حالياً — لما تنفتح لك عهدة يوصلك إشعار وتظهر هنا.</div>`; }
   let D; try{ D=await cuLoad(); }catch(e){ if(cuMissing(e)) return `<div class="card empty">ميزة العُهد تحتاج تشغيل ملف custody.sql في Supabase أولاً</div>`; throw e; }
