@@ -675,6 +675,8 @@ body.hasnav .toast{bottom:calc(100px + env(safe-area-inset-bottom,0px))}
 .fl-modal{position:fixed;inset:0;z-index:85;background:rgba(0,0,0,.45);display:grid;place-items:center;padding:16px}
 .fl-ad{border:1px solid var(--line);border-radius:12px;padding:10px 12px}.fl-ad.on{box-shadow:0 0 0 2px var(--gold)}.fl-ad.bad{background:rgba(208,69,58,.04)}.fl-ad.warn{background:rgba(201,138,12,.05)}
 .fl-kv{display:flex;justify-content:space-between;font-size:11px;padding:3px 0}.fl-kv span{color:var(--muted)}
+.hx-hero{padding:13px 14px 11px!important;border-radius:20px!important}.hx-main{margin-top:6px!important}.hx-ring{width:64px!important;height:64px!important}.hx-rtx b{font-size:13px!important}.hx-rtx span{font-size:8.5px!important}.hx-big{font-size:clamp(22px,7vw,29px)!important}.hx-spark{display:none}.hx-pace{margin-top:7px!important;padding:5px 9px!important}.hx-stats{margin-top:7px!important}.hx-stats button{padding:6px 8px!important}.hx-hi{font-size:15px!important}
+.mkh{padding:12px 13px!important;margin:10px 0!important;gap:11px!important}.mkh-ic{width:44px!important;height:44px!important;font-size:23px!important;border-radius:13px!important}.mkh-tx b{font-size:14px!important}
 </style>
 </head>
 <body>
@@ -781,7 +783,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['handover','maint','maint_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610160931';
+const APP_VER='202610160934';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -1019,7 +1021,7 @@ V.home=async()=>{
     const dPct=prevSame?tot/prevSame-1:null, dim=daysIn(m), avg=tot/lastDay, fc=salesFcOf(S,m,bs)??avg*dim;
     const yd=dayKeys[dayKeys.length-1], yv=dayTot[dayTot.length-1], wkv=dayVal(shiftD(yd,-7));
     const prog=pmTot?Math.min(tot/pmTot,1.5):lastDay/dim, timeP=lastDay/dim;
-    const R=34,C=2*Math.PI*R, ring=`<svg width="84" height="84" viewBox="0 0 84 84" style="display:block;transform:rotate(-90deg)"><circle cx="42" cy="42" r="${R}" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="7"/><circle cx="42" cy="42" r="${R}" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="7" stroke-dasharray="1.2 ${(C/dim-1.2).toFixed(2)}"/><circle class="hx-arc" cx="42" cy="42" r="${R}" fill="none" stroke="url(#hxg)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C*(1-Math.min(prog,1))).toFixed(1)}" style="--c:${C.toFixed(1)}"/><defs><linearGradient id="hxg"><stop offset="0" stop-color="#F6E7B0"/><stop offset="1" stop-color="#D4AF37"/></linearGradient></defs></svg>`;
+    const R=34,C=2*Math.PI*R, ring=`<svg width="64" height="64" viewBox="0 0 84 84" style="display:block;transform:rotate(-90deg)"><circle cx="42" cy="42" r="${R}" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="7"/><circle cx="42" cy="42" r="${R}" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="7" stroke-dasharray="1.2 ${(C/dim-1.2).toFixed(2)}"/><circle class="hx-arc" cx="42" cy="42" r="${R}" fill="none" stroke="url(#hxg)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C*(1-Math.min(prog,1))).toFixed(1)}" style="--c:${C.toFixed(1)}"/><defs><linearGradient id="hxg"><stop offset="0" stop-color="#F6E7B0"/><stop offset="1" stop-color="#D4AF37"/></linearGradient></defs></svg>`;
     const ahead=pmTot?prog-timeP:null;
     h+=`<div class="hx-hero">
       <div class="hx-glow"></div>
@@ -1056,8 +1058,8 @@ V.home=async()=>{
   } else {
     h+=`<div class="hx-hero"><div class="hx-glow"></div><div class="hx-top"><div><div class="hx-date">${dateTxt}</div><div class="hx-hi">${greet}${nm?'، '+esc(nm):''} 👋</div></div>${brTag}</div><div style="position:relative;margin-top:10px;opacity:.85;font-size:12.5px">أهلاً بك في منصة الإدارة الموحّدة</div></div>`;
   }
-  try{ h+=await brCard(); }catch(e){}
   try{ h+=await mkHomeCard(); }catch(e){}
+  try{ h+=await brCard(); }catch(e){}
   // ===== المؤشرات =====
   const tile=(ic,bg,l,v,sub,go)=>`<button class="hx-tile" ${go?`data-t="${go}"`:''}><span class="hx-ic" style="background:${bg}">${ic}</span><span class="hx-tl">${l}</span><b class="num">${v}</b>${sub?`<span class="hx-ts">${sub}</span>`:''}</button>`;
   if(allowed('income')){ const I=(await loadIncome()).filter(r=>bs.includes(r.branch_id)&&!r.is_estimate); const ms=[...new Set(I.map(r=>r.month))].sort();
