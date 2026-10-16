@@ -562,9 +562,10 @@ function aEval(r,s){const o={late:0,early:0};const sh=aFor(s,r);if(!sh||!r.in_at
 async function loadAtt(month){
   if(S.att&&S.att[month])return S.att[month];S.att=S.att||{};
   const N=daysIn(month),a=month+'-01',z=month+'-'+pad(N);
-  const [sh,rc,gb,cfq,ae,...fs]=await Promise.all([SBC.from('att_shift').select('*'),SBC.from('attendance').select('emp_id,branch,day,seq,in_at,out_at').gte('day',a).lte('day',z).limit(10000),SBC.from('att_branch').select('*'),SBC.from('att_cfg').select('*'),SBC.from('att_emp').select('*')].concat(S.branches.map(b=>SBC.from('attendance').select('day').eq('branch',b.id).order('day').limit(1))));
-  const o={ok:!rc.error&&!sh.error,sh:{},by:{},first:{},geo:{},cfg:{},ex:{}};
+  const [sh,rc,gb,cfq,ae,lvq,...fs]=await Promise.all([SBC.from('att_shift').select('*'),SBC.from('attendance').select('emp_id,branch,day,seq,in_at,out_at').gte('day',a).lte('day',z).limit(10000),SBC.from('att_branch').select('*'),SBC.from('att_cfg').select('*'),SBC.from('att_emp').select('*'),SBC.rpc('lv_list',{p_from:a,p_to:z}).then(r=>r,()=>({data:[]}))].concat(S.branches.map(b=>SBC.from('attendance').select('day').eq('branch',b.id).order('day').limit(1))));
+  const o={ok:!rc.error&&!sh.error,sh:{},by:{},first:{},geo:{},cfg:{},ex:{},lv:{}};
   ((ae&&ae.data)||[]).forEach(x=>{if(x.exempt)o.ex[x.emp_id]=1});
+  o.lv={};((lvq&&!lvq.error&&lvq.data)||[]).filter(x=>x.status==='approved').forEach(x=>(o.lv[x.emp]=o.lv[x.emp]||[]).push([x.from,x.to,x.kind]));
   (gb.data||[]).forEach(x=>o.geo[x.branch]=x); ((cfq&&cfq.data)||[]).forEach(x=>o.cfg[x.branch]=x);
   (sh.data||[]).forEach(x=>o.sh[x.emp_id]=x);
   (rc.data||[]).forEach(r=>{((o.by[r.emp_id]=o.by[r.emp_id]||{})[r.day]=o.by[r.emp_id][r.day]||[]).push(r)});
@@ -582,7 +583,7 @@ function attDed(r,month,A){
     const sd=aSh(s,d),Ld=aShifts(sd);
     if(d>=since) R.forEach(x=>{const e=aEval(x,sd);late+=e.late+e.early});
     if(d<since||d>endD||d>=bt||(s.off_days||[]).includes(new Date(d+'T12:00:00').getDay()))continue;
-    if(!R.length){abs++;continue}
+    if(!R.length){const lv=((A.lv||{})[r.id]||[]).find(([x,y])=>d>=x&&d<=y);if(lv&&lv[2]!=='unpaid')continue;abs++;continue}
     if(R.length<Ld.length){const got=new Set(R.map(x=>x.seq||1));Ld.forEach((q,k)=>{if(!got.has(k+1))missMin+=aLen(q)})}}
   const r2=v=>Math.round(v*100)/100;
   return{abs,missMin,late,absDed:r2(abs*day+missMin*mr),lateDed:r2(late*mr)};
