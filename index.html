@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Readex+Pro:wght@500;600;700&family=Montserrat:wght@400;600&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="config.js?v=7"></script>
+<script src="i18n.js?v=2"></script>
 <style>
 :root{
   --bg:#F5F5F1; --card:#FFFFFF; --line:#E6E6E0; --fg:#18231C; --muted:#6B706A;
@@ -680,6 +681,8 @@ body.hasnav .toast{bottom:calc(100px + env(safe-area-inset-bottom,0px))}
 .hx-top1{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:baseline;gap:8px}.hx-top1 .hx-hi{font-size:14px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hx-top1 .hx-date{flex:none;font-size:10.5px}.hx-pc{display:inline-block;font-size:9.5px;padding:1px 7px;border-radius:99px;margin-inline-start:4px;vertical-align:1px}.hx-pc.u{background:rgba(142,227,181,.16);color:#8EE3B5}.hx-pc.d{background:rgba(255,180,168,.16);color:#FFB4A8}.hx-main{margin-top:4px!important}
 .mkh-tx b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:14px!important}.mkh-ch:empty{display:none}.mkh-go{position:relative;flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#D4AF37;color:#0F3322;font-size:16px;font-weight:700;line-height:1}.mkh{margin:10px 0 12px!important}
 .rt-hd{margin:4px 2px 10px}.rt-hd h2{font-size:17px}.rt-hd .muted{font-size:11.5px}.rt-day{display:flex;justify-content:space-between;align-items:baseline;margin:14px 4px 6px;font-size:13px}.rt-day span{font-size:11.5px;color:var(--muted)}.rt-list{padding:4px 14px!important}.rt-it{display:flex;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line)}.rt-it:last-child{border-bottom:0}.rt-a{flex:none;min-width:70px;text-align:center;padding:7px 6px;border-radius:12px;background:#FBF3DF}.rt-a b{display:block;font-size:15px}.rt-a small{font-size:9.5px;color:var(--muted)}.rt-a.big{background:#FBE9E7;color:#B23126}.rt-m{flex:1;min-width:0;font-size:12px;line-height:1.6}.rt-t{font-weight:700;font-size:13.5px}.rt-br{font-size:10px;font-weight:600;padding:1px 7px;border-radius:99px;background:color-mix(in srgb,var(--c) 14%,transparent);color:var(--c);margin-inline-start:4px}.rt-n{font-size:11.5px;background:var(--soft,#F6F6F2);border-radius:8px;padding:3px 8px;margin-top:3px}.rt-s{font-size:10.5px}.rt-ph{flex:none;width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-size:20px;cursor:pointer}
+html[dir=ltr] .sh-t{direction:ltr}html[dir=ltr] .sh-t i{display:inline-block;transform:scaleX(-1)}html[dir=ltr] .chev{display:inline-block;transform:scaleX(-1)}
+.lg-sw{display:flex;gap:6px;justify-content:flex-end;margin:-4px 0 10px}.lg-sw button{font:inherit;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:99px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;cursor:pointer}.lg-sw button.on{background:#F6E7B0;color:#143F2A;border-color:#F6E7B0}
 </style>
 </head>
 <body>
@@ -787,7 +790,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['maint','maint_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','handover','rets','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610162141';
+const APP_VER='202610170014';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets='تفعيل اشعارات مرتجع الكاشيرات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -864,7 +867,7 @@ async function boot(){
   renderShell(); pushSync();
 }
 
-function renderShell(){
+function renderShell(){ try{ window.I18N&&I18N.emp(isEmp()); }catch(_){}
   const p=st.profile;
   $('#uname').textContent=p.full_name||p.username;
   $('#urole').textContent=ROLE_NAME[p.role]+' · '+p.username;
@@ -1553,6 +1556,7 @@ function attShiftCard(A){ if(!A) return '';
     <div class="sh-wk">${[0,1,2,3,4,5,6].map(d=>`<span class="${off.includes(d)?'off':''}${d===new Date(A.today+'T12:00:00').getDay()?' td':''}">${ATT_DOW[d].replace('ال','')}<small>${off.includes(d)?'إجازة':d===5&&S.fri_start?'دوام مختلف':'دوام'}</small></span>`).join('')}</div>
     <div class="sh-ft"><span>⏱️ مهلة التأخير ${S.grace||0} دقيقة</span>${S.by?`<span>حدده: ${esc(S.by)}${S.at?' · '+dLbl(String(S.at).slice(0,10)):''}</span>`:''}</div>
     ${isNew?`<button class="btn sm sh-ok" data-shok="${esc(String(S.at))}">👍 تمام، اطّلعت</button>`:''}</div>`; }
+document.addEventListener('click',e=>{const l=e.target.closest('[data-lang]'); if(l&&window.I18N){ I18N.set(l.dataset.lang); document.querySelectorAll('[data-lang]').forEach(x=>x.classList.toggle('on',x===l)); return; }});
 document.addEventListener('click',e=>{const b=e.target.closest('[data-shok]'); if(!b) return; try{localStorage.setItem('shSeen',b.dataset.shok);}catch(_){} const c=b.closest('.sh-card'); if(c){c.classList.remove('new'); const n=c.querySelector('.sh-new'); if(n) n.remove(); b.remove();} toast('تمام ✓');});
 async function attCard(){ let r; try{ r=await sb.rpc('att_me'); }catch(e){ return ''; } if(r.error||!r.data) return ''; const A=st._attMe=r.data;
   const sh=attSh(A.shift?{start_t:A.shift.start,end_t:A.shift.end,start2_t:A.shift.start2,end2_t:A.shift.end2,grace:A.shift.grace,off_days:A.shift.off,fri_start_t:A.shift.fri_start,fri_end_t:A.shift.fri_end,fri_start2_t:A.shift.fri_start2,fri_end2_t:A.shift.fri_end2}:null,A.today);
@@ -2243,7 +2247,7 @@ V.me=async()=>{
   const rem=act.reduce((t,a)=>t+advCalc(a).rem,0), mo=act.reduce((t,a)=>t+advCalc(a).mo,0);
   const sv=e.start_date?Math.max(0,monDiff(e.start_date.slice(0,7),curMon())):0;
   let h=`<div class="card" style="background:radial-gradient(120% 140% at 100% 0%,#2A6B49,#1E5A3E 45%,#123A27);color:#fff;border:0;padding:18px">
-    <div style="font-size:11.5px;opacity:.75">أهلاً بك 👋</div><div style="font-family:var(--f-disp);font-size:19px;font-weight:700">${esc(e.name)}</div>
+    <div class="lg-sw">${[['ar','العربية'],['en','English'],['bn','বাংলা']].map(([k,n])=>`<button class="ntr${(window.I18N?I18N.lang:'ar')===k?' on':''}" data-lang="${k}">${n}</button>`).join('')}</div><div style="font-size:11.5px;opacity:.75">أهلاً بك 👋</div><div style="font-family:var(--f-disp);font-size:19px;font-weight:700">${esc(e.name)}</div>
     <div style="font-size:11px;opacity:.8">${esc(e.job||'')} · ${esc(e.branch_name||'')}</div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;border-top:1px solid rgba(255,255,255,.15);padding-top:12px;text-align:center">
       <div><div style="font-size:10px;opacity:.75">الراتب</div><b class="num" style="font-size:13.5px;color:#F6E7B0">${fmt(e.salary)}</b></div>

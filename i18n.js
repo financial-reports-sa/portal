@@ -1,0 +1,131 @@
+// ترجمة حساب الموظف: العربية / English / বাংলা — تترجم النصوص الظاهرة فقط (محتوى الرسائل والأسماء يبقى كما هو)
+(function(){
+const P=[ // [نمط، إنجليزي، بنغالي]
+ [/عندك (\d+) مراسلات جديدة/g,'You have $1 new messages','আপনার $1টি নতুন বার্তা'],
+ [/🪪 شهادتك الصحية تنتهي بعد (\d+) يوم/g,'🪪 Your health certificate expires in $1 days','🪪 আপনার হেলথ সার্টিফিকেটের মেয়াদ $1 দিনে শেষ'],
+ [/🪪 شهادتك الصحية منتهية منذ (\d+) يوم/g,'🪪 Your health certificate expired $1 days ago','🪪 আপনার হেলথ সার্টিফিকেটের মেয়াদ $1 দিন আগে শেষ'],
+ [/جدّدها وبلّغ مديرك\./g,'Renew it and tell your manager.','নবায়ন করে ম্যানেজারকে জানান।'],
+ [/(\d+) سنة و(\d+) شهر/g,'$1 yr $2 mo','$1 বছর $2 মাস'],
+ [/([\d:]+) ساعة يومياً/g,'$1 hrs/day','দৈনিক $1 ঘণ্টা'],
+ [/⏱️ مهلة التأخير (\d+) دقيقة/g,'⏱️ Late grace: $1 min','⏱️ দেরির ছাড়: $1 মিনিট'],
+ [/أنت بعيد عن الفرع \(([\d,]+) متر\) — سجّل وأنت داخل الفرع/g,"You're far from the branch ($1 m) — check in from inside the branch",'আপনি ব্রাঞ্চ থেকে দূরে ($1 মিটার) — ব্রাঞ্চের ভিতরে থেকে হাজিরা দিন'],
+ [/الموقع غير دقيق \(±([\d,]+) م\) — فعّل «الموقع الدقيق» من إعدادات الجوال وحاول مرة ثانية/g,'Location is not accurate (±$1 m) — turn on Precise Location in phone settings and try again','লোকেশন সঠিক নয় (±$1 মি) — ফোন সেটিংসে Precise Location চালু করে আবার চেষ্টা করুন'],
+ [/قبل (\d+) د(?![؀-ۿ])/g,'$1 min ago','$1 মিনিট আগে'],
+ [/قبل (\d+) س(?![؀-ۿ])/g,'$1 h ago','$1 ঘণ্টা আগে'],
+ [/(\d+) س (\d+) د(?![؀-ۿ])/g,'$1h $2m','$1ঘ $2মি'],
+ [/(\d+) س(?![؀-ۿ])/g,'$1h','$1ঘ'],
+ [/(\d+) د(?![؀-ۿ])/g,'$1m','$1মি'],
+ [/(\d+) دقيقة/g,'$1 min','$1 মিনিট'],
+ [/(\d+) يوم/g,'$1 days','$1 দিন'],
+ [/(\d+) سنة/g,'$1 yr','$1 বছর'],
+ [/(\d+) شهر/g,'$1 mo','$1 মাস'],
+ [/(\d+) أشهر/g,'$1 months','$1 মাস'],
+ [/(\d+) قسط/g,'$1 installments','$1 কিস্তি'],
+ [/(\d+) من (\d+)/g,'$1 of $2','$2 এর মধ্যে $1'],
+ [/الشفت (\d+)/g,'Shift $1','শিফট $1'],
+ [/رقم (\d+)/g,'No. $1','নং $1'],
+ [/(\d{1,2}:\d{2}(?::\d{2})?)\s?ص/g,'$1 AM','$1 AM'],
+ [/(\d{1,2}:\d{2}(?::\d{2})?)\s?م(?![؀-ۿ])/g,'$1 PM','$1 PM'],
+];
+const W=[ // [عربي، إنجليزي، بنغالي] — تُطبّق الأطول أولاً
+ ['حركة بانتظار مراجعة المحاسب','pending accountant review','হিসাবরক্ষকের পর্যালোচনার অপেক্ষায়'],['حركة بانتظار مراجعتك','pending your review','আপনার পর্যালোচনার অপেক্ষায়'],
+ ['بانتظار تأكيدك','awaiting your confirmation','আপনার নিশ্চিতকরণের অপেক্ষায়'],['فواتير معلّقة','pending invoices','অপেক্ষমাণ রসিদ'],
+ ['المصروف حسب الفرع:','Spending by branch:','ব্রাঞ্চ অনুযায়ী খরচ:'],['فواتير غير ضريبية:','Non-VAT invoices:','ভ্যাটবিহীন রসিদ:'],['فواتير غير ضريبية','Non-VAT invoices','ভ্যাটবিহীন রসিদ'],
+ ['ضريبة مدخلات معتمدة','approved input VAT','অনুমোদিত ইনপুট ভ্যাট'],['سجّلها','Recorded by','রেকর্ড করেছেন'],
+ ['منصة الإدارة الموحّدة','Unified Management Platform','ইউনিফাইড ম্যানেজমেন্ট প্ল্যাটফর্ম'],
+ ['تطوير بواسطة أمير العريفي','Developed by Ameer Alarifi','ডেভেলপ করেছেন আমীর আলআরিফি'],
+ ['مستجدات','Updates','আপডেট'],['حساب موظف','Employee account','কর্মীর অ্যাকাউন্ট'],
+ ['تم رفض مبلغ مستلم في عهدتك','A received amount in your custody was rejected','আপনার কাস্টডির একটি প্রাপ্ত টাকা বাতিল হয়েছে'],
+ ['تقدر تطلب سلفة من صفحتك بضغطة','You can request an advance from your page in one tap','এক ট্যাপে আপনার পেজ থেকে অগ্রিম চাইতে পারেন'],
+ ['بوابتي','My Portal','আমার পোর্টাল'],['المراسلات','Messages','বার্তা'],
+ ['فعّل إشعارات الجوال','Turn on phone notifications','ফোনের নোটিফিকেশন চালু করুন'],
+ ['الإشعارات محظورة — فعّلها من إعدادات المتصفح لهذا الموقع','Notifications are blocked — enable them in your browser settings for this site','নোটিফিকেশন বন্ধ — ব্রাউজার সেটিংস থেকে এই সাইটের জন্য চালু করুন'],
+ ['فعّل الإشعارات','Enable notifications','নোটিফিকেশন চালু করুন'],
+ ['مراسلة جديدة','New message','নতুন বার্তা'],['آخرها','Latest','সর্বশেষ'],['مطلوب إقرارك','Your acknowledgment is required','আপনার স্বীকৃতি প্রয়োজন'],
+ ['قرار إداري','Admin decision','প্রশাসনিক সিদ্ধান্ত'],['تعميم','Circular','সার্কুলার'],['عرض / حملة','Offer / Campaign','অফার / ক্যাম্পেইন'],
+ ['دوامات وجداول','Shifts & schedules','শিফট ও সময়সূচি'],['تنبيه','Warning','সতর্কতা'],['رسالة عامة','General message','সাধারণ বার্তা'],
+ ['أهلاً بك','Welcome','স্বাগতম'],['كاشير','Cashier','ক্যাশিয়ার'],['الراتب الشهري','Monthly salary','মাসিক বেতন'],['الراتب','Salary','বেতন'],
+ ['مدة الخدمة','Service','চাকরির মেয়াদ'],['السلف المتبقية','Remaining advances','বাকি অগ্রিম'],
+ ['مديرك ما حدد دوامك للحين — أول ما يحدده يوصلك إشعار ويطلع هنا',"Your manager hasn't set your shift yet — you'll get a notification once it's set",'আপনার ম্যানেজার এখনো শিফট ঠিক করেননি — ঠিক করলে নোটিফিকেশন পাবেন'],
+ ['مديرك حدد دوامك — اطّلع عليه','Your manager set your shift — please check it','আপনার ম্যানেজার শিফট ঠিক করেছেন — দেখে নিন'],
+ ['مديرك عدّل دوامك — اطّلع عليه','Your manager changed your shift — please check it','আপনার ম্যানেজার শিফট পরিবর্তন করেছেন — দেখে নিন'],
+ ['تمام، اطّلعت','OK, got it','ঠিক আছে, দেখেছি'],['تمام','OK','ঠিক আছে'],
+ ['اليوم إجازتك','Today is your day off','আজ আপনার ছুটি'],['شفتين في اليوم','Two shifts a day','দিনে দুই শিফট'],['شفت واحد في اليوم','One shift a day','দিনে এক শিফট'],
+ ['الشفت الأول','1st shift','প্রথম শিফট'],['الشفت الثاني','2nd shift','দ্বিতীয় শিফট'],['من — إلى','From — To','থেকে — পর্যন্ত'],
+ ['ينتهي اليوم التالي','Ends the next day','পরের দিন শেষ'],['دوام يوم الجمعة','Friday hours','শুক্রবারের সময়'],['دوام مختلف','Different hours','ভিন্ন সময়'],
+ ['حدده','Set by','নির্ধারণ করেছেন'],['دوامك','Your shift','আপনার শিফট'],['دوام','Work','কাজ'],['إجازة','Off','ছুটি'],
+ ['الحضور والانصراف','Attendance','হাজিরা'],['أنت على رأس العمل',"You're on duty",'আপনি এখন ডিউটিতে'],['خلّصت دوام اليوم',"You finished today's shift",'আজকের শিফট শেষ'],
+ ['بين الشفتين','Between shifts','দুই শিফটের মাঝে'],['ما سجّلت حضور اليوم',"You haven't checked in today",'আজ এখনো হাজিরা দেননি'],['ما تحدد دوامك بعد',"Your shift isn't set yet",'শিফট এখনো ঠিক হয়নি'],
+ ['حضور الشفت الثاني','Check in — 2nd shift','দ্বিতীয় শিফটে হাজিরা'],['تسجيل حضور','Check in','হাজিরা দিন'],['تسجيل انصراف','Check out','চেক আউট'],
+ ['لازم تكون داخل الفرع، ويطلب منك صورة سيلفي.','You must be inside the branch. A selfie is required.','ব্রাঞ্চের ভিতরে থাকতে হবে। একটি সেলফি লাগবে।'],
+ ['لازم تكون داخل الفرع، والتسجيل من جوالك المسجّل فقط.','You must be inside the branch, using your registered phone only.','ব্রাঞ্চের ভিতরে থাকতে হবে, শুধু আপনার নিবন্ধিত ফোন দিয়ে।'],
+ ['موقع الفرع ما تحدد بعد — بلّغ مدير الفرع.',"The branch location isn't set yet — tell the branch manager.",'ব্রাঞ্চের লোকেশন ঠিক হয়নি — ব্রাঞ্চ ম্যানেজারকে জানান।'],
+ ['أنت معفى من تسجيل الحضور والانصراف',"You're exempt from attendance",'আপনি হাজিরা থেকে অব্যাহতিপ্রাপ্ত'],
+ ['ما يحتاج تسجّل حضور ولا انصراف، وما ينحسب عليك غياب ولا تأخير.','No check-in or check-out needed, and no absence or lateness is counted.','হাজিরা বা চেক আউট লাগবে না, অনুপস্থিতি বা দেরিও গণনা হবে না।'],
+ ['متأخر','Late','দেরি'],['دخول','In','প্রবেশ'],['خروج','Out','বের'],['المدة','Duration','সময়'],
+ ['جاري تحديد موقعك…','Getting your location…','লোকেশন খোঁজা হচ্ছে…'],['جاري التسجيل…','Saving…','সেভ হচ্ছে…'],
+ ['تم تسجيل حضورك ✓','Checked in ✓','হাজিরা হয়েছে ✓'],['تم تسجيل انصرافك ✓ — يعطيك العافية','Checked out ✓ — thank you','চেক আউট হয়েছে ✓ — ধন্যবাদ'],
+ ['صورة السيلفي إلزامية','A selfie is required','সেলফি বাধ্যতামূলক'],['موقعك داخل الفرع',"You're inside the branch",'আপনি ব্রাঞ্চের ভিতরে আছেন'],
+ ['باقي صورة سيلفي لإثبات الحضور','Now take a selfie to confirm attendance','হাজিরা নিশ্চিত করতে একটি সেলফি তুলুন'],['صوّر السيلفي','Take selfie','সেলফি তুলুন'],
+ ['جاري تجهيز الصورة…','Preparing photo…','ছবি প্রস্তুত হচ্ছে…'],
+ ['الجوال ما يدعم تحديد الموقع',"This phone doesn't support location",'এই ফোনে লোকেশন সাপোর্ট নেই'],
+ ['لازم تسمح للتطبيق باستخدام الموقع من إعدادات الجوال','Allow the app to use location in your phone settings','ফোন সেটিংসে অ্যাপকে লোকেশন ব্যবহারের অনুমতি দিন'],
+ ['ما قدرنا نحدد موقعك — تأكد إن الموقع (GPS) شغّال',"We couldn't get your location — make sure GPS is on",'লোকেশন পাওয়া যায়নি — GPS চালু আছে কিনা দেখুন'],
+ ['عهدتي','My custody','আমার কাস্টডি'],['التفاصيل','Details','বিস্তারিত'],['المستلم','Received','প্রাপ্ত'],['المصروف المعتمد','Approved spending','অনুমোদিত খরচ'],
+ ['الرصيد عند مسؤول العهدة','Balance with custody holder','কাস্টডি হোল্ডারের কাছে ব্যালেন্স'],['أكّد استلام المبالغ','Confirm received amounts','প্রাপ্ত টাকা নিশ্চিত করুন'],
+ ['مبلغ مستلم','Amount received','প্রাপ্ত টাকা'],['نقداً','Cash','নগদ'],['بانتظار المراجعة','Pending review','পর্যালোচনার অপেক্ষায়'],
+ ['بانتظار تأكيد مسؤول العهدة','Waiting for custody holder','কাস্টডি হোল্ডারের নিশ্চিতকরণের অপেক্ষায়'],['تأكيد الاستلام','Confirm receipt','প্রাপ্তি নিশ্চিত করুন'],
+ ['ما استلمت','Not received','পাইনি'],['رفع فاتورة','Upload invoice','রসিদ আপলোড'],['استلمت مبلغ','I received money','টাকা পেয়েছি'],['رُفضت فاتورة','Invoice rejected','রসিদ বাতিল'],
+ ['صوّر كل فاتورة وارفعها هنا — الفاتورة بدون صورة ما يقبلها المحاسب، والعهدة ما تنصفى إلا بعد مراجعة كل الفواتير.',"Photograph every invoice and upload it here — the accountant won't accept an invoice without a photo.",'প্রতিটি রসিদের ছবি তুলে এখানে আপলোড করুন — ছবি ছাড়া হিসাবরক্ষক রসিদ গ্রহণ করবেন না।'],
+ ['طلب سلفة جديدة','Request a new advance','নতুন অগ্রিমের আবেদন'],
+ ['طلبك يروح للإدارة مباشرة للاعتماد، ويوصلك إشعار بالنتيجة.',"Your request goes straight to management for approval, and you'll be notified of the result.",'আপনার আবেদন সরাসরি অনুমোদনের জন্য ম্যানেজমেন্টে যায়, ফলাফল নোটিফিকেশনে জানবেন।'],
+ ['نموذج طلب سلفة على الراتب','Salary advance request form','বেতন অগ্রিম আবেদন ফর্ম'],['بيانات الموظف','Employee details','কর্মীর তথ্য'],['المسمى الوظيفي','Job title','পদবি'],
+ ['مبلغ السلفة','Advance amount','অগ্রিমের পরিমাণ'],['راتب كامل','Full salary','পুরো বেতন'],['الحد الأعلى: راتب شهر واحد','Max: one month salary','সর্বোচ্চ: এক মাসের বেতন'],
+ ['مدة السداد','Repayment period','পরিশোধের মেয়াদ'],['اكتب المبلغ ليظهر جدول الخصم','Enter the amount to see the deduction schedule','কর্তনের তালিকা দেখতে টাকার পরিমাণ লিখুন'],
+ ['سبب الطلب','Reason','কারণ'],['الإقرار','Declaration','ঘোষণা'],
+ ['أقر بأن هذا المبلغ سلفة على راتبي، وأوافق على خصمه من الراتب حسب الجدول الموضح، وفي حال انتهاء الخدمة قبل اكتمال السداد يُخصم المتبقي من المستحقات النهائية.','I confirm this amount is an advance on my salary and agree to its deduction per the schedule shown. If my service ends before full repayment, the rest is deducted from my final dues.','আমি নিশ্চিত করছি যে এই টাকা আমার বেতনের অগ্রিম, এবং তালিকা অনুযায়ী বেতন থেকে কর্তনে সম্মত। পরিশোধের আগে চাকরি শেষ হলে বাকি টাকা চূড়ান্ত পাওনা থেকে কাটা হবে।'],
+ ['تقديم الطلب','Submit request','আবেদন জমা দিন'],['تفاصيل إضافية (اختياري)','Extra details (optional)','অতিরিক্ত তথ্য (ঐচ্ছিক)'],
+ ['طلبك الحالي','Your current request','আপনার বর্তমান আবেদন'],['سلفي القائمة','My active advances','আমার চলমান অগ্রিম'],['سجل الطلبات','Request history','আবেদনের ইতিহাস'],
+ ['عرض النموذج','View form','ফর্ম দেখুন'],['النموذج','Form','ফর্ম'],['إلغاء الطلب','Cancel request','আবেদন বাতিল'],['يُخصم','Deducted','কাটা হয়'],['شهرياً','monthly','মাসিক'],
+ ['يبدأ الخصم من راتب','Deduction starts from salary of','কর্তন শুরু হবে যে মাসের বেতন থেকে:'],['متبقي','Remaining','বাকি'],['من','From','প্রেরক:'],
+ ['بانتظار مدير الفرع','Waiting for branch manager','ব্রাঞ্চ ম্যানেজারের অপেক্ষায়'],['بانتظار اعتماد الإدارة','Waiting for management approval','ম্যানেজমেন্টের অনুমোদনের অপেক্ষায়'],
+ ['معتمدة','Approved','অনুমোদিত'],['مرفوضة','Rejected','বাতিল'],['ملغاة','Cancelled','বাতিলকৃত'],['شهرين','2 months','২ মাস'],['شهر','month','মাস'],['أشهر','months','মাস'],
+ ['الوارد','Inbox','ইনবক্স'],['الكل','All','সব'],['مهم','Important','গুরুত্বপূর্ণ'],['عاجل','Urgent','জরুরি'],['الآن','now','এখন'],
+ ['أقررت بالاطلاع','You acknowledged','আপনি স্বীকার করেছেন'],['أقررت','Acknowledged','স্বীকার করেছি'],['رجوع للمراسلات','Back to messages','বার্তায় ফিরুন'],
+ ['طباعة / PDF','Print / PDF','প্রিন্ট / PDF'],
+ ['اطلعت على المراسلة وألتزم بما ورد فيها','I have read this message and will comply','আমি বার্তাটি পড়েছি এবং মেনে চলব'],
+ ['اطلعت على القرار وألتزم بما ورد فيها','I have read this decision and will comply','আমি সিদ্ধান্তটি পড়েছি এবং মেনে চলব'],
+ ['الردود والاستفسارات','Replies & questions','উত্তর ও প্রশ্ন'],['كل مستلم يشوف رده فقط','Each recipient sees only their own reply','প্রত্যেকে শুধু নিজের উত্তর দেখেন'],
+ ['ما فيه ردود للحين','No replies yet','এখনো কোনো উত্তর নেই'],['إرسال','Send','পাঠান'],['اكتب ردك…','Write your reply…','আপনার উত্তর লিখুন…'],
+ ['ما فيه مراسلات','No messages','কোনো বার্তা নেই'],['إلى:','To:','প্রতি:'],['إلغاء','Cancel','বাতিল'],['الاسم','Name','নাম'],['الفرع','Branch','ব্রাঞ্চ'],
+ ['العزيزية','Al-Aziziyah','আল-আজিজিয়া'],['شوران','Shoran','শোরান'],['الباتشينو','Al-Pacino','আল-পাচিনো'],['مدير','Manager','ম্যানেজার'],
+ ['التنبيهات','Notifications','নোটিফিকেশন'],['الحساب','Account','অ্যাকাউন্ট'],['تسجيل الخروج','Log out','লগ আউট'],['خروج من الحساب','Log out','লগ আউট'],
+ ['ر.س','SAR','রিয়াল'],
+ ['الأحد','Sun','রবি'],['الإثنين','Mon','সোম'],['الثلاثاء','Tue','মঙ্গল'],['الأربعاء','Wed','বুধ'],['الخميس','Thu','বৃহঃ'],['الجمعة','Fri','শুক্র'],['السبت','Sat','শনি'],
+ ['أحد','Sun','রবি'],['إثنين','Mon','সোম'],['ثلاثاء','Tue','মঙ্গল'],['أربعاء','Wed','বুধ'],['خميس','Thu','বৃহঃ'],['جمعة','Fri','শুক্র'],['سبت','Sat','শনি'],
+ ['يناير','Jan','জানুয়ারি'],['فبراير','Feb','ফেব্রুয়ারি'],['مارس','Mar','মার্চ'],['أبريل','Apr','এপ্রিল'],['مايو','May','মে'],['يونيو','Jun','জুন'],
+ ['يوليو','Jul','জুলাই'],['أغسطس','Aug','আগস্ট'],['سبتمبر','Sep','সেপ্টেম্বর'],['أكتوبر','Oct','অক্টোবর'],['نوفمبر','Nov','নভেম্বর'],['ديسمبر','Dec','ডিসেম্বর'],
+ ['الأول','1st','১ম'],['الثاني','2nd','২য়'],
+].sort((a,b)=>b[0].length-a[0].length);
+const ESC=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+const EX=new Set(['الفرع','دوام','إجازة','شهر','أشهر','شهرين','الكل','مهم','عاجل','تنبيه','تعميم','الأول','الثاني','المدة','دخول','خروج','الاسم','الراتب','متأخر','تمام','إرسال','إلغاء','المستلم','التفاصيل','النموذج','متبقي','الآن','حدده','الوارد','الإقرار','يُخصم','شهرياً','معتمدة','مرفوضة','ملغاة','نقداً']);
+const EXM=Object.fromEntries(W.filter(w=>EX.has(w[0])).map(w=>[w[0],w]));
+const RX=W.filter(w=>!EX.has(w[0])).map(w=>[new RegExp('(?<![\\u0600-\\u06FF])'+ESC(w[0])+'(?![\\u0600-\\u06FF])','g'),w[1],w[2]]);
+const LS=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
+let lang=LS('lang')||'ar';
+const SKIP='.mg-ttl,.mg-sn,.mg-body,.mg-dt,.mg-rn,.ntr,script,style,textarea,input';
+const orig=new WeakMap();
+function tr(s,L){ const i=L==='bn'?2:1; let o=s.replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/٫/g,'.');
+  for(const p of P) o=o.replace(p[0],p[i]); for(const r of RX) o=o.replace(r[0],r[i]); { const rest=(o.match(/[\u0600-\u06FF]+/g)||[]); if(rest.length&&rest.every(w=>EXM[w])) o=o.replace(/[\u0600-\u06FF]+/g,w=>EXM[w][i]); } return o.replace(/ و(?=[A-Za-zঀ-৿\d])/g,' & '); }
+function on(){ return lang!=='ar'&&!!window.__i18nEmp; }
+function node(n){ const p=n.parentElement; if(!p||p.closest(SKIP)) return; if(!orig.has(n)){ if(!/[؀-ۿ٠-٩]/.test(n.nodeValue)) return; orig.set(n,n.nodeValue); }
+  const a=orig.get(n), want=on()?tr(a,lang):a; if(n.nodeValue!==want){ busy=true; n.nodeValue=want; } }
+function attrs(root){ (root.querySelectorAll?root.querySelectorAll('[placeholder],[aria-label]'):[]).forEach(e=>['placeholder','aria-label'].forEach(k=>{ const v=e.getAttribute(k); if(!v) return; const ok='data-ar-'+k; if(!e.hasAttribute(ok)){ if(!/[؀-ۿ]/.test(v)) return; e.setAttribute(ok,v); } const a=e.getAttribute(ok), want=on()?tr(a,lang):a; if(v!==want){ busy=true; e.setAttribute(k,want); } })); }
+let busy=false, q=false;
+function run(root){ root=root||document.body; if(!root) return; const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT); let n; while((n=w.nextNode())) node(n); attrs(root);
+  const d=on()?'ltr':'rtl'; if(document.documentElement.dir!==d){ document.documentElement.dir=d; document.documentElement.lang=on()?lang:'ar'; } busy=false; }
+const mo=new MutationObserver(()=>{ if(busy) return; if(lang==='ar'&&document.documentElement.dir==='rtl') return; if(q) return; q=true; requestAnimationFrame(()=>{ q=false; run(); }); });
+function start(){ mo.observe(document.body,{childList:true,subtree:true,characterData:true}); run(); }
+if(document.body) start(); else document.addEventListener('DOMContentLoaded',start);
+window.I18N={get lang(){return lang}, set(l){ lang=l; try{localStorage.setItem('lang',l)}catch(e){} run(); }, emp(v){ window.__i18nEmp=!!v; run(); }, tr:(s)=>on()?tr(s,lang):s};
+})();
