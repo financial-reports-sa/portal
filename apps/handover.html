@@ -87,7 +87,7 @@ const daysIn=m=>{const[y,mo]=m.split('-').map(Number);return new Date(y,mo,0).ge
 const tm=s=>{try{return new Date(s).toLocaleTimeString(LOC,{hour:'numeric',minute:'2-digit'})}catch(e){return''}};
 const appsTotal=r=>Object.values(r.apps||{}).reduce((a,b)=>a+(+b||0),0);
 const totOf=r=>r2((+r.cash||0)+(+r.card||0)+(+r.credit||0)+(+r.transfer||0)+(+r.invoice||0)+appsTotal(r));
-const diffOf=r=>r.adj!=null?r2(+r.adj):(r.system==null||r.system==='')?null:r2(totOf(r)-(+r.system));
+const diffOf=r=>r.adj!=null?r2(+r.adj):(r.system==null||r.system==='')?null:r2(totOf(r)-(+r.system)-(+r.undoc||0));
 const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 function diffBadge(d){if(d==null)return'';if(Math.abs(d)<0.005)return`<span class="diff eq">مطابق</span>`;return d>0?`<span class="diff up">زيادة <span class="num">${fmt(d)}</span></span>`:`<span class="diff down">عجز <span class="num">${fmt(-d)}</span></span>`}
@@ -103,13 +103,13 @@ ${Object.entries(r.apps||{}).map(([a,v])=>`<div class="kv"><span>${esc(a)}</span
 <div class="kv t"><span style="color:var(--ink)">الإجمالي</span><b class="num">${fmt(totOf(r))}</b></div>
 ${r.system!=null?`<div class="kv"><span>إجمالي النظام (من الكاشير)</span><b class="num">${fmt(r.system)}</b></div>`:''}${r.adj!=null?`<div class="kv" style="margin-top:4px"><span><b style="color:var(--ink)">مطابقة المحاسب</b>${r.adjBy?' · '+esc(r.adjBy):''}</span>${diffBadge(r.adj)}</div>`:r.system!=null?`<div class="kv"><span>الفرق</span>${diffBadge(diffOf(r))}</div>`:''}
 ${r.reserve?`<div class="kv" style="margin-top:6px"><span>الحجوزات — خارج اليومية (${(r.reservations||[]).length})</span><b class="num" style="color:${RESC}">${fmt(r.reserve)}</b></div>${li(r.reservations)}`:''}
-${r.returnsTotal?`<div class="kv" style="margin-top:6px"><span>المردود (${(r.returns||[]).length})</span><b class="num" style="color:${RETC}">${fmt(r.returnsTotal)}</b></div>${li(r.returns)}`:''}
+${r.returnsTotal?`<div class="kv" style="margin-top:6px"><span>${r.docRet!=null?'المرتجعات الموثّقة':'المردود'} (${(r.returns||[]).length})</span><b class="num" style="color:${RETC}">${fmt(r.returnsTotal)}</b></div>${li(r.returns)}`:''}${r.docRet!=null?`<div class="kv"><span>مرتجعات النظام (من الكاشير)</span><b>${r.noRet?'لا يوجد مرتجعات':`<span class="num">${fmt(r.sysRet)}</span>`}</b></div>${r.undoc?`<div class="kv"><span style="color:var(--down);font-weight:700">⚠ مرتجعات غير موثّقة — محسوبة عجز</span><b class="num" style="color:var(--down)">${fmt(r.undoc)}</b></div>`:''}`:''}
 ${r.notes?`<div class="note">${esc(r.notes)}</div>`:''}`;
 }
 const pj=(v,d)=>{try{return typeof v==='string'?(v?JSON.parse(v):d):(v||d)}catch(e){return d}};
 function normRow(x){const apps=pj(x.apps,{}),transfers=pj(x.transfers,[]),reservations=pj(x.reservations,[]),returns=pj(x.returns,[]),invoices=pj(x.invoices,[]);
 return{id:x.hid,date:x.date,month:x.month,branch:x.branch,shift:x.shift,code:x.code||'',cashier:x.cashier||'',reviewStatus:x.review_status||'',reviewNote:x.review_note||'',reviewedAt:x.reviewed_at||'',reviewedBy:x.reviewed_by||'',cash:+x.cash||0,card:+x.card||0,credit:+x.credit||0,apps,transfers,reservations,returns,invoices,invoice:+x.invoice||0,transfer:+x.transfer||0,reserve:+x.reserve||0,returnsTotal:+x.returns_total||0,
-system:(x.system===null||x.system===undefined||x.system==='')?null:+x.system,adj:(x.adj===null||x.adj===undefined||x.adj==='')?null:+x.adj,adjBy:x.adj_by||'',notes:x.notes||'',createdAt:x.submitted_at,updatedAt:x.submitted_at}}
+system:(x.system===null||x.system===undefined||x.system==='')?null:+x.system,adj:(x.adj===null||x.adj===undefined||x.adj==='')?null:+x.adj,adjBy:x.adj_by||'',notes:x.notes||'',createdAt:x.submitted_at,updatedAt:x.submitted_at,sysRet:x.sys_ret==null?null:+x.sys_ret,docRet:x.doc_ret==null?null:+x.doc_ret,undoc:+x.undoc||0,noRet:x.no_ret===true}}
 async function fetchMonth(month){const {data,error}=await SBC.rpc('handover_list',{p_month:month});if(error){const e=new Error(error.message);e.msg='تعذّر تحميل البيانات — تأكد من الإنترنت';throw e}return(data||[]).map(normRow)}
 async function markReview(id,status,note){
 const r=S.rows.find(x=>x.id===id);if(!r)return;
@@ -144,6 +144,16 @@ Object.entries(r.apps||{}).forEach(([k,v])=>t.appsBy[k]=(t.appsBy[k]||0)+(+v||0)
 const d=diffOf(r);if(d!=null){if(d<0){t.short+=-d;t.shortN++}else t.over+=d}});
 return t;
 }
+// ---------- المرتجعات الموثّقة ----------
+async function retLoad(m){if(S.retM===m&&S.rets)return;S.retM=m;try{const {data,error}=await SBC.rpc('ret_list',{p_month:m});if(error)throw error;S.rets=data||[]}catch(e){S.rets=null}renderDash()}
+function retCard(){const m=S.view==='day'?S.date.slice(0,7):S.month;if(S.retM!==m){retLoad(m);return ''}if(!S.rets)return '';
+ const L=S.rets.filter(x=>(S.filter==='all'||x.branch===S.filter)&&(S.view==='day'?x.bdate===S.date:true));
+ const tot=L.reduce((a,x)=>a+(+x.amount||0),0),big=L.filter(x=>+x.amount>=100).length;const open=S.rtOpen!=null?S.rtOpen:big>0;S._rtShown=open;
+ const byC={};L.forEach(x=>{const k=x.code;byC[k]=byC[k]||{n:x.cashier||slotLabel(k),c:0,a:0};byC[k].c++;byC[k].a+=+x.amount});
+ return `<div class="card"><h2>↩️ المرتجعات الموثّقة <span style="font-size:12px;color:var(--mut);font-weight:500">· ${L.length} · ${fmt(tot)} ر.س${big?` · <b style="color:var(--down)">${big} كبير</b>`:''}</span><button class="tag" id="rtT" style="color:var(--ink);font-weight:600">${open?'إخفاء':'عرض'}</button></h2>
+ ${open?(L.length?`${Object.keys(byC).length>1?`<div class="hint" style="margin:-2px 0 8px">${Object.values(byC).sort((a,b)=>b.a-a.a).map(c=>`${esc(c.n)}: ${c.c} · ${fmt(c.a)}`).join(' — ')}</div>`:''}${L.map(x=>{const b=BM[x.branch]||{c:'#888',n:x.branch};return `<div class="kv" style="align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line)"><span><b style="${+x.amount>=100?'color:var(--down)':''}">${+x.amount>=100?'🚨 ':''}${fmt(x.amount)} ر.س</b> · ${esc(x.reason)}<br><small style="color:var(--mut)"><i style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${b.c}"></i> ${b.n} · ${esc(x.cashier||slotLabel(x.code))} · فاتورة ${esc(x.inv)} · ${tm(x.at)} · وُثّق بعد ${x.mins} د${S.view!=='day'?' · '+x.bdate:''}</small>${x.note?`<br><small>«${esc(x.note)}»</small>`:''}</span><span style="display:flex;gap:6px;flex:none"><button class="btn sm ghost" data-rph="${x.id}">📷</button>${S.owner?`<button class="btn sm del" data-rdel="${x.id}">🗑</button>`:''}</span></div>`}).join('')}`:'<div class="empty" style="padding:12px">ما فيه مرتجعات موثّقة</div>'):''}</div>`}
+async function retPhoto(id){const {data,error}=await SBC.rpc('ret_photo',{p_id:id});if(error||!data)return toast('تعذّر فتح الصورة',1);const m=document.createElement('div');m.className='modal';m.innerHTML=`<div class="sheet" style="text-align:center"><img src="${data}" alt="" style="max-width:100%;border-radius:12px"><div class="acts" style="margin-top:12px"><button class="btn" data-a="0">إغلاق</button></div></div>`;m.addEventListener('click',e=>{if(e.target===m||e.target.closest('[data-a]'))m.remove()});document.body.appendChild(m)}
+async function retDel(id){if(!(await askYes('حذف المرتجع','يُحذف التوثيق نهائياً — وبعدها يُحسب على الكاشير كمرتجع غير موثّق في التسليمات الجديدة.','حذف')))return;const {error}=await SBC.rpc('ret_delete',{p_id:id});if(error)return toast(error.message,1);S.rets=null;S.retM='';toast('تم الحذف');renderDash()}
 function renderDash(){
 const el=$('#vDash');
 if(!S.ready){el.innerHTML='<div class="empty">جاري التحميل…</div>';return}
@@ -161,7 +171,7 @@ head+=`<div class="dnav"><button class="ar" data-m="-1" aria-label="الشهر �
 }
 head+=`<div class="sync"><span>${S.loaded&&S.lastLoad?'آخر تحديث '+S.lastLoad.toLocaleTimeString(LOC,{hour:'numeric',minute:'2-digit'}):''}</span><button id="refBtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 4v5h-5"/></svg>تحديث</button></div>`;
 if(S.writer&&S.codes)head+=codesCard();
-head+=cmCard();
+head+=cmCard();head+=retCard();
 let body='';
 if(S.loaded&&S.loadErr)body=`<div class="banner">${esc(S.loadErr)}</div>`;
 else if(!S.loaded)body=`<div class="empty">جاري التحميل…</div>`;
@@ -175,6 +185,9 @@ const dp=$('#dPick');if(dp)dp.onchange=e=>{if(e.target.value){S.date=e.target.va
 el.querySelectorAll('[data-open]').forEach(x=>x.onclick=()=>{const k=x.dataset.open;S.open[k]=!S.open[k];renderDash()});
 el.querySelectorAll('[data-del]').forEach(x=>x.onclick=()=>delRow(x.dataset.del));
 el.querySelectorAll('[data-edit]').forEach(x=>x.onclick=()=>editRow(x.dataset.edit));
+const rt=$('#rtT');if(rt)rt.onclick=()=>{S.rtOpen=!S._rtShown;renderDash()};
+el.querySelectorAll('[data-rph]').forEach(x=>x.onclick=()=>retPhoto(+x.dataset.rph));
+el.querySelectorAll('[data-rdel]').forEach(x=>x.onclick=()=>retDel(+x.dataset.rdel));
 const cmt=$('#cmT');if(cmt)cmt.onclick=()=>{S.cmOpen=!S._cmShown;renderDash()};
 el.querySelectorAll('[data-cm]').forEach(x=>x.onclick=()=>cmOpen(x.dataset.cm));
 const cc=$('#ccT');if(cc)cc.onclick=()=>{S.codesOpen=!S.codesOpen;renderDash()};
