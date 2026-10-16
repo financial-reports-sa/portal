@@ -167,11 +167,7 @@ ${b?`<div class="sum"><span>مجموع التطبيقات</span><b class="num" i
 </div>
 ${listCard(LISTS[1])}${retCard()}
 <div class="card">
-<h2>المطابقة <span class="tag">اختياري</span></h2>
-${amtRow('fSystem','إجمالي النظام','#6B7A90',f.system)}
-<p class="hint">إجمالي مبيعات الوردية من تقرير الكاشير في النظام. يُحسب العجز أو الزيادة تلقائياً.</p>
-<div id="sysDiff" style="margin-top:8px"></div>
-<label class="fld" style="margin-top:14px"><span class="lbl">ملاحظات</span><textarea id="fNotes" placeholder="مثل: مصروف من الدرج، مرتجع، عطل في الشبكة…">${esc(f.notes)}</textarea></label>
+<label class="fld"><span class="lbl">ملاحظات <span class="tag">اختياري</span></span><textarea id="fNotes" placeholder="مثل: مصروف من الدرج، مرتجع، عطل في الشبكة…">${esc(f.notes)}</textarea></label>
 </div>`;
 el.querySelectorAll('[data-br]').forEach(x=>x.onclick=()=>{if(f.branch!==x.dataset.br){f.branch=x.dataset.br;f.apps={};S.rets=null;lsSet('ho_branch',f.branch)}render()});
 el.querySelectorAll('[data-sh]').forEach(x=>x.onclick=()=>{f.shift=x.dataset.sh;render()});
@@ -182,7 +178,7 @@ $('#fPin').onchange=()=>{S.rets=null;render()};
 $('#fNotes').oninput=e=>{f.notes=e.target.value};
 PAY.forEach(p=>{$('#p_'+p.k).oninput=e=>{f[p.k]=e.target.value;calc()}});
 if(b)b.apps.forEach((a,i)=>{$('#a_'+i).oninput=e=>{f.apps[a]=e.target.value;calc()}});
-$('#fSystem').oninput=e=>{f.system=e.target.value;calc()};
+
 const sr=$('#fSysRet');if(sr)sr.oninput=e=>{f.sysRet=e.target.value;e.target.classList.remove('err-in');calc()};
 const nr=$('#fNoRet');if(nr)nr.onchange=e=>{f.noRet=e.target.checked;render()};
 const rr=$('#retAdd2');if(rr)rr.onclick=retOpen;
