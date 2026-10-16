@@ -8,6 +8,8 @@ const TOOL = { name: "invoice", description: "بيانات الفاتورة ال
   inv_no: { type: "string", description: "رقم الفاتورة الطويل (عادة 10 إلى 14 رقم، مطبوع تحت «فاتورة ضريبية مبسطة» قبل التاريخ). ليس رقم الطلب الصغير ولا الرقم الضريبي ولا الجوال. أرقام إنجليزية فقط، أو فارغ إذا غير واضح" },
   time: { type: "string", description: "وقت الفاتورة بصيغة 24 ساعة HH:MM (حوّل ص/م). من سطر التاريخ والوقت وليس وقت التوصيل. فارغ إذا غير واضح" },
   amount: { type: "number", description: "المبلغ المستحق/الإجمالي شامل الضريبة (Net). صفر إذا غير واضح" },
+  items: { type: "array", description: "أصناف الفاتورة من جدول الأصناف، بالترتيب", items: { type: "object", required: ["name", "qty", "unit"], properties: {
+    name: { type: "string", description: "اسم الصنف كما هو مطبوع" }, qty: { type: "number", description: "الكمية" }, unit: { type: "number", description: "سعر الوحدة شامل الضريبة" } } } },
 } } };
 
 Deno.serve(async (req) => {
@@ -25,10 +27,10 @@ Deno.serve(async (req) => {
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-    body: JSON.stringify({ model: MODEL, max_tokens: 400, tools: [TOOL], tool_choice: { type: "tool", name: "invoice" },
+    body: JSON.stringify({ model: MODEL, max_tokens: 1200, tools: [TOOL], tool_choice: { type: "tool", name: "invoice" },
       messages: [{ role: "user", content: [
         { type: "image", source: { type: "base64", media_type: m[1], data: m[2] } },
-        { type: "text", text: "هذي فاتورة مطعم سعودية (حرارية). اقرأ رقم الفاتورة ووقتها والمبلغ المستحق واحفظها بالأداة invoice. لا تخمّن: إذا شي غير واضح اتركه فارغ." },
+        { type: "text", text: "هذي فاتورة مطعم سعودية (حرارية). اقرأ رقم الفاتورة ووقتها والمبلغ المستحق وجدول الأصناف واحفظها بالأداة invoice. لا تخمّن: إذا شي غير واضح اتركه فارغ." },
       ] }] }),
   });
   if (!r.ok) { console.error("upstream", r.status, (await r.text()).slice(0, 300)); return json({ ok: false, message: "upstream" }, 200); }
@@ -38,5 +40,6 @@ Deno.serve(async (req) => {
   const inv = String(x.inv_no || "").replace(/[٠-٩]/g, (d: string) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d))).replace(/\D/g, "").slice(0, 30);
   const tm = /^([01]?\d|2[0-3]):([0-5]\d)$/.exec(String(x.time || "").trim());
   const amt = Number(x.amount);
-  return json({ ok: true, inv, time: tm ? `${tm[1].padStart(2, "0")}:${tm[2]}` : "", amount: isFinite(amt) && amt > 0 && amt < 50000 ? Math.round(amt * 100) / 100 : 0 });
+  const items = (Array.isArray(x.items) ? x.items : []).slice(0, 30).map((i: { name?: unknown; qty?: unknown; unit?: unknown }) => ({ name: String(i.name || "").slice(0, 60), qty: Math.max(0, Math.min(999, Math.round(Number(i.qty) || 0))), unit: Math.max(0, Math.round((Number(i.unit) || 0) * 100) / 100) })).filter((i: { name: string; qty: number; unit: number }) => i.name && i.qty > 0 && i.unit > 0);
+  return json({ ok: true, items, inv, time: tm ? `${tm[1].padStart(2, "0")}:${tm[2]}` : "", amount: isFinite(amt) && amt > 0 && amt < 50000 ? Math.round(amt * 100) / 100 : 0 });
 });
