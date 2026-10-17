@@ -16,6 +16,10 @@ create table if not exists public.growth_shifts (
   synced_at  timestamptz not null default now(),
   primary key (branch, shift_id)
 );
+alter table public.growth_shifts add column if not exists sales numeric(14,2) not null default 0;
+alter table public.growth_shifts add column if not exists deposit numeric(14,2) not null default 0;
+alter table public.growth_shifts add column if not exists deposit_ret numeric(14,2) not null default 0;
+alter table public.growth_shifts add column if not exists due numeric(14,2) not null default 0;
 create index if not exists growth_shifts_day_idx on public.growth_shifts (branch, bdate);
 alter table public.growth_shifts enable row level security;
 revoke all on public.growth_shifts from anon, authenticated;
@@ -44,17 +48,18 @@ begin
     delete from growth_shifts g where g.bdate = any(p_days)
       and not exists (select 1 from jsonb_array_elements(p_rows) x where x->>'branch' = g.branch and x->>'shift_id' = g.shift_id);
   end if;
-  insert into growth_shifts (branch, shift_id, bdate, user_id, cashier, opened, closed, bills, net, cash, card, credit, refunds, apps, synced_at)
+  insert into growth_shifts (branch, shift_id, bdate, user_id, cashier, opened, closed, bills, net, cash, card, credit, refunds, apps, sales, deposit, deposit_ret, due, synced_at)
   select x->>'branch', x->>'shift_id', (x->>'bdate')::date, left(coalesce(x->>'user_id', ''), 40), left(coalesce(x->>'cashier', ''), 80),
          nullif(x->>'opened', '')::timestamptz, nullif(x->>'closed', '')::timestamptz, coalesce((x->>'bills')::int, 0),
          coalesce((x->>'net')::numeric, 0), coalesce((x->>'cash')::numeric, 0), coalesce((x->>'card')::numeric, 0),
          coalesce((x->>'credit')::numeric, 0), coalesce((x->>'refunds')::numeric, 0),
-         case when jsonb_typeof(x->'apps') = 'object' then x->'apps' else '{}'::jsonb end, now()
+         case when jsonb_typeof(x->'apps') = 'object' then x->'apps' else '{}'::jsonb end,
+         coalesce((x->>'sales')::numeric, 0), coalesce((x->>'deposit')::numeric, 0), coalesce((x->>'deposit_ret')::numeric, 0), coalesce((x->>'due')::numeric, 0), now()
   from jsonb_array_elements(coalesce(p_rows, '[]')) x
   where coalesce(x->>'branch', '') <> '' and coalesce(x->>'shift_id', '') <> '' and x->>'bdate' is not null
   on conflict (branch, shift_id) do update set bdate = excluded.bdate, user_id = excluded.user_id, cashier = excluded.cashier, opened = excluded.opened,
     closed = excluded.closed, bills = excluded.bills, net = excluded.net, cash = excluded.cash, card = excluded.card, credit = excluded.credit,
-    refunds = excluded.refunds, apps = excluded.apps, synced_at = now();
+    refunds = excluded.refunds, apps = excluded.apps, sales = excluded.sales, deposit = excluded.deposit, deposit_ret = excluded.deposit_ret, due = excluded.due, synced_at = now();
   get diagnostics n = row_count;
   insert into growth_sync_state (id, last_run, rows_in, info) values ('shifts', now(), n, jsonb_build_object('days', p_days))
   on conflict (id) do update set last_run = now(), rows_in = excluded.rows_in, info = excluded.info;
@@ -65,7 +70,7 @@ create or replace function public.growth_shifts_for(p_branch text, p_date date) 
 language sql stable security definer set search_path = public as $$
   select case when not coalesce(handover_can(p_branch), false) then '[]'::jsonb else coalesce((
     select jsonb_agg(jsonb_build_object('shift_id', s.shift_id, 'bdate', s.bdate, 'user_id', s.user_id, 'cashier', s.cashier, 'opened', s.opened, 'closed', s.closed,
-      'bills', s.bills, 'net', s.net, 'cash', s.cash, 'card', s.card, 'credit', s.credit, 'refunds', s.refunds, 'apps', s.apps, 'code', m.code) order by s.opened nulls last)
+      'bills', s.bills, 'net', s.net, 'cash', s.cash, 'card', s.card, 'credit', s.credit, 'refunds', s.refunds, 'apps', s.apps, 'sales', s.sales, 'deposit', s.deposit, 'deposit_ret', s.deposit_ret, 'due', s.due, 'code', m.code) order by s.opened nulls last)
     from growth_shifts s left join growth_cashier_map m on m.branch = s.branch and m.user_id = s.user_id
     where s.branch = p_branch and (s.bdate = p_date or (s.opened at time zone 'Asia/Riyadh')::date = p_date)), '[]'::jsonb) end
 $$;
