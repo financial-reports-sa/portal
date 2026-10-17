@@ -797,7 +797,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','handover','rets','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610171722';
+const APP_VER='202610171817';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets='تفعيل اشعارات مرتجع الكاشيرات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -2872,12 +2872,12 @@ V.rets=async()=>{
   const td=todayIso(), yd=(()=>{const d=new Date(td+'T12:00:00');d.setDate(d.getDate()-1);return d.toISOString().slice(0,10);})();
   const per=st.rtP||'today', fb=st.rtB||'all';
   const inP=x=>per==='today'?x.bdate===td:per==='yd'?x.bdate===yd:true;
-  const P=A.filter(inP); const brIds=[...new Set(A.map(x=>x.branch))];
+  const P=A.filter(inP); const brIds=[...new Set(st.branches.map(b=>b.id).concat(A.map(x=>x.branch)))].filter(b=>!bs||!bs.length||bs.includes(b));
   const L=P.filter(x=>fb==='all'||x.branch===fb);
   const tot=L.reduce((a,x)=>a+ +x.amount,0);
   let h=`<div class="rt-hd"><h2>↩️ مرتجعات الكاشيرات</h2><span class="muted">مرتّبة حسب الفرع ثم الكاشير · يوصلك إشعار مع كل مرتجع</span></div>
   <div class="chips">${[['today','اليوم'],['yd','أمس'],['7','آخر ٧ أيام']].map(([k,n])=>`<button data-rtp="${k}" aria-pressed="${per===k}">${n}</button>`).join('')}</div>
-  ${brIds.length>1?`<div class="chips">${[['all','كل الفروع']].concat(brIds.map(b=>[b,brById(b).name])).map(([k,n])=>{const c=P.filter(x=>k==='all'||x.branch===k).length;return `<button data-rtb="${k}" aria-pressed="${fb===k}">${k!=='all'?`<i class="dot" style="background:${brById(k).color}"></i>`:''}${esc(n)}${c?` <small class="num">${c}</small>`:''}</button>`;}).join('')}</div>`:''}
+  ${brIds.length>1?`<div class="chips">${[['all','كل الفروع']].concat(brIds.map(b=>[b,brById(b).name])).map(([k,n])=>{const c=P.filter(x=>k==='all'||x.branch===k).length;return `<button data-rtb="${k}" aria-pressed="${fb===k}">${k!=='all'?`<i class="dot" style="background:${brById(k).color}"></i>`:''}${esc(n)}${` <small class="num">${c}</small>`}</button>`;}).join('')}</div>`:''}
   <div class="card rt-sum"><div><span>عدد المرتجعات</span><b class="num">${L.length}</b></div><div><span>الإجمالي</span><b class="num">${fmt(tot,2)} <small>ر.س</small></b></div><div><span>الكاشيرات</span><b class="num">${new Set(L.map(x=>x.branch+'|'+(x.cashier||''))).size}</b></div></div>`;
   if(!L.length) return h+`<div class="card"><p class="muted" style="text-align:center;padding:18px 0">ما فيه مرتجعات موثّقة ${per==='today'?'اليوم':per==='yd'?'أمس':'في آخر ٧ أيام'} 👌</p></div>`;
   const byB={}; L.forEach(x=>{(byB[x.branch]=byB[x.branch]||[]).push(x);});
