@@ -684,6 +684,7 @@ body.hasnav .toast{bottom:calc(100px + env(safe-area-inset-bottom,0px))}
 html[dir=ltr] .sh-t{direction:ltr}html[dir=ltr] .sh-t i{display:inline-block;transform:scaleX(-1)}html[dir=ltr] .chev{display:inline-block;transform:scaleX(-1)}
 .lg-sw{display:flex;gap:6px;justify-content:flex-end;margin:-4px 0 10px}.lg-sw button{font:inherit;font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:99px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;cursor:pointer}.lg-sw button.on{background:#F6E7B0;color:#143F2A;border-color:#F6E7B0}
 .lv-ls{display:flex;flex-direction:column;gap:8px;margin-top:10px}.lv-it{display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid var(--line);border-radius:14px;background:var(--card)}.lv-ic{font-size:22px;line-height:1.2}.lv-m{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.lv-m b{font-size:13px}.lv-m small{font-size:11px;color:var(--muted)}.lv-m small.lv-n{color:var(--ink)}.lv-r{display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex:none}.lv-x{font:inherit;font-size:10.5px;border:0;background:none;color:var(--down);cursor:pointer;padding:0}.lv-kc{display:flex;flex-wrap:wrap;gap:6px}.lv-kc button{font:inherit;font-size:12px;font-weight:600;padding:8px 12px;border-radius:99px;border:1px solid var(--line);background:var(--card);color:inherit;cursor:pointer}.lv-kc button.on{background:var(--green,#1E5A3E);color:#fff;border-color:transparent}.lv-sum{font-size:12.5px;text-align:center;color:var(--muted)}.lv-sum b{color:var(--ink);font-size:15px}
+.pr-ir{display:grid;grid-template-columns:1fr 74px 84px 34px;gap:6px;margin-top:6px}.pr-ir .inp{min-width:0}.pr-its{margin-top:8px;border:1px solid var(--line);border-radius:12px;overflow:hidden}.pr-its div{display:flex;justify-content:space-between;gap:8px;padding:7px 10px;font-size:12px;border-bottom:1px solid var(--line)}.pr-its div:last-child{border-bottom:0}.pr-its div:nth-child(odd){background:var(--soft,#F8F8F4)}
 </style>
 </head>
 <body>
@@ -764,6 +765,7 @@ const SECTIONS=[
   {id:'loans',name:'التمويلات'},
   {id:'fleet',name:'أسطول السيارات'},
   {id:'maint',name:'الصيانة'},
+  {id:'purch',name:'طلبات الشراء'},
   {id:'feedback',name:'تقييم العملاء'},
   {id:'mkt',name:'أفكار تسويقية'},
   {id:'hr',name:'الموارد البشرية'},
@@ -786,13 +788,13 @@ const NAV_ICONS={
   hrg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="9" cy="11" r="2.3"/><path d="M5.8 16.2a3.4 3.4 0 0 1 6.4 0"/><path d="M14.5 10h3.5M14.5 13.5h3.5"/></svg>',
   fin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/><path d="M6.5 15h4"/></svg>',
   more:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>'};
-const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me','msgs']},{id:'ai',name:'المساعد الذكي',secs:['ai']},{id:'rep',name:'التقارير',secs:['brief','sales','daily','channels','income','wh','waste','chicken']},{id:'ops',name:'العمليات',secs:['maint','feedback','mkt','fleet']},{id:'hrg',name:'الموارد البشرية',secs:['hr','att','employees','advances']},{id:'fin',name:'المالية',secs:['treasury','handover','rets','loans','custody']},{id:'more',name:'الإدارة',secs:['users','data'],nav:false}];
+const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me','msgs']},{id:'ai',name:'المساعد الذكي',secs:['ai']},{id:'rep',name:'التقارير',secs:['brief','sales','daily','channels','income','wh','waste','chicken']},{id:'ops',name:'العمليات',secs:['maint','purch','feedback','mkt','fleet']},{id:'hrg',name:'الموارد البشرية',secs:['hr','att','employees','advances']},{id:'fin',name:'المالية',secs:['treasury','handover','rets','loans','custody']},{id:'more',name:'الإدارة',secs:['users','data'],nav:false}];
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
-const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['maint','maint_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','handover','rets','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
+const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','handover','rets','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610170028';
-const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets='تفعيل اشعارات مرتجع الكاشيرات';
+const APP_VER='202610170352';
+const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets='تفعيل اشعارات مرتجع الكاشيرات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 const CH={ajl:'آجل عملاء',shaden:'تطبيق الشادن',meals:'وجبات',family:'قسم العائلات',keeta:'تطبيق كيتا',hs:'تطبيق هانقرستيشن',dlv:'توصيل',tkl:'سفري / محلي',ninja:'تطبيق نينجا',bonat:'تطبيق بونات',awail:'عوائل',sfr:'سفري',mhl:'محلي'};
@@ -818,7 +820,7 @@ const st={user:null,profile:null,branches:[],myBranches:[],mySections:[],tab:'ho
 const isAdmin=()=>st.profile&&['owner','admin'].includes(st.profile.role);
 const isOwner=()=>st.profile&&st.profile.role==='owner';
 const isEmp=()=>st.profile&&st.profile.role==='employee';
-const allowed=id=>{ if(isEmp()) return id==='me'||id==='msgs'; if(id==='me') return false; if(isAdmin()||id==='home'||id==='ai'||id==='msgs') return true; if(id==='daily') return st.mySections.includes('daily')&&st.allBranches; if(id==='maint') return st.mySections.includes('maint')||st.mySections.includes('maint_sup'); if(id==='custody') return st.mySections.includes('custody')||st.mySections.includes('custody_holder'); if(id==='att') return st.mySections.includes('att')||st.mySections.includes('hr')||st.mySections.includes('employees'); const x=SECTIONS.find(q=>q.id===id); return st.mySections.includes(x&&x.perm?x.perm:id); };
+const allowed=id=>{ if(isEmp()) return id==='me'||id==='msgs'; if(id==='me') return false; if(isAdmin()||id==='home'||id==='ai'||id==='msgs') return true; if(id==='daily') return st.mySections.includes('daily')&&st.allBranches; if(id==='maint') return st.mySections.includes('maint')||st.mySections.includes('maint_sup'); if(id==='purch') return st.mySections.includes('purch')||st.mySections.includes('purch_sup'); if(id==='custody') return st.mySections.includes('custody')||st.mySections.includes('custody_holder'); if(id==='att') return st.mySections.includes('att')||st.mySections.includes('hr')||st.mySections.includes('employees'); const x=SECTIONS.find(q=>q.id===id); return st.mySections.includes(x&&x.perm?x.perm:id); };
 const brById=id=>st.branches.find(b=>b.id===id)||(st._cuBr||[]).find(b=>b.id===id)||{id,name:id,color:'#888'};
 const selBranches=()=>st.f==='all'?st.branches.map(b=>b.id):[st.f];
 
@@ -1003,7 +1005,7 @@ function spark(vals,{w=120,h=34,col='#E9CF7A',fill=true,sw=1.8}={}){
   return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="direction:ltr;display:block"><defs><linearGradient id="${gid}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".35"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>${fill?`<path d="${d} L${X(v.length-1)},${h} L${X(0)},${h} Z" fill="url(#${gid})"/>`:''}<path d="${d}" fill="none" stroke="${col}" stroke-width="${sw}" stroke-linecap="round"/><circle cx="${X(v.length-1)}" cy="${Y(v[v.length-1])}" r="2.8" fill="${col}"/></svg>`;
 }
 const DAYN=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
-const SC_ICON={sales:'📈',daily:'🧾',channels:'🛵',income:'📊',wh:'📦',chicken:'🍗',treasury:'🏦',loans:'💳',fleet:'🚗',maint:'🛠️',feedback:'⭐',mkt:'💡',ai:'✦',advances:'💵',custody:'💼',hr:'🗂️',att:'🕒',waste:'♻️',brief:'📊',handover:'🔁',employees:'👥',users:'🔐',data:'⬆️'};
+const SC_ICON={sales:'📈',daily:'🧾',channels:'🛵',income:'📊',wh:'📦',chicken:'🍗',treasury:'🏦',loans:'💳',fleet:'🚗',maint:'🛠️',purch:'🛒',feedback:'⭐',mkt:'💡',ai:'✦',advances:'💵',custody:'💼',hr:'🗂️',att:'🕒',waste:'♻️',brief:'📊',handover:'🔁',employees:'👥',users:'🔐',data:'⬆️'};
 V.home=async()=>{
   const bs=selBranches(); const now=new Date(), hr=now.getHours();
   const fn_=(st.profile&&(st.profile.full_name||st.profile.username)||'').trim(); const nm=/^(مدير|فرع|حساب)/.test(fn_)?fn_:fn_.split(' ')[0];
@@ -2153,6 +2155,7 @@ async function paintTicker(out){
   if(canSee('advances')){ const n=cnt('advances'); add('💵',n?`طلبات سلف بانتظار موافقتك: <b class="num">${n}</b>`:'السلف: <b>لا توجد طلبات معلّقة</b>','advances',!!n); }
   if(canSee('fleet')){ const n=cnt('fleet',a=>a.bad), w=cnt('fleet',a=>!a.bad); if(n||w) add('🚗',`الأسطول: ${n?`<b class="num">${n}</b> منتهية`:''}${n&&w?' · ':''}${w?`<b class="num">${w}</b> تنتهي قريباً`:''}`,'fleet',!!n); }
   try{ if(!isEmp()&&allowed('att')){ const r=await sb.rpc('lv_list'); const n=((r&&r.data)||[]).filter(x=>x.status==='pending').length; if(n) add('🌴',`طلبات إجازة بانتظار قرارك: <b class="num">${n}</b>`,'att',true); } }catch(e){}
+  try{ if(canSee('purch')){ const R=prRole(); const r=await sb.rpc('pr_list'); const L=(r&&r.data)||[]; const nw=L.filter(x=>x.status==='new').length, bt=L.filter(x=>x.status==='bought').length; if(R!=='mgr'&&nw) add('🛒',`طلبات شراء جديدة: <b class="num">${nw}</b>`,'purch',true); if(R!=='sup'&&bt) add('📦',`مشتريات بانتظار تأكيد الاستلام: <b class="num">${bt}</b>`,'purch',true); } }catch(e){}
   if(canSee('employees')){ const n=cnt('employees'); if(n) add('🪪',`شهادات صحية منتهية أو قريبة: <b class="num">${n}</b>`,'employees',true); }
   if(canSee('loans')){ out.filter(a=>a.go==='loans').slice(0,2).forEach(a=>add(a.ic,`${esc(a.t)} · <b>${esc(a.s)}</b>`,'loans',a.bad)); }
   if(canSee('wh')){ out.filter(a=>a.go==='wh').slice(0,2).forEach(a=>add('📦',`${esc(a.t)} · <b>${esc(a.s)}</b>`,'wh',true)); }
@@ -3037,6 +3040,100 @@ V.maint=async()=>{
   return h;
 };
 
+// ===================== طلبات الشراء =====================
+const PR_K={equip:['🛠️','معدات'],items:['📦','أصناف']};
+const PR_ST={new:['بانتظار المشتريات','var(--gold-soft)','var(--gold-ink)'],progress:['قيد الشراء','rgba(91,143,208,.14)','#2F67B0'],bought:['تم الشراء · بانتظار تأكيد الفرع','rgba(31,161,107,.12)','var(--up)'],closed:['مستلم ومغلق','rgba(31,161,107,.12)','var(--up)'],rejected:['مرفوض','rgba(208,69,58,.1)','var(--down)'],cancelled:['ملغى','var(--chip)','var(--muted)']};
+const PR_U=['حبة','كرتون','كيلو','جالون','لتر','علبة','كيس','ربطة','طقم'];
+const prRole=()=>isAdmin()?'admin':st.mySections.includes('purch_sup')?'sup':'mgr';
+const prRef=m=>'PR-'+String(m.no||0).padStart(5,'0');
+const prPill=x=>{const v=PR_ST[x]||[x,'var(--chip)','inherit'];return `<span class="tag" style="background:${v[1]};color:${v[2]};font-weight:700">${v[0]}</span>`;};
+const prOpen=m=>['new','progress','bought'].includes(m.status);
+function prSteps(m){const S=['رفع الطلب','استلام المشتريات','الشراء','تأكيد الفرع'];const cur={new:1,progress:2,bought:3,closed:4,rejected:1,cancelled:1}[m.status]||0;const bad=['rejected','cancelled'].includes(m.status);
+  return `<div class="mt-st">${S.map((n,i)=>{const c=i<cur?'ok':i===cur?(bad?'x':'cur'):'';return `<div class="${c}"><i></i><span>${n}</span></div>`;}).join('')}</div>`;}
+function prItemRow(it){return `<div class="pr-ir"><input class="inp" name="in" placeholder="اسم الصنف" value="${esc(it.n||'')}"><input class="inp num" name="iq" inputmode="decimal" placeholder="الكمية" value="${it.q||''}"><select class="inp" name="iu">${PR_U.map(u=>`<option ${u===(it.u||'حبة')?'selected':''}>${u}</option>`).join('')}</select><button type="button" class="icb" data-prdel="1">✕</button></div>`;}
+function prForm(){ const brs=st.branches.filter(b=>b.id!=='wafra'); const k=st.prK||'items';
+  return `<div class="card afm" id="prFormCard"><div class="afm-hd"><div><h3>طلب شراء جديد</h3><small>Purchase Request · ${dLbl(todayIso())}</small></div><span class="afm-code">OPS-PR-01</span></div>
+  <form id="prForm" autocomplete="off"><div class="afm-bd">
+    ${brs.length>1?`<div class="afm-sec"><div class="afm-t" data-n="1">الفرع</div><select class="inp" name="br" required><option value="">اختر الفرع</option>${brs.map(b=>`<option value="${b.id}">${esc(b.name)}</option>`).join('')}</select></div>`:`<input type="hidden" name="br" value="${brs[0]?brs[0].id:''}">`}
+    <div class="afm-sec"><div class="afm-t" data-n="${brs.length>1?2:1}">نوع الطلب</div><div class="afm-seg" style="grid-template-columns:1fr 1fr">${Object.entries(PR_K).map(([kk,v])=>`<label><input type="radio" name="k" value="${kk}" ${kk===k?'checked':''} data-prk="${kk}"><span>${v[0]} ${v[1]}<small>${kk==='equip'?'أجهزة، أدوات، أثاث':'مواد، تغليف، منظفات، مستهلكات'}</small></span></label>`).join('')}</div></div>
+    <div class="afm-sec"><div class="afm-t" data-n="${brs.length>1?3:2}">${k==='equip'?'المعدة المطلوبة':'الأصناف المطلوبة'}</div>
+      <input class="inp" name="title" maxlength="120" placeholder="${k==='equip'?'مثل: قلاية كهربائية مزدوجة':'مثل: مستلزمات الأسبوع'}" required>
+      ${k==='items'?`<div id="prItems">${prItemRow({})}${prItemRow({})}</div><button type="button" class="btn ghost sm" data-pradd="1">＋ صنف</button>`:`<textarea class="inp" name="details" rows="2" placeholder="المواصفات، المقاس، الماركة، سبب الطلب"></textarea><input class="inp" type="file" name="ph" accept="image/*" capture="environment"><div class="muted" style="font-size:10.5px">صورة توضيحية (اختياري)</div>`}
+      ${k==='items'?`<textarea class="inp" name="details" rows="2" placeholder="ملاحظات (اختياري)"></textarea>`:''}</div>
+    <div class="afm-sec"><div class="afm-t" data-n="${brs.length>1?4:3}">الأولوية والموعد</div><div class="afm-seg" style="grid-template-columns:1fr 1fr"><label><input type="radio" name="pr" value="normal" checked><span>عادي</span></label><label><input type="radio" name="pr" value="urgent"><span>🚨 عاجل</span></label></div>
+      <div class="field" style="margin-top:8px"><label>مطلوب قبل (اختياري)</label><input class="inp" type="date" name="need" min="${todayIso()}"></div></div>
+    <div class="err" id="prErr"></div></div>
+    <div class="afm-ft"><button class="btn" type="submit">رفع الطلب للمشتريات</button><button class="btn ghost" type="button" data-prx="1">إلغاء</button></div></form></div>`; }
+function prRow(m,R){ const sup=R==='admin'||R==='sup', mgr=R==='mgr'||R==='admin'; let a='';
+  if(sup){ if(m.status==='new') a+=`<button class="btn sm" data-prst="progress" data-id="${m.id}">▶ استلام وبدء الشراء</button><button class="btn ghost sm" data-prst="rejected" data-id="${m.id}" style="color:var(--down)">رفض</button>`;
+    if(m.status==='progress') a+=`<button class="btn sm" data-prst="bought" data-id="${m.id}">✓ تم الشراء</button><button class="btn ghost sm" data-prst="rejected" data-id="${m.id}" style="color:var(--down)">رفض</button>`; }
+  if(mgr&&m.status==='bought') a+=`<button class="btn sm" data-prst="closed" data-id="${m.id}">✓ تأكيد الاستلام</button><button class="btn ghost sm" data-prst="progress" data-id="${m.id}" style="color:var(--down)">ناقص / غير مطابق</button>`;
+  if(R==='mgr'&&m.status==='new') a+=`<button class="btn ghost sm" data-prst="cancelled" data-id="${m.id}" style="color:var(--down)">إلغاء الطلب</button>`;
+  let more=''; if(m.has_photo) more+=`<button class="btn ghost sm" data-prph="${m.id}">📷 الصور</button>`; if(isOwner()) more+=`<button class="btn ghost sm" data-prdl="${m.id}" style="color:var(--down)">حذف</button>`;
+  const k=PR_K[m.kind]||PR_K.items; const its=m.items||[];
+  return `<div class="mt"><div class="mt-top"><div class="mt-ic">${k[0]}</div><div style="flex:1;min-width:0">
+    <div class="advref">${prRef(m)} · ${k[1]}${m.priority==='urgent'?' · <span style="color:var(--down)">🚨 عاجل</span>':''}</div>
+    <b style="font-size:13px">${esc(m.title)}</b>
+    <div class="mt-m">${esc(brById(m.branch).name)} · ${esc(m.requested_by||'')} · ${dLbl(String(m.created_at).slice(0,10))}${m.need_by?` · مطلوب قبل <b>${dLbl(m.need_by)}</b>`:''}</div>
+    <div style="margin-top:5px">${prPill(m.status)}</div></div></div>
+    ${prSteps(m)}
+    ${its.length?`<div class="pr-its">${its.map(i=>`<div><span>${esc(i.n)}</span><b class="num">${+i.q} ${esc(i.u||'')}</b></div>`).join('')}</div>`:''}
+    ${m.details?`<div class="mt-m" style="font-size:11px;color:var(--fg);margin-top:6px">${esc(m.details)}</div>`:''}
+    ${m.status==='progress'&&m.handled_by?`<div class="mt-n">🛒 عند: <b>${esc(m.handled_by)}</b>${m.reject_reason?` · <span class="down">ملاحظة الفرع: ${esc(m.reject_reason)}</span>`:''}</div>`:''}
+    ${m.status==='rejected'&&m.reject_reason?`<div class="mt-n" style="background:rgba(208,69,58,.08)">✕ سبب الرفض: ${esc(m.reject_reason)}</div>`:''}
+    ${['bought','closed'].includes(m.status)?`<div class="mt-n d">✓ تم الشراء ${m.bought_at?dLbl(String(m.bought_at).slice(0,10)):''}${m.handled_by?' بواسطة '+esc(m.handled_by):''}${m.supplier?' · المورد: '+esc(m.supplier):''}${m.cost?` · التكلفة <b class="num">${fmt(m.cost)}</b> ر.س`:''}${m.sup_note?' — '+esc(m.sup_note):''}${m.status==='closed'?`<br>أكّد الاستلام ${esc(m.closed_by||'')}`:''}</div>`:''}
+    ${a?`<div class="mt-a">${a}</div>`:''}${more?`<div class="mt-a" style="margin-top:6px">${more}</div>`:''}</div>`; }
+V.purch=async()=>{ const r=await sb.rpc('pr_list'); if(r.error) return `<div class="card empty">طلبات الشراء تحتاج تشغيل ملف «purch-setup» في Supabase أولاً</div>`;
+  const R=prRole(); const all=r.data||[]; st._prList=all;
+  const fb=st.prB||'all', fk=st.prKf||'all'; const L=all.filter(m=>(fb==='all'||m.branch===fb)&&(fk==='all'||m.kind===fk));
+  const nw=L.filter(m=>m.status==='new'), pg=L.filter(m=>m.status==='progress'), bt=L.filter(m=>m.status==='bought'), cl=L.filter(m=>m.status==='closed');
+  const mon=curMon(), costM=L.filter(m=>['bought','closed'].includes(m.status)&&String(m.bought_at).slice(0,7)===mon).reduce((t,m)=>t+(+m.cost||0),0);
+  const brs=[...new Set(st.branches.map(b=>b.id).filter(b=>b!=='wafra').concat(all.map(m=>m.branch)))];
+  const def=R==='mgr'?(bt.length?'bought':'act'):(nw.length?'new':'act'); const ft=st.prT||def;
+  let h=brs.length>1?`<div class="chips">${[['all','كل الفروع']].concat(brs.map(b=>[b,brById(b).name])).map(([k,n])=>`<button data-prb="${k}" aria-pressed="${fb===k}">${k!=='all'?`<i class="dot" style="background:${brById(k).color}"></i>`:''}${esc(n)}</button>`).join('')}</div>`:'';
+  h+=`<div class="card" style="background:linear-gradient(140deg,#1E5A3E,#143F2A);color:#fff;border:0"><div class="bar-row"><div><div style="font-size:11px;opacity:.8">طلبات الشراء المفتوحة</div><div class="num" style="font-size:27px;font-weight:700;color:#F6E7B0">${nw.length+pg.length+bt.length}</div></div>${st.prNew||R==='sup'?'':`<button class="mybtn" data-prn="1">＋ طلب شراء</button>`}</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px;border-top:1px solid rgba(255,255,255,.15);padding-top:10px;text-align:center">
+      <div><div style="font-size:9.5px;opacity:.75">جديدة</div><b class="num">${nw.length}</b></div><div><div style="font-size:9.5px;opacity:.75">قيد الشراء</div><b class="num">${pg.length}</b></div>
+      <div><div style="font-size:9.5px;opacity:.75">بانتظار التأكيد</div><b class="num">${bt.length}</b></div><div><div style="font-size:9.5px;opacity:.75">مشتريات الشهر</div><b class="num" style="color:#F6E7B0">${fmt(costM)}</b></div></div></div>`;
+  if(st.prNew) h+=prForm();
+  h+=`<div class="chips">${[['all','الكل'],['equip','🛠️ معدات'],['items','📦 أصناف']].map(([k,n])=>`<button data-prkf="${k}" aria-pressed="${fk===k}">${n}</button>`).join('')}</div>`;
+  const tabs=[['act','المفتوحة',nw.length+pg.length+bt.length],['new','جديدة',nw.length],['progress','قيد الشراء',pg.length],['bought','بانتظار التأكيد',bt.length],['closed','المستلمة',cl.length],['rejected','المرفوضة',L.filter(m=>m.status==='rejected').length],['all','الكل',L.length]];
+  h+=`<div class="chips sc">${tabs.map(([k,n,c])=>`<button data-prt="${k}" aria-pressed="${ft===k}">${n} <span class="muted">${c}</span></button>`).join('')}</div>`;
+  let rows=ft==='act'?L.filter(prOpen):ft==='all'?L:L.filter(m=>m.status===ft);
+  rows=rows.slice().sort((a,b)=>(b.priority==='urgent')-(a.priority==='urgent')||new Date(b.created_at)-new Date(a.created_at));
+  h+=rows.length?`<div class="card">${rows.map(m=>prRow(m,R)).join('')}</div>`:`<div class="card empty">${ft==='act'?'✅ ما فيه طلبات شراء مفتوحة':'لا توجد طلبات'}</div>`;
+  h+=`<div class="muted" style="font-size:11px;text-align:center;line-height:1.8">دورة الطلب: الفرع يرفع ← المشتريات تستلم وتشتري ← الفرع يأكد الاستلام</div>`;
+  return h; };
+document.addEventListener('change',e=>{const k=e.target.closest('[data-prk]'); if(k&&$('#prFormCard')){ st.prK=k.dataset.prk; const f=$('#prForm'); const t=f.title.value, br=f.br.value; render().then(()=>{const g=$('#prForm'); if(g){g.title.value=t; g.br.value=br;}}); }});
+document.addEventListener('submit',async e=>{ if(e.target.id!=='prForm') return; e.preventDefault(); const f=e.target, err=$('#prErr'); err.textContent=''; const k=f.k.value;
+  const items=k==='items'?[...f.querySelectorAll('.pr-ir')].map(r=>({n:r.querySelector('[name=in]').value.trim(),q:+String(r.querySelector('[name=iq]').value).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d))||0,u:r.querySelector('[name=iu]').value})).filter(x=>x.n&&x.q>0):[];
+  if(!f.br.value){err.textContent='اختر الفرع';return;} if(k==='items'&&!items.length){err.textContent='أضف صنف واحد على الأقل مع الكمية';return;}
+  const bt=f.querySelector('[type=submit]'); bt.disabled=true; bt.textContent='جاري الرفع…';
+  let ph=null; if(f.ph&&f.ph.files&&f.ph.files[0]){ try{ ph=await mediaPut('purch',f.br.value,await flImg(f.ph.files[0],1100,.72)); }catch(_){ } }
+  const r=await sb.rpc('pr_create',{p_branch:f.br.value,p_kind:k,p_title:f.title.value.trim(),p_items:items,p_details:(f.details&&f.details.value.trim())||null,p_priority:f.pr.value,p_need:f.need.value||null,p_photo:ph});
+  if(r.error){ err.textContent=r.error.message; bt.disabled=false; bt.textContent='رفع الطلب للمشتريات'; return; }
+  st.prNew=false; st.prT='act'; toast('تم رفع طلب الشراء ✓ — وصل إشعار للمشتريات'); render(); });
+document.addEventListener('click',async e=>{ const t=e.target.closest('[data-prn],[data-prx],[data-prb],[data-prkf],[data-prt],[data-pradd],[data-prdel],[data-prst],[data-prph],[data-prdl]'); if(!t||!$('#view').contains(t)) return; const d=t.dataset;
+  if(d.prn){ st.prNew=true; await render(); const c=$('#prFormCard'); if(c) c.scrollIntoView({behavior:'smooth'}); return; }
+  if(d.prx){ st.prNew=false; render(); return; }
+  if(d.prb){ st.prB=d.prb; render(); return; } if(d.prkf){ st.prKf=d.prkf; render(); return; } if(d.prt){ st.prT=d.prt; render(); return; }
+  if(d.pradd){ $('#prItems').insertAdjacentHTML('beforeend',prItemRow({})); return; }
+  if(d.prdel){ const rows=document.querySelectorAll('#prItems .pr-ir'); if(rows.length>1) t.closest('.pr-ir').remove(); return; }
+  if(d.prdl){ if(!confirm('حذف طلب الشراء نهائياً؟')) return; const r=await sb.rpc('pr_delete',{p_id:d.prdl}); if(r.error){toast(r.error.message);return;} toast('تم الحذف'); render(); return; }
+  if(d.prph){ const r=await sb.rpc('pr_photos',{p_id:d.prph}); const p=r.data||{}; const a=await mediaSrc(p.photo), b=await mediaSrc(p.inv_photo); const ims=[[a,'صورة الطلب'],[b,'الفاتورة']].filter(x=>x[0]); if(!ims.length){toast('ما فيه صور');return;}
+    const m=document.createElement('div'); m.style.cssText='position:fixed;inset:0;z-index:85;background:rgba(0,0,0,.85);display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;padding:16px;overflow:auto';
+    m.innerHTML=ims.map(([s2,l])=>`<figure style="margin:0;text-align:center;color:#fff"><img src="${esc(s2)}" style="max-width:100%;max-height:70vh;border-radius:12px"><figcaption style="font-size:11.5px;margin-top:4px">${l}</figcaption></figure>`).join(''); m.onclick=()=>m.remove(); document.body.appendChild(m); return; }
+  if(d.prst){ const s2=d.prst, m=(st._prList||[]).find(x=>String(x.id)===d.id)||{}; let o={}; const sub=`${prRef(m)} · ${esc(m.title||'')}`;
+    const sups=[...new Set((st._prList||[]).map(x=>x.supplier).filter(Boolean))];
+    if(s2==='rejected'){ o=await mtAsk('رفض طلب الشراء',[{name:'note',label:'سبب الرفض',type:'area',req:1}],sub); if(!o) return; }
+    else if(s2==='bought'){ o=await mtAsk('تم الشراء',[{name:'cost',label:'التكلفة ر.س',type:'number',req:1},{name:'sup',label:'المورد / المحل (اختياري)',list:sups},{name:'note',label:'ملاحظة (اختياري)',type:'area'},{name:'ph',label:'صورة الفاتورة (اختياري)',type:'file'}],'بعدها يروح الطلب للفرع يأكد الاستلام'); if(!o) return; }
+    else if(s2==='closed'){ if(!confirm('تأكيد استلام المشتريات كاملة؟')) return; }
+    else if(s2==='progress'&&m.status==='bought'){ o=await mtAsk('ناقص / غير مطابق',[{name:'note',label:'وش الناقص أو غير المطابق؟',type:'area',req:1}],'يرجع الطلب لمسؤول المشتريات'); if(!o) return; }
+    else if(s2==='cancelled'){ if(!confirm('إلغاء طلب الشراء؟')) return; }
+    t.disabled=true; if(o.ph) o.ph=await mediaPut('purch',m.branch,o.ph);
+    const r=await sb.rpc('pr_update',{p_id:d.id,p_status:s2,p_note:o.note||null,p_cost:o.cost?+o.cost:null,p_supplier:o.sup||null,p_inv_photo:o.ph||null}); t.disabled=false;
+    if(r.error){ toast('تعذّر: '+r.error.message); return; } st._alertsAt=0;
+    toast({progress:m.status==='bought'?'رجع الطلب للمشتريات':'تم استلام الطلب ✓ — وصل إشعار للفرع',bought:'تم ✓ — وصل إشعار للفرع يأكد الاستلام',closed:'تم تأكيد الاستلام ✓',rejected:'تم رفض الطلب',cancelled:'تم الإلغاء'}[s2]); render(); return; } });
 // ===================== تقييم العملاء =====================
 const FB_ST={new:['جديد','var(--gold-soft)','var(--gold-ink)'],reviewed:['تمت المراجعة','rgba(91,143,208,.14)','#2F67B0'],contacted:['تم التواصل مع العميل','rgba(91,143,208,.14)','#2F67B0'],resolved:['تم حل المشكلة','rgba(31,161,107,.12)','var(--up)'],closed:['مغلق','var(--chip)','var(--muted)']};
 const FB_ACT={new:'استلام التقييم',reviewed:'تمت المراجعة',contacted:'تم التواصل مع العميل',resolved:'تم حل المشكلة',closed:'إغلاق'};
