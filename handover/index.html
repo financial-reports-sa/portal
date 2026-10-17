@@ -131,7 +131,8 @@ async function retOcr(m,img){const o=m.querySelector('#rOcr');const f=S.f;o.styl
   const n=put('#rInv',j.inv)+put('#rAt',j.time)+put('#rAmt',j.amount?String(j.amount):'');
   retItems(m,j.items||[],j.amount||0);
   if(!j.inv){const ie=m.querySelector('#rInv');ie.value='';ie.classList.add('err-in');}
-  const ag=retAge(j.time);let tw='';if(j.time&&(ag===null||ag>60)){const te=m.querySelector('#rAt');te.classList.remove('ocr-on');te.classList.add('err-in');tw=' — ⚠️ الوقت المقروء ('+j.time+') بعيد عن الحين، طابقه مع الفاتورة وعدّله';}
+  const ag=retAge(j.time);let tw='';if(j.time&&(ag===null||ag>60)){const te=m.querySelector('#rAt');te.classList.remove('ocr-on');te.classList.add('err-in');tw=' — ⚠️ الوقت المقروء ('+j.time+') بعيد عن الحين — إذا ما يطابق الفاتورة صوّر مرة ثانية';}
+  if(j.inv&&!j.time){const te=m.querySelector('#rAt');te.value='';te.classList.add('err-in');o.className='rocr';o.style.color='#B91C1C';o.textContent='⚠️ ما قدرت أقرأ وقت الفاتورة — قرّب الجوال من سطر التاريخ والوقت وصوّر مرة ثانية';return}
   if(!j.inv){o.className='rocr';o.style.color='#B91C1C';o.textContent='⚠️ ما قدرت أقرأ رقم الفاتورة — قرّب الجوال من الرقم الطويل تحت «فاتورة ضريبية مبسطة» وصوّر مرة ثانية';return}o.style.color='';
   o.className=n&&!tw?'rocr ok':'rocr';o.textContent=(n===3?'✓ النظام قرأ الفاتورة — تأكد من الأرقام واختر السبب':n?'✓ قرأت جزء من الفاتورة — كمّل الباقي':'⚠️ ما قدرت أقرأ الفاتورة — صوّر مرة ثانية')+tw;
  }catch(e){if(document.body.contains(m)){o.className='rocr';o.style.color='#B91C1C';o.textContent='⚠️ ما قدرت أقرأ الفاتورة — تأكد من الإنترنت وصوّر مرة ثانية ('+(e&&e.name==='AbortError'?'انتهى الوقت':'اتصال')+')'}}}
@@ -141,19 +142,18 @@ function retOpen(){const f=S.f;if(!f.branch)return toast('اختر الفرع أ
 <label class="rph rph1"><span id="rPhT">📸 صوّر الفاتورة — قرّب الجوال عشان يبان رقم الفاتورة واضح</span><input id="rPh" type="file" accept="image/*" capture="environment" hidden></label>
 <div id="rOcr" class="rocr"></div>
 <div id="rItems"></div>
- <div class="row2"><label class="fld"><span class="lbl">رقم الفاتورة <small>— يقرأه النظام من الصورة</small></span><input id="rInv" class="num" readonly placeholder="صوّر الفاتورة" style="background:var(--soft2)"></label><label class="fld"><span class="lbl">وقت الفاتورة</span><input id="rAt" type="time" value="${now}" class="num"></label></div>
+ <div class="row2"><label class="fld"><span class="lbl">رقم الفاتورة <small>— يقرأه النظام من الصورة</small></span><input id="rInv" class="num" readonly placeholder="صوّر الفاتورة" style="background:var(--soft2)"></label><label class="fld"><span class="lbl">وقت الفاتورة <small>— من الصورة</small></span><input id="rAt" class="num" readonly placeholder="صوّر الفاتورة" style="background:var(--soft2);direction:ltr;text-align:right"></label></div>
  <div style="height:10px"></div><label class="amt"><i class="dot" style="background:#B91C1C"></i><span>مبلغ المرتجع</span><input id="rAmt" inputmode="decimal" placeholder="0" autocomplete="off"><em>ر.س</em></label>
  <span class="lbl" style="display:block;margin:12px 0 6px">السبب</span><div class="rchips">${RET_R.map(x=>`<button data-r="${x}">${x}</button>`).join('')}</div>
  <label class="fld" style="margin-top:10px"><span class="lbl">ملاحظة (اختياري)</span><input id="rNote" autocomplete="off"></label>
  <label class="rack"><input type="checkbox" id="rAck"><span>أقرّ أنا <b>${esc(f.cashier.trim())}</b> بأن هذا المرتجع صحيح وحقيقي، وأتحمّل كامل المسؤولية في حال ثبت أنه غير صحيح.</span></label>
   <div class="acts" style="margin-top:14px"><button class="btn ghost" data-a="0">إلغاء</button><button class="btn" data-a="1" style="background:#B91C1C">توثيق المرتجع</button></div></div>`;
  document.body.appendChild(m);
- m.querySelector('#rAt').oninput=e=>e.target.classList.remove('err-in');
  m.querySelector('#rPh').onchange=async e=>{const fl=e.target.files[0];if(!fl)return;m.querySelector('#rPhT').textContent='جارِ تجهيز الصورة…';try{img=await retImg(fl);m.querySelector('#rPhT').innerHTML=`<img src="${img}" alt=""> ✓ تم — اضغط لإعادة التصوير`;retOcr(m,img)}catch(_){m.querySelector('#rPhT').textContent='تعذّر قراءة الصورة — صوّر مرة ثانية'}};
  m.addEventListener('click',async e=>{const r=e.target.closest('[data-r]');if(r){reason=r.dataset.r;m.querySelectorAll('[data-r]').forEach(b=>b.classList.toggle('on',b===r));return}
   const a=e.target.closest('[data-a]');if(!a&&e.target!==m)return;if(!a||a.dataset.a==='0'){m.remove();return}
   const inv=toEn(m.querySelector('#rInv').value),amt=pn(m.querySelector('#rAmt').value),at=m.querySelector('#rAt').value;
-  if(!/^\d{10,14}$/.test(inv))return toast('صوّر الفاتورة وقرّب الجوال من رقمها — النظام لازم يقرأ الرقم',1);if(!at)return toast('اكتب وقت الفاتورة',1);if(!amt)return toast('اكتب مبلغ المرتجع',1);if(!reason)return toast('اختر السبب',1);if(!img)return toast('صورة الفاتورة إلزامية',1);if(!m.querySelector('#rAck').checked)return toast('لازم توافق على الإقرار قبل التوثيق',1);
+  if(!/^\d{2}:\d{2}$/.test(at))return toast('النظام لازم يقرأ وقت الفاتورة من الصورة — صوّر مرة ثانية',1);if(!/^\d{10,14}$/.test(inv))return toast('صوّر الفاتورة وقرّب الجوال من رقمها — النظام لازم يقرأ الرقم',1);if(!at)return toast('اكتب وقت الفاتورة',1);if(!amt)return toast('اكتب مبلغ المرتجع',1);if(!reason)return toast('اختر السبب',1);if(!img)return toast('صورة الفاتورة إلزامية',1);if(!m.querySelector('#rAck').checked)return toast('لازم توافق على الإقرار قبل التوثيق',1);
   a.disabled=true;a.textContent='جارِ التوثيق…';
   try{const _a={p_branch:f.branch,p_pin:toEn(f.pin).trim(),p_cashier:f.cashier.trim(),p_inv:inv,p_inv_time:at,p_amount:amt,p_reason:reason,p_note:[m._items&&m._items.length?'أصناف: '+m._items.join('، '):'',m.querySelector('#rNote').value.trim()].filter(Boolean).join(' · ').slice(0,300),p_img:img,p_ack:true};let {data:j,error}=await SB.rpc('ret_add',_a);if(error&&/ret_add|function/i.test(error.message||'')){delete _a.p_ack;({data:j,error}=await SB.rpc('ret_add',_a));}if(error)throw error;
    if(!j||!j.ok){toast((j&&j.message)||'تعذّر التوثيق',1);a.disabled=false;a.textContent='توثيق المرتجع';return}

@@ -1,16 +1,18 @@
 alter table public.ret_ocr_log add column if not exists inv text;
+alter table public.ret_ocr_log add column if not exists tm text;
+drop function if exists public.ret_ocr_mark(text, text, text);
 create index if not exists ret_ocr_log_inv_idx on public.ret_ocr_log (code, inv);
 
-create or replace function public.ret_ocr_mark(p_branch text, p_pin text, p_inv text) returns void
+create or replace function public.ret_ocr_mark(p_branch text, p_pin text, p_inv text, p_time text default null) returns void
 language plpgsql volatile security definer set search_path = public as $$
 declare v_code text;
 begin
   begin v_code := ret_pin(p_branch, p_pin); exception when others then return; end;
   if coalesce(p_inv, '') !~ '^[0-9]{10,14}$' then return; end if;
-  insert into ret_ocr_log (code, inv) values (v_code, p_inv);
+  insert into ret_ocr_log (code, inv, tm) values (v_code, p_inv, case when coalesce(p_time, '') ~ '^[0-2][0-9]:[0-5][0-9]$' then p_time end);
 end $$;
-revoke all on function public.ret_ocr_mark(text, text, text) from public, anon, authenticated;
-grant execute on function public.ret_ocr_mark(text, text, text) to service_role;
+revoke all on function public.ret_ocr_mark(text, text, text, text) from public, anon, authenticated;
+grant execute on function public.ret_ocr_mark(text, text, text, text) to service_role;
 
 alter table public.cashier_returns add column if not exists ack_at timestamptz;
 alter table public.cashier_returns add column if not exists status text;
@@ -73,6 +75,7 @@ begin
   if not exists (select 1 from ret_ocr_log where code = v_code and inv = v_inv and at > now() - interval '3 hours') then
     return jsonb_build_object('ok', false, 'message', 'رقم الفاتورة لازم يقرأه النظام من صورة الفاتورة — قرّب الجوال من الرقم وصوّر مرة ثانية');
   end if;
+  p_inv_time := coalesce((select tm from ret_ocr_log where code = v_code and inv = v_inv and tm is not null order by at desc limit 1), p_inv_time);
   if coalesce(p_amount, 0) <= 0 or p_amount > 50000 then return jsonb_build_object('ok', false, 'message', 'اكتب مبلغ المرتجع'); end if;
   if coalesce(p_reason, '') = '' then return jsonb_build_object('ok', false, 'message', 'اختر سبب المرتجع'); end if;
   if coalesce(p_img, '') !~ '^data:image/' or length(p_img) < 2000 then return jsonb_build_object('ok', false, 'message', 'صورة الفاتورة إلزامية'); end if;
