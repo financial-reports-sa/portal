@@ -1,0 +1,114 @@
+create table if not exists public.mkt_inf (
+  id         uuid primary key default gen_random_uuid(),
+  city       text not null default 'madinah' check (city in ('madinah','jeddah')),
+  name       text not null,
+  handle     text not null default '',
+  platform   text not null default 'instagram' check (platform in ('tiktok','snapchat','instagram','x','youtube')),
+  url        text not null default '',
+  followers  text not null default '',
+  niche      text not null default '',
+  why        text not null default '',
+  idea       text not null default '',
+  status     text not null default 'new' check (status in ('new','contacted','agreed','done','rejected')),
+  price      numeric(12,2),
+  visit_date date,
+  post_url   text not null default '',
+  notes      text not null default '',
+  src        text not null default 'ai',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  updated_by text not null default ''
+);
+create unique index if not exists mkt_inf_uq on public.mkt_inf (platform, lower(coalesce(nullif(handle, ''), url)));
+alter table public.mkt_inf enable row level security;
+revoke all on public.mkt_inf from anon, authenticated;
+
+create or replace function public.mkt_inf_list() returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not mkt_can() then raise exception 'ما عندك صلاحية على التسويق'; end if;
+  return coalesce((select jsonb_agg(to_jsonb(i) order by case i.status when 'agreed' then 0 when 'contacted' then 1 when 'new' then 2 when 'done' then 3 else 4 end, i.created_at desc) from mkt_inf i), '[]');
+end $$;
+
+create or replace function public.mkt_inf_save(p jsonb) returns uuid
+language plpgsql security definer set search_path = public as $$
+declare w text := coalesce((select coalesce(nullif(full_name, ''), username) from profiles where id = auth.uid()), ''); nid uuid := nullif(p->>'id', '')::uuid;
+begin
+  if not mkt_can() then raise exception 'ما عندك صلاحية على التسويق'; end if;
+  if nid is null then
+    if coalesce(btrim(p->>'name'), '') = '' then raise exception 'اكتب اسم المؤثر'; end if;
+    insert into mkt_inf (city, name, handle, platform, url, followers, niche, why, idea, notes, src, updated_by)
+    values (case when p->>'city' = 'jeddah' then 'jeddah' else 'madinah' end, left(btrim(p->>'name'), 80), left(regexp_replace(coalesce(p->>'handle', ''), '^@', ''), 60),
+            case when p->>'platform' in ('tiktok','snapchat','instagram','x','youtube') then p->>'platform' else 'instagram' end,
+            left(coalesce(p->>'url', ''), 300), left(coalesce(p->>'followers', ''), 30), left(coalesce(p->>'niche', ''), 60), '', '', left(coalesce(p->>'notes', ''), 500), 'manual', w)
+    returning id into nid;
+    return nid;
+  end if;
+  update mkt_inf set
+    status     = case when p ? 'status' and p->>'status' in ('new','contacted','agreed','done','rejected') then p->>'status' else status end,
+    price      = case when p ? 'price' then nullif(p->>'price', '')::numeric else price end,
+    visit_date = case when p ? 'visit_date' then nullif(p->>'visit_date', '')::date else visit_date end,
+    post_url   = case when p ? 'post_url' then left(coalesce(p->>'post_url', ''), 300) else post_url end,
+    notes      = case when p ? 'notes' then left(coalesce(p->>'notes', ''), 500) else notes end,
+    updated_at = now(), updated_by = w
+  where id = nid;
+  return nid;
+end $$;
+
+create or replace function public.mkt_inf_delete(p_id uuid) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not coalesce(is_admin(), false) then raise exception 'الحذف للإدارة فقط'; end if;
+  delete from mkt_inf where id = p_id;
+end $$;
+
+create or replace function public.mkt_inf_kick() returns boolean
+language plpgsql security definer set search_path = public, extensions as $$
+declare c brief_cfg; have jsonb;
+begin
+  if auth.uid() is not null and not coalesce(is_admin(), false) then raise exception 'البحث للإدارة فقط'; end if;
+  select * into c from brief_cfg where id = 1;
+  if c.token is null then raise exception 'إعدادات التقرير المسائي غير موجودة'; end if;
+  select coalesce(jsonb_agg(platform || ':' || coalesce(nullif(handle, ''), name)), '[]') into have from mkt_inf;
+  perform net.http_post(url := replace(c.fn_url, 'daily-brief', 'mkt-trends'), headers := jsonb_build_object('Content-Type', 'application/json'),
+    body := jsonb_build_object('mode', 'inf', 'token', c.token, 'apikey', c.api_key, 'have', have), timeout_milliseconds := 150000);
+  return true;
+end $$;
+
+create or replace function public.mkt_inf_srv_add(p_token text, p_items jsonb) returns int
+language plpgsql security definer set search_path = public as $$
+declare n int := 0; x jsonb; u uuid[];
+begin
+  if not brief_auth(p_token) then raise exception 'unauthorized'; end if;
+  for x in select * from jsonb_array_elements(case when jsonb_typeof(p_items) = 'array' then p_items else '[]' end) loop
+    begin
+      insert into mkt_inf (city, name, handle, platform, url, followers, niche, why, idea, src)
+      values (case when x->>'city' = 'jeddah' then 'jeddah' else 'madinah' end, left(x->>'name', 80), left(coalesce(x->>'handle', ''), 60),
+              case when x->>'platform' in ('tiktok','snapchat','instagram','x','youtube') then x->>'platform' else 'instagram' end,
+              left(coalesce(x->>'url', ''), 300), left(coalesce(x->>'followers', ''), 30), left(coalesce(x->>'niche', ''), 60), left(coalesce(x->>'why', ''), 300), left(coalesce(x->>'idea', ''), 400), 'ai')
+      on conflict do nothing;
+      if found then n := n + 1; end if;
+    exception when others then null; end;
+  end loop;
+  if n > 0 then
+    u := array(select p.id from profiles p where p.active and (p.role in ('owner','admin') or exists (select 1 from user_sections s where s.user_id = p.id and s.section = 'mkt')));
+    begin perform push_send(u, '🤳 مؤثرين جدد في قائمة التسويق', n || ' مؤثر من المدينة وجدة — افتح «أفكار تسويقية ← المؤثرين»', './?tab=mkt&inf=1', 'mkt-inf'); exception when others then null; end;
+  end if;
+  return n;
+end $$;
+
+revoke all on function public.mkt_inf_list() from public, anon;
+revoke all on function public.mkt_inf_save(jsonb) from public, anon;
+revoke all on function public.mkt_inf_delete(uuid) from public, anon;
+revoke all on function public.mkt_inf_kick() from public, anon;
+revoke all on function public.mkt_inf_srv_add(text, jsonb) from public, authenticated;
+grant execute on function public.mkt_inf_list() to authenticated;
+grant execute on function public.mkt_inf_save(jsonb) to authenticated;
+grant execute on function public.mkt_inf_delete(uuid) to authenticated;
+grant execute on function public.mkt_inf_kick() to authenticated;
+grant execute on function public.mkt_inf_srv_add(text, jsonb) to anon;
+
+do $$ begin perform cron.unschedule('mkt-inf-weekly'); exception when others then null; end $$;
+select cron.schedule('mkt-inf-weekly', '0 6 * * 6', 'select public.mkt_inf_kick()');
+
+select 'تم: قائمة المؤثرين جاهزة' as result;
