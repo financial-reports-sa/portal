@@ -61,11 +61,11 @@ begin
   if coalesce(p_img, '') !~ '^data:image/' or length(p_img) < 2000 then return jsonb_build_object('ok', false, 'message', 'صورة الفاتورة إلزامية'); end if;
   if length(p_img) > 1200000 then return jsonb_build_object('ok', false, 'message', 'الصورة كبيرة — صوّر مرة ثانية'); end if;
   begin t := p_inv_time::time; exception when others then return jsonb_build_object('ok', false, 'message', 'اكتب وقت الفاتورة'); end;
-  cand := nr::date + t;
-  if cand > nr + interval '3 minutes' then cand := cand - interval '1 day'; end if;
+  select max(c) into cand from unnest(array[nr::date + t, nr::date + t + case when t < time '12:00' then interval '12 hours' else interval '-12 hours' end,
+    nr::date - 1 + t, nr::date - 1 + t + case when t < time '12:00' then interval '12 hours' else interval '-12 hours' end]) c where c <= nr + interval '3 minutes';
   mins := floor(extract(epoch from (nr - cand)) / 60);
-  if mins > 30 then
-    return jsonb_build_object('ok', false, 'error', 'late', 'message', 'انتهت مهلة التوثيق — المرتجع لازم يتوثّق خلال نص ساعة من وقت الفاتورة (مرّ ' || mins || ' دقيقة). المرتجع غير الموثّق يُحسب عجز عليك.');
+  if mins > 60 then
+    return jsonb_build_object('ok', false, 'error', 'late', 'message', 'انتهت مهلة التوثيق — المرتجع لازم يتوثّق خلال ساعة من وقت الفاتورة (مرّ ' || mins || ' دقيقة). المرتجع غير الموثّق يُحسب عجز عليك.');
   end if;
   v_at := cand at time zone 'Asia/Riyadh';
   v_bd := (nr - interval '6 hours')::date;

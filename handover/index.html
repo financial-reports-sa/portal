@@ -42,7 +42,7 @@
 </div>
 <div class="topbtns"><button id="msgBtn" class="minebtn msgbtn">💬 الرسائل<span class="bd" id="msgBd" hidden></span></button><button id="mineBtn" class="minebtn">تسليماتي</button></div>
 </div>
-<button id="retBtn" class="retwide">↩️ توثيق مرتجع <small>— خلال نص ساعة من الفاتورة</small></button><div id="cmBan"></div><div id="mineBan"></div>
+<button id="retBtn" class="retwide">↩️ توثيق مرتجع <small>— خلال ساعة من الفاتورة</small></button><div id="cmBan"></div><div id="mineBan"></div>
 <section id="vForm"></section>
 </div>
 <div class="bar" id="bar"><div class="in" id="formBar">
@@ -108,7 +108,7 @@ function retCard(){const L=S.rets||[],f=S.f;return `<div class="card rcard"><h2>
 <div class="rlist">${L.length?L.map(x=>`<div class="kv"><span>فاتورة ${esc(x.inv)} · ${esc(x.reason)} <small style="color:var(--mut)">${new Date(x.at).toLocaleTimeString('ar-SA-u-nu-latn',{hour:'numeric',minute:'2-digit'})}</small></span><b class="num">${fmt(x.amount)}</b></div>${x.status==='rejected'?`<div class="hint" style="color:#B91C1C;margin:-4px 0 6px">⛔ رفضه المدير${x.mgr_note?': '+esc(x.mgr_note):''}</div>`:''}`).join('')+`<div class="sum"><span>الموثّقة اليوم (${L.length})</span><b class="num">${fmt(docOf())}</b></div>`:`<p class="hint" style="margin:0 0 10px">${S.rets===null?'سجّل رمزك فوق عشان تظهر مرتجعاتك الموثّقة.':'ما وثّقت أي مرتجع اليوم.'}</p>`}</div>
 <button class="ladd" id="retAdd2" style="margin:10px 0">+ توثيق مرتجع جديد</button>
 ${L.length?'':`<label class="nochk"><input type="checkbox" id="fNoRet" ${f.noRet?'checked':''}><span>لا يوجد مرتجعات في ورديتي</span></label>`}
-${f.noRet&&!L.length?'':amtRow('fSysRet','مجموع مرتجعات النظام','#B91C1C',f.sysRet)+`<p class="hint">من تقرير الكاشير في النظام. أي مرتجع ما وثّقته خلال نص ساعة من الفاتورة يُحسب عجز عليك.</p>`}
+${f.noRet&&!L.length?'':amtRow('fSysRet','مجموع مرتجعات النظام','#B91C1C',f.sysRet)+`<p class="hint">من تقرير الكاشير في النظام. أي مرتجع ما وثّقته خلال ساعة من الفاتورة يُحسب عجز عليك.</p>`}
 <div id="retInfo"></div></div>`}
 async function retFetch(){const f=S.f,pin=toEn(f.pin||'').trim();if(!f.branch||!pin||!SB)return null;try{const {data:j,error}=await SB.rpc('ret_mine',{p_branch:f.branch,p_pin:pin,p_date:f.date});if(error||!j||!j.ok)return null;S.rets=j.rows||[];return S.rets}catch(e){return null}}
 function retImg(file){return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=rej;fr.onload=()=>{const im=new Image();im.onerror=rej;im.onload=()=>{const k=Math.min(1,1280/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.62))};im.src=fr.result};fr.readAsDataURL(file)})}
@@ -121,6 +121,7 @@ function retItems(m,items,full){const box=m.querySelector('#rItems');m._items=nu
   if(mode==='all'){if(full)amtEl.value=String(full);m._items=null}else{const v=sum();amtEl.value=v?String(v):'';m._items=items.map((x,i)=>q[i]?`${q[i]}× ${x.name}`:'').filter(Boolean)}};
  box.onclick=e=>{const a=e.target.closest('[data-rim]');if(a){mode=a.dataset.rim;draw();return}const b=e.target.closest('[data-riq]');if(b){const [i,d]=b.dataset.riq.split('|').map(Number);q[i]=Math.max(0,Math.min(items[i].qty,q[i]+d));draw()}};
  draw();}
+function retAge(hm){const x=/^(\d{1,2}):(\d{2})$/.exec(hm||'');if(!x)return null;const now=new Date(),h=+x[1],mi=+x[2];let best=null;[0,-1].forEach(dd=>[h,h<12?h+12:h-12].forEach(H=>{const c=new Date(now);c.setDate(c.getDate()+dd);c.setHours(H,mi,0,0);const d=(now-c)/6e4;if(d>=-3&&(best===null||d<best))best=d;}));return best===null?null:Math.round(best);}
 async function retOcr(m,img){const o=m.querySelector('#rOcr');const f=S.f;o.className='rocr busy';o.textContent='✨ جارِ قراءة الفاتورة…';
  try{const ac=new AbortController();const tt=setTimeout(()=>ac.abort(),20000);
   const r=await fetch(window.PORTAL_CONFIG.url+'/functions/v1/ret-ocr',{method:'POST',signal:ac.signal,headers:{'Content-Type':'application/json',apikey:window.PORTAL_CONFIG.key},body:JSON.stringify({branch:f.branch,pin:toEn(f.pin).trim(),img})});clearTimeout(tt);
@@ -129,11 +130,12 @@ async function retOcr(m,img){const o=m.querySelector('#rOcr');const f=S.f;o.clas
   const put=(id,v)=>{if(!v)return 0;const el=m.querySelector(id);el.value=v;el.classList.add('ocr-on');return 1};
   const n=put('#rInv',j.inv)+put('#rAt',j.time)+put('#rAmt',j.amount?String(j.amount):'');
   retItems(m,j.items||[],j.amount||0);
-  o.className=n?'rocr ok':'rocr';o.textContent=n===3?'✓ النظام قرأ الفاتورة — تأكد من الأرقام واختر السبب':n?'✓ قرأت جزء من الفاتورة — كمّل الباقي':'ما قدرت أقرأ الفاتورة — اكتب البيانات يدوياً';
+  const ag=retAge(j.time);let tw='';if(j.time&&(ag===null||ag>60)){const te=m.querySelector('#rAt');te.classList.remove('ocr-on');te.classList.add('err-in');tw=' — ⚠️ الوقت المقروء ('+j.time+') بعيد عن الحين، طابقه مع الفاتورة وعدّله';}
+  o.className=n&&!tw?'rocr ok':'rocr';o.textContent=(n===3?'✓ النظام قرأ الفاتورة — تأكد من الأرقام واختر السبب':n?'✓ قرأت جزء من الفاتورة — كمّل الباقي':'ما قدرت أقرأ الفاتورة — اكتب البيانات يدوياً')+tw;
  }catch(_){if(document.body.contains(m)){o.className='rocr';o.textContent='ما قدرت أقرأ الفاتورة — اكتب البيانات يدوياً'}}}
 function retOpen(){const f=S.f;if(!f.branch)return toast('اختر الفرع أولاً',1);if(!f.cashier.trim())return toast('اكتب اسمك أولاً',1);if(!toEn(f.pin).trim())return toast('اكتب رمزك الشخصي أولاً',1);
  const d=new Date(),now=pad(d.getHours())+':'+pad(d.getMinutes());let reason='',img='';
- const m=document.createElement('div');m.className='modal';m.innerHTML=`<div class="sheet"><h3>↩️ توثيق مرتجع</h3><p class="hint" style="margin-top:-4px">لازم يتوثّق خلال نص ساعة من وقت الفاتورة.</p>
+ const m=document.createElement('div');m.className='modal';m.innerHTML=`<div class="sheet"><h3>↩️ توثيق مرتجع</h3><p class="hint" style="margin-top:-4px">لازم يتوثّق خلال ساعة من وقت الفاتورة.</p>
 <label class="rph rph1"><span id="rPhT">📸 صوّر الفاتورة أول — والنظام يقرأ الرقم والوقت والمبلغ</span><input id="rPh" type="file" accept="image/*" capture="environment" hidden></label>
 <div id="rOcr" class="rocr"></div>
 <div id="rItems"></div>
@@ -144,6 +146,7 @@ function retOpen(){const f=S.f;if(!f.branch)return toast('اختر الفرع أ
  <label class="rack"><input type="checkbox" id="rAck"><span>أقرّ أنا <b>${esc(f.cashier.trim())}</b> بأن هذا المرتجع صحيح وحقيقي، وأتحمّل كامل المسؤولية في حال ثبت أنه غير صحيح.</span></label>
   <div class="acts" style="margin-top:14px"><button class="btn ghost" data-a="0">إلغاء</button><button class="btn" data-a="1" style="background:#B91C1C">توثيق المرتجع</button></div></div>`;
  document.body.appendChild(m);
+ m.querySelector('#rAt').oninput=e=>e.target.classList.remove('err-in');
  m.querySelector('#rPh').onchange=async e=>{const fl=e.target.files[0];if(!fl)return;m.querySelector('#rPhT').textContent='جارِ تجهيز الصورة…';try{img=await retImg(fl);m.querySelector('#rPhT').innerHTML=`<img src="${img}" alt=""> ✓ تم — اضغط لإعادة التصوير`;retOcr(m,img)}catch(_){m.querySelector('#rPhT').textContent='تعذّر قراءة الصورة — صوّر مرة ثانية'}};
  m.addEventListener('click',async e=>{const r=e.target.closest('[data-r]');if(r){reason=r.dataset.r;m.querySelectorAll('[data-r]').forEach(b=>b.classList.toggle('on',b===r));return}
   const a=e.target.closest('[data-a]');if(!a&&e.target!==m)return;if(!a||a.dataset.a==='0'){m.remove();return}

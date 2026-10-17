@@ -1,15 +1,16 @@
 // قراءة فاتورة المرتجع من الصورة — Supabase → Edge Functions → اسمها: ret-ocr (Verify JWT: OFF)
 // تستخدم نفس المفتاح ANTHROPIC_API_KEY. الكاشير يصوّر الفاتورة ← ترجع رقم الفاتورة والوقت والمبلغ
-const MODEL = Deno.env.get("OCR_MODEL") || "claude-haiku-4-5-20251001";
+const MODEL = Deno.env.get("OCR_MODEL") || "claude-sonnet-5-5";
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type", "Access-Control-Allow-Methods": "POST, OPTIONS" };
 const json = (o: unknown, status = 200) => new Response(JSON.stringify(o), { status, headers: { ...CORS, "Content-Type": "application/json" } });
 
-const TOOL = { name: "invoice", description: "بيانات الفاتورة المقروءة من الصورة", input_schema: { type: "object", required: ["inv_no", "time", "amount"], properties: {
-  inv_no: { type: "string", description: "رقم الفاتورة الطويل (عادة 10 إلى 14 رقم، مطبوع تحت «فاتورة ضريبية مبسطة» قبل التاريخ). ليس رقم الطلب الصغير ولا الرقم الضريبي ولا الجوال. أرقام إنجليزية فقط، أو فارغ إذا غير واضح" },
-  time: { type: "string", description: "وقت الفاتورة بصيغة 24 ساعة HH:MM (حوّل ص/م). من سطر التاريخ والوقت وليس وقت التوصيل. فارغ إذا غير واضح" },
-  amount: { type: "number", description: "المبلغ المستحق/الإجمالي شامل الضريبة (Net). صفر إذا غير واضح" },
+const TOOL = { name: "invoice", description: "بيانات الفاتورة المقروءة من الصورة", input_schema: { type: "object", required: ["inv_no", "time", "ampm", "amount"], properties: {
+  inv_no: { type: "string", description: "رقم الفاتورة الطويل (12 رقم تقريباً، مثل 260020170435) المطبوع تحت «فاتورة ضريبية مبسطة» على نفس سطر اسم الكاشير. ليس Bill No (رقم الطلب القصير مثل 0:33) ولا الرقم الضريبي ولا الجوال. أرقام إنجليزية فقط، أو فارغ إذا غير واضح" },
+  time: { type: "string", description: "وقت الفاتورة كما هو مطبوع بالضبط HH:MM بدون تحويل (مثلاً 11:10). من سطر التاريخ والوقت جنب «كاشير». اقرأ كل رقم بعناية. فارغ إذا غير واضح" },
+  ampm: { type: "string", enum: ["ص", "م", ""], description: "الحرف المطبوع بعد الوقت: ص (صباحاً) أو م (مساءً)، فارغ إذا ما فيه" },
+  amount: { type: "number", description: "المبلغ الإجمالي المستحق للفاتورة كاملة شامل الضريبة (Net/الإجمالي في أسفل الفاتورة) — ليس سعر أول صنف. صفر إذا غير واضح أو ما يظهر في الصورة" },
   items: { type: "array", description: "أصناف الفاتورة من جدول الأصناف، بالترتيب", items: { type: "object", required: ["name", "qty", "unit"], properties: {
-    name: { type: "string", description: "اسم الصنف كما هو مطبوع" }, qty: { type: "number", description: "الكمية" }, unit: { type: "number", description: "سعر الوحدة شامل الضريبة" } } } },
+    name: { type: "string", description: "اسم الصنف حرفياً كما هو مطبوع — لا تخترع أسماء" }, qty: { type: "number", description: "الكمية" }, unit: { type: "number", description: "سعر الوحدة شامل الضريبة" } } } },
 } } };
 
 Deno.serve(async (req) => {
@@ -38,8 +39,10 @@ Deno.serve(async (req) => {
   const tu = (j.content || []).find((c: { type: string; name?: string }) => c.type === "tool_use" && c.name === "invoice");
   const x = (tu && tu.input) || {};
   const inv = String(x.inv_no || "").replace(/[٠-٩]/g, (d: string) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d))).replace(/\D/g, "").slice(0, 30);
-  const tm = /^([01]?\d|2[0-3]):([0-5]\d)$/.exec(String(x.time || "").trim());
+  const tm = /^([01]?\d|2[0-3]):([0-5]\d)$/.exec(String(x.time || "").replace(/[٠-٩]/g, (d: string) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d))).trim());
+  let hh = tm ? Number(tm[1]) : 0;
+  if (tm && hh <= 12) { if (x.ampm === "م" && hh < 12) hh += 12; if (x.ampm === "ص" && hh === 12) hh = 0; }
   const amt = Number(x.amount);
   const items = (Array.isArray(x.items) ? x.items : []).slice(0, 30).map((i: { name?: unknown; qty?: unknown; unit?: unknown }) => ({ name: String(i.name || "").slice(0, 60), qty: Math.max(0, Math.min(999, Math.round(Number(i.qty) || 0))), unit: Math.max(0, Math.round((Number(i.unit) || 0) * 100) / 100) })).filter((i: { name: string; qty: number; unit: number }) => i.name && i.qty > 0 && i.unit > 0);
-  return json({ ok: true, items, inv, time: tm ? `${tm[1].padStart(2, "0")}:${tm[2]}` : "", amount: isFinite(amt) && amt > 0 && amt < 50000 ? Math.round(amt * 100) / 100 : 0 });
+  return json({ ok: true, items, inv, time: tm ? `${String(hh).padStart(2, "0")}:${tm[2]}` : "", amount: isFinite(amt) && amt > 0 && amt < 50000 ? Math.round(amt * 100) / 100 : 0 });
 });
