@@ -122,19 +122,19 @@ function retItems(m,items,full){const box=m.querySelector('#rItems');m._items=nu
  box.onclick=e=>{const a=e.target.closest('[data-rim]');if(a){mode=a.dataset.rim;draw();return}const b=e.target.closest('[data-riq]');if(b){const [i,d]=b.dataset.riq.split('|').map(Number);q[i]=Math.max(0,Math.min(items[i].qty,q[i]+d));draw()}};
  draw();}
 function retAge(hm){const x=/^(\d{1,2}):(\d{2})$/.exec(hm||'');if(!x)return null;const now=new Date(),h=+x[1],mi=+x[2];let best=null;[0,-1].forEach(dd=>[h,h<12?h+12:h-12].forEach(H=>{const c=new Date(now);c.setDate(c.getDate()+dd);c.setHours(H,mi,0,0);const d=(now-c)/6e4;if(d>=-3&&(best===null||d<best))best=d;}));return best===null?null:Math.round(best);}
-async function retOcr(m,img){const o=m.querySelector('#rOcr');const f=S.f;o.style.color='';m.querySelectorAll('#rInv,#rAt').forEach(x=>x.classList.remove('err-in'));o.className='rocr busy';o.textContent='✨ جارِ قراءة الفاتورة…';
- try{const ac=new AbortController();const tt=setTimeout(()=>ac.abort(),20000);
+async function retOcr(m,img){const o=m.querySelector('#rOcr');const f=S.f;o.style.color='';m.querySelectorAll('#rInv,#rAt').forEach(x=>x.classList.remove('err-in'));o.className='rocr busy';o.textContent='✨ جارِ قراءة الفاتورة… (حتى ٢٠ ثانية)';
+ try{const ac=new AbortController();const tt=setTimeout(()=>ac.abort(),45000);
   const r=await fetch(window.PORTAL_CONFIG.url+'/functions/v1/ret-ocr',{method:'POST',signal:ac.signal,headers:{'Content-Type':'application/json',apikey:window.PORTAL_CONFIG.key},body:JSON.stringify({branch:f.branch,pin:toEn(f.pin).trim(),img})});clearTimeout(tt);
   const j=r.ok?await r.json():null;if(!document.body.contains(m))return;
-  if(!j||!j.ok){o.className='rocr';o.textContent=(j&&j.message&&!/^(auth|upstream|bad_|no_key)/.test(j.message))?j.message:'ما قدرت أقرأ الفاتورة — اكتب البيانات يدوياً';return}
+  if(!j||!j.ok){o.className='rocr';o.style.color='#B91C1C';o.textContent=(j&&j.message&&!/^(auth|upstream|bad_|no_key)/.test(j.message))?j.message:'⚠️ ما قدرت أقرأ الفاتورة — صوّر مرة ثانية'+(r.ok?(j&&j.message?' ('+j.message+')':''):' (HTTP '+r.status+')');return}
   const put=(id,v)=>{if(!v)return 0;const el=m.querySelector(id);el.value=v;el.classList.add('ocr-on');return 1};
   const n=put('#rInv',j.inv)+put('#rAt',j.time)+put('#rAmt',j.amount?String(j.amount):'');
   retItems(m,j.items||[],j.amount||0);
   if(!j.inv){const ie=m.querySelector('#rInv');ie.value='';ie.classList.add('err-in');}
   const ag=retAge(j.time);let tw='';if(j.time&&(ag===null||ag>60)){const te=m.querySelector('#rAt');te.classList.remove('ocr-on');te.classList.add('err-in');tw=' — ⚠️ الوقت المقروء ('+j.time+') بعيد عن الحين، طابقه مع الفاتورة وعدّله';}
   if(!j.inv){o.className='rocr';o.style.color='#B91C1C';o.textContent='⚠️ ما قدرت أقرأ رقم الفاتورة — قرّب الجوال من الرقم الطويل تحت «فاتورة ضريبية مبسطة» وصوّر مرة ثانية';return}o.style.color='';
-  o.className=n&&!tw?'rocr ok':'rocr';o.textContent=(n===3?'✓ النظام قرأ الفاتورة — تأكد من الأرقام واختر السبب':n?'✓ قرأت جزء من الفاتورة — كمّل الباقي':'ما قدرت أقرأ الفاتورة — اكتب البيانات يدوياً')+tw;
- }catch(_){if(document.body.contains(m)){o.className='rocr';o.textContent='ما قدرت أقرأ الفاتورة — اكتب البيانات يدوياً'}}}
+  o.className=n&&!tw?'rocr ok':'rocr';o.textContent=(n===3?'✓ النظام قرأ الفاتورة — تأكد من الأرقام واختر السبب':n?'✓ قرأت جزء من الفاتورة — كمّل الباقي':'⚠️ ما قدرت أقرأ الفاتورة — صوّر مرة ثانية')+tw;
+ }catch(e){if(document.body.contains(m)){o.className='rocr';o.style.color='#B91C1C';o.textContent='⚠️ ما قدرت أقرأ الفاتورة — تأكد من الإنترنت وصوّر مرة ثانية ('+(e&&e.name==='AbortError'?'انتهى الوقت':'اتصال')+')'}}}
 function retOpen(){const f=S.f;if(!f.branch)return toast('اختر الفرع أولاً',1);if(!f.cashier.trim())return toast('اكتب اسمك أولاً',1);if(!toEn(f.pin).trim())return toast('اكتب رمزك الشخصي أولاً',1);
  const d=new Date(),now=pad(d.getHours())+':'+pad(d.getMinutes());let reason='',img='';
  const m=document.createElement('div');m.className='modal';m.innerHTML=`<div class="sheet"><h3>↩️ توثيق مرتجع</h3><p class="hint" style="margin-top:-4px">لازم يتوثّق خلال ساعة من وقت الفاتورة.</p>

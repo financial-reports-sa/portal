@@ -25,16 +25,18 @@ Deno.serve(async (req) => {
   const a = await fetch(`${sb}/rest/v1/rpc/ret_ocr_ok`, { method: "POST", headers: { apikey: anon, Authorization: `Bearer ${anon}`, "Content-Type": "application/json" }, body: JSON.stringify({ p_branch: b.branch, p_pin: b.pin }) });
   const aj = a.ok ? await a.json() : null;
   if (!aj || !aj.ok) return json({ ok: false, message: (aj && aj.message) || "auth" }, 200);
-  const r = await fetch("https://api.anthropic.com/v1/messages", {
+  const ask = (model: string) => fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-    body: JSON.stringify({ model: MODEL, max_tokens: 1200, tools: [TOOL], tool_choice: { type: "tool", name: "invoice" },
+    body: JSON.stringify({ model, max_tokens: 1200, tools: [TOOL], tool_choice: { type: "tool", name: "invoice" },
       messages: [{ role: "user", content: [
         { type: "image", source: { type: "base64", media_type: m[1], data: m[2] } },
         { type: "text", text: "هذي فاتورة مطعم سعودية (حرارية). اقرأ رقم الفاتورة ووقتها والمبلغ المستحق وجدول الأصناف واحفظها بالأداة invoice. لا تخمّن: إذا شي غير واضح اتركه فارغ." },
       ] }] }),
   });
-  if (!r.ok) { console.error("upstream", r.status, (await r.text()).slice(0, 300)); return json({ ok: false, message: "upstream" }, 200); }
+  let r = await ask(MODEL);
+  if (!r.ok) { console.error("upstream", MODEL, r.status, (await r.text()).slice(0, 300)); r = await ask("claude-haiku-4-5-20251001"); }
+  if (!r.ok) { const t = (await r.text()).slice(0, 300); console.error("upstream2", r.status, t); return json({ ok: false, message: "upstream " + r.status }, 200); }
   const j = await r.json();
   const tu = (j.content || []).find((c: { type: string; name?: string }) => c.type === "tool_use" && c.name === "invoice");
   const x = (tu && tu.input) || {};
