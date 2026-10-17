@@ -687,6 +687,7 @@ html[dir=ltr] .sh-t{direction:ltr}html[dir=ltr] .sh-t i{display:inline-block;tra
 .pr-ir{display:grid;grid-template-columns:1fr 74px 84px 34px;gap:6px;margin-top:6px}.pr-ir .inp{min-width:0}.pr-its{margin-top:8px;border:1px solid var(--line);border-radius:12px;overflow:hidden}.pr-its div{display:flex;justify-content:space-between;gap:8px;padding:7px 10px;font-size:12px;border-bottom:1px solid var(--line)}.pr-its div:last-child{border-bottom:0}.pr-its div:nth-child(odd){background:var(--soft,#F8F8F4)}
 .lv-nm{font:inherit;font-size:13.5px;font-weight:700;background:none;border:0;padding:0;color:inherit;cursor:pointer;text-align:start;text-decoration:underline dotted rgba(0,0,0,.25);text-underline-offset:4px}.lv-nm span{font-size:11px;color:var(--gold-ink);text-decoration:none}
 .mi-top{display:flex;gap:10px;align-items:flex-start}.mi-top b{font-size:14px}.mi-ic{font-size:26px;line-height:1.1;width:40px;height:40px;border-radius:12px;background:var(--gold-soft);display:grid;place-items:center;flex:none}.mi-p{font-size:12px;line-height:1.7;margin-top:6px}.mi-n{margin-top:8px;font-size:11.5px;background:var(--soft,#F6F6F2);border-radius:10px;padding:8px 10px;line-height:1.7}.mi-n a{color:var(--green,#1E5A3E);font-weight:600}
+.mkh2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0 12px}.mkq{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:flex-start;gap:5px;text-align:start;padding:13px 12px;border-radius:18px;color:#fff;font:inherit;cursor:pointer;min-height:132px;background:linear-gradient(145deg,#123d29 0%,#1E5A3E 60%,#0d2e1f 100%);border:1.5px solid rgba(212,175,55,.5);box-shadow:0 12px 26px -18px rgba(15,51,34,.8)}.mkq::before{content:'';position:absolute;inset:4px;border:1px solid rgba(212,175,55,.2);border-radius:14px;pointer-events:none}.mkq-sh{position:absolute;top:0;bottom:0;width:45%;left:-60%;background:linear-gradient(100deg,transparent,rgba(244,215,130,.16),transparent);animation:mkhS 5s ease-in-out infinite;pointer-events:none}.mkq:nth-child(2) .mkq-sh{animation-delay:1.2s}.mkq-ic{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;font-size:19px;background:linear-gradient(145deg,#F4D782,#C9A13B)}.mkq-k{font-size:10.5px;color:#F4D782}.mkq-t{font-size:12.5px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.mkq-ch{display:flex;flex-wrap:wrap;gap:4px;margin-top:auto}.mkq-ch i{font-style:normal;font-size:10px;padding:2px 7px;border-radius:99px;background:rgba(255,255,255,.1);border:1px solid rgba(212,175,55,.3)}.mkq-ch:empty{display:none}
 </style>
 </head>
 <body>
@@ -795,7 +796,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','handover','rets','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610170812';
+const APP_VER='202610170911';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets='تفعيل اشعارات مرتجع الكاشيرات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -2535,9 +2536,14 @@ async function mkGenerate(day,replace){
   const s=await sb.rpc('mkt_save',{p_day:day,p_occasion:j.occasion||'',p_items:j.ideas,p_replace:!!replace}); if(s.error) throw s.error;
   return true; }
 async function mkHomeCard(){ if(!mkCan()) return ''; let L=st._mk;
-  if(!L){ try{ L=await Promise.race([mkLoad(),new Promise((_,j)=>setTimeout(()=>j(0),2500))]); }catch(e){ L=[]; } }
+  const to=(pr)=>Promise.race([pr,new Promise((_,j)=>setTimeout(()=>j(0),2500))]);
+  if(!L){ try{ L=await to(mkLoad()); }catch(e){ L=[]; } }
+  let I=st._mi; if(!I){ try{ const r=await to(sb.rpc('mkt_inf_list')); I=(r&&!r.error&&r.data)||[]; st._mi=I; }catch(e){ I=[]; } }
   const D=(L||[]).find(d=>d.day===todayIso())||null, n=D?(D.items||[]).length:0, tn=D?(D.trends||[]).length:0, f=D&&D.items&&D.items[0];
-  return `<button class="mkh" data-t="mkt"><span class="mkh-sh"></span><span class="mkh-ic">💡</span><span class="mkh-tx"><span class="mkh-k">أفكار تسويقية · اليوم</span><b>${f?esc(f.title):D?'أفكار اليوم جاهزة':'افتح وجهّز أفكار اليوم'}</b><span class="mkh-ch">${tn?`<i>🔥 ${tn} ترند</i>`:''}${n?`<i>💡 ${n} أفكار</i>`:''}</span></span><span class="mkh-go">←</span></button>`; }
+  const nw=I.filter(x=>x.status==='new').length, ag=I.filter(x=>x.status==='agreed').length;
+  return `<div class="mkh2"><button class="mkq" data-mkgo="ideas"><span class="mkq-sh"></span><span class="mkq-ic">💡</span><span class="mkq-k">أفكار تسويقية</span><b class="mkq-t">${f?esc(f.title):D?'أفكار اليوم جاهزة':'جهّز أفكار اليوم'}</b><span class="mkq-ch">${n?`<i>${n} أفكار</i>`:''}${tn?`<i>🔥 ${tn}</i>`:''}</span></button>
+    <button class="mkq" data-mkgo="inf"><span class="mkq-sh"></span><span class="mkq-ic">🤳</span><span class="mkq-k">المؤثرين المقترحين</span><b class="mkq-t">${I.length?`<span class="num">${I.length}</span> مؤثر · المدينة وجدة`:'اكتشف مؤثري المدينة وجدة'}</b><span class="mkq-ch">${nw?`<i>${nw} جديد</i>`:''}${ag?`<i>🤝 ${ag} متفق</i>`:''}</span></button></div>`; }
+document.addEventListener('click',e=>{const b=e.target.closest('[data-mkgo]'); if(!b) return; st.mkTab=b.dataset.mkgo; st.tab='mkt'; try{localStorage.setItem('tab','mkt');}catch(_){} window.scrollTo({top:0}); renderShell();});
 async function mkLoad(){ const r=await sb.rpc('mkt_get',{p_days:14}); if(r.error) throw r.error; st._mk=r.data||[]; return st._mk; }
 // ----- المؤثرين -----
 const MI_P={tiktok:['🎵','تيك توك'],snapchat:['👻','سناب'],instagram:['📸','انستقرام'],x:['𝕏','إكس'],youtube:['▶️','يوتيوب']};
