@@ -338,6 +338,7 @@ if(x==null||x<0){toast('اكتب مبيعات السستم',1);return}
 const d=syDiff(r,x);const lbl=d<0?'عجز '+fmt(-d):d>0?'زيادة '+fmt(d):'مطابق';
 await saveAdj(id,d,`مبيعات السستم ${fmt(x)} — ${lbl}`);}
 const GS={};
+const gsAll=x=>Math.round(((+x.net||0)+(+x.deposit||0)-(+x.deposit_ret||0))*100)/100;
 async function gsFill(){const els=[...document.querySelectorAll('[data-gs]')];if(!els.length)return;
  const keys=[...new Set(els.map(e=>e.dataset.gbr+'|'+e.dataset.gd))];
  await Promise.all(keys.filter(k=>!GS[k]).map(async k=>{const [b,d]=k.split('|');try{const {data,error}=await SBC.rpc('growth_shifts_for',{p_branch:b,p_date:d});GS[k]=error?[]:(data||[])}catch(_){GS[k]=[]}}));
@@ -345,9 +346,9 @@ async function gsFill(){const els=[...document.querySelectorAll('[data-gs]')];if
   const tm=t=>t?new Date(t).toLocaleTimeString(LOC,{hour:'numeric',minute:'2-digit'}):'—';
   e.innerHTML=`<div class="gsl">من جروث — وردية الكاشير (اضغط الرقم اللي تطابق عليه):</div>`+L.map((x,i)=>{const me=x.code&&x.code===e.dataset.gcode;return `<div class="gsb ${me?'me':''}" data-gi="${i}"><div class="gst"><b>${esc(x.cashier||'—')}${me?' ⭐':''}</b><small>${tm(x.opened)} – ${tm(x.closed)} · ${x.bills} فاتورة</small></div>
 <div class="gsg"><span>مبيعات <b class="num">${fmt(+x.sales)}</b></span><span>آجل <b class="num">${fmt(+x.credit)}</b></span>${+x.deposit?`<span>تأمين <b class="num">${fmt(+x.deposit)}</b></span>`:''}${+x.deposit_ret?`<span>مردود تأمين <b class="num">${fmt(+x.deposit_ret)}</b></span>`:''}${+x.refunds?`<span>مردود <b class="num">${fmt(+x.refunds)}</b></span>`:''}</div>
-<div class="gsp"><button data-gpick="${e.dataset.gs}|${i}|due"><small>المطلوب</small><b class="num">${fmt(+x.due)}</b></button><button data-gpick="${e.dataset.gs}|${i}|net"><small>الصافي شامل الآجل</small><b class="num">${fmt(+x.net)}</b></button></div></div>`;}).join('');});}
+<div class="gsp"><button data-gpick="${e.dataset.gs}|${i}|due"><small>المطلوب</small><b class="num">${fmt(+x.due)}</b></button><button data-gpick="${e.dataset.gs}|${i}|all"><small>المستحق شامل الآجل</small><b class="num">${fmt(gsAll(x))}</b></button></div></div>`;}).join('');});}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-gpick]');if(!b)return;const [id,i,k]=b.dataset.gpick.split('|');const box=b.closest('[data-gs]');const x=(GS[box.dataset.gbr+'|'+box.dataset.gd]||[])[+i];if(!x)return;
- const inp=document.getElementById('sy_'+id);if(inp){inp.value=String(+(k==='due'?x.due:x.net));inp.dispatchEvent(new Event('input'));}
+ const inp=document.getElementById('sy_'+id);if(inp){inp.value=String(k==='due'?+x.due:gsAll(x));inp.dispatchEvent(new Event('input'));}
  box.querySelectorAll('.gsp button').forEach(z=>z.classList.toggle('on',z===b));
  if(x.user_id&&box.dataset.gcode)SBC.rpc('growth_pick',{p_branch:box.dataset.gbr,p_user_id:x.user_id,p_code:box.dataset.gcode}).then(()=>{x.code=box.dataset.gcode;}).catch(()=>{});
  toast('تم وضع مبيعات جروث — راجع واضغط «احسب واعتمد»');});
