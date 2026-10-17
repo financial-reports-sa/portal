@@ -44,5 +44,7 @@ Deno.serve(async (req) => {
   if (tm && hh <= 12) { if (x.ampm === "م" && hh < 12) hh += 12; if (x.ampm === "ص" && hh === 12) hh = 0; }
   const amt = Number(x.amount);
   const items = (Array.isArray(x.items) ? x.items : []).slice(0, 30).map((i: { name?: unknown; qty?: unknown; unit?: unknown }) => ({ name: String(i.name || "").slice(0, 60), qty: Math.max(0, Math.min(999, Math.round(Number(i.qty) || 0))), unit: Math.max(0, Math.round((Number(i.unit) || 0) * 100) / 100) })).filter((i: { name: string; qty: number; unit: number }) => i.name && i.qty > 0 && i.unit > 0);
-  return json({ ok: true, items, inv, time: tm ? `${String(hh).padStart(2, "0")}:${tm[2]}` : "", amount: isFinite(amt) && amt > 0 && amt < 50000 ? Math.round(amt * 100) / 100 : 0 });
+  const okInv = /^\d{10,14}$/.test(inv), srv = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (okInv && srv) await fetch(`${sb}/rest/v1/rpc/ret_ocr_mark`, { method: "POST", headers: { apikey: srv, Authorization: `Bearer ${srv}`, "Content-Type": "application/json" }, body: JSON.stringify({ p_branch: b.branch, p_pin: b.pin, p_inv: inv }) }).catch(() => null);
+  return json({ ok: true, items, inv: okInv ? inv : "", time: tm ? `${String(hh).padStart(2, "0")}:${tm[2]}` : "", amount: isFinite(amt) && amt > 0 && amt < 50000 ? Math.round(amt * 100) / 100 : 0 });
 });

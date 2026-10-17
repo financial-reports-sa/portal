@@ -111,7 +111,7 @@ ${L.length?'':`<label class="nochk"><input type="checkbox" id="fNoRet" ${f.noRet
 ${f.noRet&&!L.length?'':amtRow('fSysRet','مجموع مرتجعات النظام','#B91C1C',f.sysRet)+`<p class="hint">من تقرير الكاشير في النظام. أي مرتجع ما وثّقته خلال ساعة من الفاتورة يُحسب عجز عليك.</p>`}
 <div id="retInfo"></div></div>`}
 async function retFetch(){const f=S.f,pin=toEn(f.pin||'').trim();if(!f.branch||!pin||!SB)return null;try{const {data:j,error}=await SB.rpc('ret_mine',{p_branch:f.branch,p_pin:pin,p_date:f.date});if(error||!j||!j.ok)return null;S.rets=j.rows||[];return S.rets}catch(e){return null}}
-function retImg(file){return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=rej;fr.onload=()=>{const im=new Image();im.onerror=rej;im.onload=()=>{const k=Math.min(1,1280/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.62))};im.src=fr.result};fr.readAsDataURL(file)})}
+function retImg(file){return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=rej;fr.onload=()=>{const im=new Image();im.onerror=rej;im.onload=()=>{const k=Math.min(1,1600/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.72))};im.src=fr.result};fr.readAsDataURL(file)})}
 const RET_R=['خطأ في الطلب','إلغاء قبل التحضير','تأخير الطلب','جودة / شكوى','العميل غيّر رأيه','أخرى'];
 function retItems(m,items,full){const box=m.querySelector('#rItems');m._items=null;if(!items.length){box.innerHTML='';return}
  const q=items.map(()=>0);let mode='all';
@@ -122,7 +122,7 @@ function retItems(m,items,full){const box=m.querySelector('#rItems');m._items=nu
  box.onclick=e=>{const a=e.target.closest('[data-rim]');if(a){mode=a.dataset.rim;draw();return}const b=e.target.closest('[data-riq]');if(b){const [i,d]=b.dataset.riq.split('|').map(Number);q[i]=Math.max(0,Math.min(items[i].qty,q[i]+d));draw()}};
  draw();}
 function retAge(hm){const x=/^(\d{1,2}):(\d{2})$/.exec(hm||'');if(!x)return null;const now=new Date(),h=+x[1],mi=+x[2];let best=null;[0,-1].forEach(dd=>[h,h<12?h+12:h-12].forEach(H=>{const c=new Date(now);c.setDate(c.getDate()+dd);c.setHours(H,mi,0,0);const d=(now-c)/6e4;if(d>=-3&&(best===null||d<best))best=d;}));return best===null?null:Math.round(best);}
-async function retOcr(m,img){const o=m.querySelector('#rOcr');const f=S.f;o.className='rocr busy';o.textContent='✨ جارِ قراءة الفاتورة…';
+async function retOcr(m,img){const o=m.querySelector('#rOcr');const f=S.f;o.style.color='';m.querySelectorAll('#rInv,#rAt').forEach(x=>x.classList.remove('err-in'));o.className='rocr busy';o.textContent='✨ جارِ قراءة الفاتورة…';
  try{const ac=new AbortController();const tt=setTimeout(()=>ac.abort(),20000);
   const r=await fetch(window.PORTAL_CONFIG.url+'/functions/v1/ret-ocr',{method:'POST',signal:ac.signal,headers:{'Content-Type':'application/json',apikey:window.PORTAL_CONFIG.key},body:JSON.stringify({branch:f.branch,pin:toEn(f.pin).trim(),img})});clearTimeout(tt);
   const j=r.ok?await r.json():null;if(!document.body.contains(m))return;
@@ -130,16 +130,18 @@ async function retOcr(m,img){const o=m.querySelector('#rOcr');const f=S.f;o.clas
   const put=(id,v)=>{if(!v)return 0;const el=m.querySelector(id);el.value=v;el.classList.add('ocr-on');return 1};
   const n=put('#rInv',j.inv)+put('#rAt',j.time)+put('#rAmt',j.amount?String(j.amount):'');
   retItems(m,j.items||[],j.amount||0);
+  if(!j.inv){const ie=m.querySelector('#rInv');ie.value='';ie.classList.add('err-in');}
   const ag=retAge(j.time);let tw='';if(j.time&&(ag===null||ag>60)){const te=m.querySelector('#rAt');te.classList.remove('ocr-on');te.classList.add('err-in');tw=' — ⚠️ الوقت المقروء ('+j.time+') بعيد عن الحين، طابقه مع الفاتورة وعدّله';}
+  if(!j.inv){o.className='rocr';o.style.color='#B91C1C';o.textContent='⚠️ ما قدرت أقرأ رقم الفاتورة — قرّب الجوال من الرقم الطويل تحت «فاتورة ضريبية مبسطة» وصوّر مرة ثانية';return}o.style.color='';
   o.className=n&&!tw?'rocr ok':'rocr';o.textContent=(n===3?'✓ النظام قرأ الفاتورة — تأكد من الأرقام واختر السبب':n?'✓ قرأت جزء من الفاتورة — كمّل الباقي':'ما قدرت أقرأ الفاتورة — اكتب البيانات يدوياً')+tw;
  }catch(_){if(document.body.contains(m)){o.className='rocr';o.textContent='ما قدرت أقرأ الفاتورة — اكتب البيانات يدوياً'}}}
 function retOpen(){const f=S.f;if(!f.branch)return toast('اختر الفرع أولاً',1);if(!f.cashier.trim())return toast('اكتب اسمك أولاً',1);if(!toEn(f.pin).trim())return toast('اكتب رمزك الشخصي أولاً',1);
  const d=new Date(),now=pad(d.getHours())+':'+pad(d.getMinutes());let reason='',img='';
  const m=document.createElement('div');m.className='modal';m.innerHTML=`<div class="sheet"><h3>↩️ توثيق مرتجع</h3><p class="hint" style="margin-top:-4px">لازم يتوثّق خلال ساعة من وقت الفاتورة.</p>
-<label class="rph rph1"><span id="rPhT">📸 صوّر الفاتورة أول — والنظام يقرأ الرقم والوقت والمبلغ</span><input id="rPh" type="file" accept="image/*" capture="environment" hidden></label>
+<label class="rph rph1"><span id="rPhT">📸 صوّر الفاتورة — قرّب الجوال عشان يبان رقم الفاتورة واضح</span><input id="rPh" type="file" accept="image/*" capture="environment" hidden></label>
 <div id="rOcr" class="rocr"></div>
 <div id="rItems"></div>
- <div class="row2"><label class="fld"><span class="lbl">رقم الفاتورة</span><input id="rInv" inputmode="numeric" class="num" autocomplete="off"></label><label class="fld"><span class="lbl">وقت الفاتورة</span><input id="rAt" type="time" value="${now}" class="num"></label></div>
+ <div class="row2"><label class="fld"><span class="lbl">رقم الفاتورة <small>— يقرأه النظام من الصورة</small></span><input id="rInv" class="num" readonly placeholder="صوّر الفاتورة" style="background:var(--soft2)"></label><label class="fld"><span class="lbl">وقت الفاتورة</span><input id="rAt" type="time" value="${now}" class="num"></label></div>
  <div style="height:10px"></div><label class="amt"><i class="dot" style="background:#B91C1C"></i><span>مبلغ المرتجع</span><input id="rAmt" inputmode="decimal" placeholder="0" autocomplete="off"><em>ر.س</em></label>
  <span class="lbl" style="display:block;margin:12px 0 6px">السبب</span><div class="rchips">${RET_R.map(x=>`<button data-r="${x}">${x}</button>`).join('')}</div>
  <label class="fld" style="margin-top:10px"><span class="lbl">ملاحظة (اختياري)</span><input id="rNote" autocomplete="off"></label>
@@ -151,7 +153,7 @@ function retOpen(){const f=S.f;if(!f.branch)return toast('اختر الفرع أ
  m.addEventListener('click',async e=>{const r=e.target.closest('[data-r]');if(r){reason=r.dataset.r;m.querySelectorAll('[data-r]').forEach(b=>b.classList.toggle('on',b===r));return}
   const a=e.target.closest('[data-a]');if(!a&&e.target!==m)return;if(!a||a.dataset.a==='0'){m.remove();return}
   const inv=toEn(m.querySelector('#rInv').value),amt=pn(m.querySelector('#rAmt').value),at=m.querySelector('#rAt').value;
-  if(!inv)return toast('اكتب رقم الفاتورة',1);if(!at)return toast('اكتب وقت الفاتورة',1);if(!amt)return toast('اكتب مبلغ المرتجع',1);if(!reason)return toast('اختر السبب',1);if(!img)return toast('صورة الفاتورة إلزامية',1);if(!m.querySelector('#rAck').checked)return toast('لازم توافق على الإقرار قبل التوثيق',1);
+  if(!/^\d{10,14}$/.test(inv))return toast('صوّر الفاتورة وقرّب الجوال من رقمها — النظام لازم يقرأ الرقم',1);if(!at)return toast('اكتب وقت الفاتورة',1);if(!amt)return toast('اكتب مبلغ المرتجع',1);if(!reason)return toast('اختر السبب',1);if(!img)return toast('صورة الفاتورة إلزامية',1);if(!m.querySelector('#rAck').checked)return toast('لازم توافق على الإقرار قبل التوثيق',1);
   a.disabled=true;a.textContent='جارِ التوثيق…';
   try{const _a={p_branch:f.branch,p_pin:toEn(f.pin).trim(),p_cashier:f.cashier.trim(),p_inv:inv,p_inv_time:at,p_amount:amt,p_reason:reason,p_note:[m._items&&m._items.length?'أصناف: '+m._items.join('، '):'',m.querySelector('#rNote').value.trim()].filter(Boolean).join(' · ').slice(0,300),p_img:img,p_ack:true};let {data:j,error}=await SB.rpc('ret_add',_a);if(error&&/ret_add|function/i.test(error.message||'')){delete _a.p_ack;({data:j,error}=await SB.rpc('ret_add',_a));}if(error)throw error;
    if(!j||!j.ok){toast((j&&j.message)||'تعذّر التوثيق',1);a.disabled=false;a.textContent='توثيق المرتجع';return}

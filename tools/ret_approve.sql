@@ -1,3 +1,17 @@
+alter table public.ret_ocr_log add column if not exists inv text;
+create index if not exists ret_ocr_log_inv_idx on public.ret_ocr_log (code, inv);
+
+create or replace function public.ret_ocr_mark(p_branch text, p_pin text, p_inv text) returns void
+language plpgsql volatile security definer set search_path = public as $$
+declare v_code text;
+begin
+  begin v_code := ret_pin(p_branch, p_pin); exception when others then return; end;
+  if coalesce(p_inv, '') !~ '^[0-9]{10,14}$' then return; end if;
+  insert into ret_ocr_log (code, inv) values (v_code, p_inv);
+end $$;
+revoke all on function public.ret_ocr_mark(text, text, text) from public, anon, authenticated;
+grant execute on function public.ret_ocr_mark(text, text, text) to service_role;
+
 alter table public.cashier_returns add column if not exists ack_at timestamptz;
 alter table public.cashier_returns add column if not exists status text;
 alter table public.cashier_returns add column if not exists mgr_id uuid;
@@ -55,7 +69,10 @@ declare v_code text; nr timestamp := now() at time zone 'Asia/Riyadh'; t time; c
 begin
   begin v_code := ret_pin(p_branch, p_pin); exception when others then return jsonb_build_object('ok', false, 'error', 'pin', 'message', sqlerrm); end;
   if not coalesce(p_ack, false) then return jsonb_build_object('ok', false, 'message', 'لازم توافق على الإقرار قبل التوثيق'); end if;
-  if v_inv = '' then return jsonb_build_object('ok', false, 'message', 'اكتب رقم الفاتورة'); end if;
+  if v_inv !~ '^[0-9]{10,14}$' then return jsonb_build_object('ok', false, 'message', 'رقم الفاتورة لازم يكون الرقم الطويل تحت «فاتورة ضريبية مبسطة» — صوّر الفاتورة وقرّب الجوال من الرقم'); end if;
+  if not exists (select 1 from ret_ocr_log where code = v_code and inv = v_inv and at > now() - interval '3 hours') then
+    return jsonb_build_object('ok', false, 'message', 'رقم الفاتورة لازم يقرأه النظام من صورة الفاتورة — قرّب الجوال من الرقم وصوّر مرة ثانية');
+  end if;
   if coalesce(p_amount, 0) <= 0 or p_amount > 50000 then return jsonb_build_object('ok', false, 'message', 'اكتب مبلغ المرتجع'); end if;
   if coalesce(p_reason, '') = '' then return jsonb_build_object('ok', false, 'message', 'اختر سبب المرتجع'); end if;
   if coalesce(p_img, '') !~ '^data:image/' or length(p_img) < 2000 then return jsonb_build_object('ok', false, 'message', 'صورة الفاتورة إلزامية'); end if;
