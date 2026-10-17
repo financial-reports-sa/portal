@@ -6,10 +6,10 @@ self.addEventListener('fetch', () => {});
 self.addEventListener('push', (e) => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch (_) { d = { body: e.data ? e.data.text() : '' }; }
-  e.waitUntil(self.registration.showNotification(d.title || 'MyHub', {
+  e.waitUntil(self.registration.showNotification(d.title || 'منصة الإدارة الموحّدة', {
     body: d.body || '',
     icon: 'icon-192.png?v=4',
-    badge: 'icon-192.png?v=4',
+    badge: 'badge.png?v=1',
     dir: 'rtl',
     lang: 'ar',
     tag: d.tag || undefined,
