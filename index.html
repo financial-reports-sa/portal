@@ -688,6 +688,8 @@ html[dir=ltr] .sh-t{direction:ltr}html[dir=ltr] .sh-t i{display:inline-block;tra
 .lv-nm{font:inherit;font-size:13.5px;font-weight:700;background:none;border:0;padding:0;color:inherit;cursor:pointer;text-align:start;text-decoration:underline dotted rgba(0,0,0,.25);text-underline-offset:4px}.lv-nm span{font-size:11px;color:var(--gold-ink);text-decoration:none}
 .mi-top{display:flex;gap:10px;align-items:flex-start}.mi-top b{font-size:14px}.mi-ic{font-size:26px;line-height:1.1;width:40px;height:40px;border-radius:12px;background:var(--gold-soft);display:grid;place-items:center;flex:none}.mi-p{font-size:12px;line-height:1.7;margin-top:6px}.mi-n{margin-top:8px;font-size:11.5px;background:var(--soft,#F6F6F2);border-radius:10px;padding:8px 10px;line-height:1.7}.mi-n a{color:var(--green,#1E5A3E);font-weight:600}
 .mkh2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0 12px}.mkq{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:flex-start;gap:5px;text-align:start;padding:13px 12px;border-radius:18px;color:#fff;font:inherit;cursor:pointer;min-height:132px;background:linear-gradient(145deg,#123d29 0%,#1E5A3E 60%,#0d2e1f 100%);border:1.5px solid rgba(212,175,55,.5);box-shadow:0 12px 26px -18px rgba(15,51,34,.8)}.mkq::before{content:'';position:absolute;inset:4px;border:1px solid rgba(212,175,55,.2);border-radius:14px;pointer-events:none}.mkq-sh{position:absolute;top:0;bottom:0;width:45%;left:-60%;background:linear-gradient(100deg,transparent,rgba(244,215,130,.16),transparent);animation:mkhS 5s ease-in-out infinite;pointer-events:none}.mkq:nth-child(2) .mkq-sh{animation-delay:1.2s}.mkq-ic{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;font-size:19px;background:linear-gradient(145deg,#F4D782,#C9A13B)}.mkq-k{font-size:10.5px;color:#F4D782}.mkq-t{font-size:12.5px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.mkq-ch{display:flex;flex-wrap:wrap;gap:4px;margin-top:auto}.mkq-ch i{font-style:normal;font-size:10px;padding:2px 7px;border-radius:99px;background:rgba(255,255,255,.1);border:1px solid rgba(212,175,55,.3)}.mkq-ch:empty{display:none}
+#aiFab{position:fixed;inset-inline-end:14px;bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:36;display:flex;align-items:center;gap:6px;padding:10px 14px 10px 12px;border-radius:99px;border:1.5px solid rgba(243,222,156,.7);background:linear-gradient(145deg,#2A6B4C,#123A27);color:#fff;font:inherit;font-size:11.5px;font-weight:700;box-shadow:0 10px 24px rgba(18,58,39,.4);cursor:pointer}#aiFab span{font-size:16px;color:#F3DE9C}#aiFab[hidden]{display:none}
+@media (min-width:900px){body.hasnav{padding-inline-start:118px}.bnav{inset-inline:auto;inset-inline-start:14px;top:50%;bottom:auto;transform:translateY(-50%);flex-direction:column;width:96px;max-width:none;margin:0;border-radius:28px;padding:8px}.bnav button{flex:none;padding:12px 4px;font-size:10.5px}#aiFab{bottom:24px;inset-inline-end:24px}}
 </style>
 </head>
 <body>
@@ -770,20 +772,21 @@ const SECTIONS=[
   {id:'maint',name:'الصيانة'},
   {id:'purch',name:'طلبات الشراء'},
   {id:'feedback',name:'تقييم العملاء'},
-  {id:'mkt',name:'أفكار تسويقية'},
-  {id:'hr',name:'الموارد البشرية'},
-  {id:'att',name:'الحضور والانصراف'},
+  {id:'mkt',name:'الأفكار والمؤثرين'},
+  {id:'hr',name:'الوثائق والموارد'},
+  {id:'att',name:'الحضور والإجازات'},
   {id:'employees',name:'الموظفين',app:'employees'},
   {id:'advances',name:'السلف'},
   {id:'custody',name:'العُهد'},
   {id:'me',name:'بوابتي'},
   {id:'msgs',name:'المراسلات'},
   {id:'handover',name:'تسليم الورديات',app:'handover'},
-  {id:'rets',name:'مرتجعات الكاشيرات'},
+  {id:'rets',name:'المرتجعات'},
   {id:'users',name:'المستخدمين والصلاحيات',admin:true},
   {id:'data',name:'إدخال البيانات',admin:true}
 ];
 const NAV_ICONS={
+  mkg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>',
   ai:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.9a2.5 2.5 0 0 0 1.5 1.5L20 11l-4.7 1.7a2.5 2.5 0 0 0-1.5 1.5L12 19l-1.8-4.8a2.5 2.5 0 0 0-1.5-1.5L4 11l4.7-1.6a2.5 2.5 0 0 0 1.5-1.5z"/><path d="M19 3v3M17.5 4.5h3"/></svg>',
   home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
   rep:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>',
@@ -791,12 +794,12 @@ const NAV_ICONS={
   hrg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="9" cy="11" r="2.3"/><path d="M5.8 16.2a3.4 3.4 0 0 1 6.4 0"/><path d="M14.5 10h3.5M14.5 13.5h3.5"/></svg>',
   fin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/><path d="M6.5 15h4"/></svg>',
   more:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>'};
-const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me','msgs']},{id:'ai',name:'المساعد الذكي',secs:['ai']},{id:'rep',name:'التقارير',secs:['brief','sales','daily','channels','income','wh','waste','chicken']},{id:'ops',name:'العمليات',secs:['maint','purch','feedback','mkt','fleet']},{id:'hrg',name:'الموارد البشرية',secs:['hr','att','employees','advances']},{id:'fin',name:'المالية',secs:['treasury','handover','rets','loans','custody']},{id:'more',name:'الإدارة',secs:['users','data'],nav:false}];
+const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me','msgs']},{id:'rep',name:'التقارير',secs:['brief','sales','daily','channels','income','wh','waste','chicken']},{id:'ops',name:'التشغيل',secs:['handover','rets','maint','purch','fleet']},{id:'hrg',name:'الموظفين',secs:['employees','att','advances','hr']},{id:'fin',name:'المالية',secs:['treasury','custody','loans']},{id:'mkg',name:'التسويق',secs:['mkt','feedback']},{id:'ai',name:'المساعد الذكي',secs:['ai'],nav:false},{id:'more',name:'الإدارة',secs:['users','data'],nav:false}];
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
-const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','handover','rets','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
+const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'التشغيل',secs:['handover','rets','maint','maint_sup','purch','purch_sup','fleet']},{name:'الموظفين',secs:['employees','att','advances','hr']},{name:'المالية',secs:['treasury','custody','custody_holder','loans']},{name:'التسويق',secs:['mkt','feedback']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610170911';
+const APP_VER='202610170929';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets='تفعيل اشعارات مرتجع الكاشيرات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -875,6 +878,7 @@ async function boot(){
   renderShell(); pushSync();
 }
 
+function aiFab(){ let b=document.getElementById('aiFab'); const sx=SECTIONS.find(x=>x.id===st.tab)||{}; const show=!isEmp()&&canSee('ai')&&st.tab!=='ai'&&!sx.app&&!sx.page; if(!b){ b=document.createElement('button'); b.id='aiFab'; b.setAttribute('aria-label','المساعد الذكي'); b.innerHTML='<span>✦</span><b>المساعد</b>'; b.onclick=()=>{ st.tab='ai'; try{localStorage.setItem('tab','ai');}catch(_){} window.scrollTo({top:0}); renderShell(); }; document.body.appendChild(b); } b.hidden=!show; }
 function renderShell(){ try{ window.I18N&&I18N.emp(isEmp()); }catch(_){}
   const p=st.profile;
   $('#uname').textContent=p.full_name||p.username;
@@ -885,8 +889,8 @@ function renderShell(){ try{ window.I18N&&I18N.emp(isEmp()); }catch(_){}
   if(!canSee(st.tab)) st.tab='home';
   const g=groupOf(st.tab); st.lastIn=st.lastIn||{}; st.lastIn[g]=st.tab;
   const gs=GROUPS.filter(x=>x.nav!==false&&x.secs.some(canSee));
-  $('#bnav').innerHTML=gs.map(x=>`<button data-g="${x.id}" aria-pressed="${x.id===g}"><span class="bi">${NAV_ICONS[x.id]}</span><span class="bl">${x.id==='ai'?'المساعد':x.id==='hrg'?'الموارد':x.name}</span></button>`).join('');
-  document.body.classList.toggle('hasnav',gs.length>1); $('#bnav').hidden=gs.length<=1; try{paintNavDots();}catch(e){}
+  $('#bnav').innerHTML=gs.map(x=>`<button data-g="${x.id}" aria-pressed="${x.id===g}"><span class="bi">${NAV_ICONS[x.id]}</span><span class="bl">${x.name}</span></button>`).join('');
+  document.body.classList.toggle('hasnav',gs.length>1); $('#bnav').hidden=gs.length<=1; try{paintNavDots();}catch(e){} try{aiFab();}catch(e){}
   const subs=(GROUPS.find(x=>x.id===g)||{secs:[]}).secs.filter(canSee);
   $('#tabs').innerHTML=subs.length>1?SECTIONS.filter(s=>subs.includes(s.id)).map(s=>`<button data-t="${s.id}" aria-pressed="${st.tab===s.id}">${s.name}</button>`).join(''):'';
   loadAlerts();
@@ -1074,6 +1078,7 @@ V.home=async()=>{
     h+=`<div class="hx-hero"><div class="hx-glow"></div><div class="hx-top1"><span class="hx-hi">${greet}${nm?'، '+esc(nm):''} 👋</span><span class="hx-date">${dateTxt}</span></div><div style="position:relative;margin-top:10px;opacity:.85;font-size:12.5px">أهلاً بك في منصة الإدارة الموحّدة</div></div>`;
   }
   try{ h+=await mkHomeCard(); }catch(e){}
+  h+=`<div id="homeTasks"></div>`;
   try{ h+=await brCard(); }catch(e){}
   // ===== المؤشرات =====
   const tile=(ic,bg,l,v,sub,go)=>`<button class="hx-tile" ${go?`data-t="${go}"`:''}><span class="hx-ic" style="background:${bg}">${ic}</span><span class="hx-tl">${l}</span><b class="num">${v}</b>${sub?`<span class="hx-ts">${sub}</span>`:''}</button>`;
@@ -1096,8 +1101,6 @@ V.home=async()=>{
       tiles.push(tile('⭐','rgba(212,175,55,.16)','رضا العملاء · 30 يوم',`${a.toFixed(1)} <small style="font-size:11px;font-weight:500">من 5</small>`,oc?`<span class="down">${oc} شكوى مفتوحة</span>`:`${F.length} تقييم`,'feedback'));
       if(oc) ins.push({ic:'⭐',t:`عندك <b>${oc}</b> شكوى عميل مفتوحة — تابعها قبل ما تتأخر.`,go:'feedback',lv:'bad'}); } }catch(e){} }
   if(tiles.length) h+=`<div class="hx-tiles">${tiles.join('')}</div>`;
-  // ===== يحتاج إجراء (من التنبيهات) =====
-  h+=`<div id="homeTasks"></div>`;
   // ===== التحليل الذكي =====
   if(ins.length){ const ord={bad:0,warn:1,ok:2,undefined:3}; ins.sort((a,b)=>ord[a.lv]-ord[b.lv]);
     h+=`<div class="card hx-ai"><div class="hx-aih"><span class="hx-aib">✦</span><div><h3 style="margin:0">التحليل الذكي</h3><div class="muted" style="font-size:10.5px">قراءة تلقائية لأرقامك — تتحدّث مع كل بيانات جديدة</div></div></div>
