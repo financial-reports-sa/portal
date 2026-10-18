@@ -805,7 +805,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','balances','handover','rets','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610182357';
+const APP_VER='202610190039';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets='تفعيل اشعارات مرتجع الكاشيرات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -3065,7 +3065,7 @@ const BL_ENT={all:null,shaden:['az','sh'],pacino:['pc']};
 V.balances=async()=>{
   const r=await sb.rpc('growth_balances');
   if(r.error) return `<div class="card"><h3>📒 أرصدة العملاء والموردين</h3><p class="muted">${/growth_balances/.test(r.error.message)?'شغّل ملف «growth-accounts» في Supabase أول.':'تعذّر التحميل — تأكد من الإنترنت'}</p></div>`;
-  const D=r.data||{}, RAW=D.rows||[]; const k=st.blK||'vend', en=st.blE||'all', brs=BL_ENT[en];
+  const D=r.data||{}, RAW=D.rows||[]; const BRL=D.branches||[]; const ENTS=[...new Set(BRL.map(b=>b.entity).filter(Boolean))]; const k=st.blK||'vend', en=st.blE||'all'; const brs=en==='all'?null:BL_ENT[en]&&!BRL.length?BL_ENT[en]:BRL.filter(b=>b.entity===en).map(b=>b.code); st._blBrs=brs;
   const M=new Map(); RAW.filter(x=>x.k===k&&(!brs||brs.includes(x.br))).forEach(x=>{const o=M.get(x.id)||{...x,b:0,dr:0,cr:0,lm:null}; o.b+=+x.b; o.dr+=+x.dr; o.cr+=+x.cr; if(x.lm&&(!o.lm||x.lm>o.lm)) o.lm=x.lm; M.set(x.id,o);});
   const L=[...M.values()].filter(x=>Math.abs(x.b)>=0.005).sort((a,b)=>Math.abs(b.b)-Math.abs(a.b)); st._blL=L;
   const owe=k==='vend'?L.filter(x=>x.b<0):L.filter(x=>x.b>0), rev=k==='vend'?L.filter(x=>x.b>0):L.filter(x=>x.b<0);
@@ -3075,7 +3075,7 @@ V.balances=async()=>{
   const lbl=k==='vend'?['مستحق للموردين','دفعات مقدمة للموردين']:['مستحق على العملاء','أرصدة دائنة للعملاء'];
   const cnt=v=>new Set(RAW.filter(x=>x.k===v&&(!brs||brs.includes(x.br))&&Math.abs(+x.b)>=0.005).map(x=>x.id)).size;
   let h=`<div class="rt-hd"><h2>📒 أرصدة العملاء والموردين</h2><span class="muted">مباشر من جروث${ago?' · آخر تحديث '+ago:''}${stale?' · ⚠️ المزامنة متأخرة':''} · اضغط أي حساب لكشف الحساب</span></div>
-  <div class="chips">${[['all','كل المنشآت'],['shaden','مطاعم الشادن'],['pacino','الباتشينو']].map(([v,n])=>`<button data-ble="${v}" aria-pressed="${en===v}">${n}</button>`).join('')}</div>
+  <div class="chips">${[['all','كل المنشآت']].concat(BRL.length?ENTS.map(e=>[e,e]):[['shaden','مطاعم الشادن'],['pacino','الباتشينو']]).map(([v,n])=>`<button data-ble="${esc(v)}" aria-pressed="${en===v}">${esc(n)}</button>`).join('')}</div>
   <div class="chips">${[['vend','🏭 الموردين'],['cust','👥 العملاء']].map(([v,n])=>`<button data-blk="${v}" aria-pressed="${k===v}">${n} <small class="num">${cnt(v)}</small></button>`).join('')}</div>`;
   if(!RAW.length) return h+`<div class="card"><p class="muted">بانتظار أول مزامنة للأرصدة من جروث — تظهر هنا تلقائياً بعد ربط السيرفر.</p></div>`;
   if(brs&&!RAW.some(x=>x.br)) h+=`<div class="card" style="background:#FBF3DF"><p class="muted" style="margin:0">فصل الأرصدة حسب المنشأة يحتاج تحديث سكربت المزامنة على السيرفر — حالياً الأرقام لكل المنشآت.</p></div>`;
@@ -3089,7 +3089,7 @@ V.balances=async()=>{
   <div class="card rt-list" id="blL">${LS.map(x=>`<button class="rt-it" style="width:100%;text-align:inherit;background:none;border-left:0;border-right:0;border-top:0;cursor:pointer;font:inherit;color:inherit" data-blst="${esc(x.id)}" data-bln="${esc((x.n+' '+x.c).toLowerCase())}"><div class="rt-m"><div class="rt-t">${esc(x.n||'—')}</div><div class="muted rt-s">${x.c?'رقم '+esc(x.c):''}${x.g?' · '+esc(x.g):''}${x.lm?' · آخر حركة '+esc(String(x.lm).slice(0,10)):''}</div></div><div style="text-align:left;flex:none"><b class="num" style="font-size:15px;color:${(k==='vend'?x.b<0:x.b>0)?'#1F2A24':'#16794C'}">${fmt(Math.abs(x.b),2)}</b><div class="muted" style="font-size:10.5px">${side(x)} ‹</div></div></button>`).join('')||'<p class="muted">ما فيه أرصدة</p>'}</div>`;
   setTimeout(()=>{const q=$('#blQ'); if(q){ if(st._blQ){q.value=st._blQ;} const ap=()=>{const v=q.value.trim().toLowerCase(); st._blQ=q.value; document.querySelectorAll('#blL [data-bln]').forEach(e=>{e.style.display=!v||e.dataset.bln.includes(v)?'':'none';});}; q.oninput=ap; ap(); }},0);
   return h; };
-async function blStatement(id,per){ const k=st.blK||'vend', en=st.blE||'all', brs=BL_ENT[en]; const x=(st._blL||[]).find(z=>z.id===id); if(!x) return;
+async function blStatement(id,per){ const k=st.blK||'vend', en=st.blE||'all', brs=st._blBrs||null; const x=(st._blL||[]).find(z=>z.id===id); if(!x) return;
   const td=todayIso(); const from=per==='ytd'?td.slice(0,4)+'-01-01':(()=>{const d=new Date(td+'T12:00:00');d.setDate(d.getDate()-(per==='30'?30:90));return d.toISOString().slice(0,10);})();
   let w=document.querySelector('.lv-ov.blst'); if(!w){ w=document.createElement('div'); w.className='lv-ov blst'; document.body.appendChild(w); document.body.style.overflow='hidden';
     w.addEventListener('click',e=>{ if(e.target===w||e.target.closest('[data-x]')){w.remove();document.body.style.overflow='';return;} const p=e.target.closest('[data-blper]'); if(p) blStatement(id,p.dataset.blper); }); }
@@ -3100,7 +3100,7 @@ async function blStatement(id,per){ const k=st.blK||'vend', en=st.blE||'all', br
   const mv=(S.moves||[]); const noMv=!S.moves_from||S.moves_from>from;
   const rows=mv.map(m=>{ run+=sg*((+m.dr)-(+m.cr)); return `<div class="rt-it" style="align-items:flex-start"><div class="rt-m"><div class="rt-t" style="font-size:12.5px">${esc(m.t||'حركة')}${m.doc?' · <span class="num">#'+esc(m.doc)+'</span>':''}</div><div class="muted rt-s">${esc(String(m.d).slice(0,10))}${m.br&&!brs?' · '+esc(brById(m.br).name):''}${m.x?' · '+esc(m.x):''}</div></div><div style="text-align:left;flex:none;font-size:12px;line-height:1.7">${+m.dr?`<div>مدين <b class="num">${fmt(+m.dr,2)}</b></div>`:''}${+m.cr?`<div>دائن <b class="num">${fmt(+m.cr,2)}</b></div>`:''}<div class="muted">الرصيد <span class="num">${fmt(Math.abs(run),2)}</span></div></div></div>`; }).join('');
   w.querySelector('.lv-sheet').innerHTML=`<div class="lv-top"><b>📄 كشف حساب</b><button class="icb" data-x="1">✕</button></div>
-   <div style="margin:-4px 0 10px"><b style="font-size:15px">${esc(x.n)}</b><div class="muted" style="font-size:11.5px">${x.c?'رقم '+esc(x.c)+' · ':''}${en==='all'?'كل المنشآت':en==='shaden'?'مطاعم الشادن':'الباتشينو'}</div></div>
+   <div style="margin:-4px 0 10px"><b style="font-size:15px">${esc(x.n)}</b><div class="muted" style="font-size:11.5px">${x.c?'رقم '+esc(x.c)+' · ':''}${en==='all'?'كل المنشآت':esc(BL_ENT[en]?(en==='shaden'?'مطاعم الشادن':'الباتشينو'):en)}</div></div>
    <div class="chips">${[['30','آخر ٣٠ يوم'],['90','آخر ٩٠ يوم'],['ytd','من بداية السنة']].map(([v,n])=>`<button data-blper="${v}" aria-pressed="${(per||'90')===v}">${n}</button>`).join('')}</div>
    <div class="rtd-box"><span>رصيد أول المدة · ${esc(String(S.from).slice(0,10))}</span><b class="num">${fmt(Math.abs(+S.opening),2)} <small class="muted">${sd(sg*(+S.opening))}</small></b></div>
    ${noMv?`<p class="muted" style="font-size:11.5px">⚠️ حركات الحسابات ما اكتملت مزامنتها لهذي الفترة${S.moves_from?' (متوفرة من '+esc(String(S.moves_from).slice(0,10))+')':''} — الرصيد الحالي صحيح.</p>`:''}

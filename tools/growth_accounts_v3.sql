@@ -1,0 +1,14 @@
+create or replace function public.growth_balances() returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not growth_bal_can() then raise exception 'غير مصرح'; end if;
+  return jsonb_build_object(
+    'last_run', (select last_run from growth_sync_state where id = 'acc'),
+    'moves_from', (select min(dt) from growth_acc_moves),
+    'branches', coalesce((select jsonb_agg(jsonb_build_object('code', code, 'name', name, 'entity', entity) order by code) from growth_branches), '[]'::jsonb),
+    'rows', coalesce((select jsonb_agg(jsonb_build_object('k', kind, 'id', acc_id, 'br', branch, 'c', code, 'n', name, 'p', phone, 'g', grp,
+                      'dr', debit, 'cr', credit, 'b', balance, 'lm', last_move) order by kind, abs(balance) desc)
+                      from growth_accounts where balance <> 0 or debit <> 0 or credit <> 0), '[]'::jsonb));
+end $$;
+revoke all on function public.growth_balances() from public, anon;
+grant execute on function public.growth_balances() to authenticated;
