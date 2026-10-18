@@ -768,6 +768,7 @@ const SECTIONS=[
   {id:'income',name:'قوائم الدخل',app:'income'},
   {id:'wh',name:'نسبة تكلفة المستودعات'},
   {id:'waste',name:'مراقبة الهدر'},
+  {id:'stock',name:'المستودعات والمشتريات',perm:'wh'},
   {id:'chicken',name:'أسعار المشتريات',page:'prices'},
   {id:'treasury',name:'خزينة الأرصدة',app:'treasury'},
   {id:'finst',name:'القوائم المالية',perm:'income'},
@@ -798,12 +799,12 @@ const NAV_ICONS={
   hrg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="9" cy="11" r="2.3"/><path d="M5.8 16.2a3.4 3.4 0 0 1 6.4 0"/><path d="M14.5 10h3.5M14.5 13.5h3.5"/></svg>',
   fin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/><path d="M6.5 15h4"/></svg>',
   more:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>'};
-const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me','msgs']},{id:'ai',name:'المساعد الذكي',secs:['ai']},{id:'rep',name:'التقارير',secs:['brief','sales','daily','channels','income','wh','waste','chicken']},{id:'ops',name:'العمليات',secs:['maint','purch','feedback','mkt','fleet']},{id:'hrg',name:'الموارد البشرية',secs:['hr','att','employees','advances']},{id:'fin',name:'المالية',secs:['finst','treasury','balances','handover','rets','loans','custody']},{id:'more',name:'الإدارة',secs:['users','data'],nav:false}];
+const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me','msgs']},{id:'ai',name:'المساعد الذكي',secs:['ai']},{id:'rep',name:'التقارير',secs:['brief','sales','daily','channels','income','stock','wh','waste','chicken']},{id:'ops',name:'العمليات',secs:['maint','purch','feedback','mkt','fleet']},{id:'hrg',name:'الموارد البشرية',secs:['hr','att','employees','advances']},{id:'fin',name:'المالية',secs:['finst','treasury','balances','handover','rets','loans','custody']},{id:'more',name:'الإدارة',secs:['users','data'],nav:false}];
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','balances','handover','rets','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610182224';
+const APP_VER='202610182236';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets='تفعيل اشعارات مرتجع الكاشيرات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -2901,6 +2902,50 @@ function cuStatement(c,tx,staff){ const k=cuCalc(tx);
     ${(()=>{const L=cuByBranch(tx); return L.length?`<div class="cu-brs"><span class="muted">المصروف حسب الفرع:</span>${L.map(([b,v])=>`<span class="tag"><i class="dot" style="background:${brById(b).color}"></i>${esc(brById(b).name)} <b class="num">${fmt(v,2)}</b></span>`).join('')}</div>`:'';})()}
     ${k.nonTax?`<div class="muted" style="font-size:11px;margin-top:6px">🧾 فواتير غير ضريبية: <b class="num" style="color:var(--down)">${fmt(k.nonTax,2)}</b> ر.س${k.vat?` · ضريبة مدخلات معتمدة ${fmt(k.vat,2)}`:''}</div>`:''}`; }
 
+function invRange(P){ const td=todayIso(), d=o=>{const x=new Date(td+'T12:00:00');x.setDate(x.getDate()+o);return x.toISOString().slice(0,10);};
+  if(P==='td') return [td,td]; if(P==='yd') return [d(-1),d(-1)]; if(P==='7') return [d(-6),td]; if(P==='pm'){ const x=new Date(td.slice(0,7)+'-01T12:00:00'); x.setDate(0); const e=x.toISOString().slice(0,10); return [e.slice(0,7)+'-01',e]; } return [td.slice(0,7)+'-01',td]; }
+V.stock=async()=>{
+  const T=st.ivT||'pur', P=st.ivP||'m', B=st.ivB||'all'; const [f,t]=invRange(P);
+  let D0; try{ const r0=await sb.rpc('growth_inv',{p_from:f,p_to:t,p_branches:null}); if(r0.error) throw r0.error; D0=r0.data; }catch(e){ return `<div class="card"><h3>📦 المستودعات والمشتريات</h3><p class="muted">${/growth_inv/.test(e.message||'')?'شغّل ملف «growth-inv» في Supabase أول.':'تعذّر التحميل — تأكد من الإنترنت'}</p></div>`; }
+  const BR=D0.branches||[]; const ents=[...new Set(BR.map(b=>b.entity).filter(Boolean))];
+  const brs=B==='all'?null:B.startsWith('e:')?BR.filter(b=>b.entity===B.slice(2)).map(b=>b.code):[B];
+  let D=D0; if(brs){ const r=await sb.rpc('growth_inv',{p_from:f,p_to:t,p_branches:brs}); D=r.data||D0; }
+  st._ivR=[f,t,brs];
+  const ago=(T==='stock'?D.stock_run:D.last_run); 
+  let h=`<div class="rt-hd"><h2>📦 المستودعات والمشتريات</h2><span class="muted">مباشر من جروث${ago?' · آخر تحديث '+lvAgo(ago):''}</span></div>
+   <div class="chips">${[['pur','🧾 المشتريات'],['iss','📤 الصرف المباشر'],['stock','📦 أرصدة المخزون']].map(([v,n])=>`<button data-ivt="${v}" aria-pressed="${T===v}">${n}</button>`).join('')}</div>
+   ${BR.length?`<div class="chips">${[['all','الكل']].concat(ents.map(e=>['e:'+e,e])).concat(BR.map(b=>[b.code,b.name.replace(/^.*-\s*/,'')])).map(([v,n])=>`<button data-ivb="${esc(v)}" aria-pressed="${B===v}">${esc(n)}</button>`).join('')}</div>`:''}
+   ${T!=='stock'?`<div class="chips">${[['td','اليوم'],['yd','أمس'],['7','٧ أيام'],['m','الشهر'],['pm','الشهر الماضي']].map(([v,n])=>`<button data-ivp="${v}" aria-pressed="${P===v}">${n}</button>`).join('')}</div>`:''}`;
+  const kpi=(a,b)=>`<div class="kpis" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">${[a,b].map(([l,v])=>`<div class="card" style="margin:0"><small class="muted">${l}</small><b class="num" style="display:block;font-size:19px;margin-top:4px">${v}</b></div>`).join('')}</div>`;
+  const q3=v=>fmt(+v,Math.abs(+v%1)>0.0005?2:0);
+  const itemRow=(x,extra)=>`<button class="rt-it" style="width:100%;text-align:inherit;background:none;border-left:0;border-right:0;border-top:0;cursor:pointer;font:inherit;color:inherit" data-ivi="${esc(x.i)}" data-ivn="${esc((x.n+' '+x.i+' '+(x.g||'')).toLowerCase())}"><div class="rt-m"><div class="rt-t">${esc(x.n)}</div><div class="muted rt-s">${extra}</div></div><div style="text-align:left;flex:none"><b class="num" style="font-size:15px">${fmt(+x.a,2)}</b><div class="muted" style="font-size:10.5px">ر.س ‹</div></div></button>`;
+  const search=`<input class="inp" id="ivQ" placeholder="🔎 ابحث بالصنف أو المجموعة" autocomplete="off" style="width:100%;margin-bottom:10px">`;
+  if(T==='stock'){
+    const S=(D.stock||[]).slice().sort((a,b)=>+b.v-+a.v); if(!S.length) return h+`<div class="card"><p class="muted">بانتظار أول مزامنة لأرصدة المخزون من جروث.</p></div>`;
+    h+=kpi(['قيمة المخزون',fmt(sum(S.map(x=>+x.v)),2)],['عدد الأصناف',fmt(S.length)])+search+`<div class="card rt-list" id="ivL">${S.map(x=>itemRow({...x,a:x.v},`${q3(x.q)} ${esc(x.u||'')}${x.g?' · '+esc(x.g):''}`)).join('')}</div>`;
+  } else {
+    const I=(D.items||[]).filter(x=>x.k===T).sort((a,b)=>+b.a-+a.a), R=(D.items||[]).filter(x=>x.k==='pret');
+    const Pa=(D.parties||[]).filter(x=>x.k===T).sort((a,b)=>+b.a-+a.a); const tot=sum(I.map(x=>+x.a)), ret=sum(R.map(x=>+x.a));
+    if(!I.length&&!(D.items||[]).length) return h+`<div class="card"><p class="muted">بانتظار أول مزامنة من جروث — أو ما فيه حركات في هذي الفترة.</p></div>`;
+    if(T==='pur') h+=kpi(['صافي المشتريات (قبل الضريبة)',fmt(tot-ret,2)],[ret?'المردودات':'عدد الفواتير',ret?fmt(ret,2):fmt(sum(Pa.map(x=>+x.c)))]);
+    else h+=kpi(['إجمالي الصرف المباشر',fmt(tot,2)],['عدد الأصناف',fmt(I.length)]);
+    if(Pa.length&&(T==='pur'||Pa.some(x=>x.p))) h+=`<h4 class="lv-h4">${T==='pur'?'حسب المورد':'حسب جهة الصرف'}</h4><div class="card rt-list">${Pa.slice(0,st.ivPm?999:8).map(x=>`<div class="rt-it"><div class="rt-m"><div class="rt-t">${esc(x.p||'بدون بيان')}</div><div class="muted rt-s">${x.c} مستند · ${tot?Math.round(+x.a/tot*1000)/10:0}%</div></div><b class="num">${fmt(+x.a,2)}</b></div>`).join('')}${Pa.length>8&&!st.ivPm?`<button class="btn sm" data-ivpm="1" style="margin:8px 0">عرض الكل (${Pa.length})</button>`:''}</div>`;
+    h+=`<h4 class="lv-h4">حسب الصنف</h4>`+search+`<div class="card rt-list" id="ivL">${I.map(x=>itemRow(x,`${q3(x.q)} ${esc(x.u||'')} · متوسط ${fmt(+x.q?+x.a/+x.q:0,2)}${T==='pur'&&+x.mn!==+x.mx?` · من ${fmt(+x.mn,2)} إلى ${fmt(+x.mx,2)}`:''}${T==='pur'?' · آخر سعر '+fmt(+x.last,2):''}`)).join('')||'<p class="muted">ما فيه حركات</p>'}</div>`;
+  }
+  setTimeout(()=>{const q=$('#ivQ'); if(q){ q.oninput=()=>{const v=q.value.trim().toLowerCase(); document.querySelectorAll('#ivL [data-ivn]').forEach(e=>{e.style.display=!v||e.dataset.ivn.includes(v)?'':'none';});}; }},0);
+  return h; };
+async function invItem(item){ const [f0,t,brs]=st._ivR||[]; const f=(()=>{const x=new Date(todayIso()+'T12:00:00');x.setDate(x.getDate()-90);return x.toISOString().slice(0,10);})();
+  const w=document.createElement('div'); w.className='lv-ov'; w.innerHTML=`<div class="card lv-sheet"><div class="lv-top"><b>📦 تفاصيل الصنف</b><button class="icb" data-x="1">✕</button></div><p class="muted">جارِ التحميل…</p></div>`;
+  w.addEventListener('click',e=>{if(e.target===w||e.target.closest('[data-x]')){w.remove();document.body.style.overflow='';}}); document.body.style.overflow='hidden'; document.body.appendChild(w);
+  const r=await sb.rpc('growth_inv_item',{p_item:item,p_from:f<f0?f:f0,p_to:t||todayIso(),p_branches:brs||null}); const D=r.data||{}; const it=D.item||{}; const K={pur:'شراء',pret:'مردود',iss:'صرف'};
+  const L=D.lines||[], S=D.stock||[]; const pur=L.filter(x=>x.k==='pur');
+  w.querySelector('.lv-sheet').innerHTML=`<div class="lv-top"><b>📦 ${esc(it.n||item)}</b><button class="icb" data-x="1">✕</button></div>
+   <div class="muted" style="font-size:11.5px;margin:-6px 0 10px">رقم ${esc(item)}${it.u?' · '+esc(it.u):''}${it.g?' · '+esc(it.g):''} · آخر ٩٠ يوم</div>
+   ${S.length?`<h4 class="lv-h4">الرصيد الحالي</h4><div class="card rt-list">${S.map(x=>`<div class="rt-it"><div class="rt-m"><div class="rt-t">${esc(x.w||'—')}</div><div class="muted rt-s">${esc(brById(x.br).name)} · تكلفة ${fmt(+x.c,2)}</div></div><div style="text-align:left"><b class="num">${fmt(+x.q,2)}</b><div class="muted" style="font-size:10.5px">${fmt(+x.v,2)} ر.س</div></div></div>`).join('')}</div>`:''}
+   ${pur.length?`<h4 class="lv-h4">أسعار الشراء</h4><div class="muted" style="font-size:12px;margin-bottom:6px">آخر ${fmt(+pur[0].pr,2)} · أقل ${fmt(Math.min(...pur.map(x=>+x.pr)),2)} · أعلى ${fmt(Math.max(...pur.map(x=>+x.pr)),2)}</div>`:''}
+   <h4 class="lv-h4">الحركات</h4><div class="card rt-list">${L.map(x=>`<div class="rt-it"><div class="rt-m"><div class="rt-t" style="font-size:12.5px">${K[x.k]}${x.doc?' · #'+esc(x.doc):''} · ${esc(x.p||'')}</div><div class="muted rt-s">${esc(String(x.d).slice(0,10))} · ${esc(brById(x.br).name)}${x.w?' · '+esc(x.w):''}</div></div><div style="text-align:left;font-size:12px"><b class="num">${fmt(+x.q,2)}</b> × ${fmt(+x.pr,2)}<div class="muted">${fmt(+x.a,2)}</div></div></div>`).join('')||'<p class="muted">ما فيه حركات</p>'}</div>`; }
+document.addEventListener('click',e=>{const t=e.target.closest('[data-ivt],[data-ivb],[data-ivp],[data-ivi],[data-ivpm]');if(!t)return;const d=t.dataset; if(d.ivi){invItem(d.ivi);return;} if(d.ivpm){st.ivPm=1;render();return;}
+  if(d.ivt)st.ivT=d.ivt; if(d.ivb)st.ivB=d.ivb; if(d.ivp){st.ivP=d.ivp;st.ivPm=0;} render();});
 const FS_IS=['3','4'];
 const fsIsAcc=a=>FS_IS.includes(String(a)[0]);
 async function fsLoad(from,to,brs){ const key=[from,to,(brs||[]).join(',')].join('|'); st._fsC=st._fsC||{}; const c=st._fsC[key]; if(c&&Date.now()-c.t<60e3) return c.d;
