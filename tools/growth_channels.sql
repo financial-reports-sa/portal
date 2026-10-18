@@ -29,6 +29,8 @@ begin
   n := replace(replace(n, 'ة', 'ه'), 'ى', 'ي');
   if n ~ '(كيتا|keeta)' then return 'keeta'; end if;
   if n ~ '(هنقر|هنجر|هانقر|هانجر|hunger)' then return 'hs'; end if;
+  if n ~ 'تويو|toyou' then return 'toyou'; end if;
+  if n ~ 'توالف|اعاشه' then return null; end if;
   if n ~ 'نينجا|ninja' then return 'ninja'; end if;
   if n ~ 'بونات|bonat' then return 'bonat'; end if;
   if n ~ 'الشادن' then return 'shaden'; end if;
@@ -64,7 +66,9 @@ begin
   insert into app_docs (app, coll, id, data, branches, updated_at) values ('channels', 'periods', p_month, doc, '{}', now())
   on conflict (app, coll, id) do update set data = excluded.data, updated_at = now();
   select coalesce(jsonb_agg(distinct jsonb_build_object('branch', branch, 'name', name)), '[]'::jsonb) into unm
-  from growth_channels_daily where to_char(day, 'YYYY-MM') = p_month and growth_ch_code(branch, name) is null and net <> 0;
+  from growth_channels_daily g where to_char(day, 'YYYY-MM') = p_month and growth_ch_code(branch, name) is null and net <> 0
+    and not exists (select 1 from growth_channel_map m where m.name = g.name and m.code = '-')
+    and regexp_replace(g.name, '[أإآ]', 'ا', 'g') !~ '(توالف|اعاش)';
   return jsonb_build_object('month', p_month, 'unmapped', unm);
 end $$;
 
@@ -97,6 +101,7 @@ begin
   return jsonb_build_object('ok', true, 'rows', n, 'deleted', d, 'months', res);
 end $$;
 
+insert into public.growth_channel_map (branch, name, code) values ('*', 'توالف', '-'), ('*', 'اعاشة العمال', '-') on conflict do nothing;
 revoke all on function public.growth_ch_code(text, text) from public, anon;
 revoke all on function public.growth_channels_rebuild(text) from public, anon, authenticated;
 revoke all on function public.growth_ingest_channels(jsonb, date, boolean) from public, anon;
