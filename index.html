@@ -800,7 +800,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','handover','rets','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610180831';
+const APP_VER='202610180834';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets='تفعيل اشعارات مرتجع الكاشيرات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -2543,12 +2543,15 @@ async function mkGenerate(day,replace){
 async function liveLoad(force){ if(!force&&st._lv&&Date.now()-st._lvAt<60e3) return st._lv; const r=await sb.rpc('growth_live',{}); if(r.error) throw r.error; st._lv=r.data; st._lvAt=Date.now(); return r.data; }
 function lvAgo(t){ if(!t) return '—'; const m=Math.round((Date.now()-new Date(t))/6e4); return m<1?'الحين':m<60?`قبل ${m} د`:m<1440?`قبل ${Math.floor(m/60)} س`:`قبل ${Math.floor(m/1440)} يوم`; }
 async function liveCard(){ let L; try{ L=await liveLoad(); }catch(e){ return ''; }
-  const bs=selBranches(); const B=(L.branches||[]).filter(x=>!bs||bs.includes(x.branch)); if(!B.length) return '';
+  const bs=selBranches(); const biz=new Date(Date.now()+3*36e5-8*36e5).toISOString().slice(0,10); const old=L.day&&String(L.day).slice(0,10)<biz;
+  const got=old?[]:(L.branches||[]).filter(x=>!bs||bs.includes(x.branch)); const ids=(bs&&bs.length?bs:got.map(x=>x.branch)).filter(id=>['az','sh','pc'].includes(id)||got.some(g=>g.branch===id));
+  const B=ids.map(id=>got.find(g=>g.branch===id)||{branch:id,net:0,bills:0}).sort((x,y)=>+y.net-+x.net); if(!B.length) return '';
+  const prev=old?sum((L.branches||[]).filter(x=>!bs||bs.includes(x.branch)).map(x=>+x.net)):0;
   const tot=sum(B.map(x=>+x.net)), bills=sum(B.map(x=>+x.bills)), stale=L.last_run&&(Date.now()-new Date(L.last_run))>20*6e4;
   const mx=Math.max(...B.map(x=>+x.net),1);
   return `<button class="card lv-card" data-lvopen="1"><div class="lv-hd"><span class="lv-dot ${stale?'off':''}"></span><b>مبيعات اليوم · مباشر من جروث</b><small class="muted">${stale?'⚠️ متوقف ':''}${lvAgo(L.last_run)}</small></div>
-    <div class="lv-big"><b class="num">${fmt(tot)}</b><small>ر.س · ${fmt(bills)} فاتورة</small></div>
-    <div class="lv-brs">${B.map(x=>{const b=brById(x.branch);return `<div class="lv-br"><span><i class="dot" style="background:${b.color||'#888'}"></i>${esc(b.name)}</span><div class="lv-bar"><i style="width:${Math.max(4,+x.net/mx*100)}%;background:${b.color||'#888'}"></i></div><b class="num">${fmt(+x.net)}</b></div>`;}).join('')}</div>
+    <div class="lv-big"><b class="num">${fmt(tot)}</b><small>ر.س · ${fmt(bills)} فاتورة</small></div>${old?`<div class="muted" style="font-size:12px;margin:-4px 0 8px">ما بدأ البيع اليوم بعد · أمس ${fmt(prev)} ر.س</div>`:''}
+    <div class="lv-brs">${B.map(x=>{const b=brById(x.branch);return `<div class="lv-br"><span><i class="dot" style="background:${b.color||'#888'}"></i>${esc(b.name)}</span><div class="lv-bar"><i style="width:${+x.net?Math.max(4,+x.net/mx*100):0}%;background:${b.color||'#888'}"></i></div><b class="num">${fmt(+x.net)}</b></div>`;}).join('')}</div>
     <div class="muted lv-more">القنوات والكاشيرات والساعات ‹</div></button>`; }
 async function liveOpen(){ let L; try{ L=await liveLoad(true); }catch(e){ toast('تعذّر التحميل'); return; }
   const bs=selBranches(), inB=x=>!bs||bs.includes(x.branch); const B=(L.branches||[]).filter(inB);
