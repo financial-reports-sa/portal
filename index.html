@@ -800,7 +800,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','handover','rets','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610180834';
+const APP_VER='202610182000';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets='تفعيل اشعارات مرتجع الكاشيرات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -2951,10 +2951,35 @@ async function rtDetail(id){ const x=(st._rtA||[]).find(z=>z.id===id); if(!x) re
    ${x.status==='approved'?`<div class="rtd-ack ok"><div class="rtd-ah">✓ اعتماد مدير الفرع — ${esc(x.mgr||'')} <small>${dt(x.mgr_at)}</small></div><p>«${RT_ACK_OK}»</p></div>`
     :x.status==='rejected'?`<div class="rtd-ack no"><div class="rtd-ah">⛔ رفض مدير الفرع — ${esc(x.mgr||'')} <small>${dt(x.mgr_at)}</small></div><p>«${RT_ACK_NO}»</p>${x.mgr_note?`<p><b>سبب الرفض:</b> ${esc(x.mgr_note)}</p>`:''}</div>`
     :x.status==='pending'?`<div class="rtd-ack p"><div class="rtd-ah">⏳ بانتظار اعتماد مدير الفرع</div>${x.can?`<div class="rt-btns" style="margin-top:8px"><button class="rt-ok" data-rtok="${x.id}">✓ اعتماد</button><button class="rt-no" data-rtno="${x.id}">رفض</button></div>`:''}</div>`:''}
-   <h4 class="lv-h4">صورة الفاتورة</h4><div class="rtd-ph" data-rtdph="${x.id}"><span class="muted">جارِ التحميل…</span></div></div>`;
+   <h4 class="lv-h4">صورة الفاتورة</h4><div class="rtd-ph" data-rtdph="${x.id}"><span class="muted">جارِ التحميل…</span></div>
+   <button class="btn" data-rtdl="${x.id}" style="width:100%;margin-top:12px">⬇️ تحميل المرتجع كصورة</button></div>`;
   w.addEventListener('click',e=>{if(e.target===w||e.target.closest('[data-x]')||e.target.closest('[data-rtok],[data-rtno]')){w.remove();document.body.style.overflow='';}});
   document.body.style.overflow='hidden'; document.body.appendChild(w);
-  const r=await sb.rpc('ret_photo',{p_id:x.id}); const ph=w.querySelector('[data-rtdph]'); if(ph) ph.innerHTML=r.data?`<img src="${r.data}" alt="">`:'<span class="muted">ما فيه صورة</span>'; }
+  w.querySelector('[data-rtdl]').onclick=async ev=>{ const bt=ev.currentTarget; bt.disabled=true; bt.textContent='جارِ التجهيز…'; try{ await rtDownload(x,dt,items,note,ph0); }catch(e){ toast('تعذّر التحميل'); } bt.disabled=false; bt.textContent='⬇️ تحميل المرتجع كصورة'; };
+  let ph0=null; const r=await sb.rpc('ret_photo',{p_id:x.id}); ph0=r.data||null; const ph=w.querySelector('[data-rtdph]'); if(ph) ph.innerHTML=r.data?`<img src="${r.data}" alt="">`:'<span class="muted">ما فيه صورة</span>'; }
+async function rtDownload(x,dt,items,note,photo){ if(!photo){ try{ const r=await sb.rpc('ret_photo',{p_id:x.id}); photo=r.data||null; }catch(_){} }
+  const W=1080, P=60, c=document.createElement('canvas'), g=c.getContext('2d'); const F='"Tajawal","IBM Plex Sans Arabic",system-ui,sans-serif';
+  const wrap=(t,f,mw)=>{ g.font=f; const out=[]; let line=''; String(t||'').split(/\s+/).forEach(wd=>{ const tt=line?line+' '+wd:wd; if(g.measureText(tt).width>mw&&line){ out.push(line); line=wd; } else line=tt; }); if(line) out.push(line); return out; };
+  const rows=[['الفرع',brById(x.branch).name],['الكاشير',x.cashier||'—'],['رقم الفاتورة',x.inv],['السبب',x.reason],['وقت الفاتورة',dt(x.at)],['وقت التوثيق',dt(x.created)+' (بعد '+x.mins+' د)']];
+  if(items) rows.push(['الأصناف',items[1].trim()]); if(note) rows.push(['ملاحظة الكاشير',note]);
+  const acks=[]; if(x.ack) acks.push(['✍️ إقرار الكاشير · '+dt(x.created),'«'+RT_ACK_C(x.cashier)+'»','#1F2A24']);
+  if(x.status==='approved') acks.push(['✓ اعتماد مدير الفرع — '+(x.mgr||'')+' · '+dt(x.mgr_at),'«'+RT_ACK_OK+'»','#16794C']);
+  else if(x.status==='rejected') acks.push(['⛔ رفض مدير الفرع — '+(x.mgr||'')+' · '+dt(x.mgr_at),'«'+RT_ACK_NO+'»'+(x.mgr_note?' — سبب الرفض: '+x.mgr_note:''),'#B42318']);
+  else if(x.status==='pending') acks.push(['⏳ بانتظار اعتماد مدير الفرع','','#9A6A06']);
+  let img=null; if(photo){ img=await new Promise(res=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=()=>res(null); i.src=photo; }); }
+  const lay=draw=>{ g.direction='rtl'; let y=P; const T=(t,f,col,yy,al='right',xx=W-P)=>{ if(draw){ g.font=f; g.fillStyle=col; g.textAlign=al; g.fillText(t,xx,yy);} };
+    if(draw){ g.fillStyle='#fff'; g.fillRect(0,0,W,c.height); g.fillStyle='#1B4D3E'; g.fillRect(0,0,W,150); }
+    T('منصة الإدارة الموحّدة','bold 40px '+F,'#fff',75); T('تفاصيل مرتجع','28px '+F,'#E8D9A8',122); y=150+90;
+    T(fmt(+x.amount,2)+' ر.س','bold 72px '+F,'#1F2A24',y,'center',W/2); y+=50;
+    rows.forEach(([k,v])=>{ const L=wrap(v,'bold 32px '+F,W-2*P-260); if(draw){ g.fillStyle='#F4F3EE'; g.fillRect(P,y,W-2*P,26+L.length*44); } T(k,'28px '+F,'#6B7280',y+50); L.forEach((l,i)=>T(l,'bold 32px '+F,'#1F2A24',y+50+i*44,'right',W-P-260)); y+=26+L.length*44+14; });
+    y+=20; T('الإقرارات','bold 34px '+F,'#1F2A24',y+30); y+=60;
+    acks.forEach(([h,t,col])=>{ const L=t?wrap(t,'28px '+F,W-2*P-40):[]; const hh=70+L.length*40; if(draw){ g.strokeStyle=col; g.lineWidth=3; g.strokeRect(P,y,W-2*P,hh); } T(h,'bold 28px '+F,col,y+45,'right',W-P-20); L.forEach((l,i)=>T(l,'28px '+F,'#1F2A24',y+90+i*40,'right',W-P-20)); y+=hh+20; });
+    if(img){ y+=10; T('صورة الفاتورة','bold 34px '+F,'#1F2A24',y+30); y+=55; const iw=W-2*P, ih=Math.round(img.height*iw/img.width); if(draw) g.drawImage(img,P,y,iw,ih); y+=ih+20; }
+    T('صدر من المنصة · '+new Date().toLocaleString('ar-SA-u-ca-gregory-nu-latn'),'24px '+F,'#9CA3AF',y+40,'center',W/2); return y+80; };
+  c.width=W; c.height=200; const H=lay(false); c.height=H; lay(true);
+  const blob=await new Promise(res=>c.toBlob(res,'image/jpeg',0.9)); const name='مرتجع-'+x.inv+'.jpg'; const file=new File([blob],name,{type:'image/jpeg'});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file],title:'مرتجع '+x.inv}); return; }catch(e){ if(e&&e.name==='AbortError') return; } }
+  const u=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=u; a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),5000); }
 document.addEventListener('click',e=>{const t=e.target.closest('[data-rtd]');if(t&&!e.target.closest('button'))rtDetail(+t.dataset.rtd);});
 function rtStat(x){ const tm=x.mgr_at?new Date(x.mgr_at).toLocaleString('ar-SA-u-ca-gregory-nu-latn',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}):'';
   const ack=x.ack?'<span class="rt-ack">✍️ أقرّ الكاشير بصحته</span>':'';
