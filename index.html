@@ -769,6 +769,7 @@ const SECTIONS=[
   {id:'waste',name:'مراقبة الهدر'},
   {id:'chicken',name:'أسعار المشتريات',page:'prices'},
   {id:'treasury',name:'خزينة الأرصدة',app:'treasury'},
+  {id:'balances',name:'أرصدة العملاء والموردين'},
   {id:'loans',name:'التمويلات'},
   {id:'fleet',name:'أسطول السيارات'},
   {id:'maint',name:'الصيانة'},
@@ -795,12 +796,12 @@ const NAV_ICONS={
   hrg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="9" cy="11" r="2.3"/><path d="M5.8 16.2a3.4 3.4 0 0 1 6.4 0"/><path d="M14.5 10h3.5M14.5 13.5h3.5"/></svg>',
   fin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/><path d="M6.5 15h4"/></svg>',
   more:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>'};
-const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me','msgs']},{id:'ai',name:'المساعد الذكي',secs:['ai']},{id:'rep',name:'التقارير',secs:['brief','sales','daily','channels','income','wh','waste','chicken']},{id:'ops',name:'العمليات',secs:['maint','purch','feedback','mkt','fleet']},{id:'hrg',name:'الموارد البشرية',secs:['hr','att','employees','advances']},{id:'fin',name:'المالية',secs:['treasury','handover','rets','loans','custody']},{id:'more',name:'الإدارة',secs:['users','data'],nav:false}];
+const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me','msgs']},{id:'ai',name:'المساعد الذكي',secs:['ai']},{id:'rep',name:'التقارير',secs:['brief','sales','daily','channels','income','wh','waste','chicken']},{id:'ops',name:'العمليات',secs:['maint','purch','feedback','mkt','fleet']},{id:'hrg',name:'الموارد البشرية',secs:['hr','att','employees','advances']},{id:'fin',name:'المالية',secs:['treasury','balances','handover','rets','loans','custody']},{id:'more',name:'الإدارة',secs:['users','data'],nav:false}];
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
-const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','handover','rets','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
+const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','balances','handover','rets','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610182000';
+const APP_VER='202610182121';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets='تفعيل اشعارات مرتجع الكاشيرات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -2898,6 +2899,26 @@ function cuStatement(c,tx,staff){ const k=cuCalc(tx);
     ${(()=>{const L=cuByBranch(tx); return L.length?`<div class="cu-brs"><span class="muted">المصروف حسب الفرع:</span>${L.map(([b,v])=>`<span class="tag"><i class="dot" style="background:${brById(b).color}"></i>${esc(brById(b).name)} <b class="num">${fmt(v,2)}</b></span>`).join('')}</div>`:'';})()}
     ${k.nonTax?`<div class="muted" style="font-size:11px;margin-top:6px">🧾 فواتير غير ضريبية: <b class="num" style="color:var(--down)">${fmt(k.nonTax,2)}</b> ر.س${k.vat?` · ضريبة مدخلات معتمدة ${fmt(k.vat,2)}`:''}</div>`:''}`; }
 
+V.balances=async()=>{
+  const r=await sb.rpc('growth_balances');
+  if(r.error) return `<div class="card"><h3>📒 أرصدة العملاء والموردين</h3><p class="muted">${/growth_balances/.test(r.error.message)?'شغّل ملف «growth-accounts» في Supabase أول.':'تعذّر التحميل — تأكد من الإنترنت'}</p></div>`;
+  const D=r.data||{}, A=D.rows||[]; const k=st.blK||'vend'; const L=A.filter(x=>x.k===k);
+  const owe=k==='vend'?L.filter(x=>+x.b<0):L.filter(x=>+x.b>0), rev=k==='vend'?L.filter(x=>+x.b>0):L.filter(x=>+x.b<0);
+  const sOwe=Math.abs(sum(owe.map(x=>+x.b))), sRev=Math.abs(sum(rev.map(x=>+x.b)));
+  const ago=D.last_run?lvAgo(D.last_run):''; const stale=D.last_run&&(Date.now()-new Date(D.last_run))>90*6e4;
+  const side=x=>k==='vend'?(+x.b<0?'لهم':'علينا لهم دفعة مقدمة'):(+x.b>0?'عليهم':'لهم عندنا');
+  const lbl=k==='vend'?['مستحق للموردين','دفعات مقدمة للموردين']:['مستحق على العملاء','أرصدة دائنة للعملاء'];
+  let h=`<div class="rt-hd"><h2>📒 أرصدة العملاء والموردين</h2><span class="muted">مباشر من جروث${ago?' · آخر تحديث '+ago:''}${stale?' · ⚠️ المزامنة متأخرة':''}</span></div>
+  <div class="chips">${[['vend','🏭 الموردين'],['cust','👥 العملاء']].map(([v,n])=>`<button data-blk="${v}" aria-pressed="${k===v}">${n} <small class="num">${A.filter(x=>x.k===v).length}</small></button>`).join('')}</div>`;
+  if(!A.length) return h+`<div class="card"><p class="muted">بانتظار أول مزامنة للأرصدة من جروث — تظهر هنا تلقائياً بعد ربط السيرفر.</p></div>`;
+  h+=`<div class="kpis" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+    <div class="card" style="margin:0"><small class="muted">${lbl[0]} · ${owe.length}</small><b class="num" style="display:block;font-size:20px;margin-top:4px">${fmt(sOwe,2)}</b></div>
+    <div class="card" style="margin:0"><small class="muted">${lbl[1]} · ${rev.length}</small><b class="num" style="display:block;font-size:20px;margin-top:4px">${fmt(sRev,2)}</b></div></div>
+  <input class="inp" id="blQ" placeholder="🔎 ابحث بالاسم أو الرقم" autocomplete="off" style="width:100%;margin-bottom:10px">
+  <div class="card rt-list" id="blL">${L.map(x=>`<div class="rt-it" data-bln="${esc((x.n+' '+x.c).toLowerCase())}"><div class="rt-m"><div class="rt-t">${esc(x.n||'—')}</div><div class="muted rt-s">${x.c?'رقم '+esc(x.c):''}${x.g?' · '+esc(x.g):''}${x.lm?' · آخر حركة '+esc(String(x.lm).slice(0,10)):''}</div></div><div style="text-align:left;flex:none"><b class="num" style="font-size:15px;color:${(k==='vend'?+x.b<0:+x.b>0)?'#1F2A24':'#16794C'}">${fmt(Math.abs(+x.b),2)}</b><div class="muted" style="font-size:10.5px">${side(x)}</div></div></div>`).join('')||'<p class="muted">ما فيه أرصدة</p>'}</div>`;
+  setTimeout(()=>{const q=$('#blQ'); if(q) q.oninput=()=>{const v=q.value.trim().toLowerCase(); document.querySelectorAll('#blL [data-bln]').forEach(e=>{e.style.display=!v||e.dataset.bln.includes(v)?'':'none';});};},0);
+  return h; };
+document.addEventListener('click',e=>{const t=e.target.closest('[data-blk]');if(!t)return;st.blK=t.dataset.blk;render();});
 V.rets=async()=>{
   const r=await sb.rpc('ret_feed',{p_days:7});
   if(r.error) return `<div class="card"><h3>↩️ مرتجعات الكاشيرات</h3><p class="muted">${/ret_feed/.test(r.error.message)?'شغّل ملف «إشعارات المرتجعات» في Supabase أول.':'تعذّر التحميل — تأكد من الإنترنت'}</p></div>`;
