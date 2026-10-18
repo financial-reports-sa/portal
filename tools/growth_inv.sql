@@ -122,6 +122,8 @@ begin
     'parties', coalesce((select jsonb_agg(jsonb_build_object('k', kind, 'p', party, 'a', a, 'c', c))
         from (select kind, party, sum(amount) a, count(distinct doc) c from growth_inv_lines
               where dt between p_from and p_to and (bs is null or branch = any(bs)) group by kind, party) t), '[]'::jsonb),
+    'sales_days', coalesce((select jsonb_agg(jsonb_build_object('d', bdate, 'net', n, 'ex', n - t) order by bdate)
+        from (select bdate, sum(net) n, sum(tax) t from growth_bills where bdate between p_from and p_to and (bs is null or branch = any(bs)) group by bdate) q), '[]'::jsonb),
     'days', coalesce((select jsonb_agg(jsonb_build_object('k', kind, 'd', dt, 'a', a) order by dt)
         from (select kind, dt, sum(amount) a from growth_inv_lines where dt between p_from and p_to and (bs is null or branch = any(bs)) group by kind, dt) t), '[]'::jsonb),
     'stock', coalesce((select jsonb_agg(jsonb_build_object('i', s.item, 'n', coalesce(it.name, s.item), 'u', coalesce(it.unit, ''), 'g', coalesce(it.grp, ''), 'q', q, 'v', v))
