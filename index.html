@@ -800,7 +800,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','handover','rets','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610180318';
+const APP_VER='202610180323';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets='تفعيل اشعارات مرتجع الكاشيرات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -3219,23 +3219,24 @@ const prOpen=m=>['new','progress','bought'].includes(m.status);
 function prSteps(m){const S=['رفع الطلب','استلام المشتريات','الشراء','تأكيد الفرع'];const cur={new:1,progress:2,bought:3,closed:4,rejected:1,cancelled:1}[m.status]||0;const bad=['rejected','cancelled'].includes(m.status);
   return `<div class="mt-st">${S.map((n,i)=>{const c=i<cur?'ok':i===cur?(bad?'x':'cur'):'';return `<div class="${c}"><i></i><span>${n}</span></div>`;}).join('')}</div>`;}
 function prItemRow(it){return `<div class="pr-ir"><input class="inp" name="in" placeholder="اسم الصنف" value="${esc(it.n||'')}"><input class="inp num" name="iq" inputmode="decimal" placeholder="الكمية" value="${it.q||''}"><select class="inp" name="iu">${PR_U.map(u=>`<option ${u===(it.u||'حبة')?'selected':''}>${u}</option>`).join('')}</select><button type="button" class="icb" data-prdel="1">✕</button></div>`;}
-function prForm(){ const brs=st.branches.filter(b=>b.id!=='wafra'); const k=st.prK||'items';
-  return `<div class="card afm" id="prFormCard"><div class="afm-hd"><div><h3>طلب شراء جديد</h3><small>Purchase Request · ${dLbl(todayIso())}</small></div><span class="afm-code">OPS-PR-01</span></div>
-  <form id="prForm" autocomplete="off"><div class="afm-bd">
+function prForm(E){ const brs=E?[brById(E.branch)].map(b=>({id:E.branch,name:b.name})):st.branches.filter(b=>b.id!=='wafra'); const k=E?E.kind:(st.prK||'items');
+  return `<div class="card afm" id="prFormCard"><div class="afm-hd"><div><h3>${E?'تعديل طلب الشراء '+prRef(E):'طلب شراء جديد'}</h3><small>${E?'متاح حتى '+new Date(E.edit_until).toLocaleTimeString('ar-SA-u-nu-latn',{hour:'numeric',minute:'2-digit'})+' أو لين تستلمه المشتريات':'Purchase Request · '+dLbl(todayIso())}</small></div><span class="afm-code">OPS-PR-01</span></div>
+  <form id="prForm" autocomplete="off" ${E?`data-edit="${E.id}"`:''}><div class="afm-bd">
     ${brs.length>1?`<div class="afm-sec"><div class="afm-t" data-n="1">الفرع</div><select class="inp" name="br" required><option value="">اختر الفرع</option>${brs.map(b=>`<option value="${b.id}">${esc(b.name)}</option>`).join('')}</select></div>`:`<input type="hidden" name="br" value="${brs[0]?brs[0].id:''}">`}
-    <div class="afm-sec"><div class="afm-t" data-n="${brs.length>1?2:1}">نوع الطلب</div><div class="afm-seg" style="grid-template-columns:1fr 1fr">${Object.entries(PR_K).map(([kk,v])=>`<label><input type="radio" name="k" value="${kk}" ${kk===k?'checked':''} data-prk="${kk}"><span>${v[0]} ${v[1]}<small>${kk==='equip'?'أجهزة، أدوات، أثاث':'مواد، تغليف، منظفات، مستهلكات'}</small></span></label>`).join('')}</div></div>
+    <div class="afm-sec"><div class="afm-t" data-n="${brs.length>1?2:1}">نوع الطلب</div><div class="afm-seg" style="grid-template-columns:1fr 1fr">${Object.entries(PR_K).filter(([kk])=>!E||kk===k).map(([kk,v])=>`<label><input type="radio" name="k" value="${kk}" ${kk===k?'checked':''} ${E?'':`data-prk="${kk}"`}><span>${v[0]} ${v[1]}<small>${kk==='equip'?'أجهزة، أدوات، أثاث':'مواد، تغليف، منظفات، مستهلكات'}</small></span></label>`).join('')}</div></div>
     <div class="afm-sec"><div class="afm-t" data-n="${brs.length>1?3:2}">${k==='equip'?'المعدة المطلوبة':'الأصناف المطلوبة'}</div>
-      <input class="inp" name="title" maxlength="120" placeholder="${k==='equip'?'مثل: قلاية كهربائية مزدوجة':'مثل: مستلزمات الأسبوع'}" required>
-      ${k==='items'?`<div id="prItems">${prItemRow({})}${prItemRow({})}</div><button type="button" class="btn ghost sm" data-pradd="1">＋ صنف</button>`:`<textarea class="inp" name="details" rows="2" placeholder="المواصفات، المقاس، الماركة، سبب الطلب"></textarea><input class="inp" type="file" name="ph" accept="image/*" capture="environment"><div class="muted" style="font-size:10.5px">صورة توضيحية (اختياري)</div>`}
-      ${k==='items'?`<textarea class="inp" name="details" rows="2" placeholder="ملاحظات (اختياري)"></textarea>`:''}</div>
-    <div class="afm-sec"><div class="afm-t" data-n="${brs.length>1?4:3}">الأولوية والموعد</div><div class="afm-seg" style="grid-template-columns:1fr 1fr"><label><input type="radio" name="pr" value="normal" checked><span>عادي</span></label><label><input type="radio" name="pr" value="urgent"><span>🚨 عاجل</span></label></div>
-      <div class="field" style="margin-top:8px"><label>مطلوب قبل (اختياري)</label><input class="inp" type="date" name="need" min="${todayIso()}"></div></div>
+      <input class="inp" name="title" maxlength="120" placeholder="${k==='equip'?'مثل: قلاية كهربائية مزدوجة':'مثل: مستلزمات الأسبوع'}" required value="${E?esc(E.title):''}">
+      ${k==='items'?`<div id="prItems">${E&&(E.items||[]).length?E.items.map(prItemRow).join(''):prItemRow({})+prItemRow({})}</div><button type="button" class="btn ghost sm" data-pradd="1">＋ صنف</button>`:`<textarea class="inp" name="details" rows="2" placeholder="المواصفات، المقاس، الماركة، سبب الطلب">${E?esc(E.details||''):''}</textarea>${E?'':`<input class="inp" type="file" name="ph" accept="image/*" capture="environment"><div class="muted" style="font-size:10.5px">صورة توضيحية (اختياري)</div>`}`}
+      ${k==='items'?`<textarea class="inp" name="details" rows="2" placeholder="ملاحظات (اختياري)">${E?esc(E.details||''):''}</textarea>`:''}</div>
+    <div class="afm-sec"><div class="afm-t" data-n="${brs.length>1?4:3}">الأولوية والموعد</div><div class="afm-seg" style="grid-template-columns:1fr 1fr"><label><input type="radio" name="pr" value="normal" ${E&&E.priority==='urgent'?'':'checked'}><span>عادي</span></label><label><input type="radio" name="pr" value="urgent" ${E&&E.priority==='urgent'?'checked':''}><span>🚨 عاجل</span></label></div>
+      <div class="field" style="margin-top:8px"><label>مطلوب قبل (اختياري)</label><input class="inp" type="date" name="need" min="${todayIso()}" value="${E&&E.need_by?E.need_by:''}"></div></div>
     <div class="err" id="prErr"></div></div>
-    <div class="afm-ft"><button class="btn" type="submit">رفع الطلب للمشتريات</button><button class="btn ghost" type="button" data-prx="1">إلغاء</button></div></form></div>`; }
+    <div class="afm-ft"><button class="btn" type="submit">${E?'حفظ التعديل':'رفع الطلب للمشتريات'}</button><button class="btn ghost" type="button" data-prx="1">إلغاء</button></div></form></div>`; }
 function prRow(m,R){ const sup=R==='admin'||R==='sup', mgr=R==='mgr'||R==='admin'; let a='';
   if(sup){ if(m.status==='new') a+=`<button class="btn sm" data-prst="progress" data-id="${m.id}">▶ استلام وبدء الشراء</button><button class="btn ghost sm" data-prst="rejected" data-id="${m.id}" style="color:var(--down)">رفض</button>`;
     if(m.status==='progress') a+=`<button class="btn sm" data-prst="bought" data-id="${m.id}">✓ تم الشراء</button><button class="btn ghost sm" data-prst="rejected" data-id="${m.id}" style="color:var(--down)">رفض</button>`; }
   if(mgr&&m.status==='bought') a+=`<button class="btn sm" data-prst="closed" data-id="${m.id}">✓ تأكيد الاستلام</button><button class="btn ghost sm" data-prst="progress" data-id="${m.id}" style="color:var(--down)">ناقص / غير مطابق</button>`;
+  if(m.can_edit) a+=`<button class="btn ghost sm" data-pred="${m.id}">✏️ تعديل <small class="muted">حتى ${new Date(m.edit_until).toLocaleTimeString('ar-SA-u-nu-latn',{hour:'numeric',minute:'2-digit'})}</small></button>`;
   if(R==='mgr'&&m.status==='new') a+=`<button class="btn ghost sm" data-prst="cancelled" data-id="${m.id}" style="color:var(--down)">إلغاء الطلب</button>`;
   let more=''; if(m.has_photo) more+=`<button class="btn ghost sm" data-prph="${m.id}">📷 الصور</button>`; if(isOwner()) more+=`<button class="btn ghost sm" data-prdl="${m.id}" style="color:var(--down)">حذف</button>`;
   const k=PR_K[m.kind]||PR_K.items; const its=m.items||[];
@@ -3269,21 +3270,25 @@ V.purch=async()=>{ const r=await sb.rpc('pr_list'); if(r.error) return `<div cla
   h+=`<div class="chips sc">${tabs.map(([k,n,c])=>`<button data-prt="${k}" aria-pressed="${ft===k}">${n} <span class="muted">${c}</span></button>`).join('')}</div>`;
   let rows=ft==='act'?L.filter(prOpen):ft==='all'?L:L.filter(m=>m.status===ft);
   rows=rows.slice().sort((a,b)=>(b.priority==='urgent')-(a.priority==='urgent')||new Date(b.created_at)-new Date(a.created_at));
-  h+=rows.length?`<div class="card">${rows.map(m=>prRow(m,R)).join('')}</div>`:`<div class="card empty">${ft==='act'?'✅ ما فيه طلبات شراء مفتوحة':'لا توجد طلبات'}</div>`;
+  h+=rows.length?`<div class="card">${rows.map(m=>st.prEd===m.id&&m.can_edit?prForm(m):prRow(m,R)).join('')}</div>`:`<div class="card empty">${ft==='act'?'✅ ما فيه طلبات شراء مفتوحة':'لا توجد طلبات'}</div>`;
   h+=`<div class="muted" style="font-size:11px;text-align:center;line-height:1.8">دورة الطلب: الفرع يرفع ← المشتريات تستلم وتشتري ← الفرع يأكد الاستلام</div>`;
   return h; };
 document.addEventListener('change',e=>{const k=e.target.closest('[data-prk]'); if(k&&$('#prFormCard')){ st.prK=k.dataset.prk; const f=$('#prForm'); const t=f.title.value, br=f.br.value; render().then(()=>{const g=$('#prForm'); if(g){g.title.value=t; g.br.value=br;}}); }});
 document.addEventListener('submit',async e=>{ if(e.target.id!=='prForm') return; e.preventDefault(); const f=e.target, err=$('#prErr'); err.textContent=''; const k=f.k.value;
   const items=k==='items'?[...f.querySelectorAll('.pr-ir')].map(r=>({n:r.querySelector('[name=in]').value.trim(),q:+String(r.querySelector('[name=iq]').value).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d))||0,u:r.querySelector('[name=iu]').value})).filter(x=>x.n&&x.q>0):[];
   if(!f.br.value){err.textContent='اختر الفرع';return;} if(k==='items'&&!items.length){err.textContent='أضف صنف واحد على الأقل مع الكمية';return;}
-  const bt=f.querySelector('[type=submit]'); bt.disabled=true; bt.textContent='جاري الرفع…';
+  const bt=f.querySelector('[type=submit]'); bt.disabled=true; bt.textContent='جاري الحفظ…';
+  if(f.dataset.edit){ const r=await sb.rpc('pr_edit',{p_id:f.dataset.edit,p_title:f.title.value.trim(),p_items:items,p_details:(f.details&&f.details.value.trim())||null,p_priority:f.pr.value,p_need:f.need.value||null});
+    if(r.error){ err.textContent=/pr_edit/.test(r.error.message)?'شغّل ملف «تعديل الطلب» في Supabase أول':r.error.message; bt.disabled=false; bt.textContent='حفظ التعديل'; return; }
+    st.prEd=null; toast('تم تعديل الطلب ✓ — وصل إشعار للمشتريات'); render(); return; }
   let ph=null; if(f.ph&&f.ph.files&&f.ph.files[0]){ try{ ph=await mediaPut('purch',f.br.value,await flImg(f.ph.files[0],1100,.72)); }catch(_){ } }
   const r=await sb.rpc('pr_create',{p_branch:f.br.value,p_kind:k,p_title:f.title.value.trim(),p_items:items,p_details:(f.details&&f.details.value.trim())||null,p_priority:f.pr.value,p_need:f.need.value||null,p_photo:ph});
   if(r.error){ err.textContent=r.error.message; bt.disabled=false; bt.textContent='رفع الطلب للمشتريات'; return; }
   st.prNew=false; st.prT='act'; toast('تم رفع طلب الشراء ✓ — وصل إشعار للمشتريات'); render(); });
-document.addEventListener('click',async e=>{ const t=e.target.closest('[data-prn],[data-prx],[data-prb],[data-prkf],[data-prt],[data-pradd],[data-prdel],[data-prst],[data-prph],[data-prdl]'); if(!t||!$('#view').contains(t)) return; const d=t.dataset;
+document.addEventListener('click',async e=>{ const t=e.target.closest('[data-pred],[data-prn],[data-prx],[data-prb],[data-prkf],[data-prt],[data-pradd],[data-prdel],[data-prst],[data-prph],[data-prdl]'); if(!t||!$('#view').contains(t)) return; const d=t.dataset;
   if(d.prn){ st.prNew=true; await render(); const c=$('#prFormCard'); if(c) c.scrollIntoView({behavior:'smooth'}); return; }
-  if(d.prx){ st.prNew=false; render(); return; }
+  if(d.pred){ st.prEd=d.pred; st.prNew=false; render(); return; }
+  if(d.prx){ st.prNew=false; st.prEd=null; render(); return; }
   if(d.prb){ st.prB=d.prb; render(); return; } if(d.prkf){ st.prKf=d.prkf; render(); return; } if(d.prt){ st.prT=d.prt; render(); return; }
   if(d.pradd){ $('#prItems').insertAdjacentHTML('beforeend',prItemRow({})); return; }
   if(d.prdel){ const rows=document.querySelectorAll('#prItems .pr-ir'); if(rows.length>1) t.closest('.pr-ir').remove(); return; }
