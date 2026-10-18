@@ -761,6 +761,7 @@ const sb=window.supabase.createClient(CFG.url,CFG.key,{auth:{persistSession:true
 const SECTIONS=[
   {id:'home',name:'الرئيسية'},
   {id:'ai',name:'المساعد الذكي'},
+  {id:'cmp',name:'مقارنة الفروع اليومية',perm:'sales'},
   {id:'brief',name:'التقرير المسائي',admin:true},
   {id:'sales',name:'مبيعات الفروع',app:'sales'},
   {id:'daily',name:'التقرير اليومي',page:'daily'},
@@ -799,12 +800,12 @@ const NAV_ICONS={
   hrg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="9" cy="11" r="2.3"/><path d="M5.8 16.2a3.4 3.4 0 0 1 6.4 0"/><path d="M14.5 10h3.5M14.5 13.5h3.5"/></svg>',
   fin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/><path d="M6.5 15h4"/></svg>',
   more:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>'};
-const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me','msgs']},{id:'ai',name:'المساعد الذكي',secs:['ai']},{id:'rep',name:'التقارير',secs:['brief','sales','daily','channels','income','stock','wh','waste','chicken']},{id:'ops',name:'العمليات',secs:['maint','purch','feedback','mkt','fleet']},{id:'hrg',name:'الموارد البشرية',secs:['hr','att','employees','advances']},{id:'fin',name:'المالية',secs:['finst','treasury','balances','handover','rets','loans','custody']},{id:'more',name:'الإدارة',secs:['users','data'],nav:false}];
+const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me','msgs']},{id:'ai',name:'المساعد الذكي',secs:['ai']},{id:'rep',name:'التقارير',secs:['cmp','brief','sales','daily','channels','stock']},{id:'ops',name:'العمليات',secs:['maint','purch','feedback','mkt','fleet']},{id:'hrg',name:'الموارد البشرية',secs:['hr','att','employees','advances']},{id:'fin',name:'المالية',secs:['finst','treasury','balances','handover','rets','loans','custody']},{id:'more',name:'الإدارة',secs:['users','data'],nav:false}];
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','balances','handover','rets','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610182307';
+const APP_VER='202610182357';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets='تفعيل اشعارات مرتجع الكاشيرات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -2902,6 +2903,50 @@ function cuStatement(c,tx,staff){ const k=cuCalc(tx);
     ${(()=>{const L=cuByBranch(tx); return L.length?`<div class="cu-brs"><span class="muted">المصروف حسب الفرع:</span>${L.map(([b,v])=>`<span class="tag"><i class="dot" style="background:${brById(b).color}"></i>${esc(brById(b).name)} <b class="num">${fmt(v,2)}</b></span>`).join('')}</div>`:'';})()}
     ${k.nonTax?`<div class="muted" style="font-size:11px;margin-top:6px">🧾 فواتير غير ضريبية: <b class="num" style="color:var(--down)">${fmt(k.nonTax,2)}</b> ر.س${k.vat?` · ضريبة مدخلات معتمدة ${fmt(k.vat,2)}`:''}</div>`:''}`; }
 
+V.cmp=async()=>{
+  const bizDay=new Date(Date.now()+3*36e5-8*36e5).toISOString().slice(0,10); const D0=st.cmD||bizDay;
+  const r=await sb.rpc('growth_daily_cmp',{p_day:D0});
+  if(r.error) return `<div class="card"><h3>📊 مقارنة الفروع اليومية</h3><p class="muted">${/growth_daily_cmp/.test(r.error.message)?'شغّل ملف «growth-cmp» في Supabase أول.':'تعذّر التحميل — تأكد من الإنترنت'}</p></div>`;
+  const X=r.data||{}; const d=String(X.day).slice(0,10); const sh=o=>{const t=new Date(d+'T12:00:00');t.setDate(t.getDate()+o);return t.toISOString().slice(0,10);}; const y=sh(-1), w=sh(-7);
+  const dn=x=>new Date(x+'T12:00:00').toLocaleDateString('ar-SA-u-ca-gregory-nu-latn',{weekday:'long',day:'numeric',month:'short'});
+  const S={}; (X.sales||[]).forEach(z=>{const k=String(z.d).slice(0,10)+'|'+z.br; S[k]={net:+z.net,ex:(+z.net)-(+z.tax),c:+z.bills};});
+  (X.sales_doc||[]).forEach(z=>{const v=z.v||{}; Object.keys(v).forEach(b=>{ if(b==='date') return; const k=z.d+'|'+b; if(!S[k]&&typeof v[b]==='number') S[k]={net:+v[b],ex:+v[b]/1.15,c:0,doc:1}; });});
+  const I={}; (X.inv||[]).forEach(z=>{const k=String(z.d).slice(0,10)+'|'+z.br+'|'+z.k; I[k]=+z.a;});
+  const sal=(dd,b)=>S[dd+'|'+b], iv=(dd,b,k)=>I[dd+'|'+b+'|'+k]||0, pur=(dd,b)=>iv(dd,b,'pur')-iv(dd,b,'pret');
+  const brs=[...new Set(['az','sh','pc'].concat(Object.keys(S).map(k=>k.split('|')[1])).concat(Object.keys(I).map(k=>k.split('|')[1])))].filter(b=>b&&(st.f==='all'||!st.f||b===st.f));
+  const pct=(a,b)=>b?Math.round((a/b-1)*1000)/10:null; const chip=v=>v==null?'<span class="muted">—</span>':`<span style="color:${v>=0?'#16794C':'#B42318'};font-weight:700">${v>=0?'▲':'▼'} ${Math.abs(v)}%</span>`;
+  const cpct=(a,b)=>b?Math.round(a/b*1000)/10:null; const chipR=v=>v==null?'<span class="muted">—</span>':`<span style="color:${v<=0?'#16794C':'#B42318'};font-weight:700">${v>=0?'▲':'▼'} ${Math.abs(v)}%</span>`;
+  const isUp=v=>v==null?'':`<span style="color:${v<=0?'#16794C':'#B42318'};font-weight:700">${v>0?'▲':'▼'} ${Math.abs(v)}</span>`;
+  let h=`<div class="rt-hd"><h2>📊 مقارنة الفروع اليومية</h2><span class="muted">${dn(d)} مقابل أمس ونفس اليوم الأسبوع الماضي · مباشر من جروث${X.last_pos?' · آخر تحديث '+lvAgo(X.last_pos):''}</span></div>
+   <div class="chips">${[[bizDay,'اليوم'],[(()=>{const t=new Date(bizDay+'T12:00:00');t.setDate(t.getDate()-1);return t.toISOString().slice(0,10);})(),'أمس']].map(([v,n])=>`<button data-cmd="${v}" aria-pressed="${d===v}">${n}</button>`).join('')}<input type="date" class="inp" id="cmD" value="${d}" max="${bizDay}" style="width:auto;padding:6px 10px"></div>`;
+  const T={s:0,sy:0,sw:0,ex:0,exy:0,i:0,iy:0,p:0,py:0};
+  const card=b=>{ const s0=sal(d,b), s1=sal(y,b), s7=sal(w,b); const i0=iv(d,b,'iss'), i1=iv(y,b,'iss'), p0=pur(d,b), p1=pur(y,b);
+    if(!s0&&!s1&&!i0&&!i1&&!p0&&!p1) return '';
+    T.s+=s0?s0.net:0; T.sy+=s1?s1.net:0; T.sw+=s7?s7.net:0; T.ex+=s0?s0.ex:0; T.exy+=s1?s1.ex:0; T.i+=i0; T.iy+=i1; T.p+=p0; T.py+=p1;
+    const r0=s0?cpct(i0,s0.ex):null, r1=s1?cpct(i1,s1.ex):null; const br=brById(b);
+    const top=(X.top_iss||[]).filter(z=>z.br===b).sort((a,c)=>(+c.a||0)-(+a.a||0)).slice(0,5);
+    const up=(X.price_up||[]).filter(z=>z.br===b);
+    return `<div class="card" style="border-top:3px solid ${br.color||'#888'}"><h3 style="margin:0 0 10px"><i class="dot" style="background:${br.color||'#888'}"></i> ${esc(br.name)}</h3>
+     <table class="fs-t"><tr class="g"><td></td><td class="v">${dn(d).split('،')[0]}</td><td class="v">أمس</td></tr>
+      <tr><td>💰 المبيعات</td><td class="v"><b>${s0?fmt(s0.net):'—'}</b></td><td class="v">${s1?fmt(s1.net):'—'}</td></tr>
+      <tr><td class="muted" style="font-size:11px">التغيّر</td><td class="v">${chip(s0&&s1?pct(s0.net,s1.net):null)}</td><td class="v" style="font-size:10.5px">أسبوع: ${chip(s0&&s7?pct(s0.net,s7.net):null)}</td></tr>
+      <tr><td>📤 الصرف المباشر</td><td class="v"><b>${fmt(i0)}</b></td><td class="v">${fmt(i1)}</td></tr>
+      <tr><td class="muted" style="font-size:11px">نسبة الصرف من المبيعات</td><td class="v"><b>${r0==null?'—':r0+'%'}</b></td><td class="v">${r1==null?'—':r1+'%'}</td></tr>
+      <tr><td>🧾 المشتريات</td><td class="v"><b>${fmt(p0)}</b></td><td class="v">${fmt(p1)}</td></tr></table>
+     ${r0!=null&&r1!=null?`<div class="muted" style="font-size:11.5px;margin-top:6px">نسبة الصرف ${isUp(Math.round((r0-r1)*10)/10)} نقطة عن أمس</div>`:''}
+     ${top.length?`<h4 class="lv-h4" style="margin-top:12px">أعلى أصناف الصرف</h4><table class="fs-t">${top.map(z=>`<tr><td>${esc(z.n)}<div class="dl"><span>${fmt(+z.q||0,2)} ${esc(z.u)}</span><span>أمس ${fmt(+z.qy||0,2)}</span></div></td><td class="v">${fmt(+z.a||0)}<div>${z.ay?chipR(pct(+z.a||0,+z.ay)):'جديد'}</div></td></tr>`).join('')}</table>`:''}
+     ${up.length?`<h4 class="lv-h4" style="margin-top:12px;color:#B42318">⚠️ أصناف ارتفع سعرها عن آخر شراء</h4><table class="fs-t">${up.map(z=>`<tr><td>${esc(z.n)}<div class="dl"><span>${esc(z.party||'')}</span></div></td><td class="v">${fmt(+z.p,2)}<div>كان ${fmt(+z.pp,2)} ${chipR(pct(+z.p,+z.pp))}</div></td></tr>`).join('')}</table>`:''}
+    </div>`; };
+  const cards=brs.map(card).join('');
+  const r0=T.ex?cpct(T.i,T.ex):null, r1=T.exy?cpct(T.iy,T.exy):null;
+  h+=`<div class="card" style="background:var(--soft,#F6F6F2)"><h3 style="margin:0 0 8px">الإجمالي</h3><table class="fs-t"><tr class="g"><td></td><td class="v">اليوم</td><td class="v">أمس</td></tr>
+    <tr><td>💰 المبيعات</td><td class="v"><b>${fmt(T.s)}</b><div>${chip(pct(T.s,T.sy))}</div></td><td class="v">${fmt(T.sy)}<div>أسبوع ${chip(pct(T.s,T.sw))}</div></td></tr>
+    <tr><td>📤 الصرف المباشر</td><td class="v"><b>${fmt(T.i)}</b><div>${r0==null?'':r0+'%'}</div></td><td class="v">${fmt(T.iy)}<div>${r1==null?'':r1+'%'}</div></td></tr>
+    <tr><td>🧾 المشتريات</td><td class="v"><b>${fmt(T.p)}</b></td><td class="v">${fmt(T.py)}</td></tr></table>
+    <p class="muted" style="font-size:10.5px;margin:6px 0 0">المبيعات شاملة الضريبة · نسبة الصرف = الصرف المباشر ÷ المبيعات قبل الضريبة</p></div>`+(cards||'<div class="card"><p class="muted">ما فيه بيانات لهذا اليوم بعد.</p></div>');
+  setTimeout(()=>{const i=$('#cmD'); if(i) i.onchange=()=>{ if(i.value){ st.cmD=i.value; render(); } };},0);
+  return h; };
+document.addEventListener('click',e=>{const t=e.target.closest('[data-cmd]');if(!t)return;st.cmD=t.dataset.cmd;render();});
 function invRange(P){ const td=todayIso(), d=o=>{const x=new Date(td+'T12:00:00');x.setDate(x.getDate()+o);return x.toISOString().slice(0,10);};
   if(P==='td') return [td,td]; if(P==='yd') return [d(-1),d(-1)]; if(P==='7') return [d(-6),td]; if(P==='pm'){ const x=new Date(td.slice(0,7)+'-01T12:00:00'); x.setDate(0); const e=x.toISOString().slice(0,10); return [e.slice(0,7)+'-01',e]; } return [td.slice(0,7)+'-01',td]; }
 V.stock=async()=>{
