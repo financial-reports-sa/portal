@@ -800,7 +800,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','handover','rets','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610180705';
+const APP_VER='202610180748';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets='تفعيل اشعارات مرتجع الكاشيرات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -3959,16 +3959,30 @@ const aiVScore=v=>(/google|network|online|natural|neural/i.test(v.name+' '+v.voi
 function aiPickVoice(){ try{ const V=aiArV(); let want=null; try{want=localStorage.getItem('aiVoiceName');}catch(_){}
   aiVoice=(want&&V.find(v=>v.name===want))||V.slice().sort((a,b)=>aiVScore(b)-aiVScore(a))[0]||null; }catch(e){} }
 if('speechSynthesis' in window){ aiPickVoice(); try{ speechSynthesis.onvoiceschanged=aiPickVoice; }catch(e){} }
-function aiUnlock(){ try{ if(!('speechSynthesis' in window)||st._aiUnl) return; const u=new SpeechSynthesisUtterance(' '); u.volume=0; speechSynthesis.speak(u); st._aiUnl=true; }catch(e){} }
+// صوت طبيعي من Azure (ai-tts) مع رجوع لصوت الجوال إذا تعطّل
+const aiTtsV=()=>{try{return localStorage.getItem('aiTtsV')==='f'?'f':'m'}catch(e){return 'm'}};
+let aiAu=null; const aiAudio=()=>aiAu||(aiAu=new Audio());
+const aiCloudOk=()=>!(st._ttsOff&&Date.now()-st._ttsOff<600000);
+function aiUnlock(){ try{ if(!st._auUnl){ const a=aiAudio(); a.src='data:audio/wav;base64,UklGRnQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVAAAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgA=='; a.play().catch(()=>{}); st._auUnl=true; } }catch(e){}
+  try{ if(!('speechSynthesis' in window)||st._aiUnl) return; const u=new SpeechSynthesisUtterance(' '); u.volume=0; speechSynthesis.speak(u); st._aiUnl=true; }catch(e){} }
+async function aiTtsFetch(p){ const {data:{session}}=await sb.auth.getSession(); if(!session) throw new Error('tts nosess'); const r=await fetch(CFG.url+'/functions/v1/ai-tts',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token,'apikey':CFG.key},body:JSON.stringify({text:p,voice:aiTtsV()})}); if(!r.ok) throw new Error('tts '+r.status); const bl=await r.blob(); if(!bl.size) throw new Error('tts empty'); return URL.createObjectURL(bl); }
+async function aiCloud(parts,tok){ const au=aiAudio(); let next=aiTtsFetch(parts[0]); next.catch(()=>{});
+  for(let i=0;i<parts.length;i++){ const url=await next; if(tok!==st._aiTok){ URL.revokeObjectURL(url); return; } if(i+1<parts.length){ next=aiTtsFetch(parts[i+1]); next.catch(()=>{}); }
+    await new Promise((res,rej)=>{ au.onended=res; au.onerror=()=>rej(new Error('play')); au.src=url; au.play().catch(rej); }); URL.revokeObjectURL(url); if(tok!==st._aiTok) return; } }
 function aiClean(t){ return String(t||'').replace(/```[\s\S]*?```/g,' ').replace(/^\s*\|?[\s:|-]+\|[\s:|-]*$/gm,' ').replace(/^[ \t]*\|[ \t]*|[ \t]*\|[ \t]*$/gm,'').replace(/\|/g,'، ').replace(/[*_#>`~]+/g,'').replace(/(\d),(?=\d{3}\b)/g,'$1').replace(/ر\.س/g,' ريال').replace(/(\d)\s*%/g,'$1 بالمية').replace(/[−–]\s*(?=\d)/g,'ناقص ').replace(/↑|▲/g,' ارتفاع ').replace(/↓|▼/g,' انخفاض ').replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}️]/gu,'').replace(/\s*\n+\s*/g,'. ').replace(/\s{2,}/g,' ').replace(/(\s*،\s*)+\./g,'.').replace(/\.\s*\./g,'.').trim(); }
-function aiStop(){ try{ if('speechSynthesis' in window) speechSynthesis.cancel(); }catch(e){} document.querySelectorAll('.ai-say.on').forEach(b=>{b.classList.remove('on');b.textContent='🔊 استمع';}); }
-function aiSpeak(text,node){ if(!('speechSynthesis' in window)) return; aiStop(); const t=aiClean(text); if(!t) return; if(!aiVoice) aiPickVoice();
+function aiStop(){ st._aiTok=(st._aiTok||0)+1; try{ if(aiAu){ aiAu.onended=null; aiAu.onerror=null; aiAu.pause(); } }catch(e){} try{ if('speechSynthesis' in window) speechSynthesis.cancel(); }catch(e){} document.querySelectorAll('.ai-say.on').forEach(b=>{b.classList.remove('on');b.textContent='🔊 استمع';}); }
+function aiSpeakLocal(t,done){ if(!('speechSynthesis' in window)){ done(); return; } if(!aiVoice) aiPickVoice();
   const parts=[]; t.split(/(?<=[.!؟?])\s+/).forEach(p=>{ const last=parts[parts.length-1]; if(last&&last.length+p.length<380) parts[parts.length-1]=last+' '+p; else parts.push(p); });
+  parts.forEach((p,i)=>{ const u=new SpeechSynthesisUtterance(p); u.lang=aiVoice?aiVoice.lang:'ar-SA'; if(aiVoice) u.voice=aiVoice; u.rate=0.98; u.pitch=1; if(i===parts.length-1) u.onend=done; speechSynthesis.speak(u); }); }
+function aiSpeak(text,node){ aiStop(); const t=aiClean(text); if(!t) return; const tok=st._aiTok;
   const b=node&&node.querySelector('.ai-say'); if(b){ b.classList.add('on'); b.textContent='⏹ إيقاف'; }
-  parts.forEach((p,i)=>{ const u=new SpeechSynthesisUtterance(p); u.lang=aiVoice?aiVoice.lang:'ar-SA'; if(aiVoice) u.voice=aiVoice; u.rate=0.98; u.pitch=1; if(i===parts.length-1) u.onend=()=>{ if(b){ b.classList.remove('on'); b.textContent='🔊 استمع'; } }; speechSynthesis.speak(u); }); }
+  const done=()=>{ if(b&&tok===st._aiTok){ b.classList.remove('on'); b.textContent='🔊 استمع'; } };
+  if(!aiCloudOk()){ aiSpeakLocal(t,done); return; }
+  const parts=[]; t.split(/(?<=[.!؟?])\s+/).forEach(p=>{ const last=parts[parts.length-1]; const lim=parts.length<=1?260:900; if(last&&last.length+p.length<lim) parts[parts.length-1]=last+' '+p; else parts.push(p.slice(0,2400)); });
+  aiCloud(parts,tok).then(done).catch(err=>{ if(tok!==st._aiTok) return; if(/^tts/.test(err&&err.message||'')) st._ttsOff=Date.now(); aiSpeakLocal(t,done); }); }
 function aiSayBtn(node){ if(!node||!('speechSynthesis' in window)||node.querySelector('.ai-say')) return; const body=node.querySelector('.ai-body'); if(body) body.insertAdjacentHTML('beforeend','<button type="button" class="ai-say">🔊 استمع</button>'); }
 document.addEventListener('click',e=>{
-  const vc=e.target.closest('#aiVch'); if(vc){ const V=aiArV().sort((a,b)=>aiVScore(b)-aiVScore(a)); if(!V.length){toast('ما فيه أصوات عربية في جوالك — ثبّت «خدمات Google للكلام» من المتجر');return;} if(!aiVoice) aiPickVoice(); const i=(V.findIndex(v=>aiVoice&&v.name===aiVoice.name)+1)%V.length; aiVoice=V[i]; try{localStorage.setItem('aiVoiceName',aiVoice.name);}catch(_){} toast(`الصوت ${i+1} من ${V.length}`); aiSpeak('هذا صوتي الحين، إذا ما عجبك اضغط مرة ثانية',null); return; }
+  const vc=e.target.closest('#aiVch'); if(vc){ if(aiCloudOk()){ const nv=aiTtsV()==='m'?'f':'m'; try{localStorage.setItem('aiTtsV',nv);}catch(_){} aiUnlock(); toast(nv==='m'?'صوت رجالي 🗣':'صوت نسائي 🗣'); aiSpeak(nv==='m'?'هلا، هذا صوتي الرجالي. إذا تبي الصوت النسائي اضغط مرة ثانية':'هلا، هذا صوتي النسائي. إذا تبي الصوت الرجالي اضغط مرة ثانية',null); return; } const V=aiArV().sort((a,b)=>aiVScore(b)-aiVScore(a)); if(!V.length){toast('ما فيه أصوات عربية في جوالك — ثبّت «خدمات Google للكلام» من المتجر');return;} if(!aiVoice) aiPickVoice(); const i=(V.findIndex(v=>aiVoice&&v.name===aiVoice.name)+1)%V.length; aiVoice=V[i]; try{localStorage.setItem('aiVoiceName',aiVoice.name);}catch(_){} toast(`الصوت ${i+1} من ${V.length}`); aiSpeak('هذا صوتي الحين، إذا ما عجبك اضغط مرة ثانية',null); return; }
   const vt=e.target.closest('#aiVt'); if(vt){ const on=!aiVoiceOn(); try{localStorage.setItem('aiVoice',on?'1':'0');}catch(_){} vt.classList.toggle('on',on); vt.textContent=on?'🔊 صوت':'🔇 صوت'; if(on){ aiUnlock(); toast('المساعد بيرد عليك بالصوت 🔊'); } else aiStop(); return; }
   const sy=e.target.closest('.ai-say'); if(sy){ aiUnlock(); if(sy.classList.contains('on')){ aiStop(); return; } const n=sy.closest('.ai-msg'); const b=n&&n.querySelector('.ai-body'); if(!b) return; const tx=[...b.childNodes].filter(x=>!(x.classList&&x.classList.contains('ai-say'))).map(x=>x.innerText||x.textContent||'').join('\n'); aiSpeak(tx,n); }
 });
@@ -4006,7 +4020,7 @@ async function aiAsk(q){
   if(aiVoiceOn()||st._aiVOnce) aiSpeak(node.querySelector('.ai-body')?.innerText||'',node); st._aiVOnce=false;
   st._aiBusy=false; if(sb_) sb_.disabled=false;
 }
-document.addEventListener('submit',e=>{ if(e.target.id==='aiForm'){ e.preventDefault(); const i=$('#aiIn'); const q=i.value; i.value=''; aiAsk(q); } });
+document.addEventListener('submit',e=>{ if(e.target.id==='aiForm'){ e.preventDefault(); const i=$('#aiIn'); const q=i.value; i.value=''; aiUnlock(); aiAsk(q); } });
 document.addEventListener('click',e=>{
   const c=e.target.closest('[data-aiq]'); if(c){ if(st.tab!=='ai'){st.aiQ=c.dataset.aiq;st.tab='ai';renderShell();} else aiAsk(c.dataset.aiq); return; }
   if(e.target.closest('[data-aiclr]')){ st.aiLog=[]; st.aiConv=[]; st._aiCtx=null; render(); return; }
