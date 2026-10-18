@@ -84,7 +84,7 @@ const undocOf=r=>r.no_ret?0:(r.sys_ret==null?0:Math.max(0,r2(r.sys_ret-docOf()))
 const diffOf=r=>r.system==null?null:r2(totOf(r)-r.system-undocOf(r));
 const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
-function diffBadge(d){if(d==null)return'';if(Math.abs(d)<0.005)return`<span class="diff eq">مطابق</span>`;return d>0?`<span class="diff up">زيادة <span class="num">${fmt(d)}</span></span>`:`<span class="diff down">عجز <span class="num">${fmt(-d)}</span></span>`}
+function diffBadge(d){if(d==null)return'';if(Math.abs(d)<0.005||d>0)return`<span class="diff eq">مطابق</span>`;return d>0?`<span class="diff up">زيادة <span class="num">${fmt(d)}</span></span>`:`<span class="diff down">عجز <span class="num">${fmt(-d)}</span></span>`}
 function toast(msg,err){const t=document.createElement('div');t.className='toast'+(err?' err':'');t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),err?4200:2400)}
 function ask(title,body,ok){return new Promise(res=>{const m=document.createElement('div');m.className='modal';m.innerHTML=`<div class="sheet"><h3>${title}</h3><div>${body}</div><div class="acts"><button class="btn ghost" data-a="0">رجوع</button><button class="btn" data-a="1">${ok}</button></div></div>`;m.addEventListener('click',e=>{const a=e.target.closest('[data-a]');if(a||e.target===m){m.remove();res(a?.dataset.a==='1')}});document.body.appendChild(m)})}
 const h=new Date().getHours();
@@ -272,10 +272,10 @@ const st=r=>r.status==='ok'?'<span class="mst ok">تمت المراجعة</span>
 const md=document.createElement('div');md.className='modal';
 md.innerHTML=`<div class="sheet"><h3>تسليماتي</h3><p class="hint" style="margin:-4px 0 12px">فرع ${BM[S.f.branch].n} · آخر ٤٥ يوم</p>
 <div class="msum"><div><small>العجز هذا الشهر</small><b class="num" style="color:${sh?'#b23126':'var(--ink)'}">${fmt(sh)}</b></div><div><small>تسليماتي هذا الشهر</small><b class="num">${cur.length}</b></div></div>
-${ov?`<p class="hint" style="margin:-4px 0 10px">زيادة هذا الشهر: <b class="num" style="color:#137a50">${fmt(ov)}</b></p>`:''}
+
 ${rows.length?rows.map(r=>`<div class="mrow"><div class="t"><b>${dShort(r.date)}</b><b class="num">${fmt(r.total)}</b></div>
 <div class="t" style="margin-top:6px">${st(r)}${r.adj!=null?diffBadge(+r.adj):''}</div>
-${r.note?`<div class="note" style="margin-top:8px">${esc(r.note)}</div>`:''}</div>`).join(''):'<div class="empty">ما فيه تسليمات</div>'}
+${r.note&&!(+r.adj>0)&&!/زيادة/.test(r.note)?`<div class="note" style="margin-top:8px">${esc(r.note)}</div>`:''}</div>`).join(''):'<div class="empty">ما فيه تسليمات</div>'}
 <p class="hint">إذا عندك اعتراض على عجز، كلّم المحاسب.</p>
 <div class="acts"><button class="btn" data-a="0">إغلاق</button></div></div>`;
 md.addEventListener('click',e=>{if(e.target===md||e.target.closest('[data-a]'))md.remove()});

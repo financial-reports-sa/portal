@@ -1,0 +1,24 @@
+create or replace function public.handover_mine(p_branch text, p_pin text) returns jsonb
+language plpgsql volatile security definer set search_path = public as $$
+declare
+  v_ip   text := coalesce(split_part(coalesce(current_setting('request.headers', true), '{}')::json->>'x-forwarded-for', ',', 1), 'unknown');
+  v_code text;
+begin
+  if (select count(*) from handover_fails where ip = v_ip and at > now() - interval '15 minutes') >= 10 then
+    return jsonb_build_object('ok', false, 'error', 'locked', 'message', 'محاولات كثيرة — انتظر ربع ساعة وحاول مرة ثانية');
+  end if;
+  select code into v_code from cashier_codes where pin = btrim(coalesce(p_pin, '')) and branch = p_branch;
+  if v_code is null then
+    insert into handover_fails (ip) values (v_ip);
+    return jsonb_build_object('ok', false, 'error', 'pin', 'message', 'رمزك الشخصي غلط أو مو لهذا الفرع');
+  end if;
+  return jsonb_build_object('ok', true, 'rows', coalesce((
+    select jsonb_agg(jsonb_build_object('date', h.date, 'cashier', h.cashier, 'total', h.total, 'status', h.review_status,
+                                        'note', case when coalesce(h.adj, 0) >= 0 then '' else regexp_replace(coalesce(h.review_note, ''), 'مبيعات السستم [0-9,.]+ — ', '', 'g') end,
+                                        'adj', case when h.adj > 0 then 0 else h.adj end) order by h.date desc)
+    from (select * from handovers where code = v_code and date >= current_date - 45 order by date desc limit 60) h), '[]'::jsonb));
+end $$;
+revoke all on function public.handover_mine(text, text) from public;
+grant execute on function public.handover_mine(text, text) to anon, authenticated;
+
+select 'تم: الكاشير يشوف العجز فقط — الزيادة مخفية عنه' as result;
