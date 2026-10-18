@@ -800,7 +800,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','handover','rets','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610180759';
+const APP_VER='202610180808';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets='تفعيل اشعارات مرتجع الكاشيرات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -3981,6 +3981,20 @@ function aiSpeak(text,node){ aiStop(); const t=aiClean(text); if(!t) return; con
   if(!aiCloudOk()){ aiSpeakLocal(t,done); return; }
   const parts=[]; t.split(/(?<=[.!؟?])\s+/).forEach(p=>{ const last=parts[parts.length-1]; const lim=parts.length<=1?260:900; if(last&&last.length+p.length<lim) parts[parts.length-1]=last+' '+p; else parts.push(p.slice(0,2400)); });
   aiCloud(parts,tok).then(done).catch(err=>{ if(tok!==st._aiTok) return; if(/^tts/.test(err&&err.message||'')) st._ttsOff=Date.now(); aiSpeakLocal(t,done); }); }
+// كلام مع الرد أول بأول (يقرأ الجمل المكتملة وهي تنكتب)
+function aiSQStart(){ aiStop(); return {tok:st._aiTok,items:[],busy:false,end:false,said:'',n:0,local:!aiCloudOk(),lastU:null}; }
+function aiSQPush(q,txt){ if(q.tok!==st._aiTok||!txt.trim()) return;
+  if(q.local){ if(!('speechSynthesis' in window)) return; if(!aiVoice) aiPickVoice(); const u=new SpeechSynthesisUtterance(txt); u.lang=aiVoice?aiVoice.lang:'ar-SA'; if(aiVoice) u.voice=aiVoice; u.rate=0.98; speechSynthesis.speak(u); return; }
+  q.items.push(aiTtsFetch(txt.slice(0,2400)).catch(err=>({err,txt}))); aiSQRun(q); }
+async function aiSQRun(q){ if(q.busy) return; q.busy=true; const au=aiAudio();
+  while(q.items.length&&q.tok===st._aiTok){ const r=await q.items.shift(); if(q.tok!==st._aiTok) break;
+    if(typeof r!=='string'){ if(/^tts/.test(r.err&&r.err.message||'')) st._ttsOff=Date.now(); q.local=true; aiSQPush(q,r.txt); const rest=q.items.splice(0); for(const x of rest){ const y=await x; if(typeof y==='string') URL.revokeObjectURL(y); } break; }
+    try{ await new Promise((res,rej)=>{ au.onended=res; au.onerror=()=>rej(new Error('play')); au.src=r; au.play().catch(rej); }); }catch(e){} URL.revokeObjectURL(r); }
+  q.busy=false; }
+function aiSQFeed(q,cur,fin){ if(!q||q.tok!==st._aiTok) return; const t=aiClean(cur); let k=0; const L=Math.min(t.length,q.said.length); while(k<L&&t[k]===q.said[k]) k++;
+  const rest=t.slice(k); if(fin){ q.said=t; q.end=true; aiSQPush(q,rest); return; }
+  const re=/[.!؟?:](?=\s)/g; let last=-1,m; while((m=re.exec(rest))) last=m.index+1;
+  if(last>=(q.n?220:30)){ const part=rest.slice(0,last); q.said=t.slice(0,k)+part; q.n++; aiSQPush(q,part); } }
 function aiSayBtn(node){ if(!node||!('speechSynthesis' in window)||node.querySelector('.ai-say')) return; const body=node.querySelector('.ai-body'); if(body) body.insertAdjacentHTML('beforeend','<button type="button" class="ai-say">🔊 استمع</button>'); }
 document.addEventListener('click',e=>{
   const vc=e.target.closest('#aiVch'); if(vc){ if(aiCloudOk()){ const k=(AI_TV.findIndex(x=>x[0]===aiTtsV())+1)%AI_TV.length; const nv=AI_TV[k]; try{localStorage.setItem('aiTtsV2',nv[0]);}catch(_){} aiUnlock(); toast(`🗣 ${k+1} من ${AI_TV.length}: ${nv[1]}`); aiSpeak('هلا أمير، مبيعات اليوم ماشية زين، والعزيزية متصدرة الفروع. إذا ما عجبك صوتي اضغط مرة ثانية',null); return; } const V=aiArV().sort((a,b)=>aiVScore(b)-aiVScore(a)); if(!V.length){toast('ما فيه أصوات عربية في جوالك — ثبّت «خدمات Google للكلام» من المتجر');return;} if(!aiVoice) aiPickVoice(); const i=(V.findIndex(v=>aiVoice&&v.name===aiVoice.name)+1)%V.length; aiVoice=V[i]; try{localStorage.setItem('aiVoiceName',aiVoice.name);}catch(_){} toast(`الصوت ${i+1} من ${V.length}`); aiSpeak('هذا صوتي الحين، إذا ما عجبك اضغط مرة ثانية',null); return; }
@@ -3999,12 +4013,13 @@ async function aiAsk(q){
     let node=null, body=null;
     const mk=()=>{ if(node) return; clearInterval(iv); const ty=$('#aiTy'); const w=document.createElement('div'); w.innerHTML=`<div class="ai-msg"><div class="ai-av">✦</div><div class="ai-body"><div class="ai-llm typing"></div></div></div>`; node=w.firstElementChild; if(ty) ty.replaceWith(node); else box.appendChild(node); body=node.querySelector('.ai-llm'); };
     try{
-      const res=await aiLLM(q,(cur,calc)=>{ if(!cur.trim()){ const e=$('#aiTkT'); if(e&&calc) e.textContent='أراجع الحسابات…'; if(node&&calc) body.innerHTML='<p class="muted">أراجع الحسابات…</p>'; return; } mk(); body.innerHTML=aiMd(cur); aiBottom(false); });
+      const sq=(aiVoiceOn()||st._aiVOnce)?aiSQStart():null; st._aiVOnce=false;
+      const res=await aiLLM(q,(cur,calc)=>{ if(sq&&cur.trim()&&!calc) aiSQFeed(sq,cur,false); if(!cur.trim()){ const e=$('#aiTkT'); if(e&&calc) e.textContent='أراجع الحسابات…'; if(node&&calc) body.innerHTML='<p class="muted">أراجع الحسابات…</p>'; return; } mk(); body.innerHTML=aiMd(cur); aiBottom(false); });
       mk(); body.innerHTML=aiMd(res.txt); body.classList.remove('typing');
       if(res.broke) body.insertAdjacentHTML('beforeend','<p class="muted">⚠️ انقطع الجواب قبل ما يكمل — اسأل مرة ثانية للتأكد.</p>');
       else st.aiConv.push({role:'user',content:q},{role:'assistant',content:res.txt});
       aiSayBtn(node); st.aiLog.push({h:node.outerHTML});
-      if(!res.broke&&(aiVoiceOn()||st._aiVOnce)) aiSpeak(res.txt,node); st._aiVOnce=false;
+      if(sq){ if(res.broke) aiStop(); else aiSQFeed(sq,res.txt,true); }
       aiBottom(true); st._aiBusy=false; if(sb_) sb_.disabled=false; return;
     }catch(e){ console.warn('AI model unavailable',e);
       if(node){ body.classList.remove('typing'); body.insertAdjacentHTML('beforeend','<p class="muted">⚠️ انقطع الاتصال قبل ما يكمل الجواب — اسأل مرة ثانية.</p>'); st.aiLog.push({h:node.outerHTML}); st._aiBusy=false; if(sb_) sb_.disabled=false; return; }
