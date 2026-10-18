@@ -54,7 +54,7 @@ begin
   on conflict (item) do update set name = excluded.name, unit = excluded.unit, grp = excluded.grp;
   get diagnostics n = row_count;
   if p_stock is not null then
-    delete from growth_stock;
+    delete from growth_stock where true;
     insert into growth_stock (branch, wh, item, qty, cost, value)
     select coalesce(x->>'branch', ''), left(coalesce(x->>'wh', ''), 80), x->>'item', coalesce((x->>'qty')::numeric, 0),
            coalesce((x->>'cost')::numeric, 0), coalesce((x->>'value')::numeric, 0)
