@@ -800,7 +800,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','handover','rets','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610180323';
+const APP_VER='202610180705';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets='تفعيل اشعارات مرتجع الكاشيرات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -3640,7 +3640,7 @@ V.ai=async()=>{
   st.aiLog=st.aiLog||[]; const nm=esc(((st.profile.full_name||st.profile.username||'').trim().split(' ')[0])||'');
   const welcome=!st.aiLog.length;
   const h=`<div class="aiv ${welcome?'welcome':''}" id="aiV">
-    <div class="ai-top"><div class="ai-brand"><span class="ai-dot">✦</span><b>MyHub AI</b><span class="ai-badge">ذكي</span></div><div class="ai-tops">${'speechSynthesis' in window?`<button class="ai-vt ${aiVoiceOn()?'on':''}" id="aiVt" type="button" aria-label="الرد بالصوت">${aiVoiceOn()?'🔊 صوت':'🔇 صوت'}</button>`:''}<button class="ai-new" data-aiclr="1" ${welcome?'hidden':''}>＋ محادثة جديدة</button></div></div>
+    <div class="ai-top"><div class="ai-brand"><span class="ai-dot">✦</span><b>MyHub AI</b><span class="ai-badge">ذكي</span></div><div class="ai-tops">${'speechSynthesis' in window?`<button class="ai-vt ${aiVoiceOn()?'on':''}" id="aiVt" type="button" aria-label="الرد بالصوت">${aiVoiceOn()?'🔊 صوت':'🔇 صوت'}</button><button class="ai-vt" id="aiVch" type="button" aria-label="تغيير الصوت" title="تغيير الصوت">🗣</button>`:''}<button class="ai-new" data-aiclr="1" ${welcome?'hidden':''}>＋ محادثة جديدة</button></div></div>
     <div class="ai-scroll" id="aiScroll">
       <div class="ai-hero"><button class="orb" id="aiOrb" type="button" aria-label="ابدأ السؤال"><i class="o1"></i><i class="o2"></i><i class="o3"></i><span>✦</span></button><h2>مرحباً ${nm}، <span>كيف أقدر أساعدك؟</span></h2><p>اسألني عن أي رقم في شركتك، وأحلله لك فوراً</p><div class="ai-grid">${aiCards()}</div></div>
       <div class="ai-msgs" id="aiMsgs">${st.aiLog.map(m=>m.u?`<div class="ai-me">${esc(m.u)}</div>`:m.h).join('')}</div>
@@ -3691,7 +3691,7 @@ async function aiCtx(){
   const td=todayIso(), now=new Date(), bs=st.branches.map(b=>b.id), BN=Object.fromEntries(st.branches.map(b=>[b.id,b.name]));
   const role=isOwner()?'المالك':isAdmin()?'إدارة (صلاحية كاملة)':'مدير فرع / مستخدم بصلاحيات محدودة';
   const secs=SECTIONS.filter(s=>!['home','me','ai','users','data'].includes(s.id));
-  const C={meta:{today:td,weekday:DAYN[now.getDay()],time_now:String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0'),
+  const C={meta:{today:td,yesterday:(()=>{const d=new Date(td+'T12:00:00');d.setDate(d.getDate()-1);return d.toISOString().slice(0,10);})(),sales_note:'مبيعات الفروع تتحدث مباشرة من نظام جروث كل ٥ دقائق — مبيعات اليوم (today) جزئية حتى الساعة الحالية، وأمس (yesterday) وما قبله مكتملة. لا تقل «ما انرفعت» ليوم موجود في البيانات.',weekday:DAYN[now.getDay()],time_now:String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0'),
     user_role:role,branches:BN,brands:Object.fromEntries(['مطاعم الشادن','بروست الباتشينو'].map(n=>[n,bs.filter(b=>AI_ENT[b]===n).map(b=>BN[b])]).filter(x=>x[1].length)),
     sections_user_can_see:secs.filter(s=>canSee(s.id)).map(s=>s.name),sections_user_cannot_see:secs.filter(s=>!canSee(s.id)).map(s=>s.name),
     currency:'ريال سعودي',vat_rate:'15%'}};
@@ -3954,17 +3954,21 @@ async function aiLLM(q,onText){
 
 // ----- الرد بالصوت (صوت الجوال) -----
 const aiVoiceOn=()=>{try{return localStorage.getItem('aiVoice')==='1'}catch(e){return false}};
-let aiVoice=null; function aiPickVoice(){ try{ const V=speechSynthesis.getVoices(); aiVoice=V.find(v=>/^ar[-_]SA/i.test(v.lang)&&/maged|majed|ماجد/i.test(v.name))||V.find(v=>/^ar[-_]SA/i.test(v.lang))||V.find(v=>/^ar/i.test(v.lang))||null; }catch(e){} }
+let aiVoice=null; const aiArV=()=>{try{return speechSynthesis.getVoices().filter(v=>/^ar/i.test(v.lang));}catch(e){return [];}};
+const aiVScore=v=>(/google|network|online|natural|neural/i.test(v.name+' '+v.voiceURI)?40:0)+(/^ar[-_]SA/i.test(v.lang)?10:0)+(/female|laila|hoda|zeina|salma|zariyah|amira|-arc-|-arz-/i.test(v.name+v.voiceURI)?6:0)-(v.localService===false?0:2);
+function aiPickVoice(){ try{ const V=aiArV(); let want=null; try{want=localStorage.getItem('aiVoiceName');}catch(_){}
+  aiVoice=(want&&V.find(v=>v.name===want))||V.slice().sort((a,b)=>aiVScore(b)-aiVScore(a))[0]||null; }catch(e){} }
 if('speechSynthesis' in window){ aiPickVoice(); try{ speechSynthesis.onvoiceschanged=aiPickVoice; }catch(e){} }
 function aiUnlock(){ try{ if(!('speechSynthesis' in window)||st._aiUnl) return; const u=new SpeechSynthesisUtterance(' '); u.volume=0; speechSynthesis.speak(u); st._aiUnl=true; }catch(e){} }
 function aiClean(t){ return String(t||'').replace(/```[\s\S]*?```/g,' ').replace(/^\s*\|?[\s:|-]+\|[\s:|-]*$/gm,' ').replace(/^[ \t]*\|[ \t]*|[ \t]*\|[ \t]*$/gm,'').replace(/\|/g,'، ').replace(/[*_#>`~]+/g,'').replace(/(\d),(?=\d{3}\b)/g,'$1').replace(/ر\.س/g,' ريال').replace(/(\d)\s*%/g,'$1 بالمية').replace(/[−–]\s*(?=\d)/g,'ناقص ').replace(/↑|▲/g,' ارتفاع ').replace(/↓|▼/g,' انخفاض ').replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}️]/gu,'').replace(/\s*\n+\s*/g,'. ').replace(/\s{2,}/g,' ').replace(/(\s*،\s*)+\./g,'.').replace(/\.\s*\./g,'.').trim(); }
 function aiStop(){ try{ if('speechSynthesis' in window) speechSynthesis.cancel(); }catch(e){} document.querySelectorAll('.ai-say.on').forEach(b=>{b.classList.remove('on');b.textContent='🔊 استمع';}); }
 function aiSpeak(text,node){ if(!('speechSynthesis' in window)) return; aiStop(); const t=aiClean(text); if(!t) return; if(!aiVoice) aiPickVoice();
-  const parts=[]; t.split(/(?<=[.!؟?،:])\s+/).forEach(p=>{ const last=parts[parts.length-1]; if(last&&last.length+p.length<220) parts[parts.length-1]=last+' '+p; else parts.push(p); });
+  const parts=[]; t.split(/(?<=[.!؟?])\s+/).forEach(p=>{ const last=parts[parts.length-1]; if(last&&last.length+p.length<380) parts[parts.length-1]=last+' '+p; else parts.push(p); });
   const b=node&&node.querySelector('.ai-say'); if(b){ b.classList.add('on'); b.textContent='⏹ إيقاف'; }
-  parts.forEach((p,i)=>{ const u=new SpeechSynthesisUtterance(p); u.lang=aiVoice?aiVoice.lang:'ar-SA'; if(aiVoice) u.voice=aiVoice; u.rate=1.02; if(i===parts.length-1) u.onend=()=>{ if(b){ b.classList.remove('on'); b.textContent='🔊 استمع'; } }; speechSynthesis.speak(u); }); }
+  parts.forEach((p,i)=>{ const u=new SpeechSynthesisUtterance(p); u.lang=aiVoice?aiVoice.lang:'ar-SA'; if(aiVoice) u.voice=aiVoice; u.rate=0.98; u.pitch=1; if(i===parts.length-1) u.onend=()=>{ if(b){ b.classList.remove('on'); b.textContent='🔊 استمع'; } }; speechSynthesis.speak(u); }); }
 function aiSayBtn(node){ if(!node||!('speechSynthesis' in window)||node.querySelector('.ai-say')) return; const body=node.querySelector('.ai-body'); if(body) body.insertAdjacentHTML('beforeend','<button type="button" class="ai-say">🔊 استمع</button>'); }
 document.addEventListener('click',e=>{
+  const vc=e.target.closest('#aiVch'); if(vc){ const V=aiArV().sort((a,b)=>aiVScore(b)-aiVScore(a)); if(!V.length){toast('ما فيه أصوات عربية في جوالك — ثبّت «خدمات Google للكلام» من المتجر');return;} if(!aiVoice) aiPickVoice(); const i=(V.findIndex(v=>aiVoice&&v.name===aiVoice.name)+1)%V.length; aiVoice=V[i]; try{localStorage.setItem('aiVoiceName',aiVoice.name);}catch(_){} toast(`الصوت ${i+1} من ${V.length}`); aiSpeak('هذا صوتي الحين، إذا ما عجبك اضغط مرة ثانية',null); return; }
   const vt=e.target.closest('#aiVt'); if(vt){ const on=!aiVoiceOn(); try{localStorage.setItem('aiVoice',on?'1':'0');}catch(_){} vt.classList.toggle('on',on); vt.textContent=on?'🔊 صوت':'🔇 صوت'; if(on){ aiUnlock(); toast('المساعد بيرد عليك بالصوت 🔊'); } else aiStop(); return; }
   const sy=e.target.closest('.ai-say'); if(sy){ aiUnlock(); if(sy.classList.contains('on')){ aiStop(); return; } const n=sy.closest('.ai-msg'); const b=n&&n.querySelector('.ai-body'); if(!b) return; const tx=[...b.childNodes].filter(x=>!(x.classList&&x.classList.contains('ai-say'))).map(x=>x.innerText||x.textContent||'').join('\n'); aiSpeak(tx,n); }
 });
