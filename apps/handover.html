@@ -346,8 +346,9 @@ async function gsFill(){const els=[...document.querySelectorAll('[data-gs]')];if
   const nn=t=>String(t||'').replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').replace(/\s+/g,' ').trim();
   const hn=nn(e.dataset.gname), hf=hn.split(' ')[0];
   const byCode=A.filter(x=>x.code&&x.code===e.dataset.gcode);
-  const byName=hf?A.filter(x=>{const g=nn(x.cashier);return g&&(g===hn||g.split(' ')[0]===hf||g.includes(hf)||hn.includes(g.split(' ')[0]));}):[];
+  const byName=hf?A.filter(x=>{if(x.code&&e.dataset.gcode&&x.code!==e.dataset.gcode)return false;const g=nn(x.cashier);return g&&(g===hn||g.split(' ')[0]===hf);}):[];
   const M=byCode.length?byCode:byName, all=e.dataset.gall==='1';
+  if(M.length===1&&!e.dataset.gauto){e.dataset.gauto='1';const inp=document.getElementById('sy_'+e.dataset.gs);if(inp&&!String(inp.value).trim()){inp.value=String(gsAll(M[0]));inp.dispatchEvent(new Event('input'));}}
   const L=all||!M.length?A:M; const idx=x=>A.indexOf(x);
   const tm=t=>t?new Date(t).toLocaleTimeString(LOC,{hour:'numeric',minute:'2-digit'}):'—';
   e.innerHTML=`<div class="gsl">مبيعات ${M.length&&!all?'«'+esc(M[0].cashier)+'»':'الكاشير'} في السستم (اضغط الرقم اللي تطابق عليه):</div>`+(M.length&&!all?'':`<div class="gsl" style="color:#9A6A06">${M.length?'كل ورديات الفرع:':'ما لقيت وردية باسم «'+esc(e.dataset.gname)+'» — اختر ورديته مرة وحدة والنظام يتذكرها:'}</div>`)+L.map(x=>{const i=idx(x);const me=x.code&&x.code===e.dataset.gcode;return `<div class="gsb ${me?'me':''}" data-gi="${i}"><div class="gst"><b>${esc(x.cashier||'—')}${me?' ⭐':''}</b><small>${tm(x.opened)} – ${tm(x.closed)} · ${x.bills} فاتورة</small></div>
