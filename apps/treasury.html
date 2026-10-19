@@ -4,7 +4,7 @@
 <script src="../config.js?v=7"></script>
 <script src="../portal-db.js?v=8"></script>
 <script src="../portal-charts.js?v=9"></script>
-<style>@media (max-width:760px){body{zoom:.86}}html[data-ro] #tbEntry{display:none!important}html[data-ro] .tabs .in{grid-template-columns:1fr 1fr!important}:root{--bg:#F5F5F1!important;--panel2:#EFEFEA!important;--line:#E6E6E0!important;--line2:#D7D8D0!important;--txt:#18231C!important;--mute:#6B706A!important;--dim:#8E928C!important}html{-webkit-text-size-adjust:100%;text-size-adjust:100%}header.top{position:static!important;background:none!important;padding-block:12px 4px!important}.hm{grid-template-columns:50px repeat(7,minmax(0,1fr))!important;gap:2px!important}.hm .c{font-size:9.5px!important;padding:7px 0!important;letter-spacing:-.4px;overflow:hidden;white-space:nowrap;cursor:pointer}.hm .h,.hm .r{font-size:9.5px!important}.cal{gap:3px!important}.cal .c{cursor:pointer}.cal .c .v{font-size:9px!important;letter-spacing:-.4px;white-space:nowrap}.cal .c .d{font-size:9.5px!important}</style>
+<style>@media (max-width:760px){body{zoom:.86}}html[data-ro] #tbEntry{display:none!important}html[data-ro] .tabs .in{grid-template-columns:1fr 1fr!important}:root{--bg:#F5F5F1!important;--panel2:#EFEFEA!important;--line:#E6E6E0!important;--line2:#D7D8D0!important;--txt:#18231C!important;--mute:#6B706A!important;--dim:#8E928C!important}html{-webkit-text-size-adjust:100%;text-size-adjust:100%}header.top{position:static!important;background:none!important;padding-block:12px 4px!important}.hm{grid-template-columns:50px repeat(7,minmax(0,1fr))!important;gap:2px!important}.hm .c{font-size:9.5px!important;padding:7px 0!important;letter-spacing:-.4px;overflow:hidden;white-space:nowrap;cursor:pointer}.hm .h,.hm .r{font-size:9.5px!important}.cal{gap:3px!important}.cal .c{cursor:pointer}.cal .c .v{font-size:9px!important;letter-spacing:-.4px;white-space:nowrap}.cal .c .d{font-size:9.5px!important}html[data-ro] #stmtBtn{display:none!important}.st-f{border:1px solid var(--line2);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px;background:var(--panel2)}.st-f b{font-size:12.5px}.st-f small{color:var(--mute);font-size:11px}.st-f select{font:inherit;padding:8px;border-radius:9px;border:1px solid var(--line2);background:var(--panel);color:var(--txt)}.st-t{width:100%;border-collapse:collapse;font-size:12px}.st-t td,.st-t th{padding:7px 4px;border-bottom:1px solid var(--line);text-align:right}.st-t th{color:var(--mute);font-weight:500;font-size:11px}.st-t .n{direction:ltr;text-align:left;font-variant-numeric:tabular-nums}.st-t .old{color:var(--mute);font-size:10.5px;display:block}</style>
 <meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>خزينة الأرصدة</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -214,6 +214,7 @@ textarea.txt{min-height:70px;resize:vertical;line-height:1.5}
     <div class="sec-h"><h2>الحسابات</h2><span>اضغط على أي حساب لتعديل رصيده</span></div>
     <div class="list" id="accList"><div class="empty">جارِ تحميل الحسابات…</div></div>
 
+    <button class="btn ghost" id="stmtBtn" type="button">📄 رفع كشوفات البنوك والنقدية — تحديث الأرصدة تلقائياً</button>
     <div class="row"><button class="btn ghost" id="addAcc">+ إضافة حساب</button><button class="btn gold" id="toDaily">سجّل الإجمالي اليوم</button></div>
 
     <div class="card"><h3>توزيع الأرصدة <small id="topAcc"></small></h3><div id="donut"></div></div>
@@ -404,6 +405,101 @@ textarea.txt{min-height:70px;resize:vertical;line-height:1.5}
     setTimeout(()=>{ (isNew?name:bal).focus(); if(!isNew) bal.select(); },60);
   }
   $('#addAcc').onclick=()=>openAccSheet(null);
+  // ---------- رفع كشوفات البنوك والنقدية ----------
+// ---- core statement parser (pure; shared by app + test) ----
+function stmtParse(pages){
+  const DT=/^(\d{4})[\/-](\d{2})[\/-](\d{2})$/;
+  const amt=s=>{ const m=String(s).replace(/,/g,'').match(/-?\d+(?:\.\d+)?/); return m?Number(m[0]):NaN; };
+  const rows=[];
+  pages.forEach((items,pi)=>{
+    const R=[];
+    items.filter(it=>it.s&&it.s.trim()).forEach(it=>{
+      let r=R.find(r=>Math.abs(r.y-it.y)<=3); if(!r){ r={y:it.y,p:pi,it:[]}; R.push(r); } r.it.push(it);
+    });
+    R.sort((a,b)=>b.y-a.y).forEach(r=>rows.push(r));
+  });
+  let acct=null, name='', opening=null, period=null; const tx=[]; let seenTx=false;
+  rows.forEach(r=>{
+    const txt=r.it.map(i=>i.s.trim());
+    const j=txt.join(' ');
+    if(!acct){ const a=txt.find(s=>/^\d{12,20}$/.test(s)); if(a&&/Account Number/i.test(j)) acct=a; }
+    if(!name&&/Customer Name/i.test(j)){ const n=r.it.filter(i=>/^[A-Za-z][A-Za-z .&-]+$/.test(i.s.trim())&&!/Customer Name/i.test(i.s)); if(n.length) name=n.map(i=>i.s.trim()).join(' '); }
+    if(!acct&&j.includes('=')){ const g=txt.find(s=>/^\d{4,8}$/.test(s)); if(g) acct='GL'+g; }
+    const dates=r.it.filter(i=>DT.test(i.s.trim()));
+    const sar=r.it.filter(i=>/SAR/.test(i.s)&&!isNaN(amt(i.s)));
+    if(dates.length>=2&&!sar.length&&!period){ const ds=dates.map(d=>d.s.trim().replace(/\//g,'-')).sort(); period=[ds[0],ds[ds.length-1]]; return; }
+    if(!sar.length) return;
+    const bal=sar.length===1? sar[0] : sar.reduce((a,b)=>b.x>a.x?b:a);
+    if(dates.length===1){ seenTx=true; tx.push({date:dates[0].s.trim().replace(/\//g,'-'),bal:amt(bal.s)}); }
+    else if(!seenTx&&opening==null&&(/Opening/i.test(j)||sar.length===1)) opening=amt(bal.s);
+  });
+  const ds=tx.map(t=>t.date).sort();
+  if(!period&&ds.length) period=[ds[0],ds[ds.length-1]];
+  const last={}; tx.forEach(t=>{ last[t.date]=t.bal; });   // document order → last row of each date wins
+  return {acct,name,opening,period,last,count:tx.length};
+}
+function stmtDaily(p){ // carry forward across the whole period
+  const out={}; if(!p.period) return out;
+  let cur=p.opening; const d=new Date(p.period[0]+'T00:00:00'), e=new Date(p.period[1]+'T00:00:00');
+  const k=x=>x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
+  for(;d<=e;d.setDate(d.getDate()+1)){ const key=k(d); if(p.last[key]!=null) cur=p.last[key]; if(cur!=null) out[key]=cur; }
+  return out;
+}
+
+  const STMT_DEF={'571608010666666':'التجارية','419608011666661':'المطعم','294608016126638':'التجارة','351608010359763':'الباتشينو','GL121101':'صندوق','351608016387446':'skip'};
+  function stmtDefault(key){ const m=st.meta.stmtMap||{}; if(m[key]) return m[key]; const w=STMT_DEF[key]; if(!w) return ''; if(w==='skip') return 'skip';
+    const hit=st.accounts.filter(a=>(a.name||'').includes(w)); return hit.length===1? hit[0].id : ''; }
+  let pdfjsP=null;
+  function loadPdfjs(){ if(pdfjsP) return pdfjsP; pdfjsP=new Promise((ok,no)=>{ const sc=document.createElement('script'); sc.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      sc.onload=()=>{ window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; ok(window.pdfjsLib); }; sc.onerror=()=>{ pdfjsP=null; no(new Error('تعذّر تحميل قارئ PDF')); }; document.head.append(sc); }); return pdfjsP; }
+  async function readStmt(file){ const lib=await loadPdfjs(); const d=await lib.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise; const pages=[];
+    for(let i=1;i<=d.numPages;i++){ const tc=await (await d.getPage(i)).getTextContent(); pages.push(tc.items.map(t=>({x:t.transform[4],y:t.transform[5],s:t.str}))); }
+    const r=stmtParse(pages); r.daily=stmtDaily(r); r.file=file.name; return r; }
+  function openStmtSheet(){
+    const inp=el('input',{type:'file',accept:'application/pdf,.pdf',multiple:'',class:'txt'});
+    const box=el('div',{style:'display:flex;flex-direction:column;gap:10px'});
+    const msg=el('div',{class:'hint'}); let S=[];
+    inp.onchange=async()=>{ const fs=[...inp.files]; if(!fs.length) return; msg.textContent='جارِ قراءة '+fs.length+' ملف…'; box.innerHTML='';
+      const got=[]; for(const f of fs){ try{ const r=await readStmt(f); if(!r.acct||!r.period){ got.push({file:f.name,bad:'ما قدرت أتعرف على الكشف'}); continue; } got.push(r); }catch(e){ got.push({file:f.name,bad:e.message||'تعذّرت القراءة'}); } }
+      const by={}; S.forEach(x=>by[x.acct]=x); got.forEach(x=>{ if(x.acct) by[x.acct]=x; }); S=Object.values(by); msg.textContent='';
+      draw(got.filter(x=>x.bad)); };
+    function draw(bad){
+      box.innerHTML=''; (bad||[]).forEach(b=>box.append(el('div',{class:'hint',style:'color:#C24A33',text:b.file+' — '+b.bad})));
+      if(!S.length) return;
+      const opts=[...st.accounts].sort((a,b)=>(a.order??99)-(b.order??99));
+      S.forEach(x=>{ if(x.to===undefined) x.to=stmtDefault(x.acct);
+        const sel=el('select',{}); sel.append(el('option',{value:'',text:'— اختر الحساب —'})); opts.forEach(a=>sel.append(el('option',{value:a.id,text:a.name}))); sel.append(el('option',{value:'skip',text:'تجاهل هذا الكشف'}));
+        sel.value=x.to; sel.onchange=()=>{ x.to=sel.value; draw(); };
+        const lastBal=x.daily[x.period[1]];
+        box.append(el('div',{class:'st-f'},[el('b',{text:(x.acct.startsWith('GL')?'كشف جروث — حساب '+x.acct.slice(2):(x.name||'كشف بنك')+' — '+x.acct.slice(-4))}),
+          el('small',{text:'من '+dmy(x.period[0])+' إلى '+dmy(x.period[1])+' • '+x.count+' حركة • رصيد آخر يوم '+fmt(lastBal,2)}), sel])); });
+      const used=S.filter(x=>x.to&&x.to!=='skip'); const ids=new Set(used.map(x=>x.to));
+      if(S.some(x=>!x.to)){ box.append(el('div',{class:'hint',text:'اختر لكل كشف الحساب التابع له.'})); return; }
+      if(!used.length) return;
+      const dates=[...new Set(used.flatMap(x=>Object.keys(x.daily)))].sort();
+      const fixed=st.accounts.filter(a=>!ids.has(a.id));
+      const tot=d=>{ let t=0; used.forEach(x=>{ const v=x.daily[d]; t+= v!=null? v : (Number((st.accounts.find(a=>a.id===x.to)||{}).balance)||0); }); fixed.forEach(a=>t+=Number(a.balance)||0); return Math.round(t*100)/100; };
+      const chk={}; const tb=el('tbody');
+      dates.forEach(d=>{ const ex=st.daily[d]; const c=el('input',{type:'checkbox'}); c.checked=!ex; chk[d]=c;
+        tb.append(el('tr',{},[el('td',{},c),el('td',{class:'n',text:dmy(d)}),el('td',{class:'n',html:fmt(tot(d),2)+(ex?'<span class="old">مسجّل: '+fmt(ex.total,2)+'</span>':'')})])); });
+      box.append(el('div',{class:'sec-h'},[el('h2',{text:'الإجمالي لكل يوم'}),el('span',{text:'الأيام المسجّلة من قبل غير محددة — حددها لو تبي تحدّثها'})]));
+      box.append(el('table',{class:'st-t'},[el('thead',{},el('tr',{},[el('th',{text:''}),el('th',{text:'التاريخ'}),el('th',{text:'الإجمالي'})])),tb]));
+      if(fixed.length) box.append(el('div',{class:'hint',text:'حسابات بدون كشف تُحسب برصيدها الحالي: '+fixed.map(a=>a.name+' ('+fmt(a.balance,2)+')').join('، ')}));
+      const lastD=dates[dates.length-1]; const bd=st.meta.balanceDate||'';
+      const upd=lastD>=bd; if(upd) box.append(el('div',{class:'hint',text:'وبيتحدث رصيد كل حساب في «الحسابات» إلى رصيد '+dmy(lastD)+'.'}));
+      const go=el('button',{class:'btn gold',text:'اعتماد وحفظ'});
+      go.onclick=async()=>{ const pick=dates.filter(d=>chk[d].checked); if(!pick.length&&!upd){ toast('ما حددت أي يوم'); return; } go.disabled=true; let ok=true;
+        for(const d of pick){ ok=await write(()=>st.db.doc('daily/'+d).set({date:d,total:tot(d)})) && ok; }
+        if(upd){ for(const x of used){ const a=st.accounts.find(a=>a.id===x.to); const v=x.daily[lastD]; if(!a||v==null) continue; const {id,...rest}=a; ok=await write(()=>st.db.doc('accounts/'+id).set({...rest,balance:Math.round(v*100)/100})) && ok; } }
+        const map={...(st.meta.stmtMap||{})}; S.forEach(x=>{ if(x.to) map[x.acct]=x.to; });
+        ok=await write(()=>st.db.doc('meta/settings').set({...st.meta,stmtMap:map,...(upd?{balanceDate:lastD}:{})})) && ok;
+        go.disabled=false; if(ok){ closeSheet(); toast('حُفظت أرصدة '+pick.length+' يوم'); } };
+      box.append(go);
+    }
+    sheet('رفع كشوفات البنوك والنقدية',[ el('div',{class:'hint',text:'ارفع كشوفات الراجحي (PDF) وكشف حساب الصندوق من جروث — ملف أو أكثر مع بعض. يُثبت رصيد آخر عملية في كل يوم، والأيام بدون حركة تأخذ رصيد اليوم اللي قبلها.'}), inp, msg, box, el('button',{class:'btn ghost',text:'إغلاق',onclick:closeSheet}) ]);
+  }
+  $('#stmtBtn').onclick=()=>{ if(!st.canWrite){ toast('لديك صلاحية عرض فقط'); return; } openStmtSheet(); };
+
 
   $('#balDate').addEventListener('change',async e=>{ const v=e.target.value; if(!v) return; if(await write(()=>st.db.doc('meta/settings').set({...st.meta,balanceDate:v}))) toast('حُدّث تاريخ الأرصدة'); });
 
