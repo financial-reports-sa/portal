@@ -24,14 +24,14 @@ create or replace function public.gpp_cat(n text, g text) returns text language 
     when coalesce(g, '') ~ 'الفواكه' then 'fruit'
     when coalesce(g, '') ~ 'استهلاك (ال)?(رز|ارز|أرز)' then 'rice'
     when coalesce(g, '') ~ 'الغاز|الفحم' then 'gas'
-    when coalesce(g, '') ~ 'استهلاك' then null
-    when coalesce(n, '') ~ 'مرق|مرقة|بهار|توابل|ماجي|شوربة|بودرة|تتبيل|صوص|خلطة' then null
+    when coalesce(n, '') ~ 'مرق|مرقة|بهار|توابل|ماجي|شوربة|بودرة|تتبيل|صوص|خلطة' then 'g:' || coalesce(nullif(trim(regexp_replace(coalesce(g, ''), '^\s*قائمة\s+استهلاك\s*|\s*[0-9]+\s*$', '', 'g')), ''), 'أصناف أخرى')
     when coalesce(n, '') ~ 'مشويات|مشاوي|شاورما|شاورمه|فيلي|فيلية|تندر|كباب|كفتة|كفته|توب سايد|شيش|لية' then 'grill'
     when coalesce(n, '') ~ 'غاز|فحم|حطب' then 'gas'
     when coalesce(n, '') ~ '(^|\s)(رز|ارز|أرز)(\s|$)|بسمتي|بشاور' then 'rice'
     when coalesce(n, '') ~ 'فواكه|فاكهة|برتقال|تفاح|موز|عنب|فراولة|فراوله|مانجو|بطيخ|شمام|اناناس|أناناس|كيوي|رمان|ثلج عصيرات|كاجو|مكسرات' then 'fruit'
     when coalesce(n, '') ~ 'ذبيح|ذبائح|ذبايح|حاشي|غنم|نعيمي|نجدي|حري|سواكن|خروف|تيس|عجل|طليان' then 'meat'
     when coalesce(n, '') ~ 'دجاج|روزنا|فقيه|أمجاد|امجاد|ساديا|داري|الوطنية|اليمامة|التنمية|فروج|فراريج' then 'chicken'
+    else 'g:' || coalesce(nullif(trim(regexp_replace(coalesce(g, ''), '^\s*قائمة\s+استهلاك\s*|\s*[0-9]+\s*$', '', 'g')), ''), 'أصناف أخرى')
   end
 $$;
 create table if not exists public.gpp_cats (
@@ -90,10 +90,10 @@ begin
 <title>تقرير أسعار المشتريات</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Reem+Kufi:wght@600;700&display=swap">
-<link rel="stylesheet" href="https://unifiedplatform.app/price-report.css?v=1"></head><body><div class="wrap">$css$;
+<link rel="stylesheet" href="https://unifiedplatform.app/price-report.css?v=2"></head><body><div class="wrap">$css$;
   h := css || '<header><div><h1>تقرير أسعار المشتريات</h1><div class="date">يوم <b>' || gpp_day(p_day) || '</b>'
      || case when p_day >= biz then ' <span class="live">حتى الآن · يتحدّث مع كل فاتورة</span>' else '' end
-     || ' · دجاج · لحوم · مشويات · فواكه · رز · غاز وفحم</div></div>'
+     || ' · كل الأصناف والفئات</div></div>'
      || '<div class="src">المصدر: GROWTH ERP · فواتير المشتريات · كل الفروع</div></header>';
   select sum(amount) / nullif(sum(qty), 0), sum(qty) into cav, cq from gpp_lines where dt = p_day and cat = 'chicken';
   select max(dt) into pdt from gpp_lines where dt < p_day and cat = 'chicken';
@@ -114,6 +114,10 @@ begin
        || case when tot is null then 'ما فيه شراء'
                else tq || ' · ' || (select count(distinct item) from gpp_lines where dt = p_day and cat = c.k) || ' أصناف' end || '</div></div>';
   end loop;
+  select sum(amount), count(distinct item), count(distinct cat) into tot, cq, pav from gpp_lines where dt = p_day and cat like 'g:%';
+  if tot is not null then
+    kp := kp || '<div class="kpi"><div class="l">باقي المشتريات</div><div class="v">' || gpp_n(tot) || '</div><div class="s">' || pav::int || ' فئة · ' || cq::int || ' أصناف</div></div>';
+  end if;
   kp := kp || '</section>';
   for r in select * from _gpp_g where pp is not null and abs(price / pp - 1) >= 0.0005
            order by (price > pp) desc, abs(price - pp) * qty desc loop
@@ -158,7 +162,9 @@ begin
     al := al || '<div class="al ok"><span class="pill">ثابت</span><p>'
        || case when okl is null then 'لا تغيير في الأسعار ✅' else 'نفس السعر السابق: ' || okl || '.' end || '</p></div>';
   end if;
-  for c in select * from gpp_cats order by ord loop
+  for c in select gc.k, gc.ord, gc.h, gc.tag, gc.kpi, gc.none from gpp_cats gc
+           union all select z.cat, 100, substr(z.cat, 3), '', '', '' from (select distinct cat from gpp_lines where dt = p_day and cat like 'g:%') z
+           order by 2, 3 loop
     select string_agg('<tr' || case when g.flag then ' class="flag"' when g.isnew then ' class="new"' else '' end || '><td data-l="الصنف">' || gpp_e(l.n)
              || '</td><td data-l="المورد">' || gpp_e(l.party) || '</td><td class="n" data-l="الكمية">' || gpp_q(l.qty) || ' ' || gpp_e(l.u)
              || '</td><td class="n" data-l="السعر">' || gpp_n(l.price) || '</td><td class="n" data-l="الصافي">' || gpp_n(l.amount)
@@ -167,7 +173,8 @@ begin
       into rows, tot
       from gpp_lines l left join _gpp_g g on g.item = l.item and g.party = l.party and g.price = round(l.price, 4)
       where l.dt = p_day and l.cat = c.k;
-    secs := secs || '<section><h2>' || c.h || ' <span class="tag">' || c.tag || '</span></h2>';
+    if rows is null and c.k <> 'chicken' then continue; end if;
+    secs := secs || '<section><h2>' || gpp_e(c.h) || case when c.tag <> '' then ' <span class="tag">' || c.tag || '</span>' else '' end || '</h2>';
     if rows is null then
       secs := secs || '<div class="empty">' || c.none || '</div></section>';
     else

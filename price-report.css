@@ -70,4 +70,13 @@ footer{text-align:center;color:var(--muted);font-size:.82rem;border-top:1px soli
   tfoot tr{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;background:var(--accent-soft);border-radius:10px;padding:10px 12px}
   tfoot td{width:auto;background:transparent}
   tfoot td:empty{display:none}
-  .kpi .v{font-size:1.25rem}}
+  .kpi .v{font-size:1.05rem}
+  body{font-size:13px;line-height:1.55}
+  .wrap{gap:14px;padding-inline:12px}
+  h1{font-size:1.2rem} h2{font-size:.98rem;margin-bottom:7px} .date,.src{font-size:.78rem}
+  .kpis{gap:7px} .kpi{padding:8px 10px;border-radius:9px} .kpi .l,.kpi .s{font-size:.7rem}
+  .alerts{gap:6px} .al{padding:8px 10px;font-size:.86rem;gap:8px} .al .inv{font-size:.76rem}
+  tbody{gap:6px} tbody tr{padding:8px 10px}
+  tbody td[data-l="الصنف"]{font-size:.9rem} tbody td[data-l="السعر"]{font-size:.95rem}
+  tbody td[data-l="المورد"],tbody td[data-l="الكمية"],tbody td[data-l="الصافي"],tbody td[data-l="الفاتورة"]{font-size:.76rem}
+  ul.prev li{padding:8px 10px;font-size:.86rem} footer{font-size:.74rem}}
