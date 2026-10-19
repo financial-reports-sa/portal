@@ -763,9 +763,9 @@ function stmtDaily(p){ // carry forward across the whole period
     }
     if(r.accMismatch) ins.push({c:DN,t:`تنبيه: مجموع أرصدة الحسابات (${fmt(accSum)}) لا يطابق إجمالي ${dmy(r.day)} (${fmt(L?L.y:0)}) — حدّث أرصدة الحسابات.`});
     const insL=ins.map(o=>wrap(o.t,23,W-2*P-90)); const insH=60+insL.reduce((t,l)=>t+l.length*38+16,0)+14;
-    const accH=acc.length? 70+64+acc.length*62+78+24 : 0;
+    const accH=acc.length? 70+64+acc.length*62+78+24 : 0; const ringR=Math.ceil(acc.length/3); const ringH=acc.length? 70+ringR*150+30+30 : 0;
     const CH=620; // each chart card
-    const H=200+20+(2*180+20)+30+(insH+30)+accH+3*(70+CH+24)+(r.note?100:0)+70;
+    const H=200+20+(2*180+20)+30+(insH+30)+ringH+accH+3*(70+CH+24)+(r.note?100:0)+70;
     const c=document.createElement('canvas'); c.width=W*2; c.height=H*2; const x=c.getContext('2d'); x.scale(2,2); c._breaks=[]; const brk=yy=>c._breaks.push(yy*2);
     const T=(t,px,py,{size=22,w=400,col=INK,al='right',f=FA,dir='rtl'}={})=>{ x.font=`${w} ${size}px ${f}`; x.fillStyle=col; x.textAlign=al; x.direction=dir; x.fillText(t,px,py); };
     const N=(t,px,py,o={})=>T(t,px,py,{f:FD,dir:'ltr',...o});
@@ -798,6 +798,19 @@ function stmtDaily(p){ // carry forward across the whole period
     rr(P,y,W-2*P,insH,20,'#FFFFFF',LINE); T('الخلاصة',W-P-30,y+46,{size:26,w:600,f:FD}); let iy=y+70;
     ins.forEach((o,i)=>{ x.beginPath(); x.arc(W-P-38,iy+14,8,0,7); x.fillStyle=o.c; x.fill(); insL[i].forEach((ln,j)=>T(ln,W-P-60,iy+22+j*38,{size:23,col:INK})); iy+=insL[i].length*38+16; });
     y+=insH+30; brk(y-15);
+    // ---------- distribution rings ----------
+    if(acc.length){
+      T('توزيع الأرصدة',W-P,y+44,{size:28,w:600,f:FD}); T('حصة كل حساب من الإجمالي',P,y+44,{size:18,col:MUTE,al:'left'}); y+=70;
+      const ch_=ringR*150+30; rr(P,y,W-2*P,ch_,20,'#FFFFFF',LINE); const cw=(W-2*P)/3;
+      acc.forEach((a,i)=>{ const col_=i%3, row=Math.floor(i/3); const cr=W-P-cw*col_; const R=50, sw=14; const cx=cr-30-R, cy=y+15+row*150+75;
+        if(col_) line(cr,y+15+row*150+22,cr,y+15+row*150+128,'#EFEFEA',1.2);
+        const pct=accSum?a.balance/accSum:0; const neg=a.balance<0; const colr=neg?DN:(a.color||GOLD);
+        x.beginPath(); x.arc(cx,cy,R,0,Math.PI*2); x.strokeStyle='#EFEFEA'; x.lineWidth=sw; x.stroke();
+        const sweep=Math.min(1,Math.abs(pct))*Math.PI*2; if(sweep>0.001){ x.save(); x.beginPath(); x.arc(cx,cy,R,-Math.PI/2,-Math.PI/2+(neg?-sweep:sweep),neg); x.strokeStyle=colr; x.lineWidth=sw; x.lineCap='round'; x.stroke(); x.restore(); }
+        N((neg?'-':'')+(Math.abs(pct)*100).toFixed(1)+'%',cx,cy+7,{size:20,w:700,col:neg?DN:INK,al:'center'});
+        const tx=cx-R-18; T(a.name.replace('بنك الراجحي — ',''),tx,cy-8,{size:21,w:600,col:INK}); N(fmt(a.balance),tx,cy+26,{size:19,w:600,col:neg?DN:MUTE,al:'right'}); });
+      y+=ch_+30; brk(y-15);
+    }
     // ---------- accounts ----------
     if(acc.length){
       T('أرصدة الحسابات',W-P,y+44,{size:28,w:600,f:FD}); T(r.balanceDate?'كما في '+dmy(r.balanceDate):'',P,y+44,{size:18,col:MUTE,al:'left'}); y+=70;
