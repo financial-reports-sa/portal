@@ -193,6 +193,13 @@ const AUTHOR='إعداد أمير العريفي';
 const BR_FALLBACK=[{id:'az',name:'العزيزية',color:'#D4AF37'},{id:'sh',name:'شوران',color:'#5B8FD0'},{id:'pc',name:'الباتشينو',color:'#A07BE6'}];
 const JOBS=['مدير فرع','مشرف','كاشير','طباخ','مساعد طباخ','معلم بروست','معلم شاورما','عامل تحضير','عامل نظافة','مباشر صالة','سائق','محاسب'];
 const ST={active:{t:'على رأس العمل',cl:'p-ok'},vacation:{t:'إجازة',cl:'p-vac'},left:{t:'منتهية خدماته',cl:'p-bad'}};
+const normPhone=v=>{let x=String(v||'').replace(/[\s\-()]/g,'');if(/^\+?966/.test(x))x='0'+x.replace(/^\+?966/,'');if(/^5\d{8}$/.test(x))x='0'+x;return x};
+function empMiss(r,form){const m=[];const idt=r.id_type||(r.has_iqama===false?'none':r.iqama?'resident':null);
+  if(!String(r.nationality||'').trim())m.push('اكتب الجنسية');
+  if(!String(r.phone||'').trim())m.push('اكتب رقم الجوال');else if(!/^05\d{8}$/.test(normPhone(r.phone)))m.push('رقم الجوال لازم يكون 10 أرقام ويبدأ بـ 05');
+  if(!form){ if(!idt)m.push('حدد نوع الهوية'); else if(idt!=='none'&&!r.iqama)m.push('اكتب رقم الهوية'); if(r.has_health==null&&!r.health_no)m.push('حدد الشهادة الصحية'); else if((r.has_health||r.health_no)&&(!r.health_no||!r.health_exp))m.push('أكمل بيانات الشهادة الصحية'); if(!r.job)m.push('المسمى الوظيفي'); if(r.salary==null)m.push('الراتب'); if(!r.start_date)m.push('تاريخ المباشرة'); }
+  if(idt&&(idt==='resident'||idt==='citizen')&&r.iqama&&!/^\d{10}$/.test(String(r.iqama)))m.push((IDT[idt]||{}).n+' لازم يكون 10 أرقام');
+  return m}
 const IDT={resident:{s:'مقيم',t:'هوية مقيم',n:'رقم الإقامة'},visitor:{s:'زائر',t:'هوية زائر',n:'رقم هوية الزائر'},citizen:{s:'مواطن',t:'هوية وطنية',n:'رقم الهوية الوطنية'},none:{s:'لا يوجد',t:'لا يوجد',n:''}};
 const idOf=r=>r.id_type&&IDT[r.id_type]?r.id_type:(r.has_iqama||r.iqama?'resident':'none');
 const DED_R=['تأخير','غياب','مخالفة بلدية','مخالفة نظافة','تلف أو كسر','عجز كاشير','سلفة','أخرى'];
@@ -352,14 +359,16 @@ function renderList(){
   h+=`<div class="chips">${[['active','النشيطين'],['vacation','إجازة'],['left','المنتهية خدماتهم'],['all','الكل']].map(([k,t])=>`<button class="chip ${S.stf===k?'on':''}" data-st="${k}">${t} <span class="c">${cnt(k)}</span></button>`).join('')}</div>`;
   const q=S.q.trim();
   if(S.df)h+=`<div class="fbar"><span>عرض: ${esc(DF[S.df]||'')}</span><button data-df="">إلغاء الفلتر ✕</button></div>`;
-  const rows=all.filter(r=>(S.df?r.status!=='left'&&dfMatch(r,S.df):(S.stf==='all'||(S.stf==='active'?r.status!=='left':r.status===S.stf)))&&(!q||[r.name,r.job,r.phone,r.nationality,r.iqama,r.health_no].some(v=>String(v||'').includes(q))));
+  const missN=all.filter(r=>r.status!=='left'&&(empMiss(r).length||(S.phOK&&!S.th[r.id]))).length;
+  if(missN)h+=`<div class="fbar" style="background:#FFF4E5"><span>⚠️ ${missN} موظف بياناته ناقصة${S.mis?' — معروضين الحين':''}</span><button data-mis="${S.mis?'':'1'}">${S.mis?'عرض الكل ✕':'اعرضهم'}</button></div>`;
+  const rows=all.filter(r=>(!S.mis||(r.status!=='left'&&(empMiss(r).length||(S.phOK&&!S.th[r.id]))))&&(S.df?r.status!=='left'&&dfMatch(r,S.df):(S.stf==='all'||(S.stf==='active'?r.status!=='left':r.status===S.stf)))&&(!q||[r.name,r.job,r.phone,r.nationality,r.iqama,r.health_no].some(v=>String(v||'').includes(q))));
   if(!rows.length){h+=`<div class="card empty">${all.length?'ما فيه نتائج':'ما فيه موظفين مسجلين بعد — اضغط «موظف جديد»'}</div>`;el.innerHTML=h;return}
   scopeBr().forEach(b=>{
     const br=rows.filter(r=>r.branch===b.id).sort((x,y)=>(x.status==='left')-(y.status==='left')||x.name.localeCompare(y.name,'ar'));
     if(!br.length)return;
     h+=`<div class="card">${S.branches.length>1||(S.hid&&S.hid[b.id])?`<div class="grp"><i style="background:${b.color}"></i>${esc(b.name)} · ${br.length}${S.hid&&S.hid[b.id]?` <span class="hidn">＋ ${S.hid[b.id]} موظف إداري</span>`:''}</div>`:''}${br.map(r=>{
       const w=[docState(r.health_exp)].filter(s=>s&&s.n<=30&&r.status!=='left');
-      return `<button class="emp ${r.status==='left'?'left':''}" data-open="${r.id}">${avOf(r,b)}<span class="nm"><b>${r.confidential?'🔒 ':''}${esc(r.name)}</b><small>${esc(r.job||'—')} · ${r.status==='left'?'انتهت '+dShort(r.left_date)+(r.end_reason?' · '+esc(r.end_reason):''):'من '+dShort(r.start_date)}</small></span><span class="v"><b class="num">${fmt(r.salary)}</b>${(()=>{const dd=dsum(dedOf(r.id,curMonth()));return dd?`<span class="pill p-bad" style="display:block;margin-bottom:2px">خصم ${fmt(dd)}</span>`:''})()}${r.status!=='active'?`<span class="pill ${ST[r.status].cl}">${ST[r.status].t}</span>`:S.phOK&&!S.th[r.id]?`<span class="pill p-warn">بدون صورة</span>`:w.length?`<span class="pill ${w.some(s=>s.n<0)?'p-bad':'p-warn'}">وثيقة</span>`:''}</span></button>`}).join('')}</div>`;
+      return `<button class="emp ${r.status==='left'?'left':''}" data-open="${r.id}">${avOf(r,b)}<span class="nm"><b>${r.confidential?'🔒 ':''}${esc(r.name)}</b><small>${esc(r.job||'—')} · ${r.status==='left'?'انتهت '+dShort(r.left_date)+(r.end_reason?' · '+esc(r.end_reason):''):'من '+dShort(r.start_date)}</small></span><span class="v"><b class="num">${fmt(r.salary)}</b>${(()=>{const dd=dsum(dedOf(r.id,curMonth()));return dd?`<span class="pill p-bad" style="display:block;margin-bottom:2px">خصم ${fmt(dd)}</span>`:''})()}${r.status!=='active'?`<span class="pill ${ST[r.status].cl}">${ST[r.status].t}</span>`:S.phOK&&!S.th[r.id]?`<span class="pill p-warn">بدون صورة</span>`:empMiss(r).length?`<span class="pill p-warn">بيانات ناقصة</span>`:w.length?`<span class="pill ${w.some(s=>s.n<0)?'p-bad':'p-warn'}">وثيقة</span>`:''}</span></button>`}).join('')}</div>`;
   });
   el.innerHTML=h;
 }
@@ -504,7 +513,7 @@ function openForm(r){
   const opt=(v,t,sel)=>`<option value="${esc(v)}" ${v===sel?'selected':''}>${esc(t)}</option>`;
   m.innerHTML=`<div class="sheet"><h3>${isNew?'موظف جديد':'تعديل بيانات '+esc(r.name)}</h3>
   <form id="ef" class="fg" novalidate>
-    <div class="fld full"><span>صورة الموظف ${isNew?'<em>*</em>':''}</span><div class="phbox"><span class="pv" id="phPv">${!isNew&&S.th&&S.th[r.id]?`<img src="${esc(S.th[r.id])}">`:'👤'}</span><label class="phbtn">📷 ${!isNew&&S.th&&S.th[r.id]?'تغيير الصورة':'التقط أو اختر صورة'}<input type="file" id="phIn" accept="image/*" hidden></label></div></div>
+    <div class="fld full"><span>صورة الموظف <em>*</em></span><div class="phbox"><span class="pv" id="phPv">${!isNew&&S.th&&S.th[r.id]?`<img src="${esc(S.th[r.id])}">`:'👤'}</span><label class="phbtn">📷 ${!isNew&&S.th&&S.th[r.id]?'تغيير الصورة':'التقط أو اختر صورة'}<input type="file" id="phIn" accept="image/*" hidden></label></div></div>
     <label class="fld full"><span>الاسم <em>*</em></span><input name="name" value="${esc(r.name||'')}" autocomplete="off"></label>
     <div class="fld full"><span>نوع الهوية <em>*</em></span><div class="seg yn idt" data-yn="iq">${Object.entries(IDT).map(([k,v])=>`<button type="button" data-v="${k}" class="${yi===k?'on':''}">${v.s}</button>`).join('')}</div></div>
     <div class="docbox full ${yi&&yi!=='none'?'':'hide'}" id="iqBox"><label class="fld"><span><span id="iqLbl">${yi&&IDT[yi]?IDT[yi].n:'رقم الهوية'}</span> <em>*</em></span><input name="iqama" class="ltr num" inputmode="numeric" value="${esc(r.iqama||'')}"></label></div>
@@ -515,8 +524,8 @@ function openForm(r){
     <label class="fld"><span>تاريخ المباشرة <em>*</em></span><input type="date" name="start_date" value="${esc(r.start_date||'')}"></label>
     <label class="fld"><span>الراتب المتفق عليه <em>*</em></span><input name="salary" class="ltr num" inputmode="decimal" value="${r.salary!=null?esc(r.salary):''}" placeholder="0"></label>
     ${S.writer?`<label class="full conf"><input type="checkbox" name="confidential" ${(isNew||r.confidential)?'checked':''}><span>🔒 موظف إداري — بياناته وراتبه مخفية عن مدير الفرع (يشوفه في العدد فقط)</span></label>`:''}
-    <label class="fld">الجنسية<input name="nationality" value="${esc(r.nationality||'')}"></label>
-    <label class="fld">الجوال<input name="phone" class="ltr num" inputmode="tel" value="${esc(r.phone||'')}" placeholder="05xxxxxxxx"></label>
+    <label class="fld"><span>الجنسية <em>*</em></span><input name="nationality" value="${esc(r.nationality||'')}"></label>
+    <label class="fld"><span>الجوال <em>*</em></span><input name="phone" class="ltr num" inputmode="tel" value="${esc(r.phone||'')}" placeholder="05xxxxxxxx"></label>
     <div class="fld full">الحالة<div class="seg" id="stSeg">${Object.entries(ST).filter(([k])=>r.status==='left'||k!=='left').map(([k,v])=>`<button type="button" data-s="${k}" class="${r.status===k?'on':''}">${v.t}</button>`).join('')}</div></div>
     <label class="fld ${r.status==='left'?'':'hide'}" id="leftF"><span>تاريخ انتهاء الخدمة <em>*</em></span><input type="date" name="left_date" value="${esc(r.left_date||'')}"></label>
     <label class="fld ${r.status==='left'?'':'hide'}" id="reasonF"><span>سبب الانتهاء</span><select name="end_reason"><option value="">—</option>${REASONS.map(x=>opt(x,x,r.end_reason)).join('')}</select></label>
@@ -535,9 +544,9 @@ function openForm(r){
     if(!a||a.dataset.a!=='1')return;
     const f=new FormData(m.querySelector('#ef'));const g=k=>String(f.get(k)||'').trim();
     const sal=toEn(g('salary')).replace(/[,،\s]/g,'').replace('٫','.');
-    const rec={...(S.writer?{confidential:f.get('confidential')==='on'}:{}),name:g('name'),branch:g('branch'),job:g('job'),start_date:g('start_date'),salary:sal===''?null:Number(sal),nationality:g('nationality'),phone:toEn(g('phone')),id_type:yi,has_iqama:yi!=='none',iqama:yi!=='none'?toEn(g('iqama')):'',iqama_exp:null,has_health:!!yh,health_no:yh?toEn(g('health_no')):'',health_exp:yh?(g('health_exp')||null):null,status,left_date:status==='left'?(g('left_date')||null):null,notes:g('notes')};if(!isNew)rec.end_reason=status==='left'?g('end_reason'):'';
-    const err=!rec.name?'اكتب اسم الموظف':!rec.branch?'اختر الفرع':!rec.job?'اكتب المسمى الوظيفي':!rec.start_date?'حدد تاريخ المباشرة':(rec.salary==null||isNaN(rec.salary)||rec.salary<0)?'اكتب الراتب المتفق عليه بالأرقام':yi==null?'اختر نوع الهوية':(yi!=='none'&&!rec.iqama)?'اكتب '+IDT[yi].n:yh==null?'حدد: هل يوجد شهادة صحية؟':(yh&&!rec.health_no)?'اكتب رقم الشهادة الصحية':(yh&&!rec.health_exp)?'حدد تاريخ انتهاء الشهادة الصحية':(status==='left'&&!rec.left_date)?'حدد تاريخ انتهاء الخدمة':(rec.left_date&&rec.left_date<rec.start_date)?'تاريخ انتهاء الخدمة قبل تاريخ المباشرة':'';
-    const err2=err||(isNew&&S.phOK&&!ph?'أرفق صورة الموظف':'');
+    const rec={...(S.writer?{confidential:f.get('confidential')==='on'}:{}),name:g('name'),branch:g('branch'),job:g('job'),start_date:g('start_date'),salary:sal===''?null:Number(sal),nationality:g('nationality'),phone:normPhone(toEn(g('phone'))),id_type:yi,has_iqama:yi!=='none',iqama:yi!=='none'?toEn(g('iqama')):'',iqama_exp:null,has_health:!!yh,health_no:yh?toEn(g('health_no')):'',health_exp:yh?(g('health_exp')||null):null,status,left_date:status==='left'?(g('left_date')||null):null,notes:g('notes')};if(!isNew)rec.end_reason=status==='left'?g('end_reason'):'';
+    const err=!rec.name?'اكتب اسم الموظف':!rec.branch?'اختر الفرع':!rec.job?'اكتب المسمى الوظيفي':!rec.start_date?'حدد تاريخ المباشرة':(rec.salary==null||isNaN(rec.salary)||rec.salary<0)?'اكتب الراتب المتفق عليه بالأرقام':yi==null?'اختر نوع الهوية':(yi!=='none'&&!rec.iqama)?'اكتب '+IDT[yi].n:yh==null?'حدد: هل يوجد شهادة صحية؟':(yh&&!rec.health_no)?'اكتب رقم الشهادة الصحية':(yh&&!rec.health_exp)?'حدد تاريخ انتهاء الشهادة الصحية':(status==='left'&&!rec.left_date)?'حدد تاريخ انتهاء الخدمة':(rec.left_date&&rec.left_date<rec.start_date)?'تاريخ انتهاء الخدمة قبل تاريخ المباشرة':empMiss(rec,true)[0]||'';
+    const err2=err||(S.phOK&&!ph&&(isNew||!(S.th&&S.th[r.id]))?'أرفق صورة الموظف':'');
     if(err2){m.querySelector('#fe').textContent=err2;return}
     a.disabled=true;a.textContent='جاري الحفظ…';
     const res=isNew?await SBC.from('employees').insert(rec).select('id').single():await SBC.from('employees').update(rec).eq('id',r.id);
@@ -745,6 +754,7 @@ document.addEventListener('click',e=>{
   const s=e.target.closest('[data-st]');if(s){S.stf=s.dataset.st;S.df='';render();return}
   const g=e.target.closest('[data-go]');if(g&&!e.target.closest('.modal')){const[b,k]=g.dataset.go.split('|');showSet(b,k);return}
   const dfx=e.target.closest('[data-df]');if(dfx){S.df='';render();return}
+  const mis=e.target.closest('[data-mis]');if(mis){S.mis=!!mis.dataset.mis;render();return}
   const o=e.target.closest('[data-open]');if(o&&!e.target.closest('.modal')){openDetail(o.dataset.open);return}
   if(e.target.closest('#xGo'))doExport();
 });
