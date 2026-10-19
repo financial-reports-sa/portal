@@ -50,6 +50,15 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 
 .hb-grid:not(.one) .hb-t:last-child:nth-child(odd){grid-column:1/-1}
 
+.rq-hd{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px}
+.rq-big{font-size:30px;font-weight:800;line-height:1;text-align:left;font-variant-numeric:tabular-nums}.rq-big small{display:block;font-size:10.5px;font-weight:600;color:var(--muted);margin-top:4px}
+.rq-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+.rq-s{background:var(--bg);border-radius:12px;padding:8px 6px;text-align:center;display:flex;flex-direction:column;gap:2px}.rq-s small{font-size:10px;color:var(--muted)}.rq-s b{font-size:15px}.rq-s em{font-style:normal;font-size:9.5px;color:var(--muted)}
+.rq-bar{position:relative;height:10px;border-radius:99px;background:linear-gradient(90deg,rgba(22,121,76,.15) 0 35%,rgba(154,106,6,.15) 35% 45%,rgba(180,35,24,.15) 45%);overflow:visible}
+[dir=rtl] .rq-bar{background:linear-gradient(270deg,rgba(22,121,76,.15) 0 35%,rgba(154,106,6,.15) 35% 45%,rgba(180,35,24,.15) 45%)}
+.rq-bar span{position:absolute;top:0;bottom:0;right:0;border-radius:99px}.rq-bar i{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--fg);opacity:.35}
+.rq-ax{position:relative;height:16px;font-size:9.5px;color:var(--muted);margin:3px 0 10px}.rq-ax span{position:absolute;top:0;transform:translateX(50%)}.rq-ax span:first-child{right:0;transform:none}
+.rq-leg{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;font-size:10.5px;color:var(--muted);margin:6px 0}.rq-leg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-inline-end:4px;vertical-align:-1px}
 .iv-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:4px 0 12px}
 .iv-tabs button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:96px;padding:12px 6px;border-radius:18px;border:1px solid var(--line);background:var(--card);box-shadow:0 1px 2px rgba(20,24,20,.04),0 6px 16px rgba(20,24,20,.06);font:inherit;color:inherit;cursor:pointer}
 .iv-tabs.iv-2{grid-template-columns:1fr 1fr}.iv-tabs.iv-2 button{min-height:84px}.iv-tabs.iv-4{grid-template-columns:1fr 1fr}.iv-tabs.iv-4 button{min-height:88px}
@@ -834,7 +843,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'التقارير',secs:['sales','channels','wh']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['income','treasury','balances','handover','rets','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610190430';
+const APP_VER='202610190445';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets='تفعيل اشعارات مرتجع الكاشيرات'; SEC_NAME.income='القوائم المالية'; SEC_NAME.wh='المستودعات والمشتريات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -3025,6 +3034,30 @@ V.stock=async()=>{
   }
   setTimeout(()=>{const fi=$('#ivF'), ti=$('#ivTo'); if(fi) fi.onchange=()=>{ if(fi.value){ st.ivF=fi.value; if(!st.ivTo||st.ivTo<fi.value) st.ivTo=fi.value; render(); } }; if(ti) ti.onchange=()=>{ if(ti.value){ st.ivTo=ti.value; render(); } }; const q=$('#ivQ'); if(q){ q.oninput=()=>{const v=q.value.trim().toLowerCase(); document.querySelectorAll('#ivL [data-ivn]').forEach(e=>{e.style.display=!v||e.dataset.ivn.includes(v)?'':'none';});}; }},0);
   return h; };
+function ivRatioCard(days,sal,iss,dl,rc){
+  const n=days.length, W=340, H=230, top=26, bot=22, ch=H-top-bot, mx=Math.max(1,...sal,...iss)*1.06, slot=W/n, bw=Math.max(6,Math.min(30,slot*.7)), iw=bw*.55;
+  const R=days.map((x,i)=>sal[i]?iss[i]/sal[i]:null); const V=R.filter(r=>r!=null);
+  const tS=sum(sal), tI=sum(iss), avg=tS?tI/tS:0;
+  let g=''; [0.25,0.5,0.75,1].forEach(f=>{const y=top+ch-f*ch; g+=`<line x1="0" x2="${W}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width=".6"/>`;});
+  days.forEach((x,i)=>{ const cx=i*slot+slot/2, hs=sal[i]/mx*ch, hi=iss[i]/mx*ch, r=R[i];
+    if(hs) g+=`<rect x="${cx-bw/2}" y="${top+ch-hs}" width="${bw}" height="${hs}" rx="3" fill="#2E7D5B" opacity=".22"/>`;
+    if(hi) g+=`<rect x="${cx-iw/2}" y="${top+ch-hi}" width="${iw}" height="${hi}" rx="2.5" fill="${rc(r)}"/>`;
+    if(r!=null) g+=`<text x="${cx}" y="${top+ch-Math.max(hs,hi)-5}" text-anchor="middle" font-size="${n>16?7.5:9}" font-weight="800" fill="${rc(r)}">${Math.round(r*100)}%</text>`;
+    const lab=n>16?((i===0||i===n-1||i%3===0)?String(+x.slice(8)):''):String(+x.slice(8));
+    if(lab) g+=`<text x="${cx}" y="${H-6}" text-anchor="middle" font-size="9" fill="var(--muted)">${lab}</text>`;
+    g+=`<rect x="${i*slot}" y="0" width="${slot}" height="${H}" fill="transparent" data-sbi="${i}" style="cursor:pointer"/>`; });
+  const info=days.map((x,i)=>`<b>${dl(x)}</b> · المبيعات <b class="num">${fmt(sal[i])}</b> · الصرف <b class="num">${fmt(iss[i])}</b>${R[i]!=null?` · النسبة <b style="color:${rc(R[i])}">${Math.round(R[i]*1000)/10}%</b>`:''}`);
+  const iMax=R.reduce((a,r,i)=>r!=null&&(a<0||r>R[a])?i:a,-1), iMin=R.reduce((a,r,i)=>r!=null&&(a<0||r<R[a])?i:a,-1);
+  const over=V.filter(r=>r>.45).length, ok=V.filter(r=>r<=.35).length;
+  const dS=x=>new Date(x+'T12:00:00').toLocaleDateString('ar-SA-u-ca-gregory-nu-latn',{weekday:'short',day:'numeric'});
+  const st4=(l,v,sub,c)=>`<div class="rq-s"><small>${l}</small><b class="num" style="color:${c||'inherit'}">${v}</b>${sub?`<em>${sub}</em>`:''}</div>`;
+  return `<div class="card rq"><div class="rq-hd"><div><h3 style="margin:0">📊 نسبة الصرف من المبيعات</h3><div class="muted" style="font-size:11px;margin-top:2px">المبيعات قبل الضريبة · ${n} يوم</div></div>
+    <div class="rq-big" style="color:${rc(avg)}">${Math.round(avg*1000)/10}%<small>متوسط الفترة</small></div></div>
+    <div class="rq-grid">${st4('أعلى نسبة',iMax>=0?Math.round(R[iMax]*1000)/10+'%':'—',iMax>=0?dS(days[iMax]):'',iMax>=0?rc(R[iMax]):'')}${st4('أقل نسبة',iMin>=0?Math.round(R[iMin]*1000)/10+'%':'—',iMin>=0?dS(days[iMin]):'',iMin>=0?rc(R[iMin]):'')}${st4('أيام ممتازة',ok,'≤ 35%','#16794C')}${st4('أيام مرتفعة',over,'> 45%',over?'#B42318':'')}</div>
+    <div class="rq-bar"><span style="width:${Math.min(100,avg*100)}%;background:${rc(avg)}"></span><i style="right:35%"></i><i style="right:45%"></i></div><div class="rq-ax"><span>0%</span><span style="right:35%">35%</span><span style="right:45%">45%</span><span style="right:100%;transform:translateX(100%)">100%</span></div>
+    <div class="sbw"><svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;direction:ltr;overflow:visible">${g}</svg><div class="rq-leg"><span><i style="background:#2E7D5B;opacity:.25"></i>المبيعات</span><span><i style="background:#16794C"></i>صرف ≤35%</span><span><i style="background:#9A6A06"></i>35–45%</span><span><i style="background:#B42318"></i>&gt;45%</span></div>
+    <div class="sb-info" data-sbinfo='${esc(JSON.stringify(info))}'><span class="muted">اضغط على أي يوم لعرض التفاصيل</span></div></div></div>`;
+}
 function ivChart(D,f,t){
   const SD={}; (D.sales_days||[]).forEach(z=>SD[String(z.d).slice(0,10)]=z); const DD={}; (D.days||[]).forEach(z=>{const k=String(z.d).slice(0,10); DD[k]=DD[k]||{pur:0,pret:0,iss:0}; DD[k][z.k]=(DD[k][z.k]||0)+(+z.a);});
   const days=[]; for(let x=new Date(f+'T12:00:00');x<=new Date(t+'T12:00:00');x.setDate(x.getDate()+1)) days.push(x.toISOString().slice(0,10));
@@ -3039,13 +3072,13 @@ function ivChart(D,f,t){
   let h=`<div class="kpis" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
     <div class="card" style="margin:0"><small class="muted">الصرف المباشر · ${days.length} يوم</small><b class="num" style="display:block;font-size:19px;margin-top:4px;color:#C2410C">${fmt(tI)}</b><small class="muted">متوسط يومي ${fmt(tI/act(iss))}</small></div>
     <div class="card" style="margin:0"><small class="muted">صافي المشتريات · ${days.length} يوم</small><b class="num" style="display:block;font-size:19px;margin-top:4px;color:#9A7B12">${fmt(tP)}</b><small class="muted">متوسط يومي ${fmt(tP/act(pur))}</small></div></div>`;
+  h+='<!--RATIO-->';
   h+=card('📤 الصرف المباشر اليومي',tS?`نسبة الصرف من المبيعات (قبل الضريبة): <b style="color:${rc(tI/tS)}">${Math.round(tI/tS*1000)/10}%</b>`:'',smartBars({labels:lab,series:[{name:'الصرف',color:'#E07A3F',vals:iss}],avg:tI/act(iss),avgLbl:fk(tI/act(iss)),h:200,
     sub:ratio.map(r=>r==null?null:{t:Math.round(r*100)+'%',c:rc(r)}),
     info:days.map((x,i)=>`<b>${dl(x)}</b> · الصرف <b class="num">${fmt(iss[i])}</b>${sal[i]?` · المبيعات ${fmt(sal[i])} · النسبة <b style="color:${rc(ratio[i])}">${Math.round(ratio[i]*1000)/10}%</b>`:''}`)}));
   h+=card('🧾 المشتريات اليومية','صافي بعد المردودات · قبل الضريبة',smartBars({labels:lab,series:[{name:'المشتريات',color:'#C9A227',vals:pur}],avg:tP/act(pur),avgLbl:fk(tP/act(pur)),h:200,
     info:days.map((x,i)=>`<b>${dl(x)}</b> · المشتريات <b class="num">${fmt(pur[i])}</b>${g('pret')[i]?` · مردود ${fmt(g('pret')[i])}`:''}`)}));
-  if(tS) h+=card('📈 المبيعات مقابل الصرف','الأعمدة: المبيعات قبل الضريبة · الجزء البرتقالي: الصرف',smartBars({labels:lab,series:[{name:'الصرف',color:'#E07A3F',vals:iss},{name:'باقي المبيعات',color:'#2E7D5B',vals:sal.map((v,i)=>Math.max(0,v-iss[i]))}],h:200,
-    info:days.map((x,i)=>`<b>${dl(x)}</b> · المبيعات <b class="num">${fmt(sal[i])}</b> · الصرف ${fmt(iss[i])}`)}));
+  h=h.replace('<!--RATIO-->',tS?ivRatioCard(days,sal,iss,dl,rc):'');
   return h+`<p class="muted" style="font-size:10.5px">اضغط على أي عمود لتفاصيل اليوم · يتحدث كل 5 دقائق من جروث</p>`;
 }
 async function invItem(item){ const [f0,t,brs]=st._ivR||[]; const f=(()=>{const x=new Date(todayIso()+'T12:00:00');x.setDate(x.getDate()-90);return x.toISOString().slice(0,10);})();

@@ -123,7 +123,11 @@ begin
         from (select kind, party, sum(amount) a, count(distinct doc) c from growth_inv_lines
               where dt between p_from and p_to and (bs is null or branch = any(bs)) group by kind, party) t), '[]'::jsonb),
     'sales_days', coalesce((select jsonb_agg(jsonb_build_object('d', bdate, 'net', n, 'ex', n - t) order by bdate)
-        from (select bdate, sum(net) n, sum(tax) t from growth_bills where bdate between p_from and p_to and (bs is null or branch = any(bs)) group by bdate) q), '[]'::jsonb),
+        from (select coalesce(c.d, b.d) bdate, coalesce(c.n, b.n) n, coalesce(c.t, b.t) t
+              from (select g.day d, sum(g.net + g.tax) n, sum(g.tax) t from growth_channels_daily g
+                    where g.day between p_from and p_to and (bs is null or g.branch = any(bs))
+                      and not exists (select 1 from growth_channel_map m where m.name = g.name and m.code = '-') group by g.day) c
+              full join (select bdate d, sum(net) n, sum(tax) t from growth_bills where bdate between p_from and p_to and (bs is null or branch = any(bs)) group by bdate) b on b.d = c.d) q), '[]'::jsonb),
     'days', coalesce((select jsonb_agg(jsonb_build_object('k', kind, 'd', dt, 'a', a) order by dt)
         from (select kind, dt, sum(amount) a from growth_inv_lines where dt between p_from and p_to and (bs is null or branch = any(bs)) group by kind, dt) t), '[]'::jsonb),
     'stock', coalesce((select jsonb_agg(jsonb_build_object('i', s.item, 'n', coalesce(it.name, s.item), 'u', coalesce(it.unit, ''), 'g', coalesce(it.grp, ''), 'q', q, 'v', v))
