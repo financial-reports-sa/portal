@@ -58,7 +58,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .iv-ents button{padding:11px 10px;border-radius:14px;border:1px solid var(--line);background:var(--card);font:inherit;font-size:12.5px;font-weight:700;color:inherit;cursor:pointer;line-height:1.35}
 .iv-ents button[aria-pressed="true"]{border:2px solid #1E5A3E;background:#EEF5F0;color:#143D2A}
 .iv-brs{margin-bottom:10px}
-#tabs .hb-back{font-weight:700;color:var(--gold-ink)}
+#tabs .hb-back{display:inline-flex;align-items:center;gap:4px;font-weight:700;background:var(--gold-soft);color:var(--gold-ink);border-color:transparent}
 .card h3{font-size:14.5px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .card h3 small{font-family:var(--f-body);font-weight:400;font-size:11px;color:var(--muted)}
 .muted{color:var(--muted)}
@@ -833,7 +833,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'التقارير',secs:['sales','channels','wh']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['income','treasury','balances','handover','rets','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610190405';
+const APP_VER='202610190410';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets='تفعيل اشعارات مرتجع الكاشيرات'; SEC_NAME.income='القوائم المالية'; SEC_NAME.wh='المستودعات والمشتريات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -926,7 +926,7 @@ function renderShell(){ try{ window.I18N&&I18N.emp(isEmp()); }catch(_){}
   document.body.classList.toggle('hasnav',gs.length>1); $('#bnav').hidden=gs.length<=1; try{paintNavDots();}catch(e){}
   const subs=(GROUPS.find(x=>x.id===g)||{secs:[]}).secs.filter(canSee);
   if(g==='rep'){ const hg=hubOf(st.tab); const sib=hg?hg.secs.filter(canSee):[];
-    $('#tabs').innerHTML=st.tab==='hub'?'':`<button data-t="hub" class="hb-back">‹ التقارير والمالية</button>`+(sib.length>1?SECTIONS.filter(s=>sib.includes(s.id)).map(s=>`<button data-t="${s.id}" aria-pressed="${st.tab===s.id}">${s.name}</button>`).join(''):''); }
+    $('#tabs').innerHTML=st.tab==='hub'?'':`<button data-t="hub" class="hb-back" aria-label="رجوع"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>رجوع</button>`+(sib.length>1?SECTIONS.filter(s=>sib.includes(s.id)).map(s=>`<button data-t="${s.id}" aria-pressed="${st.tab===s.id}">${s.name}</button>`).join(''):''); }
   else $('#tabs').innerHTML=subs.length>1?SECTIONS.filter(s=>subs.includes(s.id)).map(s=>`<button data-t="${s.id}" aria-pressed="${st.tab===s.id}">${s.name}</button>`).join(''):'';
   loadAlerts();
   render();
