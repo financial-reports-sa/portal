@@ -742,110 +742,129 @@ function stmtDaily(p){ // carry forward across the whole period
   // ---------- تقرير الأرصدة (التقرير الوحيد) ----------
   async function drawBal(r){
     try{ await document.fonts.ready; await document.fonts.load('600 20px "Readex Pro"'); await document.fonts.load('400 20px "IBM Plex Sans Arabic"'); }catch(e){}
-    const S=trendStats(r); const W=1080, P=56; const FA='"IBM Plex Sans Arabic", Tahoma, sans-serif', FD='"Readex Pro", "IBM Plex Sans Arabic", Tahoma, sans-serif';
+    const S=trendStats(r); const W=1080, P=44; const FA='"IBM Plex Sans Arabic", Tahoma, sans-serif', FD='"Readex Pro", "IBM Plex Sans Arabic", Tahoma, sans-serif';
+    const GOLD='#D4AF37', GOLD2='#9A7B12', INK='#18231C', MUTE='#6B706A', DIM='#9A9E98', UP='#1FA16B', DN='#D0453A', LINE='#E6E6E0';
+    const mc=document.createElement('canvas').getContext('2d');
+    const wrap=(t,size,maxW,w=400)=>{ mc.font=`${w} ${size}px ${FA}`; mc.direction='rtl'; const ws=String(t).split(' '); const out=[]; let cur=''; ws.forEach(q=>{ const tt=cur?cur+' '+q:q; if(mc.measureText(tt).width>maxW&&cur){out.push(cur);cur=q;} else cur=tt; }); if(cur) out.push(cur); return out; };
     const acc=(r.accounts||[]); const accSum=acc.reduce((t,a)=>t+(Number(a.balance)||0),0);
-    const showAcc=acc.length>0; const accH=showAcc? 58+56+acc.length*54+66+(r.accMismatch?58:0)+30 : 0;
-    const H=190+190+accH+(58+500+30)+(58+600+30)+(58+590+30)+(r.note?90:0)+90;
-    const c=document.createElement('canvas'); c.width=W*2; c.height=H*2; const x=c.getContext('2d'); x.scale(2,2);
-    const T=(t,px,py,{size=20,w=400,col='#18231C',al='right',f=FA,dir='rtl'}={})=>{ x.font=`${w} ${size}px ${f}`; x.fillStyle=col; x.textAlign=al; x.direction=dir; x.fillText(t,px,py); };
-    const N=(t,px,py,o={})=>T(t,px,py,{f:FD,dir:'ltr',...o});
-    const NS=(t,px,py,o={})=>{ x.save(); x.lineWidth=5; x.strokeStyle='#FFFFFF'; x.lineJoin='round'; x.font=`${o.w||600} ${o.size||13}px ${FD}`; x.textAlign=o.al||'center'; x.direction='ltr'; x.strokeText(t,px,py); x.fillStyle=o.col||'#18231C'; x.fillText(t,px,py); x.restore(); };
-    const NR=(t,px,py,o={})=>{ x.save(); x.translate(px,py); x.rotate(-Math.PI/2); x.lineWidth=5; x.strokeStyle='#FFFFFF'; x.lineJoin='round'; x.font=`${o.w||600} ${o.size||12.5}px ${FD}`; x.textAlign='left'; x.direction='ltr'; x.strokeText(t,0,4); x.fillStyle=o.col||'#18231C'; x.fillText(t,0,4); x.restore(); };
-    const rr=(px,py,w,h,rad,fill,stroke)=>{ x.beginPath(); x.roundRect(px,py,w,h,rad); if(fill){x.fillStyle=fill;x.fill();} if(stroke){x.strokeStyle=stroke;x.lineWidth=1;x.stroke();} };
-    const line=(x1,y1,x2,y2,col,w=1,dash)=>{ x.save(); x.strokeStyle=col; x.lineWidth=w; if(dash) x.setLineDash(dash); x.beginPath(); x.moveTo(x1,y1); x.lineTo(x2,y2); x.stroke(); x.restore(); };
-    const secT=(t,y,sub,n)=>{ rr(W-P-34,y+12,34,34,10,'#D4AF37'); N(String(n),W-P-17,y+36,{size:17,w:700,col:'#1A1406',al:'center'}); T(t,W-P-48,y+37,{size:22,w:600,f:FD}); if(sub) T(sub,P,y+37,{size:14.5,col:'#6B706A',al:'left'}); };
-    const dirCol=S.dir==='صاعد'?'#1FA16B':S.dir==='هابط'?'#D0453A':'#C98A0C'; const zCol=z=>z>1?'#1FA16B':z<-1?'#D0453A':'#18231C';
-    const smooth=(pts,col,w)=>{ const Q=pts.slice().sort((a,b)=>a[0]-b[0]); x.save(); x.beginPath(); smoothPath(x,Q); x.strokeStyle=col; x.lineWidth=w; x.lineJoin='round'; x.lineCap='round'; x.stroke(); x.restore(); };
-    const smoothFill=(pts,yBase,fill)=>{ const Q=pts.slice().sort((a,b)=>a[0]-b[0]); x.save(); x.beginPath(); smoothPath(x,Q); x.lineTo(Q[Q.length-1][0],yBase); x.lineTo(Q[0][0],yBase); x.closePath(); x.fillStyle=fill; x.fill(); x.restore(); };
-    x.fillStyle='#F5F5F1'; x.fillRect(0,0,W,H);
-    // ---- header ----
-    const g=x.createLinearGradient(W,0,0,190); g.addColorStop(0,'#F0F0EB'); g.addColorStop(1,'#FFFFFF'); x.fillStyle=g; x.fillRect(0,0,W,170); x.fillStyle='#D4AF37'; x.fillRect(0,170,W,4);
-    rr(W-P-56,50,56,56,14,'#D4AF37'); T('خ',W-P-28,89,{size:30,w:700,col:'#1A1406',al:'center',f:FD});
-    T(r.title,W-P-76,78,{size:30,w:600,f:FD});
-    T('فترة التحليل: '+dmy(r.from)+' — '+dmy(r.day)+'   •   '+S.n+' يوماً مسجلاً   •   أُعد في '+r.createdLabel,W-P-76,118,{size:16,col:'#9A7B12'});
-    rr(P,34,130,32,16,'rgba(212,175,55,.18)'); T('تقرير الأرصدة',P+65,56,{size:15,w:600,col:'#9A7B12',al:'center'});
-    x.fillStyle='#D4AF37'; x.fillRect(P,84,190,2); T('أُعد بواسطة',P+190,110,{size:14,col:'#6B706A'});
-    x.save(); x.font='600 25px '+FD; x.fillStyle='#9A7B12'; x.textAlign='left'; x.direction='ltr'; x.fillText('Ameer Alarifi',P,143); x.restore();
-    let y=210;
-    if(S.n<3){ T('لا توجد بيانات كافية — يلزم 3 أيام مسجلة على الأقل',W/2,y+80,{size:20,col:'#6B706A',al:'center'}); return c; }
-    const L=S.last, tl=S.tr(L.x); const prev=S.pts[S.n-2]; const chg=prev?L.y-prev.y:null;
-    // ---- KPIs ----
-    const kw=(W-2*P-3*16)/4;
-    const K=[['إجمالي الأرصدة',fmt(L.y),'#9A7B12',DAYS[fromIso(L.key).getDay()]+' '+dmy(L.key),0],
-      ['التغير عن اليوم السابق',chg==null?'—':sgnF(chg),chg>0?'#1FA16B':chg<0?'#D0453A':'#18231C',prev?'مقارنة بـ '+dmy(prev.key):'',0],
-      ['اتجاه السيولة',(S.dir==='هابط'?'▼ ':S.dir==='صاعد'?'▲ ':'● ')+S.dir,dirCol,sgnF(S.b)+' ر.س يومياً',1],
-      ['موقع الرصيد في النطاق',S.z>1?'فوق النطاق':S.z<-1?'تحت النطاق':'ضمن النطاق',zCol(S.z),(S.z>0?'+':'')+S.z.toFixed(2)+'σ عن خط الاتجاه',1]];
-    K.forEach((k,i)=>{ const px=W-P-(i+1)*kw-i*16; rr(px,y,kw,150,16,'#FFFFFF','#E6E6E0'); x.fillStyle='#D4AF37'; x.fillRect(px+16,y,kw-32,3);
-      T(k[0],px+kw-20,y+42,{size:16,col:'#6B706A'}); (k[4]?T:N)(k[1],px+kw-20,y+92,{size:k[4]?26:28,w:600,col:k[2],al:'right',f:FD}); T(k[3],px+kw-20,y+126,{size:13.5,col:'#8E928C'}); });
-    y+=190;
-    // ---- accounts ----
-    if(showAcc){
-      T('أرصدة الحسابات',W-P,y+37,{size:22,w:600,f:FD}); T(r.balanceDate?'كما في '+dmy(r.balanceDate):'',P,y+37,{size:14.5,col:'#6B706A',al:'left'}); y+=58;
-      const th=56+acc.length*54+66+(r.accMismatch?58:0); rr(P,y,W-2*P,th,16,'#FFFFFF','#E6E6E0');
-      const cA=W-P-30, cK=W-P-470, cB=P+230, cS=P+40;
-      T('الحساب',cA,y+34,{size:14.5,w:600,col:'#6B706A'}); T('النوع',cK,y+34,{size:14.5,w:600,col:'#6B706A',al:'center'}); T('الرصيد (ر.س)',cB,y+34,{size:14.5,w:600,col:'#6B706A',al:'center'}); T('الحصة',cS,y+34,{size:14.5,w:600,col:'#6B706A',al:'left'});
-      line(P+20,y+50,W-P-20,y+50,'#E6E6E0'); let ry=y+56;
-      acc.forEach((a,i)=>{ rr(cA-28,ry+13,28,28,8,a.color||'#D4AF37'); N(String(i+1),cA-14,ry+33,{size:14,w:700,col:'#1A1406',al:'center'}); T(a.name,cA-40,ry+33,{size:17,w:500});
-        T(a.kind==='cash'?'صندوق':'بنك',cK,ry+33,{size:15,col:'#6B706A',al:'center'}); N(fmt(a.balance,2),cB,ry+33,{size:18,w:600,col:a.balance<0?'#D0453A':'#18231C',al:'center'});
-        N(accSum?(a.balance/accSum*100).toFixed(1)+'%':'—',cS,ry+33,{size:15,col:'#6B706A',al:'left'}); line(P+20,ry+54,W-P-20,ry+54,'#F0F0EB'); ry+=54; });
-      rr(P+12,ry+8,W-2*P-24,50,12,'rgba(212,175,55,.16)'); T('إجمالي الحسابات',cA,ry+40,{size:18,w:600,f:FD}); N(fmt(accSum,2),cB,ry+40,{size:20,w:700,col:'#9A7B12',al:'center'}); ry+=66;
-      if(r.accMismatch){ rr(P+12,ry,W-2*P-24,46,12,'rgba(224,101,74,.10)','rgba(224,101,74,.45)'); T('تنبيه: مجموع الحسابات لا يطابق إجمالي '+dmy(r.day)+' ('+fmt(L.y,2)+') — أرصدة الحسابات غير محدّثة لهذا التاريخ.',W-P-30,ry+29,{size:14.5,w:600,col:'#C24A33'}); }
-      y+=th+30;
+    // ---------- numbers ----------
+    const ok=S.n>=3; const L=ok?S.last:null, tl=ok?S.tr(L.x):0, prev=ok?S.pts[S.n-2]:null, chg=prev?L.y-prev.y:null;
+    const avg=ok?S.mean:0, vsAvg=ok&&avg?(L.y-avg)/avg:0;
+    const inN=ok?S.pts.filter(p=>Math.abs(p.z)<=1).length:0;
+    const near=(lv)=>ok?S.pts.filter(p=>Math.abs(p.y-lv)/Math.abs(lv||1)<=0.03).length:0;
+    const tR=ok?S.pts.filter(p=>p.y>=S.p90).length+near(S.p90):0, tS=ok?S.pts.filter(p=>p.y<=S.p10).length+near(S.p10):0;
+    const dR=ok?S.p90-L.y:0, dS=ok?L.y-S.p10:0;
+    const ins=[];
+    if(ok){
+      ins.push({c:S.dir==='صاعد'?UP:S.dir==='هابط'?DN:'#C98A0C',t:S.dir==='عرضي'?`السيولة تتحرك بشكل عرضي حول ${fmt(avg)} ر.س — لا يوجد صعود أو هبوط واضح خلال الفترة.`:`السيولة في مسار ${S.dir}: ${S.b>0?'+':'−'}${fmt(Math.abs(S.b))} ر.س يومياً، أي نحو ${S.b>0?'+':'−'}${fmt(Math.abs(S.b*30))} ر.س في الشهر.`});
+      ins.push({c:vsAvg>=0?UP:DN,t:`رصيد ${dmy(L.key)} ${fmt(L.y)} ر.س — ${vsAvg>=0?'أعلى':'أقل'} من متوسط الفترة بـ ${(Math.abs(vsAvg)*100).toFixed(0)}% (المتوسط ${fmt(avg)}).`});
+      ins.push({c:Math.abs(S.z)>1?(S.z>0?UP:DN):INK,t:`الرصيد اليوم ${S.pos}. بقي داخل النطاق الطبيعي ${inN} من ${S.n} يوماً.`});
+      ins.push({c:dS<0?DN:dR<0?UP:INK,t: dS<0?`الرصيد كسر مستوى الدعم (${fmt(S.p10)}) بـ ${fmt(-dS)} ر.س — أدنى من المعتاد.`: dR<0?`الرصيد تجاوز مستوى المقاومة (${fmt(S.p90)}) بـ ${fmt(-dR)} ر.س — أعلى من المعتاد.`:`الرصيد بين الدعم ${fmt(S.p10)} والمقاومة ${fmt(S.p90)}: يبعد ${fmt(dS)} عن الدعم و${fmt(dR)} عن المقاومة.`});
     }
-    // shared plot geometry
-    const xEnd=L.x; const plot=(top,h,extra)=>{ const cx0=P+82, cx1=W-P-30, cy0=top, cy1=top+h; const X=v=>cx1-(v/Math.max(1,xEnd))*(cx1-cx0);
-      const cand=[...S.pts.map(p=>p.y),...extra]; let lo=Math.min(...cand), hi=Math.max(...cand); const pd=(hi-lo)*.08||1; lo-=pd; hi+=pd; const Y=v=>cy0+(hi-v)/(hi-lo)*(cy1-cy0);
-      for(let i=0;i<=5;i++){ const vv=lo+(hi-lo)*i/5, yy=Y(vv); line(cx0,yy,cx1,yy,'#F0F0EB',1,[4,6]); N(lblK(vv),cx0-10,yy+5,{size:12.5,col:'#8E928C',al:'right'}); }
-      const every=xEnd<=20?1:xEnd<=40?2:Math.ceil(xEnd/18);
-      for(let v=0;v<=xEnd;v++){ if(v%every&&v!==xEnd) continue; const k=addDays(r.from,v); const has=S.pts.some(p=>p.x===v); N(String(Number(k.slice(8))),X(v),cy1+26,{size:12,col:has?'#6B706A':'#C9CBC3',al:'center'}); }
+    if(r.accMismatch) ins.push({c:DN,t:`تنبيه: مجموع أرصدة الحسابات (${fmt(accSum)}) لا يطابق إجمالي ${dmy(r.day)} (${fmt(L?L.y:0)}) — حدّث أرصدة الحسابات.`});
+    const insL=ins.map(o=>wrap(o.t,23,W-2*P-90)); const insH=60+insL.reduce((t,l)=>t+l.length*38+16,0)+14;
+    const accH=acc.length? 70+64+acc.length*62+78+24 : 0;
+    const CH=690; // each chart card
+    const H=200+20+(2*180+20)+30+(insH+30)+accH+3*(70+CH+30)+(r.note?100:0)+90;
+    const c=document.createElement('canvas'); c.width=W*2; c.height=H*2; const x=c.getContext('2d'); x.scale(2,2);
+    const T=(t,px,py,{size=22,w=400,col=INK,al='right',f=FA,dir='rtl'}={})=>{ x.font=`${w} ${size}px ${f}`; x.fillStyle=col; x.textAlign=al; x.direction=dir; x.fillText(t,px,py); };
+    const N=(t,px,py,o={})=>T(t,px,py,{f:FD,dir:'ltr',...o});
+    const rr=(px,py,w,h,rad,fill,stroke,lw=1)=>{ x.beginPath(); x.roundRect(px,py,w,h,rad); if(fill){x.fillStyle=fill;x.fill();} if(stroke){x.strokeStyle=stroke;x.lineWidth=lw;x.stroke();} };
+    const line=(x1,y1,x2,y2,col,w=1,dash)=>{ x.save(); x.strokeStyle=col; x.lineWidth=w; if(dash) x.setLineDash(dash); x.beginPath(); x.moveTo(x1,y1); x.lineTo(x2,y2); x.stroke(); x.restore(); };
+    const pill=(t,cx,cy,bg,fg='#FFFFFF',size=18,al='center')=>{ x.font=`700 ${size}px ${FD}`; x.direction='ltr'; const tw=x.measureText(t).width+22, h=size+16; const lx=al==='left'?cx:al==='right'?cx-tw:cx-tw/2; rr(lx,cy-h/2,tw,h,h/2,bg); N(t,lx+tw/2,cy+size*0.36,{size,w:700,col:fg,al:'center'}); return tw; };
+    const secT=(t,y,n,sub)=>{ rr(W-P-44,y+10,44,44,12,GOLD); N(String(n),W-P-22,y+41,{size:22,w:700,col:'#1A1406',al:'center'}); T(t,W-P-58,y+42,{size:28,w:600,f:FD}); if(sub) T(sub,P,y+42,{size:18,col:MUTE,al:'left'}); };
+    x.fillStyle='#F5F5F1'; x.fillRect(0,0,W,H);
+    // ---------- header ----------
+    const g=x.createLinearGradient(W,0,0,200); g.addColorStop(0,'#EEF0E8'); g.addColorStop(1,'#FFFFFF'); x.fillStyle=g; x.fillRect(0,0,W,196); x.fillStyle=GOLD; x.fillRect(0,196,W,4);
+    rr(W-P-64,44,64,64,16,GOLD); T('خ',W-P-32,88,{size:34,w:700,col:'#1A1406',al:'center',f:FD});
+    T('تقرير الأرصدة',W-P-84,78,{size:36,w:600,f:FD}); T('حتى '+DAYS[fromIso(r.day).getDay()]+' '+dmy(r.day),W-P-84,118,{size:24,w:500,col:GOLD2,f:FD});
+    T('فترة التحليل '+dmy(r.from)+' — '+dmy(r.day)+'  •  '+S.n+' يوماً مسجلاً',W-P-84,158,{size:18,col:MUTE});
+    T('أُعد بواسطة',P+200,70,{size:16,col:MUTE}); x.fillStyle=GOLD; x.fillRect(P,82,200,2);
+    x.save(); x.font='600 28px '+FD; x.fillStyle=GOLD2; x.textAlign='left'; x.direction='ltr'; x.fillText('Ameer Alarifi',P,120); x.restore(); T('أُعد في '+r.createdLabel,P+200,158,{size:15,col:DIM});
+    let y=220;
+    if(!ok){ T('لا توجد بيانات كافية — يلزم 3 أيام مسجلة على الأقل',W/2,y+80,{size:24,col:MUTE,al:'center'}); return c; }
+    const dirCol=S.dir==='صاعد'?UP:S.dir==='هابط'?DN:'#C98A0C'; const zCol=z=>z>1?UP:z<-1?DN:INK;
+    // ---------- KPIs 2x2 ----------
+    const kw=(W-2*P-20)/2, kh=180;
+    const K=[['إجمالي الأرصدة',fmt(L.y),GOLD2,'ر.س  •  '+dmy(L.key),true],
+      ['التغير عن اليوم السابق',chg==null?'—':sgnF(chg),chg>0?UP:chg<0?DN:INK,prev?'مقارنة بـ '+dmy(prev.key):'',true],
+      ['اتجاه السيولة',(S.dir==='هابط'?'▼ ':S.dir==='صاعد'?'▲ ':'● ')+S.dir,dirCol,sgnF(S.b)+' ر.س يومياً',false],
+      ['موقع الرصيد',Math.abs(S.z)<=1?'ضمن النطاق':S.z>0?'فوق النطاق':'تحت النطاق',zCol(S.z),'النطاق الطبيعي '+lblK(tl-S.s)+' – '+lblK(tl+S.s),false]];
+    K.forEach((k,i)=>{ const col=i%2, row=Math.floor(i/2); const px=W-P-(col+1)*kw-col*20, py=y+row*(kh+20);
+      rr(px,py,kw,kh,20,'#FFFFFF',LINE); x.fillStyle=k[2]; x.fillRect(px+kw-8,py+28,4,kh-56);
+      T(k[0],px+kw-30,py+48,{size:20,col:MUTE}); (k[4]?N:T)(k[1],px+kw-30,py+112,{size:k[4]?44:38,w:700,col:k[2],al:'right',f:FD}); T(k[3],px+kw-30,py+150,{size:17,col:DIM}); });
+    y+=2*kh+20+30;
+    // ---------- key points ----------
+    rr(P,y,W-2*P,insH,20,'#FFFFFF',LINE); T('الخلاصة',W-P-30,y+46,{size:26,w:600,f:FD}); let iy=y+70;
+    ins.forEach((o,i)=>{ x.beginPath(); x.arc(W-P-38,iy+14,8,0,7); x.fillStyle=o.c; x.fill(); insL[i].forEach((ln,j)=>T(ln,W-P-60,iy+22+j*38,{size:23,col:INK})); iy+=insL[i].length*38+16; });
+    y+=insH+30;
+    // ---------- accounts ----------
+    if(acc.length){
+      T('أرصدة الحسابات',W-P,y+44,{size:28,w:600,f:FD}); T(r.balanceDate?'كما في '+dmy(r.balanceDate):'',P,y+44,{size:18,col:MUTE,al:'left'}); y+=70;
+      const th=64+acc.length*62+78; rr(P,y,W-2*P,th,20,'#FFFFFF',LINE);
+      const cA=W-P-30, cB=P+250, cS=P+34;
+      T('الحساب',cA,y+40,{size:18,w:600,col:MUTE}); T('الرصيد (ر.س)',cB,y+40,{size:18,w:600,col:MUTE,al:'center'}); T('الحصة',cS,y+40,{size:18,w:600,col:MUTE,al:'left'}); line(P+20,y+58,W-P-20,y+58,LINE);
+      let ry=y+64; acc.forEach((a,i)=>{ rr(cA-32,ry+15,32,32,9,a.color||GOLD); N(String(i+1),cA-16,ry+38,{size:17,w:700,col:'#1A1406',al:'center'}); T(a.name.replace('بنك الراجحي — ','الراجحي — '),cA-46,ry+40,{size:22,w:500});
+        N(fmt(a.balance,2),cB,ry+40,{size:23,w:600,col:a.balance<0?DN:INK,al:'center'}); N(accSum?(a.balance/accSum*100).toFixed(1)+'%':'—',cS,ry+40,{size:18,col:MUTE,al:'left'}); if(i<acc.length-1) line(P+20,ry+62,W-P-20,ry+62,'#F0F0EB'); ry+=62; });
+      rr(P+14,ry+10,W-2*P-28,58,14,'rgba(212,175,55,.16)'); T('الإجمالي',cA,ry+48,{size:23,w:600,f:FD}); N(fmt(accSum,2),cB,ry+48,{size:26,w:700,col:r.accMismatch?DN:GOLD2,al:'center'});
+      y+=th+24;
+    }
+    // ---------- shared chart helpers ----------
+    const xEnd=Math.max(1,L.x);
+    const gs=v=>{ let a_=0,w_=0; S.pts.forEach(p=>{ const w=Math.exp(-((p.x-v)**2)/(2*1.0*1.0)); a_+=w*p.y; w_+=w; }); return a_/w_; };
+    const lin=v=>{ const P_=S.pts; if(v<=P_[0].x) return P_[0].y; for(let i=1;i<P_.length;i++){ if(v<=P_[i].x){ const a_=P_[i-1],b_=P_[i]; return a_.y+(b_.y-a_.y)*(v-a_.x)/((b_.x-a_.x)||1); } } return P_[P_.length-1].y; };
+    const x0_=S.pts[0].x, ed=1.6; const sm=v=>{ const k=v>xEnd-ed?(v-(xEnd-ed))/ed:v<x0_+ed?(x0_+ed-v)/ed:0; const w=k*k*(3-2*k); return gs(v)*(1-w)+lin(v)*w; };
+    const smPts=[]; for(let v=x0_;v<=xEnd+1e-9;v+=0.5) smPts.push([v,sm(v)]);
+    const chart=(top,h,extra)=>{ const cx0=P+108, cx1=W-P-34, cy0=top, cy1=top+h; const X=v=>cx1-(v/xEnd)*(cx1-cx0);
+      let lo=Math.min(...S.pts.map(p=>p.y),...extra), hi=Math.max(...S.pts.map(p=>p.y),...extra); const pd=(hi-lo)*.1||1; lo-=pd; hi+=pd; const Y=v=>cy0+(hi-v)/(hi-lo)*(cy1-cy0);
+      for(let i=0;i<=4;i++){ const vv=lo+(hi-lo)*i/4, yy=Y(vv); line(cx0,yy,cx1,yy,'#EFEFEA',1.2); N(lblK(vv/1000)+'K',cx0-14,yy+6,{size:17,col:DIM,al:'right'}); }
+      const every=xEnd<=10?1:xEnd<=20?2:xEnd<=45?3:Math.ceil(xEnd/12);
+      for(let v=xEnd;v>=0;v-=every){ const k=addDays(r.from,v); N(String(Number(k.slice(8)))+(Number(k.slice(8))===1||v===0?'/'+Number(k.slice(5,7)):''),X(v),cy1+34,{size:17,col:MUTE,al:'center'}); }
       return {X,Y,cx0,cx1,cy0,cy1}; };
-    const legend=(items,ly)=>{ let lx=W-P-24; items.forEach(([cl,t,k])=>{ x.font='400 14px '+FA; const tw=x.measureText(t).width;
-      if(k==='b') rr(lx-16,ly-12,16,14,3,cl); else if(k==='d') line(lx-18,ly-5,lx,ly-5,cl,3,[5,3]); else line(lx-18,ly-5,lx,ly-5,cl,3.5); T(t,lx-24,ly,{size:14,col:'#4F554F'}); lx-=tw+52; }); };
-    const dots=(G,labels)=>{ const rot=S.n>12; S.pts.forEach(p=>{ const isL=p===L; x.beginPath(); x.arc(G.X(p.x),G.Y(p.y),isL?7:4.5,0,7); x.fillStyle=isL?'#9A7B12':'#18231C'; x.fill(); x.strokeStyle='#FFFFFF'; x.lineWidth=2; x.stroke();
-      if(!labels||isL) return; const t=lblK(p.y); if(rot) NR(t,G.X(p.x),G.Y(p.y)-11,{col:'#4F554F'}); else NS(t,G.X(p.x),G.Y(p.y)-13,{size:13,col:'#4F554F'}); });
-      const bx=G.X(L.x), by=G.Y(L.y), t=fmt(L.y); x.font='700 15px '+FD; const tw=x.measureText(t).width+20; const ry=by-G.cy0>60?by-46:by+16; const bxx=Math.max(G.cx0,Math.min(G.cx1-tw,bx-tw/2)); rr(bxx,ry,tw,28,8,'#9A7B12'); N(t,bxx+tw/2,ry+19.5,{size:15,w:700,col:'#FFFFFF',al:'center'}); };
-    const PT=G=>S.pts.map(p=>[G.X(p.x),G.Y(p.y)]);
-    // ---- 1) trend ----
-    secT('خط اتجاه السيولة',y,'الرصيد اليومي بخط انسيابي مع خط الاتجاه',1); y+=58; rr(P,y,W-2*P,500,16,'#FFFFFF','#E6E6E0');
-    legend([['#18231C','إجمالي الأرصدة','l'],['#D4AF37','خط الاتجاه','d']],y+36);
-    { const G=plot(y+66,330,[S.tr(0),tl]); smoothFill(PT(G),G.cy1,'rgba(212,175,55,.10)'); line(G.X(0),G.Y(S.tr(0)),G.X(L.x),G.Y(tl),'#D4AF37',2.6,[10,6]); smooth(PT(G),'#18231C',3); dots(G,true);
-      const it=[['الاتجاه',S.dir,dirCol],['الميل اليومي',sgnF(S.b),dirCol],['التغير خلال 30 يوماً',sgnF(S.b*30),dirCol],['قوة الاتجاه (R²)',(S.R2*100).toFixed(0)+'%','#18231C']];
-      const iw=(W-2*P)/it.length; line(P+20,y+432,W-P-20,y+432,'#F0F0EB'); it.forEach((q,i)=>{ const cx=W-P-iw*i-iw/2; if(i) line(W-P-iw*i,y+444,W-P-iw*i,y+490,'#E6E6E0'); T(q[0],cx,y+458,{size:13.5,col:'#6B706A',al:'center'}); N(q[1],cx,y+486,{size:19,w:600,col:q[2],al:'center'}); }); }
-    y+=500+30;
-    // ---- 2) range ----
-    secT('نطاق السيولة',y,'النطاق الطبيعي ±1σ والواسع ±2σ حول خط الاتجاه',2); y+=58; rr(P,y,W-2*P,600,16,'#FFFFFF','#E6E6E0');
-    legend([['#18231C','إجمالي الأرصدة','l'],['rgba(212,175,55,.5)','النطاق الطبيعي','b'],['rgba(212,175,55,.2)','النطاق الواسع','b'],['#D4AF37','خط الاتجاه','d']],y+36);
-    { const G=plot(y+66,330,[S.tr(0)+2*S.s,S.tr(0)-2*S.s,tl+2*S.s,tl-2*S.s]);
+    const curve=(G,pts,col,w,fill)=>{ const Q=pts.map(([v,yy])=>[G.X(v),G.Y(yy)]).sort((a,b)=>a[0]-b[0]); x.save(); x.beginPath(); smoothPath(x,Q);
+      if(fill){ const Z=x.createLinearGradient(0,G.cy0,0,G.cy1); Z.addColorStop(0,fill); Z.addColorStop(1,'rgba(255,255,255,0)'); x.lineTo(Q[Q.length-1][0],G.cy1); x.lineTo(Q[0][0],G.cy1); x.closePath(); x.fillStyle=Z; x.fill(); }
+      else { x.strokeStyle=col; x.lineWidth=w; x.lineJoin='round'; x.lineCap='round'; x.stroke(); } x.restore(); };
+    const raw=(G)=>{ x.save(); x.beginPath(); S.pts.forEach((p,i)=>i?x.lineTo(G.X(p.x),G.Y(p.y)):x.moveTo(G.X(p.x),G.Y(p.y))); x.strokeStyle='rgba(24,35,28,.18)'; x.lineWidth=1.6; x.stroke(); x.restore(); };
+    const dot=(G,p,col,r_=5.5)=>{ x.beginPath(); x.arc(G.X(p.x),G.Y(p.y),r_,0,7); x.fillStyle=col; x.fill(); x.strokeStyle='#FFFFFF'; x.lineWidth=2.4; x.stroke(); };
+    const callout=(G,p,t,bg)=>{ const px=G.X(p.x), py=G.Y(p.y); const up=py-G.cy0>70; x.font='700 18px '+FD; const tw=x.measureText(t).width+22; const bx=Math.max(G.cx0,Math.min(G.cx1-tw,px-tw/2)); const by=up?py-56:py+20; rr(bx,by,tw,34,17,bg); N(t,bx+tw/2,by+24,{size:18,w:700,col:'#FFFFFF',al:'center'}); };
+    const legend=(items,ly)=>{ let lx=W-P-30; items.forEach(([cl,t,k])=>{ x.font='400 18px '+FA; const tw=x.measureText(t).width;
+      if(k==='b') rr(lx-20,ly-15,20,16,4,cl); else if(k==='d') line(lx-24,ly-7,lx,ly-7,cl,3.5,[6,4]); else if(k==='o'){ x.beginPath(); x.arc(lx-10,ly-7,6,0,7); x.fillStyle=cl; x.fill(); } else line(lx-24,ly-7,lx,ly-7,cl,4.5); T(t,lx-32,ly,{size:18,col:'#4F554F'}); lx-=tw+64; }); };
+    const strip=(items,y0)=>{ const iw=(W-2*P)/items.length; line(P+24,y0,W-P-24,y0,LINE); items.forEach((q,i)=>{ const cx=W-P-iw*i-iw/2; if(i) line(W-P-iw*i,y0+18,W-P-iw*i,y0+96,'#EFEFEA'); T(q[0],cx,y0+42,{size:17,col:MUTE,al:'center'}); N(q[1],cx,y0+82,{size:25,w:700,col:q[2]||INK,al:'center'}); }); };
+    const mx=S.mx, mn=S.mn;
+    // ---------- 1) trend ----------
+    secT('خط اتجاه السيولة',y,1,'المنحنى يوضح حركة السيولة بدون تذبذب اليوم الواحد'); y+=70; rr(P,y,W-2*P,CH,20,'#FFFFFF',LINE);
+    legend([[INK,'منحنى السيولة','l'],[GOLD,'خط الاتجاه','d'],['rgba(24,35,28,.45)','الرصيد الفعلي','o']],y+44);
+    { const G=chart(y+90,420,[S.tr(0),tl]); curve(G,smPts,null,0,'rgba(212,175,55,.28)'); raw(G);
+      line(G.X(0),G.Y(S.tr(0)),G.X(L.x),G.Y(tl),GOLD,3,[12,7]); curve(G,smPts,INK,4.5);
+      S.pts.forEach(p=>dot(G,p,p===L?GOLD2:p===mx?UP:p===mn&&p!==L?DN:'rgba(24,35,28,.45)',p===L||p===mx||p===mn?8:4.5));
+      callout(G,mx,'أعلى '+lblK(mx.y),UP); if(mn!==L) callout(G,mn,'أدنى '+lblK(mn.y),DN); callout(G,L,'اليوم '+lblK(L.y),GOLD2);
+      strip([['الاتجاه',S.dir,dirCol],['الميل اليومي',sgnF(S.b),dirCol],['متوسط الفترة',fmt(avg)],['قوة الاتجاه',(S.R2*100).toFixed(0)+'%']],y+CH-118); }
+    y+=CH+30;
+    // ---------- 2) range ----------
+    secT('نطاق السيولة',y,2,'المساحة الطبيعية لحركة الرصيد حول خط الاتجاه'); y+=70; rr(P,y,W-2*P,CH,20,'#FFFFFF',LINE);
+    legend([['rgba(212,175,55,.55)','النطاق الطبيعي','b'],['rgba(212,175,55,.2)','النطاق الواسع','b'],[INK,'منحنى السيولة','l']],y+44);
+    { const G=chart(y+90,420,[S.tr(0)+2*S.s,S.tr(0)-2*S.s,tl+2*S.s,tl-2*S.s]);
       const band=(k,fill)=>{ x.beginPath(); x.moveTo(G.X(0),G.Y(S.tr(0)+k*S.s)); x.lineTo(G.X(L.x),G.Y(tl+k*S.s)); x.lineTo(G.X(L.x),G.Y(tl-k*S.s)); x.lineTo(G.X(0),G.Y(S.tr(0)-k*S.s)); x.closePath(); x.fillStyle=fill; x.fill(); };
-      band(2,'rgba(212,175,55,.10)'); band(1,'rgba(212,175,55,.22)');
-      [1,-1].forEach(k=>line(G.X(0),G.Y(S.tr(0)+k*S.s),G.X(L.x),G.Y(tl+k*S.s),'rgba(212,175,55,.6)',1.2,[6,5]));
-      line(G.X(0),G.Y(S.tr(0)),G.X(L.x),G.Y(tl),'#D4AF37',2.2,[10,6]); smooth(PT(G),'#18231C',3);
-      S.pts.forEach(p=>{ const isL=p===L; x.beginPath(); x.arc(G.X(p.x),G.Y(p.y),isL?7:4.5,0,7); x.fillStyle=zCol(p.z); x.fill(); x.strokeStyle='#FFFFFF'; x.lineWidth=2; x.stroke(); });
-      // gauge
-      const gy=y+66+330+104, gh=22, gx0=P+60, gx1=W-P-60; const GX=zz=>gx0+(Math.max(-3,Math.min(3,zz))+3)/6*(gx1-gx0);
-      [[-3,-2,'rgba(224,101,74,.85)'],[-2,-1,'rgba(224,101,74,.4)'],[-1,1,'rgba(212,175,55,.45)'],[1,2,'rgba(63,185,138,.4)'],[2,3,'rgba(63,185,138,.85)']].forEach(([a_,b_,cl],i)=>{ x.beginPath(); x.roundRect(GX(a_)+1,gy,GX(b_)-GX(a_)-2,gh,i===0?[11,0,0,11]:i===4?[0,11,11,0]:0); x.fillStyle=cl; x.fill(); });
-      [-2,-1,0,1,2].forEach(k=>{ const gx=GX(k); line(gx,gy-6,gx,gy+gh+6,'#18231C',1.4); N(fmt(tl+k*S.s),gx,gy+gh+26,{size:14,w:600,col:k===0?'#9A7B12':'#18231C',al:'center'}); });
-      T('أدنى',gx0,gy+gh+26,{size:12.5,col:'#8E928C',al:'left'}); T('أعلى',gx1,gy+gh+26,{size:12.5,col:'#8E928C',al:'right'});
-      const mx_=GX(S.z); x.beginPath(); x.moveTo(mx_,gy-3); x.lineTo(mx_-10,gy-18); x.lineTo(mx_+10,gy-18); x.closePath(); x.fillStyle='#18231C'; x.fill();
-      const t='الرصيد '+fmt(L.y)+' — '+S.pos; x.font='600 14px '+FA; const tw=x.measureText(t).width+22; const bx=Math.max(P+10,Math.min(W-P-10-tw,mx_-tw/2)); rr(bx,gy-52,tw,28,8,zCol(S.z)); T(t,bx+tw/2,gy-33,{size:14,w:600,col:'#FFFFFF',al:'center'});
-      T('النطاق الطبيعي اليوم: '+fmt(tl-S.s)+' — '+fmt(tl+S.s)+' ر.س     •     النطاق الواسع: '+fmt(tl-2*S.s)+' — '+fmt(tl+2*S.s)+' ر.س',W/2,y+580,{size:14.5,col:'#4F554F',al:'center'}); }
-    y+=600+30;
-    // ---- 3) support & resistance ----
-    secT('الدعم والمقاومة',y,'مستويات تكرر عندها ارتداد الرصيد خلال الفترة',3); y+=58; rr(P,y,W-2*P,590,16,'#FFFFFF','#E6E6E0');
-    legend([['#18231C','إجمالي الأرصدة','l'],['#1FA16B','المقاومة (أعلى 10%)','d'],['#D0453A','الدعم (أدنى 10%)','d']],y+36);
-    { const G=plot(y+66,350,[S.p10,S.p90]);
-      x.fillStyle='rgba(212,175,55,.08)'; x.fillRect(G.cx0,G.Y(S.p90),G.cx1-G.cx0,G.Y(S.p10)-G.Y(S.p90));
-      line(G.cx0,G.Y(S.p90),G.cx1,G.Y(S.p90),'#1FA16B',2.4,[10,6]); line(G.cx0,G.Y(S.p10),G.cx1,G.Y(S.p10),'#D0453A',2.4,[10,6]);
-      NS('المقاومة '+lblK(S.p90),G.cx0+8,G.Y(S.p90)-8,{size:13.5,col:'#1FA16B',al:'left'}); NS('الدعم '+lblK(S.p10),G.cx0+8,G.Y(S.p10)+20,{size:13.5,col:'#D0453A',al:'left'});
-      smooth(PT(G),'#18231C',3);
-      S.pts.forEach(p=>{ const hiT=p.y>=S.p90, loT=p.y<=S.p10, isL=p===L; x.beginPath(); x.arc(G.X(p.x),G.Y(p.y),hiT||loT||isL?7:4,0,7); x.fillStyle=hiT?'#1FA16B':loT?'#D0453A':isL?'#9A7B12':'#18231C'; x.fill(); x.strokeStyle='#FFFFFF'; x.lineWidth=2; x.stroke(); });
-      const ny=y+66+350+56; line(P+20,ny-22,W-P-20,ny-22,'#F0F0EB');
-      const dR=S.p90-L.y, dS=L.y-S.p10;
-      const lv=[['مستوى المقاومة',fmt(S.p90),'#1FA16B',dR>0?'يبعد عنه '+fmt(dR):'الرصيد فوقه'],['مستوى الدعم',fmt(S.p10),'#D0453A',dS>0?'يبعد عنه '+fmt(dS):'الرصيد تحته'],['أعلى رصيد',fmt(S.mx.y),'#18231C',dmy(S.mx.key)],['أدنى رصيد',fmt(S.mn.y),'#18231C',dmy(S.mn.key)]];
-      const lw=(W-2*P)/4; lv.forEach((q,i)=>{ const cx=W-P-lw*i-lw/2; if(i) line(W-P-lw*i,ny-6,W-P-lw*i,ny+70,'#E6E6E0'); T(q[0],cx,ny+8,{size:14,col:'#6B706A',al:'center'}); N(q[1],cx,ny+42,{size:20,w:600,col:q[2],al:'center'}); T(q[3],cx,ny+68,{size:13,col:'#8E928C',al:'center'}); }); }
-    y+=590+30;
-    if(r.note){ rr(P,y,W-2*P,70,14,'rgba(212,175,55,.10)','#D4AF37'); T('ملاحظة: '+r.note,W-P-24,y+43,{size:18,col:'#9A7B12'}); y+=90; }
-    x.fillStyle='#F0F0EB'; x.fillRect(0,H-56,W,56); T('خزينة الأرصدة  •  سري — للاستخدام الداخلي  •  أُعد بواسطة Ameer Alarifi',W-P,H-22,{size:14,col:'#6B706A'}); T('أُعد في '+r.createdLabel,P,H-22,{size:14,col:'#6B706A',al:'left'});
+      band(2,'rgba(212,175,55,.10)'); band(1,'rgba(212,175,55,.26)'); line(G.X(0),G.Y(S.tr(0)),G.X(L.x),G.Y(tl),'rgba(154,123,18,.55)',2,[12,7]);
+      curve(G,smPts,INK,4.5); S.pts.forEach(p=>{ if(Math.abs(p.z)>1) dot(G,p,p.z>0?UP:DN,6.5); });
+      [[2,'+2σ'],[1,'+1σ'],[-1,'−1σ'],[-2,'−2σ']].forEach(([k])=>{ const vv=tl+k*S.s; N(lblK(vv/1000)+'K',G.cx1-8,G.Y(vv)+(k>0?-8:20),{size:15.5,w:600,col:Math.abs(k)===1?GOLD2:DIM,al:'right'}); });
+      dot(G,L,zCol(S.z),9); callout(G,L,'اليوم '+lblK(L.y),zCol(S.z)===INK?GOLD2:zCol(S.z));
+      strip([['النطاق الطبيعي اليوم',lblK(tl-S.s)+' – '+lblK(tl+S.s),GOLD2],['أيام داخل النطاق',inN+' / '+S.n],['أيام فوق النطاق',String(S.above),UP],['أيام تحت النطاق',String(S.below),DN]],y+CH-118); }
+    y+=CH+30;
+    // ---------- 3) support & resistance ----------
+    secT('الدعم والمقاومة',y,3,'مستويات يرتد عندها الرصيد عادةً'); y+=70; rr(P,y,W-2*P,CH,20,'#FFFFFF',LINE);
+    legend([[UP,'المقاومة','d'],[DN,'الدعم','d'],[INK,'منحنى السيولة','l']],y+44);
+    { const G=chart(y+90,420,[S.p10,S.p90]); const zr=Math.max(6,(G.cy1-G.cy0)*.03);
+      x.fillStyle='rgba(31,161,107,.10)'; x.fillRect(G.cx0,G.Y(S.p90)-zr,G.cx1-G.cx0,2*zr); x.fillStyle='rgba(208,69,58,.10)'; x.fillRect(G.cx0,G.Y(S.p10)-zr,G.cx1-G.cx0,2*zr);
+      line(G.cx0,G.Y(S.p90),G.cx1,G.Y(S.p90),UP,3,[12,7]); line(G.cx0,G.Y(S.p10),G.cx1,G.Y(S.p10),DN,3,[12,7]);
+      curve(G,smPts,INK,4.5);
+      S.pts.forEach(p=>{ if(p.y>=S.p90) dot(G,p,UP,7); else if(p.y<=S.p10) dot(G,p,DN,7); });
+      pill('مقاومة '+lblK(S.p90),G.cx1-4,G.Y(S.p90),UP,'#FFFFFF',16,'right'); pill('دعم '+lblK(S.p10),G.cx1-4,G.Y(S.p10),DN,'#FFFFFF',16,'right');
+      dot(G,L,GOLD2,9); callout(G,L,'اليوم '+lblK(L.y),GOLD2);
+      strip([['المقاومة',fmt(S.p90),UP],['المسافة للمقاومة',dR>0?fmt(dR):'تجاوزها',dR>0?INK:UP],['الدعم',fmt(S.p10),DN],['المسافة للدعم',dS>0?fmt(dS):'كسره',dS>0?INK:DN]],y+CH-118); }
+    y+=CH+30;
+    if(r.note){ rr(P,y,W-2*P,76,16,'rgba(212,175,55,.10)',GOLD); T('ملاحظة: '+r.note,W-P-26,y+48,{size:21,col:GOLD2}); y+=100; }
+    x.fillStyle='#EEEFE9'; x.fillRect(0,H-64,W,64); T('خزينة الأرصدة  •  سري — للاستخدام الداخلي',W-P,H-26,{size:17,col:MUTE}); T('Ameer Alarifi',P,H-26,{size:17,col:MUTE,al:'left',f:FD,dir:'ltr'});
     return c;
   }
 
