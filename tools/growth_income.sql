@@ -1,0 +1,65 @@
+create or replace function public.app_section(p_app text) returns text
+language sql immutable as $$
+  select case p_app when 'sales' then 'sales' when 'daily' then 'daily' when 'channels' then 'channels'
+                    when 'income' then 'fin_is' when 'wh' then 'wh' when 'prices' then 'chicken'
+                    when 'treasury' then 'treasury' when 'loans' then 'loans' when 'fleet' then 'fleet' else null end
+$$;
+
+create or replace function public.growth_income_rebuild(p_from_ym text default null) returns int
+language plpgsql volatile security definer set search_path = public as $$
+declare n int := 0; f text := coalesce(nullif(p_from_ym, ''), to_char(now() - interval '35 days', 'YYYY-MM'));
+begin
+  with lv as (
+    select t.branch br, t.ym, t.acc, coalesce(c.name, t.acc) an, coalesce(nullif(c.parent, ''), left(t.acc, 3)) gc,
+           case when t.acc like '4%' then 'rev' when t.acc like '311%' then 'cogs' else 'opex' end cat,
+           case when t.acc like '4%' then sum(t.credit - t.debit) else sum(t.debit - t.credit) end v
+    from growth_tb t left join growth_coa c on c.acc = t.acc
+    where t.ym >= f and t.ym <> '0000-00' and t.branch in ('az', 'sh', 'pc') and (t.acc like '3%' or t.acc like '4%')
+    group by t.branch, t.ym, t.acc, c.name, c.parent
+    having abs(sum(t.debit - t.credit)) >= 0.005
+  ), gr as (
+    select br, ym, gc, cat, jsonb_agg(jsonb_build_object('c', acc, 'n', an, 'v', round(v, 2)) order by acc) a
+    from lv group by br, ym, gc, cat
+  ), doc as (
+    select g.br, g.ym, jsonb_agg(jsonb_build_object('c', g.gc, 'n', coalesce(p.name, g.gc), 'cat', g.cat, 'a', g.a)
+             order by case g.cat when 'rev' then 0 when 'cogs' then 1 else 2 end, g.gc) groups
+    from gr g left join growth_coa p on p.acc = g.gc group by g.br, g.ym
+  )
+  insert into app_docs (app, coll, id, data, branches, updated_at)
+  select 'income', 'stmts', br || '_' || ym,
+         jsonb_build_object('br', br, 'month', ym, 'est', false, 'groups', groups, 'source', 'growth', 'updatedAt', now()), array[br], now()
+  from doc
+  on conflict (app, coll, id) do update set data = excluded.data, branches = excluded.branches, updated_at = now();
+  get diagnostics n = row_count;
+  return n;
+end $$;
+revoke all on function public.growth_income_rebuild(text) from public, anon, authenticated;
+
+create or replace function public.growth_ingest_tb(p_rows jsonb, p_from_ym text default null, p_reset boolean default false) returns jsonb
+language plpgsql volatile security definer set search_path = public as $$
+declare n int := 0; d int := 0;
+begin
+  if not exists (select 1 from profiles where id = auth.uid() and role in ('sync', 'owner') and coalesce(active, true)) then
+    raise exception 'غير مصرح';
+  end if;
+  if jsonb_typeof(coalesce(p_rows, '[]')) <> 'array' or jsonb_array_length(coalesce(p_rows, '[]')) > 8000 then
+    raise exception 'دفعة غير صالحة';
+  end if;
+  if p_reset and p_from_ym is not null then
+    delete from growth_tb where ym >= p_from_ym; get diagnostics d = row_count;
+  end if;
+  insert into growth_tb (branch, acc, ym, debit, credit)
+  select coalesce(x->>'branch', ''), x->>'acc', x->>'ym', coalesce((x->>'debit')::numeric, 0), coalesce((x->>'credit')::numeric, 0)
+  from jsonb_array_elements(coalesce(p_rows, '[]')) x
+  where coalesce(x->>'acc', '') <> '' and coalesce(x->>'ym', '') ~ '^[0-9]{4}-[0-9]{2}$'
+  on conflict (branch, acc, ym) do update set debit = excluded.debit, credit = excluded.credit;
+  get diagnostics n = row_count;
+  insert into growth_sync_state (id, last_run, rows_in, info) values ('tb', now(), n, jsonb_build_object('from', p_from_ym, 'reset', p_reset, 'deleted', d))
+  on conflict (id) do update set last_run = now(), rows_in = excluded.rows_in, info = excluded.info;
+  perform growth_income_rebuild(p_from_ym);
+  return jsonb_build_object('ok', true, 'rows', n, 'deleted', d);
+end $$;
+revoke all on function public.growth_ingest_tb(jsonb, text, boolean) from public, anon;
+grant execute on function public.growth_ingest_tb(jsonb, text, boolean) to authenticated;
+
+select public.growth_income_rebuild('2026-01');

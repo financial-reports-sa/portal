@@ -57,6 +57,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .fa-in{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px dashed var(--line)}.fa-in:last-child{border:0}.fa-in span{flex:none;font-size:16px}.fa-in p{margin:0;font-size:12.5px;line-height:1.7}
 #fsPrint{display:none}
 @media print{body.fsprinting>*:not(#fsPrint){display:none!important}body.fsprinting #fsPrint{display:block;padding:0 4mm;direction:rtl}#fsPrint .fa-ph{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid #143D2A;padding-bottom:8px;margin-bottom:12px}#fsPrint .fa-ph b{font-size:18px;color:#143D2A}#fsPrint .fa-ph span{font-size:12px;color:#555}#fsPrint .card,#fsPrint .fa-hero,#fsPrint .fa-ks{break-inside:avoid;box-shadow:none}#fsPrint .fa-hero,#fsPrint .fa-pdf{-webkit-print-color-adjust:exact;print-color-adjust:exact}#fsPrint *{-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{size:A4;margin:12mm}}
+.um-list{display:flex;flex-direction:column;gap:6px}.um-row{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:var(--card);font:inherit;color:inherit;cursor:pointer;text-align:start}
+.um-row .uav{width:34px;height:34px}.um-n{flex:1;min-width:0;display:flex;flex-direction:column}.um-n b{font-size:13.5px}.um-n small{font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.um-sw{flex:none;width:44px;height:26px;border-radius:99px;background:#D9DCD6;position:relative;transition:.2s}.um-sw::after{content:'';position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:.2s}
+.um-row[aria-pressed="true"]{border-color:#1E5A3E;background:#EEF5F0}.um-row[aria-pressed="true"] .um-sw{background:#1E5A3E}.um-row[aria-pressed="true"] .um-sw::after{right:21px}
+.um-copy{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
 .hb-grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
 .hb-s{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:92px;padding:12px 6px 10px;border-radius:16px;border:1px solid var(--line);background:var(--card);box-shadow:0 1px 2px rgba(20,24,20,.04),0 4px 12px rgba(20,24,20,.05);font:inherit;color:inherit;cursor:pointer}
 .hb-s::before{content:'';position:absolute;inset:0 0 auto 0;height:3px;background:var(--c)}.hb-s:active{transform:scale(.97)}
@@ -823,6 +828,7 @@ const SECTIONS=[
   {id:'stock',name:'المستودعات والمشتريات',perm:'wh'},
   {id:'treasury',name:'خزينة الأرصدة',app:'treasury'},
   {id:'finst',name:'القوائم المالية',perm:'income'},
+  {id:'income',name:'قوائم الدخل',app:'income',perm:'fin_is'},
   {id:'balances',name:'أرصدة العملاء والموردين'},
   {id:'loans',name:'التمويلات'},
   {id:'fleet',name:'أسطول السيارات'},
@@ -850,11 +856,11 @@ const NAV_ICONS={
   hrg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="9" cy="11" r="2.3"/><path d="M5.8 16.2a3.4 3.4 0 0 1 6.4 0"/><path d="M14.5 10h3.5M14.5 13.5h3.5"/></svg>',
   fin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/><path d="M6.5 15h4"/></svg>',
   more:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>'};
-const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me','msgs']},{id:'ai',name:'المساعد الذكي',secs:['ai']},{id:'rep',name:'التقارير',secs:['hub','sales','channels','stock','finst','balances','treasury','handover','rets','custody','loans']},{id:'ops',name:'العمليات',secs:['maint','purch','feedback','mkt','fleet']},{id:'hrg',name:'الموارد البشرية',secs:['hr','att','employees','advances']},{id:'more',name:'الإدارة',secs:['users','data'],nav:false}];
+const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me','msgs']},{id:'ai',name:'المساعد الذكي',secs:['ai']},{id:'rep',name:'التقارير',secs:['hub','sales','channels','stock','income','finst','balances','treasury','handover','rets','custody','loans']},{id:'ops',name:'العمليات',secs:['maint','purch','feedback','mkt','fleet']},{id:'hrg',name:'الموارد البشرية',secs:['hr','att','employees','advances']},{id:'more',name:'الإدارة',secs:['users','data'],nav:false}];
 const HUB=[
   {n:'المبيعات',ic:'💰',c:'#1E5A3E',secs:['sales','channels']},
   {n:'المستودعات',ic:'📦',c:'#B8860B',secs:['stock'],items:[['stock','🧾','المشتريات',{ivT:'pur'}],['stock','📤','الصرف المباشر',{ivT:'iss'}],['stock','📦','أرصدة المخزون',{ivT:'stock'}],['stock','📊','المخططات اليومية',{ivT:'chart'}]]},
-  {n:'القوائم المالية والحسابات',ic:'📊',c:'#2F5D8A',secs:['finst','balances','treasury'],items:[['finst','📈','قائمة الدخل',{fsT:'is'},'fin_is'],['finst','⚖️','الميزانية',{fsT:'bs'},'fin_bs'],['finst','📚','أرصدة الحسابات',{fsT:'tb'},'fin_tb'],['balances','🏭','الموردين',{blK:'vend'}],['balances','👥','العملاء',{blK:'cust'}],['treasury','🏦','خزينة الأرصدة',{}]]},
+  {n:'القوائم المالية والحسابات',ic:'📊',c:'#2F5D8A',secs:['income','finst','balances','treasury'],items:[['income','📈','قائمة الدخل',{},'fin_is'],['finst','⚖️','الميزانية',{fsT:'bs'},'fin_bs'],['finst','📚','أرصدة الحسابات',{fsT:'tb'},'fin_tb'],['balances','🏭','الموردين',{blK:'vend'}],['balances','👥','العملاء',{blK:'cust'}],['treasury','🏦','خزينة الأرصدة',{}]]},
   {n:'الكاشيرات',ic:'🧾',c:'#9A3E2E',secs:['handover','rets']},
   {n:'العُهد والتمويلات',ic:'💼',c:'#5B5F66',secs:['custody','loans']}];
 const HUB_IT={sales:['📈','المبيعات اليومية والشهرية لكل فرع'],channels:['🛵','التطبيقات والأقسام وفئات المنيو'],stock:['📦','الصرف المباشر والمشتريات وأرصدة الأصناف'],finst:['📑','قائمة الدخل والميزانية وأرصدة الحسابات'],balances:['👥','أرصدة وكشوف العملاء والموردين'],treasury:['🏦','أرصدة البنوك والصناديق'],handover:['🔐','مطابقة عهدة الكاشير مع جروث'],rets:['↩️','تفاصيل المرتجعات وتنزيلها كصورة'],custody:['💼','العُهد واستلامها'],loans:['💳','التمويلات والأقساط']};
@@ -863,7 +869,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'المبيعات',secs:['sales','channels']},{name:'المستودعات',secs:['wh']},{name:'القوائم المالية والحسابات',secs:['fin_is','fin_bs','fin_tb','balances','treasury']},{name:'الكاشيرات',secs:['handover','rets']},{name:'العُهد والتمويلات',secs:['custody','custody_holder','loans']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610190605';
+const APP_VER='202610190740';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون والمخططات'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -3940,7 +3946,7 @@ async function aiAnswer(q){
   }
   // ---- قوائم الدخل ----
   if(aiHas(t,'ربح','صافي','خساره','خسر','ايراد','مصاريف','مصروف','هامش','قائمه الدخل','قوائم الدخل')){
-    if(true) return canSee('finst')?{text:'قوائم الدخل صارت من جروث — افتح «القوائم المالية» واختر الفترة.',go:'finst'}:aiNo('ما عندك صلاحية على القوائم المالية.');
+    if(!canSee('income')) return aiNo('ما عندك صلاحية على قوائم الدخل.');
     const I=(await loadIncome()).filter(r=>bs.includes(r.branch_id)&&!r.is_estimate); const ms=[...new Set(I.map(r=>r.month))].sort(); if(!ms.length) return {text:'ما فيه قوائم دخل متوفرة.',go:'income'};
     let sel, label, note='';
     if(P&&P.kind==='year'){sel=ms.filter(m=>m.startsWith(P.year));label=P.label;}
@@ -4622,7 +4628,18 @@ V.users=async()=>{
   const canManage=u=>u.role!=='owner'&&(isOwner()||u.role==='user');
   const q=(st.uq||'').trim().toLowerCase(); st.uOpen=st.uOpen||{};
   let h=`<div class="usr-top"><div class="usr-s"><input class="inp" id="usq" type="search" placeholder="🔍 ابحث بالاسم أو اسم المستخدم" value="${esc(st.uq||'')}" autocomplete="off"></div><button class="btn sm" data-uadd="1">${st.uAdd?'إغلاق':'＋ مستخدم'}</button></div>
-  <div class="muted" id="usqn" style="font-size:10.5px;margin:-6px 2px 0">${P.data.length} مستخدم</div>`;
+  <div class="muted" id="usqn" style="font-size:10.5px;margin:-6px 2px 0">${P.data.length} مستخدم</div>
+  <div class="iv-tabs iv-2" style="margin-top:10px">${[['user','👤','حسب الموظف'],['sec','🗂️','حسب الشاشة']].map(([v,i,n])=>`<button data-umode="${v}" aria-pressed="${(st.uMode||'user')===v}"><span>${i}</span><b>${n}</b></button>`).join('')}</div>`;
+  if(st.uMode==='sec'){ const U=P.data.filter(u=>u.role==='user'&&canManage(u)); const K=st.uSec||'s:'+PERM_GROUPS[0].secs[0]; const [kk,kid]=K.split(':');
+    const lbl=kk==='b'?((st.branches.find(b=>b.id===kid)||{}).name||kid):(SEC_NAME[kid]||kid);
+    const has=u=>kk==='b'?ub.some(x=>x.user_id===u.id&&x.branch_id===kid):us.some(x=>x.user_id===u.id&&x.section===kid);
+    h+=`<div class="card"><div class="muted" style="font-size:11px;margin-bottom:6px">1) اختر الشاشة أو الفرع</div>
+      <div class="pgrp"><div class="pgh"><b>الفروع</b></div><div class="tgrid">${st.branches.map(b=>`<button class="tg" data-usec="b:${b.id}" aria-pressed="${K==='b:'+b.id}">${esc(b.name)}</button>`).join('')}</div></div>
+      ${PERM_GROUPS.map(g=>`<div class="pgrp"><div class="pgh"><b>${g.name}</b></div><div class="tgrid">${g.secs.map(x=>`<button class="tg" data-usec="s:${x}" aria-pressed="${K==='s:'+x}">${SEC_NAME[x]}</button>`).join('')}</div></div>`).join('')}</div>
+      <div class="card"><div class="pgh" style="margin-bottom:8px"><b>2) مين يشوف «${esc(lbl)}»؟</b><span class="muted num" style="font-size:10.5px">${U.filter(has).length} من ${U.length}</span></div>
+      <div class="um-list">${U.map(u=>`<button class="um-row" data-tb="${u.id}" data-k="${K}" aria-pressed="${has(u)}"><span class="uav">${esc((u.full_name||u.username).trim().charAt(0))}</span><span class="um-n"><b>${esc(u.full_name||u.username)}</b><small>${esc(st.branches.filter(b=>ub.some(x=>x.user_id===u.id&&x.branch_id===b.id)).map(b=>b.name).join('، ')||'بدون فرع')}</small></span><span class="um-sw"></span></button>`).join('')||'<p class="muted">ما فيه مستخدمين</p>'}</div>
+      <div class="muted" style="font-size:10.5px;margin-top:8px">اضغط على الاسم للتفعيل أو الإلغاء — ينحفظ على طول. الآدمن والمالك يشوفون كل شيء.</div></div>`;
+    return h; }
   h+=`<div class="card usr" ${st.uAdd?'':'hidden'}><h3 style="font-size:13.5px">إضافة مستخدم</h3><form class="row" id="nuf" autocomplete="off">
     <div class="field"><label for="nun">الاسم</label><input class="inp" id="nun" required placeholder="مدير فرع العزيزية"></div>
     <div class="field"><label for="nuu">اسم المستخدم (إنجليزي)</label><input class="inp" id="nuu" required dir="ltr" autocapitalize="none" pattern="[a-z0-9._\-]{3,30}" placeholder="azizia"></div>
@@ -4638,13 +4655,22 @@ V.users=async()=>{
       <form class="row nmf" data-uid="${u.id}" data-un="${esc(u.username)}" data-fn="${esc(u.full_name||'')}" hidden autocomplete="off"><div class="field"><label for="nu_${u.id}">اسم المستخدم للدخول (إنجليزي)</label><input class="inp" id="nu_${u.id}" name="un" required dir="ltr" autocapitalize="none" pattern="[a-z0-9._\-]{3,30}" value="${esc(u.username)}"></div><div class="field"><label for="nm_${u.id}">الاسم الظاهر</label><input class="inp" id="nm_${u.id}" name="fn" required maxlength="60" value="${esc(u.full_name||'')}"></div><div class="field" style="justify-content:flex-end;flex:none"><button class="btn sm" type="submit">حفظ</button></div></form>
       ${m?`<form class="row pwf" data-uid="${u.id}" hidden autocomplete="off"><div class="field"><label for="pw_${u.id}">كلمة المرور الجديدة لـ ${esc(u.full_name||u.username)}</label><input class="inp" id="pw_${u.id}" dir="ltr" minlength="8" required autocomplete="new-password"></div><div class="field" style="justify-content:flex-end;flex:none"><button class="btn sm" type="submit">حفظ</button></div></form>`:''}
       ${adminLike?`<div class="muted" style="font-size:11.5px">${u.role==='owner'?'المالك يرى كل شيء، ولا يمكن تعديل حسابه.':u.role==='sync'?'حساب المهام التلقائية: يكتب أرقام التقارير فقط، ولا يدير المستخدمين.':'الآدمن يرى كل الفروع والأقسام، ويدير المستخدمين.'}</div>`:
-      `<div><div class="muted" style="font-size:11px;margin-bottom:4px">الفروع</div><div class="tgrid">${st.branches.map(b=>{const on=ub.some(x=>x.user_id===u.id&&x.branch_id===b.id);return `<button class="tg" data-tb="${u.id}" data-k="b:${b.id}" aria-pressed="${on}" ${m?'':'disabled'}><i class="dot" style="background:${b.color}"></i>${esc(b.name)}</button>`;}).join('')}</div></div>
+      `${m?`<div class="um-copy"><label class="muted" style="font-size:11px">📋 نسخ الصلاحيات من:</label><select class="inp" data-ucopy="${u.id}"><option value="">— اختر موظف —</option>${P.data.filter(o=>o.role==='user'&&o.id!==u.id).map(o=>`<option value="${o.id}">${esc(o.full_name||o.username)}</option>`).join('')}</select></div>`:''}<div><div class="muted" style="font-size:11px;margin-bottom:4px">الفروع</div><div class="tgrid">${st.branches.map(b=>{const on=ub.some(x=>x.user_id===u.id&&x.branch_id===b.id);return `<button class="tg" data-tb="${u.id}" data-k="b:${b.id}" aria-pressed="${on}" ${m?'':'disabled'}><i class="dot" style="background:${b.color}"></i>${esc(b.name)}</button>`;}).join('')}</div></div>
       <div><div class="muted" style="font-size:11px;margin-bottom:6px">الأقسام والشاشات</div>${PERM_GROUPS.map((g,gi)=>{const n=g.secs.filter(s=>us.some(x=>x.user_id===u.id&&x.section===s)).length;return `<div class="pgrp"><div class="pgh"><b>${g.name}</b><span class="muted num" style="font-size:10.5px">${n} من ${g.secs.length}</span>${m?`<button class="btn ghost sm" type="button" data-pga="${u.id}" data-g="${gi}" data-on="${n<g.secs.length?1:0}">${n<g.secs.length?'تحديد الكل':'إلغاء الكل'}</button>`:''}</div><div class="tgrid">${g.secs.map(s=>{const on=us.some(x=>x.user_id===u.id&&x.section===s);return `<button class="tg" data-tb="${u.id}" data-k="s:${s}" aria-pressed="${on}" ${m?'':'disabled'}>${SEC_NAME[s]}</button>`;}).join('')}</div></div>`;}).join('')}</div>
       ${us.some(x=>x.user_id===u.id&&x.section==='income')?'':us.some(x=>x.user_id===u.id&&x.section==='wh')?'<div class="muted" style="font-size:11px">يرى نسبة تكلفة المستودعات فقط، بدون الإيرادات أو المصروفات.</div>':''}`}
     </div></div>`;}).join('');
   h+=`<div class="card usr"><h3 style="font-size:13.5px">تغيير كلمة المرور الخاصة بك</h3><form class="row" id="cpf"><div class="field"><label for="cpn">كلمة المرور الجديدة</label><input class="inp" id="cpn" type="password" minlength="8" required dir="ltr" autocomplete="new-password"></div><div class="field" style="justify-content:flex-end"><button class="btn" type="submit">تغيير</button></div></form></div>`;
   return h;
 };
+document.addEventListener('click',e=>{ const m=e.target.closest('[data-umode]'); if(m){ st.uMode=m.dataset.umode; render(); return; } const k=e.target.closest('[data-usec]'); if(k){ st.uSec=k.dataset.usec; render(); } });
+document.addEventListener('change',async e=>{ const sel=e.target.closest('[data-ucopy]'); if(!sel||!sel.value) return; const to=sel.dataset.ucopy, from=sel.value; const nm=sel.options[sel.selectedIndex].text;
+  if(!confirm('نسخ فروع وشاشات «'+nm+'» لهذا الموظف؟ صلاحياته الحالية بتنستبدل.')){ sel.value=''; return; } sel.disabled=true;
+  const [A,B]=await Promise.all([sb.from('user_sections').select('section').eq('user_id',from),sb.from('user_branches').select('branch_id').eq('user_id',from)]);
+  let r=A.error||B.error?{error:A.error||B.error}:await sb.from('user_sections').delete().eq('user_id',to);
+  if(!r.error) r=await sb.from('user_branches').delete().eq('user_id',to);
+  if(!r.error&&(A.data||[]).length) r=await sb.from('user_sections').insert(A.data.map(x=>({user_id:to,section:x.section})));
+  if(!r.error&&(B.data||[]).length) r=await sb.from('user_branches').insert(B.data.map(x=>({user_id:to,branch_id:x.branch_id})));
+  sel.disabled=false; if(r.error){ toast('تعذّر النسخ: '+r.error.message); return; } toast('تم نسخ الصلاحيات ✓'); render(); });
 document.addEventListener('click',async e=>{
   const uo=e.target.closest('[data-uo]'); if(uo){st.uOpen=st.uOpen||{};const o=!st.uOpen[uo.dataset.uo];st.uOpen[uo.dataset.uo]=o;uo.setAttribute('aria-expanded',o);uo.nextElementSibling.hidden=!o;return;}
   if(e.target.closest('[data-uadd]')){st.uAdd=!st.uAdd;render();return;}
