@@ -52,6 +52,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 
 .iv-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:4px 0 12px}
 .iv-tabs button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:96px;padding:12px 6px;border-radius:18px;border:1px solid var(--line);background:var(--card);box-shadow:0 1px 2px rgba(20,24,20,.04),0 6px 16px rgba(20,24,20,.06);font:inherit;color:inherit;cursor:pointer}
+.iv-tabs.iv-2{grid-template-columns:1fr 1fr}.iv-tabs.iv-2 button{min-height:84px}.iv-tabs.iv-4{grid-template-columns:1fr 1fr}.iv-tabs.iv-4 button{min-height:88px}
 .iv-tabs button span{font-size:32px;line-height:1}.iv-tabs button b{font-size:13px;text-align:center}
 .iv-tabs button[aria-pressed="true"]{background:linear-gradient(160deg,#1E5A3E,#143D2A);color:#fff;border-color:#143D2A;box-shadow:0 8px 20px rgba(20,61,42,.28)}
 .iv-ents{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:8px}
@@ -833,7 +834,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'التقارير',secs:['sales','channels','wh']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['income','treasury','balances','handover','rets','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610190410';
+const APP_VER='202610190430';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets='تفعيل اشعارات مرتجع الكاشيرات'; SEC_NAME.income='القوائم المالية'; SEC_NAME.wh='المستودعات والمشتريات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -2983,8 +2984,12 @@ V.cmp=async()=>{
 document.addEventListener('click',e=>{const t=e.target.closest('[data-cmd]');if(!t)return;st.cmD=t.dataset.cmd;render();});
 function invRange(P){ const td=todayIso(), d=o=>{const x=new Date(td+'T12:00:00');x.setDate(x.getDate()+o);return x.toISOString().slice(0,10);};
   if(P==='td') return [td,td]; if(P==='yd') return [d(-1),d(-1)]; if(P==='7') return [d(-6),td]; if(P==='pm'){ const x=new Date(td.slice(0,7)+'-01T12:00:00'); x.setDate(0); const e=x.toISOString().slice(0,10); return [e.slice(0,7)+'-01',e]; } return [td.slice(0,7)+'-01',td]; }
+const entPick=(BR,ents,B,at)=>{ if(!BR.length) return ''; const selE=B.startsWith('e:')?B.slice(2):(BR.find(b=>b.code===B)||{}).entity; const sub=selE?BR.filter(b=>b.entity===selE):[];
+  const short=b=>{let n=b.name; const m=n.match(/فرع\s[^-]*$/); if(m) return m[0].trim(); if(b.entity&&n.startsWith(b.entity)) n=n.slice(b.entity.length); n=n.replace(/^.*-\s*/,'').trim(); return n||b.name;};
+  return `<div class="iv-ents">${[['all','كل الشركات']].concat(ents.map(e=>['e:'+e,e])).map(([v,n])=>`<button data-${at}="${esc(v)}" aria-pressed="${B===v||(v!=='all'&&v.slice(2)===selE)}">${esc(n)}</button>`).join('')}</div>`
+   +(sub.length>1?`<div class="chips iv-brs">${[['e:'+selE,'كل الفروع']].concat(sub.map(b=>[b.code,short(b)])).map(([v,n])=>`<button data-${at}="${esc(v)}" aria-pressed="${B===v}">${esc(n)}</button>`).join('')}</div>`:''); };
 V.stock=async()=>{
-  const T=st.ivT||'pur', B=st.ivB||'all'; const bizD=new Date(Date.now()+3*36e5-8*36e5).toISOString().slice(0,10); let f=st.ivF||bizD, t=st.ivTo||f; if(t<f){const z=f;f=t;t=z;}
+  const T=st.ivT||'pur', B=st.ivB||'all'; const bizD=new Date(Date.now()+3*36e5-8*36e5).toISOString().slice(0,10); let f=st.ivF||bizD, t=st.ivTo||f; if(t<f){const z=f;f=t;t=z;} if(T==='chart'&&f===t){ const x=new Date(t+'T12:00:00'); x.setDate(x.getDate()-13); f=x.toISOString().slice(0,10); }
   let D0; try{ const r0=await sb.rpc('growth_inv',{p_from:f,p_to:t,p_branches:null}); if(r0.error) throw r0.error; D0=r0.data; }catch(e){ return `<div class="card"><h3>📦 المستودعات والمشتريات</h3><p class="muted">${/growth_inv/.test(e.message||'')?'شغّل ملف «growth-inv» في Supabase أول.':'تعذّر التحميل — تأكد من الإنترنت'}</p></div>`; }
   const BR=D0.branches||[]; const ents=[...new Set(BR.map(b=>b.entity).filter(Boolean))];
   const brs=B==='all'?null:B.startsWith('e:')?BR.filter(b=>b.entity===B.slice(2)).map(b=>b.code):[B];
@@ -2992,17 +2997,15 @@ V.stock=async()=>{
   st._ivR=[f,t,brs];
   const ago=(T==='stock'?D.stock_run:D.last_run); 
   let h=`<div class="rt-hd"><h2>📦 المستودعات والمشتريات</h2><span class="muted">مباشر من جروث${ago?' · آخر تحديث '+lvAgo(ago):''}</span></div>
-   <div class="iv-tabs">${[['pur','🧾','المشتريات'],['iss','📤','الصرف المباشر'],['stock','📦','أرصدة المخزون']].map(([v,i,n])=>`<button data-ivt="${v}" aria-pressed="${T===v}"><span>${i}</span><b>${n}</b></button>`).join('')}</div>
-   ${BR.length?(()=>{ const selE=B.startsWith('e:')?B.slice(2):(BR.find(b=>b.code===B)||{}).entity; const sub=selE?BR.filter(b=>b.entity===selE):[];
-     const short=b=>{let n=b.name; const k=n.indexOf('فرع'); if(k>0) return n.slice(k).trim(); if(b.entity&&n.startsWith(b.entity)) n=n.slice(b.entity.length); n=n.replace(/^.*-\s*/,'').trim(); return n||b.name;};
-     return `<div class="iv-ents">${[['all','كل الشركات']].concat(ents.map(e=>['e:'+e,e])).map(([v,n])=>`<button data-ivb="${esc(v)}" aria-pressed="${B===v||(v!=='all'&&v.slice(2)===selE)}">${esc(n)}</button>`).join('')}</div>`
-       +(sub.length>1?`<div class="chips iv-brs">${[['e:'+selE,'كل الفروع']].concat(sub.map(b=>[b.code,short(b)])).map(([v,n])=>`<button data-ivb="${esc(v)}" aria-pressed="${B===v}">${esc(n)}</button>`).join('')}</div>`:''); })():''}
+   <div class="iv-tabs iv-4">${[['pur','🧾','المشتريات'],['iss','📤','الصرف المباشر'],['stock','📦','أرصدة المخزون'],['chart','📊','المخططات اليومية']].map(([v,i,n])=>`<button data-ivt="${v}" aria-pressed="${T===v}"><span>${i}</span><b>${n}</b></button>`).join('')}</div>
+   ${entPick(BR,ents,B,'ivb')}
    ${T!=='stock'?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px"><div><label class="muted" style="font-size:11px">من تاريخ</label><input type="date" class="inp" id="ivF" value="${f}" max="${bizD}" style="width:100%"></div><div><label class="muted" style="font-size:11px">إلى تاريخ</label><input type="date" class="inp" id="ivTo" value="${t}" max="${bizD}" style="width:100%"></div></div>`:''}`;
   const kpi=(a,b)=>`<div class="kpis" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">${[a,b].map(([l,v])=>`<div class="card" style="margin:0"><small class="muted">${l}</small><b class="num" style="display:block;font-size:19px;margin-top:4px">${v}</b></div>`).join('')}</div>`;
   const q3=v=>fmt(+v,Math.abs(+v%1)>0.0005?2:0);
   const itemRow=(x,extra)=>`<button class="rt-it" style="width:100%;text-align:inherit;background:none;border-left:0;border-right:0;border-top:0;cursor:pointer;font:inherit;color:inherit" data-ivi="${esc(x.i)}" data-ivn="${esc((x.n+' '+x.i+' '+(x.g||'')).toLowerCase())}"><div class="rt-m"><div class="rt-t">${esc(x.n)}</div><div class="muted rt-s">${extra}</div></div><div style="text-align:left;flex:none"><b class="num" style="font-size:15px">${fmt(+x.a,2)}</b><div class="muted" style="font-size:10.5px">ر.س ‹</div></div></button>`;
   const search=`<input class="inp" id="ivQ" placeholder="🔎 ابحث بالصنف أو المجموعة" autocomplete="off" style="width:100%;margin-bottom:10px">`;
-  if(T==='stock'){
+  if(T==='chart'){ h+=ivChart(D,f,t); }
+  else if(T==='stock'){
     const S=(D.stock||[]).slice().sort((a,b)=>+b.v-+a.v); if(!S.length) return h+`<div class="card"><p class="muted">بانتظار أول مزامنة لأرصدة المخزون من جروث.</p></div>`;
     h+=kpi(['قيمة المخزون',fmt(sum(S.map(x=>+x.v)),2)],['عدد الأصناف',fmt(S.length)])+search+`<div class="card rt-list" id="ivL">${S.map(x=>itemRow({...x,a:x.v},`${q3(x.q)} ${esc(x.u||'')}${x.g?' · '+esc(x.g):''}`)).join('')}</div>`;
   } else {
@@ -3022,6 +3025,29 @@ V.stock=async()=>{
   }
   setTimeout(()=>{const fi=$('#ivF'), ti=$('#ivTo'); if(fi) fi.onchange=()=>{ if(fi.value){ st.ivF=fi.value; if(!st.ivTo||st.ivTo<fi.value) st.ivTo=fi.value; render(); } }; if(ti) ti.onchange=()=>{ if(ti.value){ st.ivTo=ti.value; render(); } }; const q=$('#ivQ'); if(q){ q.oninput=()=>{const v=q.value.trim().toLowerCase(); document.querySelectorAll('#ivL [data-ivn]').forEach(e=>{e.style.display=!v||e.dataset.ivn.includes(v)?'':'none';});}; }},0);
   return h; };
+function ivChart(D,f,t){
+  const SD={}; (D.sales_days||[]).forEach(z=>SD[String(z.d).slice(0,10)]=z); const DD={}; (D.days||[]).forEach(z=>{const k=String(z.d).slice(0,10); DD[k]=DD[k]||{pur:0,pret:0,iss:0}; DD[k][z.k]=(DD[k][z.k]||0)+(+z.a);});
+  const days=[]; for(let x=new Date(f+'T12:00:00');x<=new Date(t+'T12:00:00');x.setDate(x.getDate()+1)) days.push(x.toISOString().slice(0,10));
+  if(days.length>62) return `<div class="card"><p class="muted">اختر فترة أقصاها شهرين للمخطط.</p></div>`;
+  const dl=x=>new Date(x+'T12:00:00').toLocaleDateString('ar-SA-u-ca-gregory-nu-latn',{weekday:'long',day:'numeric',month:'short'});
+  const lab=days.map(x=>String(+x.slice(8))); const g=k=>days.map(x=>(DD[x]||{})[k]||0);
+  const iss=g('iss'), pur=days.map((x,i)=>g('pur')[i]-g('pret')[i]), sal=days.map(x=>SD[x]?+SD[x].ex||0:0);
+  const tI=sum(iss), tP=sum(pur), tS=sum(sal); const act=a=>a.filter(v=>v>0).length||1;
+  const ratio=days.map((x,i)=>sal[i]?iss[i]/sal[i]:null);
+  const rc=r=>r==null?'var(--muted)':r<=.35?'#16794C':r<=.45?'#9A6A06':'#B42318';
+  const card=(ttl,sub,inner)=>`<div class="card"><h3 style="margin:0 0 2px">${ttl}</h3><div class="muted" style="font-size:11px;margin-bottom:8px">${sub}</div>${inner}</div>`;
+  let h=`<div class="kpis" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+    <div class="card" style="margin:0"><small class="muted">الصرف المباشر · ${days.length} يوم</small><b class="num" style="display:block;font-size:19px;margin-top:4px;color:#C2410C">${fmt(tI)}</b><small class="muted">متوسط يومي ${fmt(tI/act(iss))}</small></div>
+    <div class="card" style="margin:0"><small class="muted">صافي المشتريات · ${days.length} يوم</small><b class="num" style="display:block;font-size:19px;margin-top:4px;color:#9A7B12">${fmt(tP)}</b><small class="muted">متوسط يومي ${fmt(tP/act(pur))}</small></div></div>`;
+  h+=card('📤 الصرف المباشر اليومي',tS?`نسبة الصرف من المبيعات (قبل الضريبة): <b style="color:${rc(tI/tS)}">${Math.round(tI/tS*1000)/10}%</b>`:'',smartBars({labels:lab,series:[{name:'الصرف',color:'#E07A3F',vals:iss}],avg:tI/act(iss),avgLbl:fk(tI/act(iss)),h:200,
+    sub:ratio.map(r=>r==null?null:{t:Math.round(r*100)+'%',c:rc(r)}),
+    info:days.map((x,i)=>`<b>${dl(x)}</b> · الصرف <b class="num">${fmt(iss[i])}</b>${sal[i]?` · المبيعات ${fmt(sal[i])} · النسبة <b style="color:${rc(ratio[i])}">${Math.round(ratio[i]*1000)/10}%</b>`:''}`)}));
+  h+=card('🧾 المشتريات اليومية','صافي بعد المردودات · قبل الضريبة',smartBars({labels:lab,series:[{name:'المشتريات',color:'#C9A227',vals:pur}],avg:tP/act(pur),avgLbl:fk(tP/act(pur)),h:200,
+    info:days.map((x,i)=>`<b>${dl(x)}</b> · المشتريات <b class="num">${fmt(pur[i])}</b>${g('pret')[i]?` · مردود ${fmt(g('pret')[i])}`:''}`)}));
+  if(tS) h+=card('📈 المبيعات مقابل الصرف','الأعمدة: المبيعات قبل الضريبة · الجزء البرتقالي: الصرف',smartBars({labels:lab,series:[{name:'الصرف',color:'#E07A3F',vals:iss},{name:'باقي المبيعات',color:'#2E7D5B',vals:sal.map((v,i)=>Math.max(0,v-iss[i]))}],h:200,
+    info:days.map((x,i)=>`<b>${dl(x)}</b> · المبيعات <b class="num">${fmt(sal[i])}</b> · الصرف ${fmt(iss[i])}`)}));
+  return h+`<p class="muted" style="font-size:10.5px">اضغط على أي عمود لتفاصيل اليوم · يتحدث كل 5 دقائق من جروث</p>`;
+}
 async function invItem(item){ const [f0,t,brs]=st._ivR||[]; const f=(()=>{const x=new Date(todayIso()+'T12:00:00');x.setDate(x.getDate()-90);return x.toISOString().slice(0,10);})();
   const w=document.createElement('div'); w.className='lv-ov'; w.innerHTML=`<div class="card lv-sheet"><div class="lv-top"><b>📦 تفاصيل الصنف</b><button class="icb" data-x="1">✕</button></div><p class="muted">جارِ التحميل…</p></div>`;
   w.addEventListener('click',e=>{if(e.target===w||e.target.closest('[data-x]')){w.remove();document.body.style.overflow='';}}); document.body.style.overflow='hidden'; document.body.appendChild(w);
@@ -3049,8 +3075,8 @@ V.finst=async()=>{
   const months=[]; for(let m=1;m<=12;m++){ const ym=cy+'-'+String(m).padStart(2,'0'); if(ym<=cm) months.push(ym); }
   const mName=ym=>new Date(ym+'-15').toLocaleDateString('ar-SA-u-ca-gregory-nu-latn',{month:'long',year:'numeric'});
   let h=`<div class="rt-hd"><h2>📊 القوائم المالية</h2><span class="muted">مباشر من جروث${ago?' · آخر تحديث '+ago:''}</span></div>
-   <div class="chips">${[['is','قائمة الدخل'],['bs','الميزانية'],['tb','أرصدة الحسابات']].map(([v,n])=>`<button data-fst="${v}" aria-pressed="${T===v}">${n}</button>`).join('')}</div>
-   <div class="chips">${[['all','الكل']].concat(ents.map(e=>['e:'+e,e])).concat(BR.filter(b=>!(ents.includes(b.name)&&BR.filter(x=>x.entity===b.entity).length===1)).map(b=>[b.code,b.name.replace(/^.*-\s*/,'')])).map(([v,n])=>`<button data-fsb="${esc(v)}" aria-pressed="${B===v}">${esc(n)}</button>`).join('')}</div>
+   <div class="iv-tabs iv-2">${[['is','📈','قائمة الدخل'],['bs','⚖️','الميزانية'],['tb','📚','أرصدة الحسابات']].map(([v,i,n])=>`<button data-fst="${v}" aria-pressed="${T===v}"><span>${i}</span><b>${n}</b></button>`).join('')}${canSee('balances')?`<button data-t="balances"><span>👥</span><b>العملاء والموردين</b></button>`:''}</div>
+   ${entPick(BR,ents,B,'fsb')}
    ${T==='bs'?`<div style="margin-bottom:10px"><label class="muted" style="font-size:11px">كما في نهاية</label><select class="inp" id="fsM" style="width:100%">${months.map(m=>`<option value="${m}" ${m===M?'selected':''}>${mName(m)}</option>`).join('')}</select></div>`
    :`<div class="chips">${(()=>{const q=Math.floor((+cm.slice(5)-1)/3)*3+1, qs=cy+'-'+String(q).padStart(2,'0'); const pm=(()=>{const d=new Date(cm+'-15');d.setMonth(d.getMonth()-1);return d.toISOString().slice(0,7);})(); return [['m:'+cm+':'+cm,'هذا الشهر'],['m:'+pm+':'+pm,'الشهر الماضي'],['m:'+qs+':'+cm,'الربع الحالي'],['m:'+cy+'-01:'+cm,'من بداية السنة']];})().map(([v,n])=>{const [,a,b]=v.split(':');return `<button data-fsr="${v}" aria-pressed="${F===a&&M===b}">${n}</button>`;}).join('')}</div>
    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px"><div><label class="muted" style="font-size:11px">من</label><select class="inp" id="fsF" style="width:100%">${months.map(m=>`<option value="${m}" ${m===F?'selected':''}>${mName(m)}</option>`).join('')}</select></div>
@@ -3132,8 +3158,8 @@ V.balances=async()=>{
   const lbl=k==='vend'?['مستحق للموردين','دفعات مقدمة للموردين']:['مستحق على العملاء','أرصدة دائنة للعملاء'];
   const cnt=v=>new Set(RAW.filter(x=>x.k===v&&(!brs||brs.includes(x.br))&&Math.abs(+x.b)>=0.005).map(x=>x.id)).size;
   let h=`<div class="rt-hd"><h2>📒 أرصدة العملاء والموردين</h2><span class="muted">مباشر من جروث${ago?' · آخر تحديث '+ago:''}${stale?' · ⚠️ المزامنة متأخرة':''} · اضغط أي حساب لكشف الحساب</span></div>
-  <div class="chips">${[['all','كل المنشآت']].concat(BRL.length?ENTS.map(e=>[e,e]):[['shaden','مطاعم الشادن'],['pacino','الباتشينو']]).map(([v,n])=>`<button data-ble="${esc(v)}" aria-pressed="${en===v}">${esc(n)}</button>`).join('')}</div>
-  <div class="chips">${[['vend','🏭 الموردين'],['cust','👥 العملاء']].map(([v,n])=>`<button data-blk="${v}" aria-pressed="${k===v}">${n} <small class="num">${cnt(v)}</small></button>`).join('')}</div>`;
+  <div class="iv-tabs iv-2">${[['vend','🏭','الموردين'],['cust','👥','العملاء']].map(([v,i,n])=>`<button data-blk="${v}" aria-pressed="${k===v}"><span>${i}</span><b>${n} · <span class="num" style="font-size:inherit">${cnt(v)}</span></b></button>`).join('')}</div>
+  <div class="iv-ents">${[['all','كل الشركات']].concat(BRL.length?ENTS.map(e=>[e,e]):[['shaden','مطاعم الشادن'],['pacino','الباتشينو']]).map(([v,n])=>`<button data-ble="${esc(v)}" aria-pressed="${en===v}">${esc(n)}</button>`).join('')}</div>`;
   if(!RAW.length) return h+`<div class="card"><p class="muted">بانتظار أول مزامنة للأرصدة من جروث — تظهر هنا تلقائياً بعد ربط السيرفر.</p></div>`;
   if(brs&&!RAW.some(x=>x.br)) h+=`<div class="card" style="background:#FBF3DF"><p class="muted" style="margin:0">فصل الأرصدة حسب المنشأة يحتاج تحديث سكربت المزامنة على السيرفر — حالياً الأرقام لكل المنشآت.</p></div>`;
   const fs=st.blS||'', LS=fs==='owe'?owe:fs==='rev'?rev:L;
@@ -4479,7 +4505,7 @@ V.hub=async()=>{
   const gs=HUB.map(g=>({...g,v:g.secs.filter(canSee)})).filter(g=>g.v.length);
   if(!gs.length) return `<div class="card empty">ما عندك صلاحية على أي تقرير</div>`;
   return `<div class="hb">${gs.map(g=>`<section class="hb-g"><div class="hb-h"><span class="hb-hi" style="background:${g.c}">${g.ic}</span><b>${g.n}</b></div>
-    <div class="hb-grid ${g.v.length===1?'one':''}">${g.v.map(id=>{const it=HUB_IT[id]||['📄',''];return `<button class="hb-t" data-t="${id}" style="--c:${g.c}"><span class="hb-ti">${it[0]}</span><span class="hb-tx"><b>${esc(SEC_NAME[id]||id)}</b><small>${it[1]}</small></span></button>`;}).join('')}</div></section>`).join('')}</div>`;
+    <div class="hb-grid ${g.v.length===1?'one':''}">${g.v.map(id=>{const it=HUB_IT[id]||['📄',''];return `<button class="hb-t" data-t="${id}" style="--c:${g.c}"><span class="hb-ti">${it[0]}</span><span class="hb-tx"><b>${esc((SECTIONS.find(x=>x.id===id)||{}).name||id)}</b><small>${it[1]}</small></span></button>`;}).join('')}</div></section>`).join('')}</div>`;
 };
 SECTIONS.forEach(sec=>{ if(sec.app) V[sec.id]=appView(sec); if(sec.page) V[sec.id]=pageView(sec); });
 
