@@ -40,8 +40,8 @@ button,input,select{font:inherit;color:inherit}
 button{cursor:pointer}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow);overflow:hidden}
-.hb{display:flex;flex-direction:column;gap:18px;margin-top:6px}.hb-h{display:flex;align-items:center;gap:10px;margin:0 2px 10px}.hb-h b{font-size:15.5px}
-.hb-hi{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:17px;color:#fff}
+.hb{display:flex;flex-direction:column;gap:16px;margin-top:4px}.hb-h{display:flex;align-items:center;gap:8px;margin:0 2px 8px}.hb-h b{font-size:13px;font-weight:700;color:var(--fg)}
+.hb-hi{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-size:12px;color:#fff}
 .rtd-box.bal-now{background:linear-gradient(160deg,#1E5A3E,#143D2A);color:#fff;padding:14px 16px;border-radius:16px;margin-bottom:10px}.rtd-box.bal-now span{color:rgba(255,255,255,.8)}.rtd-box.bal-now b{font-size:21px;color:#fff}.rtd-box.bal-now small{color:#E9D58B;font-size:12px}
 .fa-pdf{width:100%;margin:0 0 12px;background:#143D2A;color:#fff;border-color:#143D2A}
 .fa-ph{display:none}
@@ -86,11 +86,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .dr-sum h3,.dr-tw h3{margin:0 0 6px;font-size:14.5px}
 .dr-t{width:100%;border-collapse:collapse;font-size:11.5px}.dr-t th,.dr-t td{border:1px solid #DDE1D7;padding:8px 6px;text-align:center;white-space:nowrap}.dr-t tr:first-child th{background:#F1F3EC;font-size:11px}.dr-t th:first-child{text-align:start;background:#F7F8F4;font-weight:700;font-size:11px}
 .dr-t .tot{background:#EEF5F0;font-weight:700}.dr-t tr:first-child .tot{background:#1E5A3E;color:#fff}
-.hb-grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
-.hb-s{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:92px;padding:12px 6px 10px;border-radius:16px;border:1px solid var(--line);background:var(--card);box-shadow:0 1px 2px rgba(20,24,20,.04),0 4px 12px rgba(20,24,20,.05);font:inherit;color:inherit;cursor:pointer}
-.hb-s::before{content:'';position:absolute;inset:0 0 auto 0;height:3px;background:var(--c)}.hb-s:active{transform:scale(.97)}
-.hb-grid3.q4{grid-template-columns:repeat(4,1fr);gap:7px}.hb-grid3.q4 .hb-s{min-height:86px;padding:10px 3px 8px}.hb-grid3.q4 .hb-s b{font-size:11px}
-.hb-si{font-size:24px;line-height:1}.hb-s b{font-size:12px;line-height:1.35;text-align:center}
+.hb-grid3{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.hb-s{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:66px;padding:9px 4px 7px;border-radius:12px;border:1px solid var(--line);background:var(--card);box-shadow:0 1px 2px rgba(20,24,20,.04);font:inherit;color:inherit;cursor:pointer}
+.hb-s::before{content:'';position:absolute;inset:0 0 auto 0;height:2px;background:var(--c);opacity:.85}.hb-s:active{transform:scale(.97)}
+.hb-grid3.q4{grid-template-columns:repeat(4,1fr)}
+.hb-si{font-size:17px;line-height:1}.hb-s b{font-size:10.5px;font-weight:600;line-height:1.35;text-align:center}
 .hb-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.hb-grid.one{grid-template-columns:1fr}
 .hb-t{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:start;min-height:124px;padding:16px 14px;border-radius:18px;border:1px solid var(--line);background:var(--card);box-shadow:0 1px 2px rgba(20,24,20,.04),0 6px 16px rgba(20,24,20,.06);font:inherit;color:inherit;cursor:pointer}
 .hb-t::before{content:'';position:absolute;inset:0 0 auto 0;height:4px;background:var(--c)}
@@ -931,7 +931,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'المبيعات',secs:['sales','channels']},{name:'المستودعات',secs:['wh']},{name:'القوائم المالية والحسابات',secs:['fin_is','fin_bs','fin_tb','balances','treasury']},{name:'الكاشيرات',secs:['handover','rets']},{name:'العُهد والتمويلات',secs:['custody','custody_holder','loans']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610191020';
+const APP_VER='202610191030';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
