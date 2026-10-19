@@ -49,6 +49,15 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .hb-grid.one .hb-t{min-height:96px;flex-direction:row;align-items:center;gap:14px}.hb-tx{display:flex;flex-direction:column;gap:4px}
 
 .hb-grid:not(.one) .hb-t:last-child:nth-child(odd){grid-column:1/-1}
+
+.iv-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:4px 0 12px}
+.iv-tabs button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:96px;padding:12px 6px;border-radius:18px;border:1px solid var(--line);background:var(--card);box-shadow:0 1px 2px rgba(20,24,20,.04),0 6px 16px rgba(20,24,20,.06);font:inherit;color:inherit;cursor:pointer}
+.iv-tabs button span{font-size:32px;line-height:1}.iv-tabs button b{font-size:13px;text-align:center}
+.iv-tabs button[aria-pressed="true"]{background:linear-gradient(160deg,#1E5A3E,#143D2A);color:#fff;border-color:#143D2A;box-shadow:0 8px 20px rgba(20,61,42,.28)}
+.iv-ents{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:8px}
+.iv-ents button{padding:11px 10px;border-radius:14px;border:1px solid var(--line);background:var(--card);font:inherit;font-size:12.5px;font-weight:700;color:inherit;cursor:pointer;line-height:1.35}
+.iv-ents button[aria-pressed="true"]{border:2px solid #1E5A3E;background:#EEF5F0;color:#143D2A}
+.iv-brs{margin-bottom:10px}
 #tabs .hb-back{font-weight:700;color:var(--gold-ink)}
 .card h3{font-size:14.5px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .card h3 small{font-family:var(--f-body);font-weight:400;font-size:11px;color:var(--muted)}
@@ -824,7 +833,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'التقارير',secs:['sales','channels','wh']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['income','treasury','balances','handover','rets','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610190400';
+const APP_VER='202610190405';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets='تفعيل اشعارات مرتجع الكاشيرات'; SEC_NAME.income='القوائم المالية'; SEC_NAME.wh='المستودعات والمشتريات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -2983,8 +2992,11 @@ V.stock=async()=>{
   st._ivR=[f,t,brs];
   const ago=(T==='stock'?D.stock_run:D.last_run); 
   let h=`<div class="rt-hd"><h2>📦 المستودعات والمشتريات</h2><span class="muted">مباشر من جروث${ago?' · آخر تحديث '+lvAgo(ago):''}</span></div>
-   <div class="chips">${[['pur','🧾 المشتريات'],['iss','📤 الصرف المباشر'],['stock','📦 أرصدة المخزون']].map(([v,n])=>`<button data-ivt="${v}" aria-pressed="${T===v}">${n}</button>`).join('')}</div>
-   ${BR.length?`<div class="chips">${[['all','الكل']].concat(ents.map(e=>['e:'+e,e])).concat(BR.filter(b=>!(ents.includes(b.name)&&BR.filter(x=>x.entity===b.entity).length===1)).map(b=>[b.code,b.name.replace(/^.*-\s*/,'')])).map(([v,n])=>`<button data-ivb="${esc(v)}" aria-pressed="${B===v}">${esc(n)}</button>`).join('')}</div>`:''}
+   <div class="iv-tabs">${[['pur','🧾','المشتريات'],['iss','📤','الصرف المباشر'],['stock','📦','أرصدة المخزون']].map(([v,i,n])=>`<button data-ivt="${v}" aria-pressed="${T===v}"><span>${i}</span><b>${n}</b></button>`).join('')}</div>
+   ${BR.length?(()=>{ const selE=B.startsWith('e:')?B.slice(2):(BR.find(b=>b.code===B)||{}).entity; const sub=selE?BR.filter(b=>b.entity===selE):[];
+     const short=b=>{let n=b.name; const k=n.indexOf('فرع'); if(k>0) return n.slice(k).trim(); if(b.entity&&n.startsWith(b.entity)) n=n.slice(b.entity.length); n=n.replace(/^.*-\s*/,'').trim(); return n||b.name;};
+     return `<div class="iv-ents">${[['all','كل الشركات']].concat(ents.map(e=>['e:'+e,e])).map(([v,n])=>`<button data-ivb="${esc(v)}" aria-pressed="${B===v||(v!=='all'&&v.slice(2)===selE)}">${esc(n)}</button>`).join('')}</div>`
+       +(sub.length>1?`<div class="chips iv-brs">${[['e:'+selE,'كل الفروع']].concat(sub.map(b=>[b.code,short(b)])).map(([v,n])=>`<button data-ivb="${esc(v)}" aria-pressed="${B===v}">${esc(n)}</button>`).join('')}</div>`:''); })():''}
    ${T!=='stock'?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px"><div><label class="muted" style="font-size:11px">من تاريخ</label><input type="date" class="inp" id="ivF" value="${f}" max="${bizD}" style="width:100%"></div><div><label class="muted" style="font-size:11px">إلى تاريخ</label><input type="date" class="inp" id="ivTo" value="${t}" max="${bizD}" style="width:100%"></div></div>`:''}`;
   const kpi=(a,b)=>`<div class="kpis" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">${[a,b].map(([l,v])=>`<div class="card" style="margin:0"><small class="muted">${l}</small><b class="num" style="display:block;font-size:19px;margin-top:4px">${v}</b></div>`).join('')}</div>`;
   const q3=v=>fmt(+v,Math.abs(+v%1)>0.0005?2:0);
