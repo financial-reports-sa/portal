@@ -843,7 +843,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'التقارير',secs:['sales','channels','wh']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['income','treasury','balances','handover','rets','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610190445';
+const APP_VER='202610190450';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets='تفعيل اشعارات مرتجع الكاشيرات'; SEC_NAME.income='القوائم المالية'; SEC_NAME.wh='المستودعات والمشتريات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -3037,7 +3037,7 @@ V.stock=async()=>{
 function ivRatioCard(days,sal,iss,dl,rc){
   const n=days.length, W=340, H=230, top=26, bot=22, ch=H-top-bot, mx=Math.max(1,...sal,...iss)*1.06, slot=W/n, bw=Math.max(6,Math.min(30,slot*.7)), iw=bw*.55;
   const R=days.map((x,i)=>sal[i]?iss[i]/sal[i]:null); const V=R.filter(r=>r!=null);
-  const tS=sum(sal), tI=sum(iss), avg=tS?tI/tS:0;
+  const tS=sum(sal), tI=sum(days.map((x,i)=>sal[i]?iss[i]:0)), avg=tS?tI/tS:0, miss=days.filter((x,i)=>!sal[i]&&iss[i]).length;
   let g=''; [0.25,0.5,0.75,1].forEach(f=>{const y=top+ch-f*ch; g+=`<line x1="0" x2="${W}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width=".6"/>`;});
   days.forEach((x,i)=>{ const cx=i*slot+slot/2, hs=sal[i]/mx*ch, hi=iss[i]/mx*ch, r=R[i];
     if(hs) g+=`<rect x="${cx-bw/2}" y="${top+ch-hs}" width="${bw}" height="${hs}" rx="3" fill="#2E7D5B" opacity=".22"/>`;
@@ -3051,7 +3051,7 @@ function ivRatioCard(days,sal,iss,dl,rc){
   const over=V.filter(r=>r>.45).length, ok=V.filter(r=>r<=.35).length;
   const dS=x=>new Date(x+'T12:00:00').toLocaleDateString('ar-SA-u-ca-gregory-nu-latn',{weekday:'short',day:'numeric'});
   const st4=(l,v,sub,c)=>`<div class="rq-s"><small>${l}</small><b class="num" style="color:${c||'inherit'}">${v}</b>${sub?`<em>${sub}</em>`:''}</div>`;
-  return `<div class="card rq"><div class="rq-hd"><div><h3 style="margin:0">📊 نسبة الصرف من المبيعات</h3><div class="muted" style="font-size:11px;margin-top:2px">المبيعات قبل الضريبة · ${n} يوم</div></div>
+  return `<div class="card rq"><div class="rq-hd"><div><h3 style="margin:0">📊 نسبة الصرف من المبيعات</h3><div class="muted" style="font-size:11px;margin-top:2px">الصرف ÷ المبيعات قبل الضريبة · ${n-miss} يوم</div>${miss?`<div style="font-size:10.5px;color:#9A6A06;margin-top:3px">⚠️ ${miss} يوم بدون مبيعات — مستبعدة من النسبة</div>`:''}</div>
     <div class="rq-big" style="color:${rc(avg)}">${Math.round(avg*1000)/10}%<small>متوسط الفترة</small></div></div>
     <div class="rq-grid">${st4('أعلى نسبة',iMax>=0?Math.round(R[iMax]*1000)/10+'%':'—',iMax>=0?dS(days[iMax]):'',iMax>=0?rc(R[iMax]):'')}${st4('أقل نسبة',iMin>=0?Math.round(R[iMin]*1000)/10+'%':'—',iMin>=0?dS(days[iMin]):'',iMin>=0?rc(R[iMin]):'')}${st4('أيام ممتازة',ok,'≤ 35%','#16794C')}${st4('أيام مرتفعة',over,'> 45%',over?'#B42318':'')}</div>
     <div class="rq-bar"><span style="width:${Math.min(100,avg*100)}%;background:${rc(avg)}"></span><i style="right:35%"></i><i style="right:45%"></i></div><div class="rq-ax"><span>0%</span><span style="right:35%">35%</span><span style="right:45%">45%</span><span style="right:100%;transform:translateX(100%)">100%</span></div>
@@ -3065,7 +3065,7 @@ function ivChart(D,f,t){
   const dl=x=>new Date(x+'T12:00:00').toLocaleDateString('ar-SA-u-ca-gregory-nu-latn',{weekday:'long',day:'numeric',month:'short'});
   const lab=days.map(x=>String(+x.slice(8))); const g=k=>days.map(x=>(DD[x]||{})[k]||0);
   const iss=g('iss'), pur=days.map((x,i)=>g('pur')[i]-g('pret')[i]), sal=days.map(x=>SD[x]?+SD[x].ex||0:0);
-  const tI=sum(iss), tP=sum(pur), tS=sum(sal); const act=a=>a.filter(v=>v>0).length||1;
+  const tI=sum(iss), tP=sum(pur), tS=sum(sal), tIs=sum(days.map((x,i)=>sal[i]?iss[i]:0)); const act=a=>a.filter(v=>v>0).length||1;
   const ratio=days.map((x,i)=>sal[i]?iss[i]/sal[i]:null);
   const rc=r=>r==null?'var(--muted)':r<=.35?'#16794C':r<=.45?'#9A6A06':'#B42318';
   const card=(ttl,sub,inner)=>`<div class="card"><h3 style="margin:0 0 2px">${ttl}</h3><div class="muted" style="font-size:11px;margin-bottom:8px">${sub}</div>${inner}</div>`;
@@ -3073,7 +3073,7 @@ function ivChart(D,f,t){
     <div class="card" style="margin:0"><small class="muted">الصرف المباشر · ${days.length} يوم</small><b class="num" style="display:block;font-size:19px;margin-top:4px;color:#C2410C">${fmt(tI)}</b><small class="muted">متوسط يومي ${fmt(tI/act(iss))}</small></div>
     <div class="card" style="margin:0"><small class="muted">صافي المشتريات · ${days.length} يوم</small><b class="num" style="display:block;font-size:19px;margin-top:4px;color:#9A7B12">${fmt(tP)}</b><small class="muted">متوسط يومي ${fmt(tP/act(pur))}</small></div></div>`;
   h+='<!--RATIO-->';
-  h+=card('📤 الصرف المباشر اليومي',tS?`نسبة الصرف من المبيعات (قبل الضريبة): <b style="color:${rc(tI/tS)}">${Math.round(tI/tS*1000)/10}%</b>`:'',smartBars({labels:lab,series:[{name:'الصرف',color:'#E07A3F',vals:iss}],avg:tI/act(iss),avgLbl:fk(tI/act(iss)),h:200,
+  h+=card('📤 الصرف المباشر اليومي',tS?`نسبة الصرف من المبيعات (قبل الضريبة): <b style="color:${rc(tIs/tS)}">${Math.round(tIs/tS*1000)/10}%</b>`:'',smartBars({labels:lab,series:[{name:'الصرف',color:'#E07A3F',vals:iss}],avg:tI/act(iss),avgLbl:fk(tI/act(iss)),h:200,
     sub:ratio.map(r=>r==null?null:{t:Math.round(r*100)+'%',c:rc(r)}),
     info:days.map((x,i)=>`<b>${dl(x)}</b> · الصرف <b class="num">${fmt(iss[i])}</b>${sal[i]?` · المبيعات ${fmt(sal[i])} · النسبة <b style="color:${rc(ratio[i])}">${Math.round(ratio[i]*1000)/10}%</b>`:''}`)}));
   h+=card('🧾 المشتريات اليومية','صافي بعد المردودات · قبل الضريبة',smartBars({labels:lab,series:[{name:'المشتريات',color:'#C9A227',vals:pur}],avg:tP/act(pur),avgLbl:fk(tP/act(pur)),h:200,
