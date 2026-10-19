@@ -3081,7 +3081,7 @@ V.cmp=async()=>{
   let G0=[]; try{ G0=(await wsCfg()).groups; }catch(e){ G0=WS_G; }
   const CT=(DT.cats||[]).filter(z=>z.br===cb), CH=(DT.ch||[]).filter(z=>z.br===cb);
   const grp=(k,dd)=>{ const g=G0.find(q=>q.k===k); const codes=((g&&g.cats)||{})[cb]||[]; const R=CT.filter(z=>String(z.d).slice(0,10)===dd&&codes.includes(String(z.c))); return R.length?{q:sum(R.map(z=>+z.q)),v:sum(R.map(z=>+z.v))}:null; };
-  const ck0=grp('chicken',d), ck1=grp('chicken',y), ck7=grp('chicken',w), mt0=grp('meat',d), mt7=grp('meat',w);
+  const ck0=grp('chicken',d), ck1=grp('chicken',y), ck7=grp('chicken',w), mt0=cb==='pc'?null:grp('meat',d), mt7=cb==='pc'?null:grp('meat',w);
   const avg=g=>g&&g.q?g.v/g.q:null;
   const yv=x.s0&&x.s1?pct(x.s0.net,x.s1.net):null, wv=x.s0&&x.s7?pct(x.s0.net,x.s7.net):null;
   if(x.s0) L.push(['💰',`المبيعات <b class="num">${fmt(x.s0.net)}</b> ر.س${yv!=null?`، ${yv>=0?'أعلى':'أقل'} من أمس بـ <b>${Math.abs(yv)}%</b>`:''}${wv!=null?` و${wv>=0?'أعلى':'أقل'} من ${wdn} الماضي بـ <b>${Math.abs(wv)}%</b>`:''}.`]);
@@ -3090,8 +3090,8 @@ V.cmp=async()=>{
   const srt=B.filter(z=>z.s0).sort((a,b)=>b.s0.net-a.s0.net), tot=sum(srt.map(z=>z.s0.net));
   if(x.s0&&srt.length>1) L.push(['🏆',`ترتيبه <b>${srt.findIndex(z=>z.b===cb)+1}</b> من ${srt.length} فروع، وحصته ${Math.round(x.s0.net/tot*100)}% من مبيعات اليوم.`]);
   if(x.s0&&x.s0.c){ const at=x.s0.net/x.s0.c, at7=x.s7&&x.s7.c?x.s7.net/x.s7.c:null; L.push(['🧾',`${fmt(x.s0.c)} فاتورة بمتوسط <b class="num">${fmt(at)}</b> ر.س للفاتورة${at7?` (${wdn} الماضي ${fmt(at7)})`:''}.`]); }
-  if(ck0&&ck0.q) L.push(['🍗',`بيع <b class="num">${fmt(ck0.q)}</b> حبة دجاج بمتوسط <b class="num">${fmt(avg(ck0),2)}</b> ر.س للحبة${ck7&&ck7.q?` (${wdn} الماضي ${fmt(ck7.q)} حبة بـ ${fmt(avg(ck7),2)})`:''}.`]);
-  if(mt0&&mt0.q) L.push(['🐑',`بيع <b class="num">${fmt(mt0.q,mt0.q%1?1:0)}</b> ذبيحة بمتوسط <b class="num">${fmt(avg(mt0))}</b> ر.س${mt7&&mt7.q?` (${wdn} الماضي ${fmt(mt7.q,mt7.q%1?1:0)})`:''}.`]);
+  if(ck0&&ck0.q) L.push(['🍗',`بيع <b class="num">${fmt(ck0.q)}</b> حبة دجاج بقيمة <b class="num">${fmt(ck0.v)}</b> ر.س ومتوسط <b class="num">${fmt(avg(ck0),2)}</b> ر.س للحبة${ck7&&ck7.q?` (${wdn} الماضي ${fmt(ck7.q)} حبة بـ ${fmt(avg(ck7),2)})`:''}.`]);
+  if(mt0&&mt0.q) L.push(['🐑',`بيع <b class="num">${fmt(mt0.q,mt0.q%1?1:0)}</b> ذبيحة بقيمة <b class="num">${fmt(mt0.v)}</b> ر.س ومتوسط <b class="num">${fmt(avg(mt0),2)}</b> ر.س للذبيحة${mt7&&mt7.q?` (${wdn} الماضي ${fmt(mt7.q,mt7.q%1?1:0)} ذبيحة بـ ${fmt(avg(mt7),2)})`:''}.`]);
   const ch0=CH.filter(z=>String(z.d).slice(0,10)===d&&+z.v>0).sort((a,b)=>+b.v-+a.v), chT=sum(ch0.map(z=>+z.v));
   if(ch0.length>1) L.push(['🛵',`أعلى منفذ <b>${esc(ch0[0].n||ch0[0].c)}</b> بـ ${fmt(+ch0[0].v)} ر.س (${Math.round(+ch0[0].v/chT*100)}%).`]);
   let h=`<button class="btn sm ghost" data-cmb="" style="margin:2px 0 6px">› كل الفروع</button>`+drHead('data-cmd',d,rpD,`<i class="dot" style="background:${c}"></i> ${esc(nm(cb))}`,sub)+drPick('cmD',d,bizDay);
@@ -3099,12 +3099,13 @@ V.cmp=async()=>{
   h+=`<div class="card dr-sum" style="border-top:3px solid ${c}"><h3>📝 الملخص</h3>${L.map(([i,t])=>`<div class="fa-in"><span>${i}</span><p>${t}</p></div>`).join('')}</div>`;
   // numbers: today / yesterday / last week
   const at=s=>s&&s.c?fmt(s.net/s.c):'—', gq=g=>g&&g.q?fmt(g.q,g.q%1?1:0):'—', ga=g=>avg(g)!=null?fmt(avg(g),2):'—';
-  const mt1=grp('meat',y);
+  const mt1=cb==='pc'?null:grp('meat',y);
   const RW=[['المبيعات',`<b>${x.s0?fmt(x.s0.net):'—'}</b>`,x.s1?fmt(x.s1.net):'—',x.s7?fmt(x.s7.net):'—'],
     ['الفواتير',x.s0?fmt(x.s0.c):'—',x.s1?fmt(x.s1.c):'—',x.s7?fmt(x.s7.c):'—'],
     ['متوسط الفاتورة',at(x.s0),at(x.s1),at(x.s7)]];
-  if(ck0||ck1||ck7) RW.push(['حبات الدجاج',gq(ck0),gq(ck1),gq(ck7)],['متوسط سعر الحبة',ga(ck0),ga(ck1),ga(ck7)]);
-  if(mt0||mt1||mt7) RW.push(['الذبائح',gq(mt0),gq(mt1),gq(mt7)]);
+  const gv=g=>g&&g.v?fmt(g.v):'—';
+  if(ck0||ck1||ck7) RW.push(['حبات الدجاج',gq(ck0),gq(ck1),gq(ck7)],['قيمة الدجاج',gv(ck0),gv(ck1),gv(ck7)],['متوسط سعر الحبة',ga(ck0),ga(ck1),ga(ck7)]);
+  if(mt0||mt1||mt7) RW.push(['الذبائح',gq(mt0),gq(mt1),gq(mt7)],['قيمة الذبائح',gv(mt0),gv(mt1),gv(mt7)],['متوسط سعر الذبيحة',ga(mt0),ga(mt1),ga(mt7)]);
   h+=`<div class="card dr-tw"><h3>📊 الأرقام</h3><div class="fs-wrap"><table class="dr-t"><tr><th></th><th class="tot">اليوم</th><th>أمس</th><th>${wdn} الماضي</th></tr>${RW.map(([l,...v])=>`<tr><th>${l}</th><td class="tot num">${v[0]}</td><td class="num">${v[1]}</td><td class="num">${v[2]}</td></tr>`).join('')}</table></div></div>`;
   // channels
   if(ch0.length){ const p7=k=>{const r=CH.find(z=>String(z.d).slice(0,10)===w&&z.c===k);return r?+r.v:null;};
