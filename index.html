@@ -80,6 +80,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .adv-msg{position:relative;border:1px solid var(--line);background:var(--card);border-radius:8px;padding:0 5px;font-size:11px;cursor:pointer;vertical-align:middle;margin-inline-start:4px}.adv-msg.on{border-color:#C9A227;background:var(--gold-soft)}.adv-msg i{position:absolute;top:-6px;left:-6px;background:#C0392B;color:#fff;font-style:normal;font-size:9px;border-radius:99px;min-width:14px;height:14px;display:grid;place-items:center;padding:0 3px}
 .mg-rf{border-inline-start:4px solid #C9A227}.mg-rf h3{margin:0 0 4px;font-size:14px}.mg-rfi{display:block;width:100%;text-align:start;background:none;border:0;border-bottom:1px solid var(--line);padding:9px 0;font:inherit;color:inherit;cursor:pointer}.mg-rfi:last-of-type{border-bottom:0}
 .mg-rfh{display:flex;justify-content:space-between;gap:8px;font-size:12.5px}.mg-rfh span{font-size:10.5px}.mg-rfb{font-size:12.5px;margin-top:3px;background:var(--bg);border-radius:10px;padding:7px 10px;line-height:1.7;white-space:pre-wrap}.mg-rft{font-size:10.5px;margin-top:3px}
+.ro-gen #view form,.ro-gen .lv-ov form{display:none!important}
 .ro-bar{background:#EEF3F8;color:#2F5D8A;border:1px solid #CFDDEB;border-radius:12px;padding:8px 12px;font-size:11.5px;font-weight:600;margin:4px 0 10px}
 body.ro-purch [data-prn],body.ro-purch [data-pradd],body.ro-purch [data-prst],body.ro-purch [data-prdel],body.ro-purch [data-pred],body.ro-maint [data-mtn],body.ro-maint [data-mtst],body.ro-maint [data-mtdel],body.ro-rets [data-rtok],body.ro-rets [data-rtno]{display:none!important}
 .hm-ts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
@@ -939,7 +940,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'المبيعات',secs:['sales','channels']},{name:'المستودعات',secs:['wh']},{name:'القوائم المالية والحسابات',secs:['fin_is','fin_bs','fin_tb','balances','treasury']},{name:'الكاشيرات',secs:['handover','rets','rets_view']},{name:'العُهد والتمويلات',secs:['custody','custody_holder','loans']},{name:'العمليات',secs:['maint','maint_sup','maint_view','purch','purch_sup','purch_view','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610192025';
+const APP_VER='202610192045';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -997,16 +998,17 @@ async function boot(){
   const {data:{session}}=await sb.auth.getSession();
   if(!session){ $('#app').hidden=true; $('#login').hidden=false; return; }
   st.user=session.user; st.cache={};
-  const [p,b,ub,us]=await Promise.all([
+  const [p,b,ub,us,uro]=await Promise.all([
     sb.from('profiles').select('*').eq('id',st.user.id).maybeSingle(),
     sb.from('branches').select('*').order('sort'),
     sb.from('user_branches').select('branch_id').eq('user_id',st.user.id),
-    sb.from('user_sections').select('section').eq('user_id',st.user.id)
+    sb.from('user_sections').select('section').eq('user_id',st.user.id),
+    sb.from('user_ro').select('section').eq('user_id',st.user.id)
   ]);
   st.profile=p.data;
   if(!st.profile||!st.profile.active){ await sb.auth.signOut(); $('#login').hidden=false; $('#app').hidden=true; $('#lerr').textContent='هذا الحساب موقوف — تواصل مع مدير النظام'; return; }
   try{ const r=await sb.rpc('has_all_branches'); st.allBranches=!!r.data; }catch(e){ st.allBranches=false; }
-  st.branches=b.data||[]; st.mySections=(us.data||[]).map(x=>x.section);
+  st.branches=b.data||[]; st.mySections=(us.data||[]).map(x=>x.section); st.myRO=((uro&&!uro.error&&uro.data)||[]).map(x=>x.section);
   $('#login').hidden=true; $('#app').hidden=false;
   if(isEmp()) st.tab='me'; else { try{ const t=localStorage.getItem('tab'); if(t&&canSee(t)) st.tab=t; }catch(e){} }
   try{ const qb=new URLSearchParams(location.search).get('brief'); if(qb&&/^\d{4}-\d\d-\d\d$/.test(qb)) st.brSel=qb; }catch(e){}
@@ -4762,6 +4764,10 @@ function mountPage(sec){
   let h=r.data.html||''; h=/<\/body>/i.test(h)?h.replace(/<\/body>/i,inj+'</body>'):h+inj;
   f.srcdoc=h;
 }
+const RO_ATTR=/^data-(?:[a-z]*?(?:del|add|new|save|edit|ok|no|send|pin|create|done|appr|rej|submit|ack|rem|upl|photo|pay|anew|apin|adel)|(?:pr|mt|cu|hr|fb|fl|att|lv|emp|mk|adv|ld)st)$/;
+function roHide(root){ if(!document.body.classList.contains('ro-gen')) return; (root||document).querySelectorAll('button,a,label,input[type=file],[role=button]').forEach(el=>{ for(const a of el.attributes){ if(RO_ATTR.test(a.name)){ el.style.display='none'; break; } } }); }
+let roObs=null; function roWatch(on){ if(on&&!roObs){ roObs=new MutationObserver(()=>roHide(document)); roObs.observe(document.body,{childList:true,subtree:true}); } else if(!on&&roObs){ roObs.disconnect(); roObs=null; } if(on) setTimeout(()=>roHide(document),0); }
+document.addEventListener('submit',e=>{ if(document.body.classList.contains('ro-gen')&&e.target.closest('#view,.lv-ov,.mtd-body')){ e.preventDefault(); e.stopPropagation(); toast('👁️ صلاحيتك قراءة فقط'); } },true);
 function fitApp(){ const f=document.querySelector('.appframe'); if(f){const nv=$('#bnav');const nh=nv&&nv.offsetHeight?Math.round(window.innerHeight-nv.getBoundingClientRect().top)+4:0; f.style.height=Math.max(420,window.innerHeight-(f.getBoundingClientRect().top+window.scrollY)-6-nh)+'px';} }
 window.addEventListener('resize',fitApp);
 
@@ -4832,7 +4838,7 @@ SECTIONS.forEach(sec=>{ if(sec.app) V[sec.id]=appView(sec); if(sec.page) V[sec.i
 
 // ----- users -----
 V.users=async()=>{
-  const [P,UB,US]=await Promise.all([sb.from('profiles').select('*').neq('role','employee').order('created_at'),sb.from('user_branches').select('*'),sb.from('user_sections').select('*')]);
+  const [P,UB,US,URO]=await Promise.all([sb.from('profiles').select('*').neq('role','employee').order('created_at'),sb.from('user_branches').select('*'),sb.from('user_sections').select('*'),sb.from('user_ro').select('user_id,section')]); st._uro=(URO&&!URO.error&&URO.data)||[]; st._uroOk=!!(URO&&!URO.error);
   if(P.error) throw P.error;
   const ub=UB.data||[],us=US.data||[];
   const canManage=u=>u.role!=='owner'&&(isOwner()||u.role==='user');
@@ -4842,13 +4848,15 @@ V.users=async()=>{
   <div class="iv-tabs" style="margin-top:10px">${[['grid','📊','جدول الصلاحيات'],['user','👤','حسب الموظف'],['sec','🗂️','حسب الشاشة']].map(([v,i,n])=>`<button data-umode="${v}" aria-pressed="${(st.uMode||'grid')===v}"><span>${i}</span><b>${n}</b></button>`).join('')}</div>`;
   if((st.uMode||'grid')==='grid'){ const U=P.data.filter(u=>u.role==='user'&&canManage(u)&&(!q||((u.full_name||'')+' '+u.username).toLowerCase().includes(q)));
     const pm=st.pmMode||'ops'; const isV=x=>/_view$/.test(x);
-    const cols=[{g:'الفروع',c:st.branches.map(b=>['b:'+b.id,b.name])}].concat(PERM_GROUPS.map(g=>({g:g.name,c:g.secs.filter(x=>pm==='ro'?isV(x):!isV(x)).map(x=>['s:'+x,(SEC_NAME[x]||x).replace(/^👁️\s*/,'').replace(/\s*\(قراءة فقط\)/,'')])})).filter(g=>g.c.length));
+    const cols=[{g:'الفروع',c:st.branches.map(b=>['b:'+b.id,b.name])}].concat(PERM_GROUPS.map(g=>({g:g.name,c:g.secs.filter(x=>!isV(x)).map(x=>['s:'+x,(SEC_NAME[x]||x).replace(/^👁️\s*/,'').replace(/\s*\(قراءة فقط\)/,'')])})).filter(g=>g.c.length));
     h+=`<div class="pm-sw">${[['ops','⚙️ صلاحيات العمليات'],['ro','👁️ القراءة فقط']].map(([k,n])=>`<button data-pmm="${k}" aria-pressed="${pm===k}">${n}</button>`).join('')}</div>`;
-    const has=(u,k)=>{const [a,id]=k.split(':'); return a==='b'?ub.some(x=>x.user_id===u.id&&x.branch_id===id):us.some(x=>x.user_id===u.id&&x.section===id);};
+    const hs=(u,id)=>us.some(x=>x.user_id===u.id&&x.section===id), hro=(u,id)=>st._uro.some(x=>x.user_id===u.id&&x.section===id), OB=['rets','purch','maint'];
+    const has=(u,k)=>{const [a,id]=k.split(':'); if(a==='b') return ub.some(x=>x.user_id===u.id&&x.branch_id===id);
+      if(pm==='ro') return OB.includes(id)?hs(u,id+'_view'):(hs(u,id)&&hro(u,id)); return hs(u,id)&&!hro(u,id);};
     h+=`<div class="muted" style="font-size:10.5px;margin:2px 2px 8px">الموظفين في العمود الأول والصلاحيات في الأعمدة — اضغط المربع للتفعيل أو الإلغاء، ينحفظ على طول. اسحب يمين ويسار لباقي الصلاحيات.</div>
     <div class="pm-wrap"><table class="pm"><thead><tr><th class="pm-u" rowspan="2">الموظف</th>${cols.map((g,gi)=>`<th class="pm-g g${gi%2}" colspan="${g.c.length}">${esc(g.g)}</th>`).join('')}</tr>
       <tr>${cols.map((g,gi)=>g.c.map(([k,n])=>`<th class="pm-h g${gi%2}"><span>${esc(n)}</span></th>`).join('')).join('')}</tr></thead>
-      <tbody>${U.map(u=>`<tr><th class="pm-u">${esc(u.full_name||u.username)}<small>${esc(u.username)}</small></th>${cols.map((g,gi)=>g.c.map(([k])=>`<td class="g${gi%2}"><button class="pm-c" data-tb="${u.id}" data-k="${k}" aria-pressed="${has(u,k)}" aria-label="${esc(k)}"></button></td>`).join('')).join('')}</tr>`).join('')||`<tr><td colspan="99" class="muted">ما فيه مستخدمين</td></tr>`}</tbody></table></div>
+      <tbody>${U.map(u=>`<tr><th class="pm-u">${esc(u.full_name||u.username)}<small>${esc(u.username)}</small></th>${cols.map((g,gi)=>g.c.map(([k])=>`<td class="g${gi%2}"><button class="pm-c" ${k.startsWith('b:')?`data-tb="${u.id}" data-k="${k}"`:`data-pmc="${u.id}" data-k="${k}" data-m="${pm}"`} aria-pressed="${has(u,k)}" aria-label="${esc(k)}"></button></td>`).join('')).join('')}</tr>`).join('')||`<tr><td colspan="99" class="muted">ما فيه مستخدمين</td></tr>`}</tbody></table></div>
     <div class="muted" style="font-size:10.5px;margin-top:8px">الآدمن والمالك يشوفون كل شيء ومو ظاهرين في الجدول. لتعديل الاسم أو كلمة المرور افتح «حسب الموظف».</div>`;
     return h; }
   if(st.uMode==='sec'){ const U=P.data.filter(u=>u.role==='user'&&canManage(u)); const K=st.uSec||'s:'+PERM_GROUPS[0].secs[0]; const [kk,kid]=K.split(':');
@@ -4883,6 +4891,16 @@ V.users=async()=>{
   h+=`<div class="card usr"><h3 style="font-size:13.5px">تغيير كلمة المرور الخاصة بك</h3><form class="row" id="cpf"><div class="field"><label for="cpn">كلمة المرور الجديدة</label><input class="inp" id="cpn" type="password" minlength="8" required dir="ltr" autocomplete="new-password"></div><div class="field" style="justify-content:flex-end"><button class="btn" type="submit">تغيير</button></div></form></div>`;
   return h;
 };
+document.addEventListener('click',async e=>{ const c=e.target.closest('[data-pmc]'); if(!c||c.disabled) return; c.disabled=true;
+  const uid=c.dataset.pmc, sec=c.dataset.k.split(':')[1], ro=c.dataset.m==='ro', on=c.getAttribute('aria-pressed')!=='true', OB=['rets','purch','maint'];
+  const T=(t)=>sb.from(t); const delS=k=>T('user_sections').delete().eq('user_id',uid).eq('section',k); const addS=async k=>{ const x=await T('user_sections').select('section').eq('user_id',uid).eq('section',k); if(!(x.data||[]).length) return T('user_sections').insert({user_id:uid,section:k}); return {error:null}; };
+  const delR=()=>T('user_ro').delete().eq('user_id',uid).eq('section',sec), addR=async()=>{ const x=await T('user_ro').select('section').eq('user_id',uid).eq('section',sec); if(!(x.data||[]).length) return T('user_ro').insert({user_id:uid,section:sec}); return {error:null}; };
+  let r={error:null}; const run=async f=>{ if(!r.error) r=await f(); };
+  if(ro&&!OB.includes(sec)&&!st._uroOk){ c.disabled=false; toast('شغّل ملف «perms-readonly» في Supabase أول'); return; }
+  if(!ro){ if(on){ await run(()=>addS(sec)); if(OB.includes(sec)) await run(()=>delS(sec+'_view')); else if(st._uroOk) await run(delR); } else { await run(()=>delS(sec)); if(!OB.includes(sec)&&st._uroOk) await run(delR); } }
+  else if(OB.includes(sec)){ if(on){ await run(()=>addS(sec+'_view')); await run(()=>delS(sec)); } else await run(()=>delS(sec+'_view')); }
+  else { if(on){ await run(()=>addS(sec)); await run(addR); } else { await run(delR); await run(()=>delS(sec)); } }
+  c.disabled=false; if(r.error){ toast('تعذّر الحفظ: '+r.error.message); return; } toast('تم الحفظ'); render(); });
 document.addEventListener('click',e=>{ const pm=e.target.closest('[data-pmm]'); if(pm){ st.pmMode=pm.dataset.pmm; render(); return; } const m=e.target.closest('[data-umode]'); if(m){ st.uMode=m.dataset.umode; render(); return; } const k=e.target.closest('[data-usec]'); if(k){ st.uSec=k.dataset.usec; render(); } });
 document.addEventListener('change',async e=>{ const sel=e.target.closest('[data-ucopy]'); if(!sel||!sel.value) return; const to=sel.dataset.ucopy, from=sel.value; const nm=sel.options[sel.selectedIndex].text;
   if(!confirm('نسخ فروع وشاشات «'+nm+'» لهذا الموظف؟ صلاحياته الحالية بتنستبدل.')){ sel.value=''; return; } sel.disabled=true;
@@ -4971,7 +4989,8 @@ async function render(){
   const sec=SECTIONS.find(s=>s.id===st.tab)||{}; document.body.classList.toggle('appmode',!!sec.app); document.body.classList.toggle('aimode',st.tab==='ai');
   const OBS={purch:['purch_view',['purch','purch_sup']],maint:['maint_view',['maint','maint_sup']],rets:['rets_view',['rets']]}; const ob=OBS[st.tab]; const ro=!!ob&&!isAdmin()&&st.mySections.includes(ob[0])&&!ob[1].some(k=>st.mySections.includes(k));
   ['purch','maint','rets'].forEach(k=>document.body.classList.toggle('ro-'+k,ro&&st.tab===k));
-  try{ v.innerHTML=(ro?'<div class="ro-bar">👁️ وضع المراقبة — تشوف كل شي بدون موافقة أو تعديل</div>':'')+(st.tab==='home'?pushBox(false):st.tab==='me'?pushBox(false)+await mgBanner():'')+await V[st.tab](); v.querySelectorAll('.sc-end').forEach(s=>s.scrollLeft=s.scrollWidth); if(sec.app) fitApp(); if(sec.page) mountPage(sec); }
+  const secX=SECTIONS.find(x=>x.id===st.tab)||{}; const roG=!ro&&!isAdmin()&&(st.myRO||[]).includes(secX.perm||st.tab); document.body.classList.toggle('ro-gen',roG); roWatch(roG);
+  try{ v.innerHTML=(ro||roG?'<div class="ro-bar">👁️ وضع المراقبة — تشوف كل شي بدون موافقة أو تعديل</div>':'')+(st.tab==='home'?pushBox(false):st.tab==='me'?pushBox(false)+await mgBanner():'')+await V[st.tab](); v.querySelectorAll('.sc-end').forEach(s=>s.scrollLeft=s.scrollWidth); if(sec.app) fitApp(); if(sec.page) mountPage(sec); }
   catch(err){ console.error(err); v.innerHTML=`<div class="card"><div class="err">تعذّر تحميل البيانات: ${esc(err.message||err)}</div><button class="btn ghost sm" onclick="location.reload()">إعادة المحاولة</button></div>`; }
 }
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState!=='visible'||!st.profile) return; if(st.tab==='fleet'&&st.flEdit) return; const sec=SECTIONS.find(s=>s.id===st.tab)||{}; st.cache={}; st._aiCtx=null; st._alertsAt=0; st._mgIn=null; loadAlerts(); if(!sec.app&&st.tab!=='data'&&st.tab!=='ai') render(); });
