@@ -848,7 +848,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'التقارير',secs:['sales','channels','wh']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['income','treasury','balances','handover','rets','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610190505';
+const APP_VER='202610190510';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets='تفعيل اشعارات مرتجع الكاشيرات'; SEC_NAME.income='القوائم المالية'; SEC_NAME.wh='المستودعات والمشتريات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -3010,8 +3010,7 @@ V.stock=async()=>{
   let D=D0; if(brs){ const r=await sb.rpc('growth_inv',{p_from:f,p_to:t,p_branches:brs}); D=r.data||D0; }
   st._ivR=[f,t,brs];
   const ago=(T==='stock'?D.stock_run:D.last_run); 
-  let h=`<div class="rt-hd"><h2>📦 المستودعات والمشتريات</h2><span class="muted">مباشر من جروث${ago?' · آخر تحديث '+lvAgo(ago):''}</span></div>
-   <div class="iv-tabs iv-4">${[['pur','🧾','المشتريات'],['iss','📤','الصرف المباشر'],['stock','📦','أرصدة المخزون'],['chart','📊','المخططات اليومية']].map(([v,i,n])=>`<button data-ivt="${v}" aria-pressed="${T===v}"><span>${i}</span><b>${n}</b></button>`).join('')}</div>
+  let h=`<div class="rt-hd"><h2>${({pur:'🧾 المشتريات',iss:'📤 الصرف المباشر',stock:'📦 أرصدة المخزون',chart:'📊 المخططات اليومية'})[T]||'📦 المستودعات'}</h2><span class="muted">مباشر من جروث${ago?' · آخر تحديث '+lvAgo(ago):''}</span></div>
    ${entPick(BR,ents,B,'ivb')}
    ${T!=='stock'?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px"><div><label class="muted" style="font-size:11px">من تاريخ</label><input type="date" class="inp" id="ivF" value="${f}" max="${bizD}" style="width:100%"></div><div><label class="muted" style="font-size:11px">إلى تاريخ</label><input type="date" class="inp" id="ivTo" value="${t}" max="${bizD}" style="width:100%"></div></div>`:''}`;
   const kpi=(a,b)=>`<div class="kpis" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">${[a,b].map(([l,v])=>`<div class="card" style="margin:0"><small class="muted">${l}</small><b class="num" style="display:block;font-size:19px;margin-top:4px">${v}</b></div>`).join('')}</div>`;
@@ -3112,8 +3111,7 @@ V.finst=async()=>{
   const ago=D.last_run?lvAgo(D.last_run):'';
   const months=[]; for(let m=1;m<=12;m++){ const ym=cy+'-'+String(m).padStart(2,'0'); if(ym<=cm) months.push(ym); }
   const mName=ym=>new Date(ym+'-15').toLocaleDateString('ar-SA-u-ca-gregory-nu-latn',{month:'long',year:'numeric'});
-  let h=`<div class="rt-hd"><h2>📊 القوائم المالية</h2><span class="muted">مباشر من جروث${ago?' · آخر تحديث '+ago:''}</span></div>
-   <div class="iv-tabs iv-2">${[['is','📈','قائمة الدخل'],['bs','⚖️','الميزانية'],['tb','📚','أرصدة الحسابات']].map(([v,i,n])=>`<button data-fst="${v}" aria-pressed="${T===v}"><span>${i}</span><b>${n}</b></button>`).join('')}${canSee('balances')?`<button data-t="balances"><span>👥</span><b>العملاء والموردين</b></button>`:''}</div>
+  let h=`<div class="rt-hd"><h2>${({is:'📈 قائمة الدخل',bs:'⚖️ الميزانية',tb:'📚 أرصدة الحسابات'})[T]||'📊 القوائم المالية'}</h2><span class="muted">مباشر من جروث${ago?' · آخر تحديث '+ago:''}</span></div>
    ${entPick(BR,ents,B,'fsb')}
    ${T==='bs'?`<div style="margin-bottom:10px"><label class="muted" style="font-size:11px">كما في نهاية</label><select class="inp" id="fsM" style="width:100%">${months.map(m=>`<option value="${m}" ${m===M?'selected':''}>${mName(m)}</option>`).join('')}</select></div>`
    :`<div class="chips">${(()=>{const q=Math.floor((+cm.slice(5)-1)/3)*3+1, qs=cy+'-'+String(q).padStart(2,'0'); const pm=(()=>{const d=new Date(cm+'-15');d.setMonth(d.getMonth()-1);return d.toISOString().slice(0,7);})(); return [['m:'+cm+':'+cm,'هذا الشهر'],['m:'+pm+':'+pm,'الشهر الماضي'],['m:'+qs+':'+cm,'الربع الحالي'],['m:'+cy+'-01:'+cm,'من بداية السنة']];})().map(([v,n])=>{const [,a,b]=v.split(':');return `<button data-fsr="${v}" aria-pressed="${F===a&&M===b}">${n}</button>`;}).join('')}</div>
@@ -3195,8 +3193,7 @@ V.balances=async()=>{
   const side=x=>k==='vend'?(x.b<0?'لهم':'دفعة مقدمة'):(x.b>0?'عليهم':'لهم عندنا');
   const lbl=k==='vend'?['مستحق للموردين','دفعات مقدمة للموردين']:['مستحق على العملاء','أرصدة دائنة للعملاء'];
   const cnt=v=>new Set(RAW.filter(x=>x.k===v&&(!brs||brs.includes(x.br))&&Math.abs(+x.b)>=0.005).map(x=>x.id)).size;
-  let h=`<div class="rt-hd"><h2>📒 أرصدة العملاء والموردين</h2><span class="muted">مباشر من جروث${ago?' · آخر تحديث '+ago:''}${stale?' · ⚠️ المزامنة متأخرة':''} · اضغط أي حساب لكشف الحساب</span></div>
-  <div class="iv-tabs iv-2">${[['vend','🏭','الموردين'],['cust','👥','العملاء']].map(([v,i,n])=>`<button data-blk="${v}" aria-pressed="${k===v}"><span>${i}</span><b>${n} · <span class="num" style="font-size:inherit">${cnt(v)}</span></b></button>`).join('')}</div>
+  let h=`<div class="rt-hd"><h2>${k==='vend'?'🏭 أرصدة الموردين':'👥 أرصدة العملاء'} <small class="num muted" style="font-size:13px">${cnt(k)}</small></h2><span class="muted">مباشر من جروث${ago?' · آخر تحديث '+ago:''}${stale?' · ⚠️ المزامنة متأخرة':''} · اضغط أي حساب لكشف الحساب</span></div>
   <div class="iv-ents">${[['all','كل الشركات']].concat(BRL.length?ENTS.map(e=>[e,e]):[['shaden','مطاعم الشادن'],['pacino','الباتشينو']]).map(([v,n])=>`<button data-ble="${esc(v)}" aria-pressed="${en===v}">${esc(n)}</button>`).join('')}</div>`;
   if(!RAW.length) return h+`<div class="card"><p class="muted">بانتظار أول مزامنة للأرصدة من جروث — تظهر هنا تلقائياً بعد ربط السيرفر.</p></div>`;
   if(brs&&!RAW.some(x=>x.br)) h+=`<div class="card" style="background:#FBF3DF"><p class="muted" style="margin:0">فصل الأرصدة حسب المنشأة يحتاج تحديث سكربت المزامنة على السيرفر — حالياً الأرقام لكل المنشآت.</p></div>`;
