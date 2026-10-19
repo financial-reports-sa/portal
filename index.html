@@ -42,6 +42,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow);overflow:hidden}
 .hb{display:flex;flex-direction:column;gap:18px;margin-top:6px}.hb-h{display:flex;align-items:center;gap:10px;margin:0 2px 10px}.hb-h b{font-size:15.5px}
 .hb-hi{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:17px;color:#fff}
+.rtd-box.bal-now{background:linear-gradient(160deg,#1E5A3E,#143D2A);color:#fff;padding:14px 16px;border-radius:16px;margin-bottom:10px}.rtd-box.bal-now span{color:rgba(255,255,255,.8)}.rtd-box.bal-now b{font-size:21px;color:#fff}.rtd-box.bal-now small{color:#E9D58B;font-size:12px}
 .hb-grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
 .hb-s{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:92px;padding:12px 6px 10px;border-radius:16px;border:1px solid var(--line);background:var(--card);box-shadow:0 1px 2px rgba(20,24,20,.04),0 4px 12px rgba(20,24,20,.05);font:inherit;color:inherit;cursor:pointer}
 .hb-s::before{content:'';position:absolute;inset:0 0 auto 0;height:3px;background:var(--c)}.hb-s:active{transform:scale(.97)}
@@ -848,7 +849,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'التقارير',secs:['sales','channels','wh']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['income','treasury','balances','handover','rets','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610190515';
+const APP_VER='202610190520';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets='تفعيل اشعارات مرتجع الكاشيرات'; SEC_NAME.income='القوائم المالية'; SEC_NAME.wh='المستودعات والمشتريات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -3170,12 +3171,13 @@ async function glStatement(acc){ const c=st._fsCtx||{}; const mName=ym=>new Date
   const pd=S.period||{dr:0,cr:0}, close=(+S.opening)+(+pd.dr)-(+pd.cr); const sumL=L.reduce((x,m)=>x+(+m.dr)-(+m.cr),0); const full=Math.abs(sumL-((+pd.dr)-(+pd.cr)))<0.01;
   sh.innerHTML=`<div class="lv-top"><b>📄 كشف حساب</b><button class="icb" data-x="1">✕</button></div>
    <div style="margin:-4px 0 10px"><b style="font-size:15px">${esc(A.n||acc)}</b><div class="muted" style="font-size:11.5px">رقم ${esc(acc)} · ${c.F===c.M?mName(c.M):'من '+mName(c.F)+' إلى '+mName(c.M)}</div></div>
+   <div class="rtd-box bal-now"><span>الرصيد في نهاية ${mName(c.M)}</span><b class="num">${fmt(Math.abs(close),2)} <small>${side(close)}</small></b></div>
    <div class="rtd-box"><span>رصيد أول المدة</span><b class="num">${fmt(Math.abs(+S.opening),2)} <small class="muted">${side(+S.opening)}</small></b></div>
    ${!L.length&&(+pd.dr||+pd.cr)?`<p class="muted" style="font-size:11.5px">⚠️ تفاصيل حركات القيود ما وصلت من جروث بعد — تحتاج تحديث سكربت المزامنة. الأرصدة صحيحة.</p>`:''}
    ${L.length&&!full?`<p class="muted" style="font-size:11.5px">⚠️ بعض الحركات ما اكتملت مزامنتها — الرصيد النهائي صحيح من ميزان المراجعة.</p>`:''}
-   <div class="card rt-list" style="margin:8px 0">${L.map(m=>{ run+=(+m.dr)-(+m.cr); return `<div class="rt-it" style="align-items:flex-start"><div class="rt-m"><div class="rt-t" style="font-size:12.5px">${esc(m.t||'قيد')}${m.doc?' · #'+esc(m.doc):''}</div><div class="muted rt-s">${esc(String(m.d).slice(0,10))}${m.br&&!c.brs?' · '+esc(brById(m.br).name):''}${m.x?' · '+esc(m.x):''}</div></div><div style="text-align:left;flex:none;font-size:12px;line-height:1.7">${+m.dr?`<div>مدين <b class="num">${fmt(+m.dr,2)}</b></div>`:''}${+m.cr?`<div>دائن <b class="num">${fmt(+m.cr,2)}</b></div>`:''}<div class="muted">الرصيد <span class="num">${fmt(Math.abs(run),2)}</span> ${side(run)}</div></div></div>`; }).join('')||'<p class="muted">ما فيه حركات في هذي الفترة</p>'}</div>
-   <div class="rtd-box"><span>مدين ${fmt(+pd.dr,2)} · دائن ${fmt(+pd.cr,2)}</span></div>
-   <div class="rtd-box"><span>الرصيد في نهاية ${mName(c.M)}</span><b class="num" style="font-size:18px">${fmt(Math.abs(close),2)} <small class="muted">${side(close)}</small></b></div>`; }
+   <div class="card rt-list" style="margin:8px 0">${L.map(m=>{ run+=(+m.dr)-(+m.cr); return `<div class="rt-it" style="align-items:flex-start"><div class="rt-m"><div class="rt-t" style="font-size:12.5px">${esc(m.t||'قيد')}${m.doc?' · #'+esc(m.doc):''}</div><div class="muted rt-s">${esc(String(m.d).slice(0,10))}${m.br&&!c.brs?' · '+esc(brById(m.br).name):''}${m.x?' · '+esc(m.x):''}</div></div><div style="text-align:left;flex:none;font-size:12px;line-height:1.7">${+m.dr?`<div>مدين <b class="num">${fmt(+m.dr,2)}</b></div>`:''}${+m.cr?`<div>دائن <b class="num">${fmt(+m.cr,2)}</b></div>`:''}<div class="muted">الرصيد <span class="num">${fmt(Math.abs(run),2)}</span> ${side(run)}</div></div></div>`; }).reverse().join('')||'<p class="muted">ما فيه حركات في هذي الفترة</p>'}</div>
+   <div class="rtd-box"><span>مجموع الفترة: مدين ${fmt(+pd.dr,2)} · دائن ${fmt(+pd.cr,2)}</span></div>
+   `; }
 document.addEventListener('click',e=>{const t=e.target.closest('[data-glst]');if(!t)return;glStatement(t.dataset.glst);});
 document.addEventListener('click',e=>{const t=e.target.closest('[data-fst],[data-fsb],[data-fsp],[data-fso],[data-fsr]');if(!t)return;const d=t.dataset; if(d.fsr){ const [,a,b]=d.fsr.split(':'); st.fsF=a; st.fsM=b; render(); return; }
   if(d.fso){ const o=st._fsOpen||(st._fsOpen=new Set()); o.has(d.fso)?o.delete(d.fso):o.add(d.fso); render(); return; }
@@ -3216,14 +3218,15 @@ async function blStatement(id,per){ const k=st.blK||'vend', en=st.blE||'all', br
   if(r.error){ w.querySelector('.lv-sheet').innerHTML=`<div class="lv-top"><b>📄 كشف حساب</b><button class="icb" data-x="1">✕</button></div><p class="muted">${/growth_acc_statement/.test(r.error.message)?'شغّل ملف «growth-accounts-v2» في Supabase أول.':'تعذّر التحميل'}</p>`; return; }
   const S=r.data||{}, sg=k==='vend'?-1:1; let run=sg*(+S.opening); const sd=v=>k==='vend'?(v>=0?'لهم':'علينا لهم مقدّم'):(v>=0?'عليهم':'لهم');
   const mv=(S.moves||[]); const noMv=!S.moves_from||S.moves_from>from;
-  const rows=mv.map(m=>{ run+=sg*((+m.dr)-(+m.cr)); return `<div class="rt-it" style="align-items:flex-start"><div class="rt-m"><div class="rt-t" style="font-size:12.5px">${esc(m.t||'حركة')}${m.doc?' · <span class="num">#'+esc(m.doc)+'</span>':''}</div><div class="muted rt-s">${esc(String(m.d).slice(0,10))}${m.br&&!brs?' · '+esc(brById(m.br).name):''}${m.x?' · '+esc(m.x):''}</div></div><div style="text-align:left;flex:none;font-size:12px;line-height:1.7">${+m.dr?`<div>مدين <b class="num">${fmt(+m.dr,2)}</b></div>`:''}${+m.cr?`<div>دائن <b class="num">${fmt(+m.cr,2)}</b></div>`:''}<div class="muted">الرصيد <span class="num">${fmt(Math.abs(run),2)}</span></div></div></div>`; }).join('');
+  const rows=mv.map(m=>{ run+=sg*((+m.dr)-(+m.cr)); return `<div class="rt-it" style="align-items:flex-start"><div class="rt-m"><div class="rt-t" style="font-size:12.5px">${esc(m.t||'حركة')}${m.doc?' · <span class="num">#'+esc(m.doc)+'</span>':''}</div><div class="muted rt-s">${esc(String(m.d).slice(0,10))}${m.br&&!brs?' · '+esc(brById(m.br).name):''}${m.x?' · '+esc(m.x):''}</div></div><div style="text-align:left;flex:none;font-size:12px;line-height:1.7">${+m.dr?`<div>مدين <b class="num">${fmt(+m.dr,2)}</b></div>`:''}${+m.cr?`<div>دائن <b class="num">${fmt(+m.cr,2)}</b></div>`:''}<div class="muted">الرصيد <span class="num">${fmt(Math.abs(run),2)}</span></div></div></div>`; }).reverse().join('');
   w.querySelector('.lv-sheet').innerHTML=`<div class="lv-top"><b>📄 كشف حساب</b><button class="icb" data-x="1">✕</button></div>
    <div style="margin:-4px 0 10px"><b style="font-size:15px">${esc(x.n)}</b><div class="muted" style="font-size:11.5px">${x.c?'رقم '+esc(x.c)+' · ':''}${en==='all'?'كل المنشآت':esc(BL_ENT[en]?(en==='shaden'?'مطاعم الشادن':'الباتشينو'):en)}</div></div>
+   <div class="rtd-box bal-now"><span>الرصيد الحالي</span><b class="num">${fmt(Math.abs(+S.balance),2)} <small>${sd(sg*(+S.balance))}</small></b></div>
    <div class="chips">${[['30','آخر ٣٠ يوم'],['90','آخر ٩٠ يوم'],['ytd','من بداية السنة']].map(([v,n])=>`<button data-blper="${v}" aria-pressed="${(per||'90')===v}">${n}</button>`).join('')}</div>
    <div class="rtd-box"><span>رصيد أول المدة · ${esc(String(S.from).slice(0,10))}</span><b class="num">${fmt(Math.abs(+S.opening),2)} <small class="muted">${sd(sg*(+S.opening))}</small></b></div>
    ${noMv?`<p class="muted" style="font-size:11.5px">⚠️ حركات الحسابات ما اكتملت مزامنتها لهذي الفترة${S.moves_from?' (متوفرة من '+esc(String(S.moves_from).slice(0,10))+')':''} — الرصيد الحالي صحيح.</p>`:''}
    <div class="card rt-list" style="margin:8px 0">${rows||'<p class="muted">ما فيه حركات في هذي الفترة</p>'}</div>
-   <div class="rtd-box"><span>الرصيد الحالي</span><b class="num" style="font-size:18px">${fmt(Math.abs(+S.balance),2)} <small class="muted">${sd(sg*(+S.balance))}</small></b></div>`; }
+   `; }
 document.addEventListener('click',e=>{const t=e.target.closest('[data-blk],[data-ble],[data-blst],[data-bls]');if(!t)return;const d=t.dataset; if(d.blst){blStatement(d.blst,'90');return;} if('bls' in d){ st.blS=(d.bls&&st.blS!==d.bls)?d.bls:''; render(); return; } if(d.blk){ if(st.blK!==d.blk) st.blS=''; st.blK=d.blk; } if(d.ble)st.blE=d.ble; render();});
 V.rets=async()=>{
   const r=await sb.rpc('ret_feed',{p_days:7});
