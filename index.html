@@ -842,6 +842,9 @@ html[dir=ltr] .sh-t{direction:ltr}html[dir=ltr] .sh-t i{display:inline-block;tra
 .dv-rg{display:flex;gap:6px;align-items:center;margin:0 0 12px}.dv-rg .inp{flex:1;min-width:0;font-size:11.5px;padding:6px 8px}
 .dv-tw{overflow-x:auto;-webkit-overflow-scrolling:touch}.dv-t{width:100%;border-collapse:collapse;font-size:11px}.dv-t th,.dv-t td{border:1px solid #DDE1D7;padding:7px 6px;text-align:center;white-space:nowrap}.dv-t thead th{background:#F1F3EC;font-size:10.5px;font-weight:700}.dv-t td.s{text-align:start}.dv-t tfoot td{background:#EEF5F0;font-weight:700}
 @media (max-width:380px){.dv-hd,.dv-r{grid-template-columns:20px minmax(0,1fr) 44px 60px 54px;gap:4px;padding-inline:9px}}
+.hx-hero{padding:11px 13px 9px!important}.hx-top1{font-size:12px}.hx-big{font-size:clamp(20px,6.2vw,25px)!important}.hx-lbl{font-size:11px!important}.hx-chg{font-size:11px!important}.hx-ring svg{width:52px!important;height:52px!important}.hx-rtx b{font-size:12.5px!important}.hx-rtx span{font-size:8.5px!important}.hx-stats button{padding:5px 7px!important}.hx-stats button span{font-size:9.5px!important}.hx-stats button b{font-size:13px!important}.hx-stats button em{font-size:9px!important}
+.lv-card{padding:11px 13px!important}.lv-hd{font-size:12px!important}.lv-big{margin:4px 0 7px!important}.lv-big b{font-size:24px!important}.lv-big small{font-size:11px}.lv-brs{gap:5px!important}.lv-br{font-size:11.5px!important;grid-template-columns:78px 1fr auto!important}.lv-bar{height:6px!important}.lv-more{font-size:10.5px!important;margin-top:6px!important}
+.hm-dvi{font-size:15px;line-height:1}
 </style>
 </head>
 <body>
@@ -961,7 +964,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'المبيعات',secs:['sales','channels','deliv']},{name:'المستودعات',secs:['wh']},{name:'القوائم المالية والحسابات',secs:['fin_is','fin_bs','fin_tb','balances','treasury']},{name:'الكاشيرات',secs:['handover','rets','rets_view']},{name:'العُهد والتمويلات',secs:['custody','custody_holder','loans']},{name:'العمليات',secs:['maint','maint_sup','maint_view','purch','purch_sup','purch_view','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610192315';
+const APP_VER='202610192330';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -1247,6 +1250,7 @@ V.home=async()=>{
     if(canSee('cmp')) T.push(`<button class="hm-t" data-hmcmp="${rd}"><span class="hm-ti">📋</span><span class="hm-tx"><b>تقرير اليوم</b><small>${new Date(rd+'T12:00:00').toLocaleDateString('ar-SA-u-ca-gregory-nu-latn',{weekday:'long',day:'numeric',month:'long'})}</small></span></button>`);
     }catch(e){}
   try{ if(allowed('sales')) h+=await liveCard(); }catch(e){}
+  try{ if(canSee('deliv')) h+=await delivCard(); }catch(e){}
   try{ h+=await mkHomeCard(); }catch(e){}
   // ===== المؤشرات =====
   const tile=(ic,bg,l,v,sub,go)=>`<button class="hx-tile" ${go?`data-t="${go}"`:''}><span class="hx-ic" style="background:${bg}">${ic}</span><span class="hx-tl">${l}</span><b class="num">${v}</b>${sub?`<span class="hx-ts">${sub}</span>`:''}</button>`;
@@ -2726,6 +2730,14 @@ async function mkGenerate(day,replace){
   return true; }
 async function liveLoad(force){ if(!force&&st._lv&&Date.now()-st._lvAt<60e3) return st._lv; if(!force&&st._lvP) return st._lvP; st._lvP=(async()=>{ const r=await sb.rpc('growth_live',{}); if(r.error) throw r.error; st._lv=r.data; st._lvAt=Date.now(); return r.data; })(); try{ return await st._lvP; } finally { st._lvP=null; } }
 function lvAgo(t){ if(!t) return '—'; const m=Math.round((Date.now()-new Date(t))/6e4); return m<1?'الحين':m<60?`قبل ${m} د`:m<1440?`قبل ${Math.floor(m/60)} س`:`قبل ${Math.floor(m/1440)} يوم`; }
+async function delivCard(){ const T=dvToday(); let r; try{ r=await sb.rpc('growth_deliv_report',{p_from:T,p_to:T,p_branches:null,p_driver:null}); }catch(e){ return ''; } if(!r||r.error||!r.data) return '';
+  const D=r.data, DR=(D.drivers||[]).map(x=>({...x,c:+x.c,a:+x.a})); const bs=selBranches(); const L=DR.filter(x=>!bs||bs.includes(x.br));
+  const B={}; L.forEach(x=>{ const o=B[x.br]=B[x.br]||{c:0,a:0}; o.c+=x.c; o.a+=x.a; }); const ids=Object.keys(B).sort((a,b)=>B[b].c-B[a].c);
+  const tc=sum(L.map(x=>x.c)), ta=sum(L.map(x=>x.a)), mx=Math.max(1,...ids.map(k=>B[k].c)); const top=L.slice().sort((a,b)=>b.c-a.c)[0];
+  return `<button class="card lv-card hm-dv" data-hmdv="${T}"><div class="lv-hd"><span class="hm-dvi">🏍️</span><b>التوصيل اليوم · مباشر من جروث</b><small class="muted">${D.last_run?lvAgo(D.last_run):''}</small></div>
+    <div class="lv-big"><b class="num">${fmt(tc)}</b><small>طلب · ${fmt(ta)} ر.س${tc?' · متوسط '+fmt(ta/tc,1):''}</small></div>
+    ${ids.length?`<div class="lv-brs">${ids.map(k=>{const b=brById(k);return `<div class="lv-br"><span><i class="dot" style="background:${b.color||'#888'}"></i>${esc(b.name)}</span><div class="lv-bar"><i style="width:${Math.max(4,B[k].c/mx*100)}%;background:${b.color||'#888'}"></i></div><b class="num">${fmt(B[k].c)} <small class="muted" style="font-weight:400">طلب</small></b></div>`;}).join('')}</div>`:'<div class="muted" style="font-size:12px">ما فيه طلبات توصيل اليوم بعد</div>'}
+    <div class="muted lv-more">${top?`الأعلى: ${esc(top.n||'')} (${fmt(top.c)} طلب) · `:''}تقرير السائقين ‹</div></button>`; }
 async function liveCard(){ let L; try{ L=await liveLoad(); }catch(e){ return ''; }
   const bs=selBranches(); const biz=new Date(Date.now()+3*36e5-8*36e5).toISOString().slice(0,10); const old=L.day&&String(L.day).slice(0,10)<biz;
   const got=old?[]:(L.branches||[]).filter(x=>!bs||bs.includes(x.branch)); const ids=(bs&&bs.length?bs:got.map(x=>x.branch)).filter(id=>['az','sh','pc'].includes(id)||got.some(g=>g.branch===id));
@@ -3115,7 +3127,8 @@ V.pricew=async()=>{ const days=st.pwD||45;
    <p class="muted" style="font-size:10.5px">النسبة = آخر سعر شراء مقارنة بالشراء اللي قبله · اضغط أي صنف لحركته كاملة</p>`;
   setTimeout(()=>{ const q=$('#pwQ'); if(q) q.oninput=()=>{const v=q.value.trim().toLowerCase(); document.querySelectorAll('#pwL [data-pwn]').forEach(e=>{e.style.display=!v||e.dataset.pwn.includes(v)?'':'none';});}; },0);
   return h; };
-document.addEventListener('click',e=>{ const t=e.target.closest('[data-pwd],[data-pwall],[data-pwc],[data-hmcmp]'); if(!t) return; const d=t.dataset;
+document.addEventListener('click',e=>{ const t=e.target.closest('[data-pwd],[data-pwall],[data-pwc],[data-hmcmp],[data-hmdv]'); if(!t) return; const d=t.dataset;
+  if(d.hmdv){ st.dvF=d.hmdv; st.dvT=d.hmdv; st.dvD=null; st.tab='deliv'; try{localStorage.setItem('tab','deliv');}catch(_){} window.scrollTo({top:0}); renderShell(); return; }
   if(d.hmcmp){ st.cmD=d.hmcmp; st.tab='cmp'; window.scrollTo({top:0}); renderShell(); return; }
   if(d.pwd) st.pwD=+d.pwd; if(d.pwall) st.pwAll=1; if(d.pwc) st['pwc_'+d.pwc]=1; render(); });
 const DR_CAT=[{k:'oil',n:'الزيت',ic:'🫗',kw:/زيت/},{k:'rice',n:'الرز',ic:'🍚',kw:/(^|\s)(رز|ارز|أرز)|بسمتي/},{k:'chicken',n:'الدجاج',ic:'🍗',kw:PW_CAT[0].kw},{k:'meat',n:'الذبائح',ic:'🐑',kw:PW_CAT[1].kw}];
