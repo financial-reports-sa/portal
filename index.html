@@ -840,17 +840,17 @@ const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me','msgs']},{id:
 const HUB=[
   {n:'المبيعات',ic:'💰',c:'#1E5A3E',secs:['sales','channels']},
   {n:'المستودعات',ic:'📦',c:'#B8860B',secs:['stock'],items:[['stock','🧾','المشتريات',{ivT:'pur'}],['stock','📤','الصرف المباشر',{ivT:'iss'}],['stock','📦','أرصدة المخزون',{ivT:'stock'}],['stock','📊','المخططات اليومية',{ivT:'chart'}]]},
-  {n:'القوائم المالية والحسابات',ic:'📊',c:'#2F5D8A',secs:['finst','balances','treasury'],items:[['finst','📈','قائمة الدخل',{fsT:'is'}],['finst','⚖️','الميزانية',{fsT:'bs'}],['finst','📚','أرصدة الحسابات',{fsT:'tb'}],['balances','🏭','الموردين',{blK:'vend'}],['balances','👥','العملاء',{blK:'cust'}],['treasury','🏦','خزينة الأرصدة',{}]]},
+  {n:'القوائم المالية والحسابات',ic:'📊',c:'#2F5D8A',secs:['finst','balances','treasury'],items:[['finst','📈','قائمة الدخل',{fsT:'is'},'fin_is'],['finst','⚖️','الميزانية',{fsT:'bs'},'fin_bs'],['finst','📚','أرصدة الحسابات',{fsT:'tb'},'fin_tb'],['balances','🏭','الموردين',{blK:'vend'}],['balances','👥','العملاء',{blK:'cust'}],['treasury','🏦','خزينة الأرصدة',{}]]},
   {n:'الكاشيرات',ic:'🧾',c:'#9A3E2E',secs:['handover','rets']},
   {n:'العُهد والتمويلات',ic:'💼',c:'#5B5F66',secs:['custody','loans']}];
 const HUB_IT={sales:['📈','المبيعات اليومية والشهرية لكل فرع'],channels:['🛵','التطبيقات والأقسام وفئات المنيو'],stock:['📦','الصرف المباشر والمشتريات وأرصدة الأصناف'],finst:['📑','قائمة الدخل والميزانية وأرصدة الحسابات'],balances:['👥','أرصدة وكشوف العملاء والموردين'],treasury:['🏦','أرصدة البنوك والصناديق'],handover:['🔐','مطابقة عهدة الكاشير مع جروث'],rets:['↩️','تفاصيل المرتجعات وتنزيلها كصورة'],custody:['💼','العُهد واستلامها'],loans:['💳','التمويلات والأقساط']};
 const hubOf=t=>HUB.find(g=>g.secs.includes(t));
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
-const PERM_GROUPS=[{name:'المبيعات',secs:['sales','channels']},{name:'المستودعات',secs:['wh']},{name:'القوائم المالية والحسابات',secs:['income','balances','treasury']},{name:'الكاشيرات',secs:['handover','rets']},{name:'العُهد والتمويلات',secs:['custody','custody_holder','loans']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'التواصل',secs:['msgs_send']}];
+const PERM_GROUPS=[{name:'المبيعات',secs:['sales','channels']},{name:'المستودعات',secs:['wh']},{name:'القوائم المالية والحسابات',secs:['fin_is','fin_bs','fin_tb','balances','treasury']},{name:'الكاشيرات',secs:['handover','rets']},{name:'العُهد والتمويلات',secs:['custody','custody_holder','loans']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610190525';
-const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.income='قائمة الدخل والميزانية وأرصدة الحسابات'; SEC_NAME.wh='المشتريات والصرف والمخزون والمخططات'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
+const APP_VER='202610190535';
+const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون والمخططات'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 const CH={ajl:'آجل عملاء',shaden:'تطبيق الشادن',meals:'وجبات',family:'قسم العائلات',keeta:'تطبيق كيتا',hs:'تطبيق هانقرستيشن',dlv:'توصيل',tkl:'سفري / محلي',ninja:'تطبيق نينجا',bonat:'تطبيق بونات',awail:'عوائل',sfr:'سفري',mhl:'محلي'};
@@ -876,7 +876,7 @@ const st={user:null,profile:null,branches:[],myBranches:[],mySections:[],tab:'ho
 const isAdmin=()=>st.profile&&['owner','admin'].includes(st.profile.role);
 const isOwner=()=>st.profile&&st.profile.role==='owner';
 const isEmp=()=>st.profile&&st.profile.role==='employee';
-const allowed=id=>{ if(isEmp()) return id==='me'||id==='msgs'; if(id==='me') return false; if(isAdmin()||id==='home'||id==='ai'||id==='msgs') return true; if(id==='hub') return HUB.some(g=>g.secs.some(canSee)); if(id==='daily') return st.mySections.includes('daily')&&st.allBranches; if(id==='maint') return st.mySections.includes('maint')||st.mySections.includes('maint_sup'); if(id==='purch') return st.mySections.includes('purch')||st.mySections.includes('purch_sup'); if(id==='custody') return st.mySections.includes('custody')||st.mySections.includes('custody_holder'); if(id==='att') return st.mySections.includes('att')||st.mySections.includes('hr')||st.mySections.includes('employees'); const x=SECTIONS.find(q=>q.id===id); return st.mySections.includes(x&&x.perm?x.perm:id); };
+const allowed=id=>{ if(isEmp()) return id==='me'||id==='msgs'; if(id==='me') return false; if(isAdmin()||id==='home'||id==='ai'||id==='msgs') return true; if(id==='hub') return HUB.some(g=>g.secs.some(canSee)); if(id==='finst') return ['fin_is','fin_bs','fin_tb'].some(k=>st.mySections.includes(k)); if(id==='daily') return st.mySections.includes('daily')&&st.allBranches; if(id==='maint') return st.mySections.includes('maint')||st.mySections.includes('maint_sup'); if(id==='purch') return st.mySections.includes('purch')||st.mySections.includes('purch_sup'); if(id==='custody') return st.mySections.includes('custody')||st.mySections.includes('custody_holder'); if(id==='att') return st.mySections.includes('att')||st.mySections.includes('hr')||st.mySections.includes('employees'); const x=SECTIONS.find(q=>q.id===id); return st.mySections.includes(x&&x.perm?x.perm:id); };
 const brById=id=>st.branches.find(b=>b.id===id)||(st._cuBr||[]).find(b=>b.id===id)||{id,name:id,color:'#888'};
 const selBranches=()=>st.f==='all'?st.branches.map(b=>b.id):[st.f];
 
@@ -3103,7 +3103,7 @@ const fsIsAcc=a=>FS_IS.includes(String(a)[0]);
 async function fsLoad(from,to,brs){ const key=[from,to,(brs||[]).join(',')].join('|'); st._fsC=st._fsC||{}; const c=st._fsC[key]; if(c&&Date.now()-c.t<60e3) return c.d;
   const r=await sb.rpc('growth_fin',{p_from:from,p_to:to,p_branches:brs}); if(r.error) throw r.error; st._fsC[key]={t:Date.now(),d:r.data}; return r.data; }
 V.finst=async()=>{
-  const td=todayIso(), cy=td.slice(0,4), cm=td.slice(0,7); const T=st.fsT||'is', M=st.fsM||cm, B=st.fsB||'all'; let F=st.fsF||(T==='tb'?cy+'-01':M); if(F>M) F=M;
+  const td=todayIso(), cy=td.slice(0,4), cm=td.slice(0,7); const fsOk=t=>isAdmin()||st.mySections.includes('fin_'+t); let T=st.fsT||'is'; if(!fsOk(T)) T=['is','bs','tb'].find(fsOk)||'is'; const M=st.fsM||cm, B=st.fsB||'all'; let F=st.fsF||(T==='tb'?cy+'-01':M); if(F>M) F=M;
   let D0; try{ D0=await fsLoad(M,M,null); }catch(e){ return `<div class="card"><h3>📊 القوائم المالية</h3><p class="muted">${/growth_fin/.test(e.message||'')?'شغّل ملف «growth-fin» في Supabase أول.':'تعذّر التحميل — تأكد من الإنترنت'}</p></div>`; }
   const BR=D0.branches||[]; const ents=[...new Set(BR.map(b=>b.entity).filter(Boolean))];
   const brs=B==='all'?null:B.startsWith('e:')?BR.filter(b=>b.entity===B.slice(2)).map(b=>b.code):[B];
@@ -4540,7 +4540,7 @@ document.addEventListener('click',e=>{
     const url=URL.createObjectURL(new Blob([r.data.html],{type:'text/html'})); const a=document.createElement('a'); a.href=url; a.download=sec.name+' '+r.id+'.html'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),30000); }
 });
 V.hub=async()=>{
-  const gs=HUB.map(g=>({...g,v:(g.items||g.secs.map(id=>[id,(HUB_IT[id]||['📄'])[0],(SECTIONS.find(x=>x.id===id)||{}).name||id,{}])).filter(x=>canSee(x[0]))})).filter(g=>g.v.length);
+  const gs=HUB.map(g=>({...g,v:(g.items||g.secs.map(id=>[id,(HUB_IT[id]||['📄'])[0],(SECTIONS.find(x=>x.id===id)||{}).name||id,{}])).filter(x=>canSee(x[0])&&(!x[4]||isAdmin()||st.mySections.includes(x[4])))})).filter(g=>g.v.length);
   if(!gs.length) return `<div class="card empty">ما عندك صلاحية على أي تقرير</div>`;
   st._hubIt=[]; return `<div class="hb">${gs.map(g=>`<section class="hb-g"><div class="hb-h"><span class="hb-hi" style="background:${g.c}">${g.ic}</span><b>${g.n}</b></div>
     <div class="hb-grid3 ${g.v.length===4?'q4':''}">${g.v.map(x=>{const k=st._hubIt.push(x)-1;return `<button class="hb-s" data-hubi="${k}" style="--c:${g.c}"><span class="hb-si">${x[1]}</span><b>${esc(x[2])}</b></button>`;}).join('')}</div></section>`).join('')}</div>`;

@@ -83,7 +83,7 @@ language plpgsql stable security definer set search_path = public as $$
 declare bs text[];
 begin
   if not (coalesce(is_writer(), false) or exists (select 1 from user_sections us join profiles p on p.id = us.user_id
-          where us.user_id = auth.uid() and us.section = 'income' and coalesce(p.active, true))) then
+          where us.user_id = auth.uid() and us.section in ('income', 'fin_is', 'fin_bs', 'fin_tb') and coalesce(p.active, true))) then
     raise exception 'غير مصرح';
   end if;
   bs := p_branches;

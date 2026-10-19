@@ -1,0 +1,72 @@
+do $$
+declare lst text[];
+begin
+  select array(select distinct x from unnest(
+           array['fin_is', 'fin_bs', 'fin_tb']
+           || coalesce((select array_agg(distinct section) from public.user_sections), '{}')
+           || coalesce((select ('{' || (regexp_match(pg_get_constraintdef(c.oid), '\{([^}]*)\}'))[1] || '}')::text[]
+                       from pg_constraint c where c.conname = 'user_sections_section_check'), '{}')) x) into lst;
+  alter table public.user_sections drop constraint if exists user_sections_section_check;
+  execute format('alter table public.user_sections add constraint user_sections_section_check check (section = any (%L::text[]))', lst);
+end $$;
+
+insert into public.user_sections (user_id, section)
+select u.user_id, x from public.user_sections u cross join unnest(array['fin_is', 'fin_bs', 'fin_tb']) x
+where u.section = 'income'
+  and not exists (select 1 from public.user_sections v where v.user_id = u.user_id and v.section = x);
+
+delete from public.user_sections where section = 'income';
+
+create or replace function public.growth_fin(p_from text, p_to text, p_branches text[] default null) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare bs text[];
+begin
+  if not (coalesce(is_writer(), false) or exists (select 1 from user_sections us join profiles p on p.id = us.user_id
+          where us.user_id = auth.uid() and us.section in ('income', 'fin_is', 'fin_bs', 'fin_tb') and coalesce(p.active, true))) then
+    raise exception 'غير مصرح';
+  end if;
+  bs := p_branches;
+  if not coalesce(is_writer(), false) then
+    bs := array(select unnest(coalesce(p_branches, my_branches())) intersect select unnest(my_branches()));
+  end if;
+  return jsonb_build_object(
+    'last_run', (select last_run from growth_sync_state where id = 'tb'),
+    'writer', coalesce(is_writer(), false),
+    'branches', coalesce((select jsonb_agg(jsonb_build_object('code', code, 'name', name, 'entity', entity) order by code) from growth_branches), '[]'::jsonb),
+    'coa', coalesce((select jsonb_agg(jsonb_build_object('a', acc, 'n', name, 'p', parent, 'l', lvl, 'f', leaf)) from growth_coa), '[]'::jsonb),
+    'rows', coalesce((select jsonb_agg(jsonb_build_object('a', acc, 'ob', ob, 'dr', dr, 'cr', cr)) from (
+        select acc,
+               sum(case when ym < p_from then debit - credit else 0 end) ob,
+               sum(case when ym >= p_from and ym <= p_to then debit else 0 end) dr,
+               sum(case when ym >= p_from and ym <= p_to then credit else 0 end) cr
+        from growth_tb where ym <= p_to and (bs is null or branch = any(bs))
+        group by acc) t where ob <> 0 or dr <> 0 or cr <> 0), '[]'::jsonb));
+end $$;
+
+create or replace function public.growth_gl_statement(p_acc text, p_from text, p_to text, p_branches text[] default null) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare bs text[]; f date; t date;
+begin
+  if not (coalesce(is_writer(), false) or exists (select 1 from user_sections us join profiles p on p.id = us.user_id
+          where us.user_id = auth.uid() and us.section in ('income', 'fin_is', 'fin_bs', 'fin_tb') and coalesce(p.active, true))) then
+    raise exception 'غير مصرح';
+  end if;
+  bs := p_branches;
+  if not coalesce(is_writer(), false) then
+    bs := array(select unnest(coalesce(p_branches, my_branches())) intersect select unnest(my_branches()));
+  end if;
+  f := (p_from || '-01')::date; t := ((p_to || '-01')::date + interval '1 month' - interval '1 day')::date;
+  return jsonb_build_object(
+    'acc', (select jsonb_build_object('a', acc, 'n', name) from growth_coa where acc = p_acc),
+    'opening', (select coalesce(sum(debit - credit), 0) from growth_tb where acc = p_acc and ym < p_from and (bs is null or branch = any(bs))),
+    'period', (select jsonb_build_object('dr', coalesce(sum(debit), 0), 'cr', coalesce(sum(credit), 0)) from growth_tb
+               where acc = p_acc and ym between p_from and p_to and (bs is null or branch = any(bs))),
+    'gl_from', (select min(dt) from growth_gl_lines),
+    'lines', coalesce((select jsonb_agg(jsonb_build_object('d', dt, 'br', branch, 'doc', doc, 't', typ, 'x', descr, 'dr', debit, 'cr', credit) order by dt, line_id)
+       from growth_gl_lines where acc = p_acc and dt between f and t and (bs is null or branch = any(bs))), '[]'::jsonb));
+end $$;
+
+revoke all on function public.growth_fin(text, text, text[]) from public, anon;
+grant execute on function public.growth_fin(text, text, text[]) to authenticated;
+revoke all on function public.growth_gl_statement(text, text, text, text[]) from public, anon;
+grant execute on function public.growth_gl_statement(text, text, text, text[]) to authenticated;
