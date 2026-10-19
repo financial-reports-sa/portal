@@ -1,6 +1,6 @@
 // خدمة الخلفية لمنصة الإدارة الموحّدة — إشعارات الجوال + تسريع التحميل
 // الصفحة: من الشبكة أولاً (نسخة محفوظة لو النت بطيء/مقطوع) · المكتبات والخطوط والملفات المرقّمة: من الذاكرة أولاً
-const CACHE = 'myhub-v2';
+const CACHE = 'myhub-v3';
 const CDN = ['cdn.jsdelivr.net', 'cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com', 'unpkg.com'];
 
 self.addEventListener('install', () => self.skipWaiting());
@@ -68,7 +68,8 @@ self.addEventListener('notificationclick', (e) => {
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((cs) => {
     for (const c of cs) {
       if (c.url.startsWith(self.registration.scope) && 'focus' in c) {
-        return c.navigate(url).then((w) => (w || c).focus()).catch(() => c.focus());
+        c.postMessage({ type: 'nav', url });
+        return c.focus().catch(() => {});
       }
     }
     return self.clients.openWindow(url);
