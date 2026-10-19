@@ -40,6 +40,16 @@ button,input,select{font:inherit;color:inherit}
 button{cursor:pointer}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow);overflow:hidden}
+.hb{display:flex;flex-direction:column;gap:18px;margin-top:6px}.hb-h{display:flex;align-items:center;gap:10px;margin:0 2px 10px}.hb-h b{font-size:15.5px}
+.hb-hi{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:17px;color:#fff}
+.hb-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.hb-grid.one{grid-template-columns:1fr}
+.hb-t{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:start;min-height:124px;padding:16px 14px;border-radius:18px;border:1px solid var(--line);background:var(--card);box-shadow:0 1px 2px rgba(20,24,20,.04),0 6px 16px rgba(20,24,20,.06);font:inherit;color:inherit;cursor:pointer}
+.hb-t::before{content:'';position:absolute;inset:0 0 auto 0;height:4px;background:var(--c)}
+.hb-t:active{transform:scale(.98)}.hb-ti{font-size:30px;line-height:1;margin-bottom:4px}.hb-t b{font-size:14.5px}.hb-t small{font-size:11px;color:var(--muted);line-height:1.5}
+.hb-grid.one .hb-t{min-height:96px;flex-direction:row;align-items:center;gap:14px}.hb-tx{display:flex;flex-direction:column;gap:4px}
+
+.hb-grid:not(.one) .hb-t:last-child:nth-child(odd){grid-column:1/-1}
+#tabs .hb-back{font-weight:700;color:var(--gold-ink)}
 .card h3{font-size:14.5px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .card h3 small{font-family:var(--f-body);font-weight:400;font-size:11px;color:var(--muted)}
 .muted{color:var(--muted)}
@@ -767,6 +777,7 @@ const sb=window.supabase.createClient(CFG.url,CFG.key,{auth:{persistSession:true
 
 const SECTIONS=[
   {id:'home',name:'الرئيسية'},
+  {id:'hub',name:'التقارير والمالية'},
   {id:'ai',name:'المساعد الذكي'},
   {id:'sales',name:'مبيعات الفروع',app:'sales'},
   {id:'channels',name:'منافذ المبيعات',app:'channels'},
@@ -800,12 +811,20 @@ const NAV_ICONS={
   hrg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="9" cy="11" r="2.3"/><path d="M5.8 16.2a3.4 3.4 0 0 1 6.4 0"/><path d="M14.5 10h3.5M14.5 13.5h3.5"/></svg>',
   fin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/><path d="M6.5 15h4"/></svg>',
   more:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>'};
-const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me','msgs']},{id:'ai',name:'المساعد الذكي',secs:['ai']},{id:'rep',name:'التقارير',secs:['sales','channels','stock']},{id:'ops',name:'العمليات',secs:['maint','purch','feedback','mkt','fleet']},{id:'hrg',name:'الموارد البشرية',secs:['hr','att','employees','advances']},{id:'fin',name:'المالية',secs:['finst','treasury','balances','handover','rets','loans','custody']},{id:'more',name:'الإدارة',secs:['users','data'],nav:false}];
+const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me','msgs']},{id:'ai',name:'المساعد الذكي',secs:['ai']},{id:'rep',name:'التقارير',secs:['hub','sales','channels','stock','finst','balances','treasury','handover','rets','custody','loans']},{id:'ops',name:'العمليات',secs:['maint','purch','feedback','mkt','fleet']},{id:'hrg',name:'الموارد البشرية',secs:['hr','att','employees','advances']},{id:'more',name:'الإدارة',secs:['users','data'],nav:false}];
+const HUB=[
+  {n:'المبيعات',ic:'💰',c:'#1E5A3E',secs:['sales','channels']},
+  {n:'المستودعات',ic:'📦',c:'#B8860B',secs:['stock']},
+  {n:'القوائم المالية والحسابات',ic:'📊',c:'#2F5D8A',secs:['finst','balances','treasury']},
+  {n:'الكاشيرات',ic:'🧾',c:'#9A3E2E',secs:['handover','rets']},
+  {n:'العُهد والتمويلات',ic:'💼',c:'#5B5F66',secs:['custody','loans']}];
+const HUB_IT={sales:['📈','المبيعات اليومية والشهرية لكل فرع'],channels:['🛵','التطبيقات والأقسام وفئات المنيو'],stock:['📦','الصرف المباشر والمشتريات وأرصدة الأصناف'],finst:['📑','قائمة الدخل والميزانية وأرصدة الحسابات'],balances:['👥','أرصدة وكشوف العملاء والموردين'],treasury:['🏦','أرصدة البنوك والصناديق'],handover:['🔐','مطابقة عهدة الكاشير مع جروث'],rets:['↩️','تفاصيل المرتجعات وتنزيلها كصورة'],custody:['💼','العُهد واستلامها'],loans:['💳','التمويلات والأقساط']};
+const hubOf=t=>HUB.find(g=>g.secs.includes(t));
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'التقارير',secs:['sales','channels','wh']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['income','treasury','balances','handover','rets','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610190350';
+const APP_VER='202610190400';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets='تفعيل اشعارات مرتجع الكاشيرات'; SEC_NAME.income='القوائم المالية'; SEC_NAME.wh='المستودعات والمشتريات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -832,7 +851,7 @@ const st={user:null,profile:null,branches:[],myBranches:[],mySections:[],tab:'ho
 const isAdmin=()=>st.profile&&['owner','admin'].includes(st.profile.role);
 const isOwner=()=>st.profile&&st.profile.role==='owner';
 const isEmp=()=>st.profile&&st.profile.role==='employee';
-const allowed=id=>{ if(isEmp()) return id==='me'||id==='msgs'; if(id==='me') return false; if(isAdmin()||id==='home'||id==='ai'||id==='msgs') return true; if(id==='daily') return st.mySections.includes('daily')&&st.allBranches; if(id==='maint') return st.mySections.includes('maint')||st.mySections.includes('maint_sup'); if(id==='purch') return st.mySections.includes('purch')||st.mySections.includes('purch_sup'); if(id==='custody') return st.mySections.includes('custody')||st.mySections.includes('custody_holder'); if(id==='att') return st.mySections.includes('att')||st.mySections.includes('hr')||st.mySections.includes('employees'); const x=SECTIONS.find(q=>q.id===id); return st.mySections.includes(x&&x.perm?x.perm:id); };
+const allowed=id=>{ if(isEmp()) return id==='me'||id==='msgs'; if(id==='me') return false; if(isAdmin()||id==='home'||id==='ai'||id==='msgs') return true; if(id==='hub') return HUB.some(g=>g.secs.some(canSee)); if(id==='daily') return st.mySections.includes('daily')&&st.allBranches; if(id==='maint') return st.mySections.includes('maint')||st.mySections.includes('maint_sup'); if(id==='purch') return st.mySections.includes('purch')||st.mySections.includes('purch_sup'); if(id==='custody') return st.mySections.includes('custody')||st.mySections.includes('custody_holder'); if(id==='att') return st.mySections.includes('att')||st.mySections.includes('hr')||st.mySections.includes('employees'); const x=SECTIONS.find(q=>q.id===id); return st.mySections.includes(x&&x.perm?x.perm:id); };
 const brById=id=>st.branches.find(b=>b.id===id)||(st._cuBr||[]).find(b=>b.id===id)||{id,name:id,color:'#888'};
 const selBranches=()=>st.f==='all'?st.branches.map(b=>b.id):[st.f];
 
@@ -897,7 +916,9 @@ function renderShell(){ try{ window.I18N&&I18N.emp(isEmp()); }catch(_){}
   $('#bnav').innerHTML=gs.map(x=>`<button data-g="${x.id}" aria-pressed="${x.id===g}"><span class="bi">${NAV_ICONS[x.id]}</span><span class="bl">${x.id==='ai'?'المساعد':x.id==='hrg'?'الموارد':x.name}</span></button>`).join('');
   document.body.classList.toggle('hasnav',gs.length>1); $('#bnav').hidden=gs.length<=1; try{paintNavDots();}catch(e){}
   const subs=(GROUPS.find(x=>x.id===g)||{secs:[]}).secs.filter(canSee);
-  $('#tabs').innerHTML=subs.length>1?SECTIONS.filter(s=>subs.includes(s.id)).map(s=>`<button data-t="${s.id}" aria-pressed="${st.tab===s.id}">${s.name}</button>`).join(''):'';
+  if(g==='rep'){ const hg=hubOf(st.tab); const sib=hg?hg.secs.filter(canSee):[];
+    $('#tabs').innerHTML=st.tab==='hub'?'':`<button data-t="hub" class="hb-back">‹ التقارير والمالية</button>`+(sib.length>1?SECTIONS.filter(s=>sib.includes(s.id)).map(s=>`<button data-t="${s.id}" aria-pressed="${st.tab===s.id}">${s.name}</button>`).join(''):''); }
+  else $('#tabs').innerHTML=subs.length>1?SECTIONS.filter(s=>subs.includes(s.id)).map(s=>`<button data-t="${s.id}" aria-pressed="${st.tab===s.id}">${s.name}</button>`).join(''):'';
   loadAlerts();
   render();
 }
@@ -905,7 +926,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-shar
   try{ if(navigator.share){ await navigator.share({title:'منصة الإدارة الموحّدة',text,url}); return; } }catch(err){ if(err&&err.name==='AbortError') return; }
   try{ await navigator.clipboard.writeText(url); toast('تم نسخ رابط التطبيق ✓'); }catch(err){ prompt('انسخ رابط التطبيق:',url); } });
 document.addEventListener('click',e=>{const b=e.target.closest('[data-um]');if(!b)return;$('#umenu').hidden=true;st.tab=b.dataset.um;window.scrollTo({top:0});renderShell();});
-$('#bnav').onclick=e=>{const b=e.target.closest('[data-g]');if(!b)return;const G=GROUPS.find(x=>x.id===b.dataset.g);const last=st.lastIn&&st.lastIn[G.id];st.tab=last&&canSee(last)?last:G.secs.find(canSee);try{localStorage.setItem('tab',st.tab);}catch(e){} window.scrollTo({top:0});renderShell();};
+$('#bnav').onclick=e=>{const b=e.target.closest('[data-g]');if(!b)return;const G=GROUPS.find(x=>x.id===b.dataset.g);const last=st.lastIn&&st.lastIn[G.id];st.tab=G.id==='rep'&&canSee('hub')?'hub':last&&canSee(last)?last:G.secs.find(canSee);try{localStorage.setItem('tab',st.tab);}catch(e){} window.scrollTo({top:0});renderShell();};
 $('#tabs').onclick=e=>{const b=e.target.closest('[data-t]');if(!b)return;st.tab=b.dataset.t;try{localStorage.setItem('tab',st.tab);}catch(e){} renderShell();};
 document.addEventListener('click',e=>{const b=e.target.closest('#view [data-t]');if(!b)return;st.tab=b.dataset.t;try{localStorage.setItem('tab',st.tab);}catch(e){} window.scrollTo({top:0});renderShell();const tb=document.querySelector('#tabs [aria-pressed="true"]');if(tb)tb.scrollIntoView({inline:'center',block:'nearest'});});
 
@@ -4442,6 +4463,12 @@ document.addEventListener('click',e=>{
   const d=e.target.closest('[data-pgdl]'); if(d){ const sec=SECTIONS.find(s=>s.id===d.dataset.pgdl); const r=(st.cache[sec.page+'/pages']||[]).find(x=>x.id===st.page[sec.id]); if(!r) return;
     const url=URL.createObjectURL(new Blob([r.data.html],{type:'text/html'})); const a=document.createElement('a'); a.href=url; a.download=sec.name+' '+r.id+'.html'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),30000); }
 });
+V.hub=async()=>{
+  const gs=HUB.map(g=>({...g,v:g.secs.filter(canSee)})).filter(g=>g.v.length);
+  if(!gs.length) return `<div class="card empty">ما عندك صلاحية على أي تقرير</div>`;
+  return `<div class="hb">${gs.map(g=>`<section class="hb-g"><div class="hb-h"><span class="hb-hi" style="background:${g.c}">${g.ic}</span><b>${g.n}</b></div>
+    <div class="hb-grid ${g.v.length===1?'one':''}">${g.v.map(id=>{const it=HUB_IT[id]||['📄',''];return `<button class="hb-t" data-t="${id}" style="--c:${g.c}"><span class="hb-ti">${it[0]}</span><span class="hb-tx"><b>${esc(SEC_NAME[id]||id)}</b><small>${it[1]}</small></span></button>`;}).join('')}</div></section>`).join('')}</div>`;
+};
 SECTIONS.forEach(sec=>{ if(sec.app) V[sec.id]=appView(sec); if(sec.page) V[sec.id]=pageView(sec); });
 
 // ----- users -----
