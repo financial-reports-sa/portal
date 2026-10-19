@@ -905,7 +905,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'المبيعات',secs:['sales','channels']},{name:'المستودعات',secs:['wh']},{name:'القوائم المالية والحسابات',secs:['fin_is','fin_bs','fin_tb','balances','treasury']},{name:'الكاشيرات',secs:['handover','rets']},{name:'العُهد والتمويلات',secs:['custody','custody_holder','loans']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610190845';
+const APP_VER='202610190905';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -4692,6 +4692,7 @@ function pageView(sec){
     const fmtD=d=>{try{return new Date(d+'T12:00:00').toLocaleDateString('ar-SA-u-ca-gregory-nu-latn',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}catch(e){return d;}};
     return `<div class="bar-row"><div class="field" style="flex:1;min-width:200px;max-width:340px"><label for="pgsel">التاريخ</label><select class="inp" id="pgsel" data-sec="${sec.id}">${rows.map(r=>`<option value="${esc(r.id)}" ${r.id===id?'selected':''}>${esc(fmtD(r.data.date||r.id))}${r===rows[0]?' · الأحدث':''}</option>`).join('')}</select></div>
       <div class="row" style="flex:none;gap:6px"><button class="btn ghost sm" data-pgprint>طباعة / PDF</button><button class="btn ghost sm" data-pgdl="${sec.id}">تنزيل</button></div></div>
+      ${sec.page==='prices'?`<button class="btn" data-pgsend="${sec.id}" style="width:100%;margin:2px 0 8px;background:#143D2A;color:#fff">📤 إرسال الملاحظات والارتفاعات لمدير المشتريات</button>`:''}
       ${rows.length<2?'<div class="muted" style="font-size:11px">التقارير تنحفظ يوم بيوم من ملف التحديث اليومي، والأيام السابقة تتراكم هنا تلقائياً.</div>':''}
       <iframe class="pageframe" id="pgf" title="${esc(sec.name)}"></iframe>`;
   };
@@ -4706,6 +4707,16 @@ function mountPage(sec){
 }
 function fitApp(){ const f=document.querySelector('.appframe'); if(f){const nv=$('#bnav');const nh=nv&&nv.offsetHeight?Math.round(window.innerHeight-nv.getBoundingClientRect().top)+4:0; f.style.height=Math.max(420,window.innerHeight-(f.getBoundingClientRect().top+window.scrollY)-6-nh)+'px';} }
 window.addEventListener('resize',fitApp);
+function pgAlertsText(html,day){ const dm=new DOMParser().parseFromString(html||'','text/html'); const T=el=>(el.textContent||'').replace(/\s+/g,' ').trim();
+  const A=[...dm.querySelectorAll('.al.bad,.al.warn')].map(el=>{const pill=T(el.querySelector('.pill')||{textContent:''}); const p=(el.querySelector('p')||el).cloneNode(true); const inv=p.querySelector('.inv'); const it=inv?T(inv):''; if(inv) inv.remove(); return (el.classList.contains('bad')?'🔴 ':'🟠 ')+(pill?'['+pill+'] ':'')+T(p)+(it?' ('+it+')':'');});
+  const N=[...dm.querySelectorAll('ul.prev li.bad')].map(el=>{const c=el.cloneNode(true); const d=c.querySelector('.d'); const dt=d?T(d):''; if(d) d.remove(); return '• '+(dt?dt+': ':'')+T(c);});
+  if(!A.length&&!N.length) return null;
+  const d=(()=>{try{return new Date(day+'T12:00:00').toLocaleDateString('ar-SA-u-ca-gregory-nu-latn',{weekday:'long',day:'numeric',month:'long'});}catch(e){return day;}})();
+  return `⚠️ ملاحظات أسعار المشتريات — ${d}\n\n`+(A.length?A.map((x,i)=>`${i+1}) ${x}`).join('\n\n'):'ما فيه ارتفاعات اليوم ✅')+(N.length?`\n\nارتفاعات الأيام السابقة:\n${N.join('\n')}`:'')+`\n\nالرجاء المراجعة مع الموردين والتركيز في الشراء.\n— منصة الإدارة الموحّدة`; }
+document.addEventListener('click',async e=>{ const b=e.target.closest('[data-pgsend]'); if(!b) return; const sec=SECTIONS.find(s=>s.id===b.dataset.pgsend); const r=(st.cache[sec.page+'/pages']||[]).find(x=>x.id===st.page[sec.id]); if(!r) return;
+  const t=pgAlertsText(r.data.html,r.data.date||r.id); if(!t){ toast('ما فيه ملاحظات أو ارتفاعات في هذا اليوم ✅'); return; }
+  try{ if(navigator.share){ await navigator.share({title:'ملاحظات أسعار المشتريات',text:t}); return; } }catch(err){ if(err&&err.name==='AbortError') return; }
+  window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank'); });
 document.addEventListener('change',e=>{ if(e.target.id==='pgsel'){ st.page[e.target.dataset.sec]=e.target.value; mountPage(SECTIONS.find(s=>s.id===e.target.dataset.sec)); } });
 document.addEventListener('click',e=>{
   if(e.target.closest('[data-pgprint]')){ const f=$('#pgf'); try{f.contentWindow.focus();f.contentWindow.print();}catch(err){toast('تعذّرت الطباعة');} return; }
