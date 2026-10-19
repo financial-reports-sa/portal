@@ -777,6 +777,9 @@ html[dir=ltr] .sh-t{direction:ltr}html[dir=ltr] .sh-t i{display:inline-block;tra
 .lv-nm{font:inherit;font-size:13.5px;font-weight:700;background:none;border:0;padding:0;color:inherit;cursor:pointer;text-align:start;text-decoration:underline dotted rgba(0,0,0,.25);text-underline-offset:4px}.lv-nm span{font-size:11px;color:var(--gold-ink);text-decoration:none}
 .mi-top{display:flex;gap:10px;align-items:flex-start}.mi-top b{font-size:14px}.mi-ic{font-size:26px;line-height:1.1;width:40px;height:40px;border-radius:12px;background:var(--gold-soft);display:grid;place-items:center;flex:none}.mi-p{font-size:12px;line-height:1.7;margin-top:6px}.mi-n{margin-top:8px;font-size:11.5px;background:var(--soft,#F6F6F2);border-radius:10px;padding:8px 10px;line-height:1.7}.mi-n a{color:var(--green,#1E5A3E);font-weight:600}
 .mkh2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0 12px}.mkq{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:flex-start;gap:5px;text-align:start;padding:13px 12px;border-radius:18px;color:#fff;font:inherit;cursor:pointer;min-height:132px;background:linear-gradient(145deg,#123d29 0%,#1E5A3E 60%,#0d2e1f 100%);border:1.5px solid rgba(212,175,55,.5);box-shadow:0 12px 26px -18px rgba(15,51,34,.8)}.mkq::before{content:'';position:absolute;inset:4px;border:1px solid rgba(212,175,55,.2);border-radius:14px;pointer-events:none}.mkq-sh{position:absolute;top:0;bottom:0;width:45%;left:-60%;background:linear-gradient(100deg,transparent,rgba(244,215,130,.16),transparent);animation:mkhS 5s ease-in-out infinite;pointer-events:none}.mkq:nth-child(2) .mkq-sh{animation-delay:1.2s}.mkq-ic{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;font-size:19px;background:linear-gradient(145deg,#F4D782,#C9A13B)}.mkq-k{font-size:10.5px;color:#F4D782}.mkq-t{font-size:12.5px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.mkq-ch{display:flex;flex-wrap:wrap;gap:4px;margin-top:auto}.mkq-ch i{font-style:normal;font-size:10px;padding:2px 7px;border-radius:99px;background:rgba(255,255,255,.1);border:1px solid rgba(212,175,55,.3)}.mkq-ch:empty{display:none}
+.dr-pick{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 auto 12px;max-width:420px;padding:8px 8px 8px 12px;border-radius:16px;background:var(--card,#fff);border:1.5px solid #1F5A3D;cursor:pointer}
+.dr-pick-l{display:flex;align-items:center;gap:8px;color:#1F5A3D;font-size:15px;padding-inline-start:4px}
+.dr-pick .inp{width:auto;margin:0;padding:6px 10px;font-weight:700}
 </style>
 </head>
 <body>
@@ -1174,7 +1177,7 @@ V.home=async()=>{
     h+=`<div class="hx-hero"><div class="hx-glow"></div><div class="hx-top1"><span class="hx-hi">${greet}${nm?'، '+esc(nm):''} 👋</span><span class="hx-date">${dateTxt}</span></div><div style="position:relative;margin-top:10px;opacity:.85;font-size:12.5px">أهلاً بك في منصة الإدارة الموحّدة</div></div>`;
   }
   try{ const rd=(()=>{const x=new Date(Date.now()+3*36e5-8*36e5);x.setUTCDate(x.getUTCDate()-1);return x.toISOString().slice(0,10);})(); const T=[];
-    if(canSee('cmp')) T.push(`<button class="hm-t" data-hmcmp="${rd}"><span class="hm-ti">📋</span><span class="hm-tx"><b>تقرير اليوم</b><small>${new Date(rd+'T12:00:00').toLocaleDateString('ar-SA-u-ca-gregory-nu-latn',{weekday:'long',day:'numeric',month:'long'})} · يتحدث 8 الصباح</small></span></button>`);
+    if(canSee('cmp')) T.push(`<button class="hm-t" data-hmcmp="${rd}"><span class="hm-ti">📋</span><span class="hm-tx"><b>تقرير اليوم</b><small>${new Date(rd+'T12:00:00').toLocaleDateString('ar-SA-u-ca-gregory-nu-latn',{weekday:'long',day:'numeric',month:'long'})}</small></span></button>`);
     if(canSee('pricew')) T.push(`<button class="hm-t" data-t="pricew"><span class="hm-ti">📈</span><span class="hm-tx"><b>متغيرات أسعار المشتريات</b><small>الدجاج · الذبائح · الخضار · التنبيهات</small></span></button>`);
     }catch(e){}
   try{ if(allowed('sales')) h+=await liveCard(); }catch(e){}
@@ -3053,8 +3056,8 @@ V.cmp=async()=>{
   const rc=v=>v==null?'var(--muted)':v<=35?'#16794C':v<=45?'#9A6A06':'#B42318';
   const pv=(v,inv)=>v==null?'<span class="muted">—</span>':`<span style="color:${(inv?v<=0:v>=0)?'#16794C':'#B42318'};font-weight:700">${v>=0?'▲':'▼'} ${Math.abs(v)}%</span>`;
   const prev=sh(-1), next=sh(1);
-  let h=`<div class="dr-hd"><button class="icb" data-cmd="${prev}" aria-label="اليوم السابق">›</button><div><b>📋 تقرير ${dn(d)}</b><small>اليوم يقفل الساعة 8 الصباح · مباشر من جروث${X.last_pos?' · '+lvAgo(X.last_pos):''}</small></div>${next<=rpD?`<button class="icb" data-cmd="${next}" aria-label="اليوم التالي">‹</button>`:'<span style="width:36px"></span>'}</div>
-   <div class="chips" style="justify-content:center"><input type="date" class="inp" id="cmD" value="${d}" max="${bizDay}" style="width:auto;padding:6px 10px"></div>`;
+  let h=`<div class="dr-hd"><button class="icb" data-cmd="${prev}" aria-label="اليوم السابق">›</button><div><b>📋 تقرير ${dn(d)}</b><small>مباشر من جروث${X.last_pos?' · '+lvAgo(X.last_pos):''}</small></div>${next<=rpD?`<button class="icb" data-cmd="${next}" aria-label="اليوم التالي">‹</button>`:'<span style="width:36px"></span>'}</div>
+   <label for="cmD" class="dr-pick"><span class="dr-pick-l"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><b>اختر اليوم</b></span><input type="date" class="inp" id="cmD" value="${d}" max="${bizDay}"></label>`;
   if(!rows.length) return h+'<div class="card"><p class="muted">ما فيه بيانات لهذا اليوم بعد.</p></div>';
   // smart summary
   const nm=b=>brById(b).name; const L=[];
@@ -3086,7 +3089,7 @@ V.cmp=async()=>{
     ['المشتريات',c=>`<span class="num">${fmt(c.tot?T.p:c.x.p0)}</span>`]];
   h+=`<div class="card dr-tw"><h3>📊 الأرقام حسب الفرع</h3><div class="fs-wrap"><table class="dr-t"><tr><th></th>${cols.map(c=>`<th class="${c.tot?'tot':''}">${c.tot?'':`<i class="dot" style="background:${c.c}"></i> `}${esc(c.h)}</th>`).join('')}</tr>${R.map(([l,f])=>`<tr><th>${l}</th>${cell(f)}</tr>`).join('')}</table></div></div>`;
   h+=`<p class="muted" style="font-size:10.5px;text-align:center">المبيعات شاملة الضريبة · نسبة الصرف = الصرف المباشر ÷ المبيعات قبل الضريبة</p>`;
-  setTimeout(()=>{const i=$('#cmD'); if(i) i.onchange=()=>{ if(i.value){ st.cmD=i.value; render(); } };},0);
+  setTimeout(()=>{const i=$('#cmD'); if(i){ i.onchange=()=>{ if(i.value){ st.cmD=i.value; render(); } }; const L=i.closest('.dr-pick'); if(L) L.onclick=e=>{ if(e.target!==i){ e.preventDefault(); try{ i.showPicker(); }catch(_){ i.focus(); } } }; }},0);
   return h; };
 document.addEventListener('click',e=>{const t=e.target.closest('[data-cmd]');if(!t)return;st.cmD=t.dataset.cmd;render();});
 function invRange(P){ const td=todayIso(), d=o=>{const x=new Date(td+'T12:00:00');x.setDate(x.getDate()+o);return x.toISOString().slice(0,10);};
