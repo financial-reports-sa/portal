@@ -81,6 +81,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .pw-row{width:100%;text-align:inherit;background:none;border-left:0;border-right:0;border-top:0;cursor:pointer;font:inherit;color:inherit;gap:8px;align-items:center}
 .pw-cat{border-top:3px solid var(--c)}.pw-ch{display:flex;align-items:center;gap:10px;margin-bottom:6px}.pw-ci{font-size:26px}.pw-ch b{display:block;font-size:15px}.pw-ch small{font-size:10.5px;color:var(--muted)}
 .pw-big{text-align:left;display:flex;flex-direction:column}.pw-big small{font-size:9.5px;color:var(--muted)}.pw-big b{font-size:18px}.pw-big em{font-style:normal;font-size:10px;font-weight:700}
+.dr-hd{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px;margin:6px 0 10px}.dr-hd>div{text-align:center;flex:1}.dr-hd b{display:block;font-size:15.5px}.dr-hd small{font-size:10.5px;color:var(--muted)}
+.dr-sum h3,.dr-tw h3{margin:0 0 6px;font-size:14.5px}
+.dr-t{width:100%;border-collapse:collapse;font-size:11.5px}.dr-t th,.dr-t td{border:1px solid #DDE1D7;padding:8px 6px;text-align:center;white-space:nowrap}.dr-t tr:first-child th{background:#F1F3EC;font-size:11px}.dr-t th:first-child{text-align:start;background:#F7F8F4;font-weight:700;font-size:11px}
+.dr-t .tot{background:#EEF5F0;font-weight:700}.dr-t tr:first-child .tot{background:#1E5A3E;color:#fff}
 .hb-grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
 .hb-s{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:92px;padding:12px 6px 10px;border-radius:16px;border:1px solid var(--line);background:var(--card);box-shadow:0 1px 2px rgba(20,24,20,.04),0 4px 12px rgba(20,24,20,.05);font:inherit;color:inherit;cursor:pointer}
 .hb-s::before{content:'';position:absolute;inset:0 0 auto 0;height:3px;background:var(--c)}.hb-s:active{transform:scale(.97)}
@@ -890,7 +894,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'المبيعات',secs:['sales','channels']},{name:'المستودعات',secs:['wh']},{name:'القوائم المالية والحسابات',secs:['fin_is','fin_bs','fin_tb','balances','treasury']},{name:'الكاشيرات',secs:['handover','rets']},{name:'العُهد والتمويلات',secs:['custody','custody_holder','loans']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610190815';
+const APP_VER='202610190830';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -3040,38 +3044,47 @@ V.cmp=async()=>{
   const brs=[...new Set(['az','sh','pc'].concat(Object.keys(S).map(k=>k.split('|')[1])).concat(Object.keys(I).map(k=>k.split('|')[1])))].filter(b=>b&&(st.f==='all'||!st.f||b===st.f));
   const pct=(a,b)=>b?Math.round((a/b-1)*1000)/10:null, rat=(a,b)=>b?Math.round(a/b*1000)/10:null;
   const pill=(v,inv)=>v==null?'':`<span class="cm-pill ${(inv?v<=0:v>=0)?'g':'r'}">${v>=0?'▲':'▼'} ${Math.abs(v)}%</span>`;
-  const T={s:0,sy:0,sw:0,ex:0,exy:0,i:0,iy:0,p:0,py:0,c:0};
+  const T={s:0,sy:0,sw:0,cy:0,cw:0,ex:0,exy:0,i:0,iy:0,p:0,py:0,c:0};
   const rows=brs.map(b=>{ const s0=sal(d,b), s1=sal(y,b), s7=sal(w,b); const i0=iv(d,b,'iss'), i1=iv(y,b,'iss'), p0=pur(d,b), p1=pur(y,b);
     if(!s0&&!s1&&!i0&&!i1&&!p0&&!p1) return null;
-    T.s+=s0?s0.net:0; T.sy+=s1?s1.net:0; T.sw+=s7?s7.net:0; T.ex+=s0?s0.ex:0; T.exy+=s1?s1.ex:0; T.i+=i0; T.iy+=i1; T.p+=p0; T.py+=p1; T.c+=s0?s0.c:0;
+    T.s+=s0?s0.net:0; T.sy+=s1&&s0?s1.net:0; T.sw+=s7&&s0?s7.net:0; T.cy+=s1&&s0?s0.net:0; T.cw+=s7&&s0?s0.net:0; T.ex+=s0?s0.ex:0; T.exy+=s1?s1.ex:0; T.i+=i0; T.iy+=i1; T.p+=p0; T.py+=p1; T.c+=s0?s0.c:0;
     return {b,s0,s1,s7,i0,i1,p0,p1,r0:s0?rat(i0,s0.ex):null,r1:s1?rat(i1,s1.ex):null}; }).filter(Boolean);
   const R0=rat(T.i,T.ex), R1=rat(T.iy,T.exy);
-  const ratBar=(v)=>{ const c=v==null?'#ccc':v<=35?'#16794C':v<=45?'#C9A227':'#B42318'; return `<div class="cm-bar"><i style="width:${Math.min(100,v||0)}%;background:${c}"></i></div>`; };
-  let h=`<div class="hx-hero" style="margin-bottom:12px"><div class="hx-glow"></div>
-     <div class="hx-top1" style="display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1"><span class="hx-hi">📊 مقارنة الفروع</span><span class="hx-date">${dn(d)}</span></div>
-     <div style="position:relative;z-index:1;margin-top:12px"><div class="hx-lbl">مبيعات اليوم · كل الفروع</div>
-       <div class="hx-big num">${fmt(T.s)}<small> ر.س</small></div>
-       <div class="cm-hchg">${pill(pct(T.s,T.sy))}<span>عن أمس (${fmt(T.sy)})</span>${T.sw?`${pill(pct(T.s,T.sw))}<span>عن ${dn(w,{weekday:'long'})} الماضي</span>`:''}</div></div>
-     <div class="cm-hgrid">
-       <div><small>الصرف المباشر</small><b class="num">${fmt(T.i)}</b><em>${R0==null?'—':R0+'% من المبيعات'}${R0!=null&&R1!=null?` · أمس ${R1}%`:''}</em></div>
-       <div><small>المشتريات</small><b class="num">${fmt(T.p)}</b><em>أمس ${fmt(T.py)}</em></div>
-       <div><small>الفواتير</small><b class="num">${fmt(T.c)}</b><em>${T.c?'متوسط '+fmt(T.s/T.c):''}</em></div></div>
-     <div class="hx-pace" style="justify-content:space-between">${X.last_pos?'🟢 مباشر من جروث · آخر تحديث '+lvAgo(X.last_pos):'مباشر من جروث'}</div></div>
-   <div class="chips">${[[bizDay,'اليوم'],[sh(0)===bizDay?(()=>{const t=new Date(bizDay+'T12:00:00');t.setDate(t.getDate()-1);return t.toISOString().slice(0,10);})():y,'أمس']].map(([v,n])=>`<button data-cmd="${v}" aria-pressed="${d===v}">${n}</button>`).join('')}<input type="date" class="inp" id="cmD" value="${d}" max="${bizDay}" style="width:auto;padding:6px 10px"></div>`;
+  const rc=v=>v==null?'var(--muted)':v<=35?'#16794C':v<=45?'#9A6A06':'#B42318';
+  const pv=(v,inv)=>v==null?'<span class="muted">—</span>':`<span style="color:${(inv?v<=0:v>=0)?'#16794C':'#B42318'};font-weight:700">${v>=0?'▲':'▼'} ${Math.abs(v)}%</span>`;
+  const prev=sh(-1), next=sh(1);
+  let h=`<div class="dr-hd"><button class="icb" data-cmd="${prev}" aria-label="اليوم السابق">›</button><div><b>📋 تقرير ${dn(d)}</b><small>اليوم يقفل الساعة 8 الصباح · مباشر من جروث${X.last_pos?' · '+lvAgo(X.last_pos):''}</small></div>${next<=rpD?`<button class="icb" data-cmd="${next}" aria-label="اليوم التالي">‹</button>`:'<span style="width:36px"></span>'}</div>
+   <div class="chips" style="justify-content:center"><input type="date" class="inp" id="cmD" value="${d}" max="${bizDay}" style="width:auto;padding:6px 10px"></div>`;
   if(!rows.length) return h+'<div class="card"><p class="muted">ما فيه بيانات لهذا اليوم بعد.</p></div>';
-  rows.forEach(x=>{ const br=brById(x.b); const top=(X.top_iss||[]).filter(z=>z.br===x.b).sort((a,c)=>(+c.a||0)-(+a.a||0)).slice(0,5); const tmax=Math.max(...top.map(z=>+z.a||0),1);
-    const up=(X.price_up||[]).filter(z=>z.br===x.b);
-    h+=`<div class="card cm-br" style="--c:${br.color||'#888'}">
-      <div class="cm-bh"><span><i class="dot" style="background:var(--c)"></i> ${esc(br.name)}</span><b class="num">${x.s0?fmt(x.s0.net):'—'}<small> ر.س</small></b></div>
-      <div class="cm-tiles">
-        <div class="cm-t"><small>💰 المبيعات</small><b class="num">${x.s0?fmt(x.s0.net):'—'}</b><div>${pill(x.s0&&x.s1?pct(x.s0.net,x.s1.net):null)}<span class="muted">أمس ${x.s1?fmt(x.s1.net):'—'}</span></div>${x.s7?`<div class="muted" style="font-size:10px">الأسبوع الماضي ${fmt(x.s7.net)} ${pill(x.s0?pct(x.s0.net,x.s7.net):null)}</div>`:''}</div>
-        <div class="cm-t"><small>📤 الصرف المباشر</small><b class="num">${fmt(x.i0)}</b><div>${pill(x.i1?pct(x.i0,x.i1):null,1)}<span class="muted">أمس ${fmt(x.i1)}</span></div></div>
-        <div class="cm-t"><small>🧾 المشتريات</small><b class="num">${fmt(x.p0)}</b><div><span class="muted">أمس ${fmt(x.p1)}</span></div></div>
-      </div>
-      <div class="cm-ratio"><div><span>نسبة الصرف من المبيعات</span><b>${x.r0==null?'—':x.r0+'%'}</b></div>${ratBar(x.r0)}<div class="muted" style="font-size:10.5px">أمس ${x.r1==null?'—':x.r1+'%'}${x.r0!=null&&x.r1!=null?` · ${x.r0>x.r1?'▲ زادت':'▼ نقصت'} ${Math.abs(Math.round((x.r0-x.r1)*10)/10)} نقطة`:''}</div></div>
-      ${top.length?`<div class="cm-sec">أعلى أصناف الصرف</div>${top.map(z=>`<div class="cm-it"><div class="cm-itn"><span>${esc(z.n)}</span><small class="muted">${fmt(+z.q||0,2)} ${esc(z.u)}${z.qy?' · أمس '+fmt(+z.qy,2):''}</small></div><div class="cm-itb"><i style="width:${(+z.a||0)/tmax*100}%"></i></div><b class="num">${fmt(+z.a||0)}</b></div>`).join('')}`:''}
-      ${up.length?`<div class="cm-sec" style="color:#B42318">⚠️ ارتفاع أسعار عن آخر شراء</div>${up.map(z=>`<div class="cm-up"><span>${esc(z.n)}<small class="muted"> · ${esc(z.party||'')}</small></span><span class="num">${fmt(+z.pp,2)} ← <b>${fmt(+z.p,2)}</b> ${pill(pct(+z.p,+z.pp),1)}</span></div>`).join('')}`:''}
-    </div>`; });
+  // smart summary
+  const nm=b=>brById(b).name; const L=[];
+  const ch=pct(T.cy,T.sy), cw=pct(T.cw,T.sw);
+  L.push(['💰',`إجمالي المبيعات <b class="num">${fmt(T.s)}</b> ر.س${ch!=null?`، ${ch>=0?'أعلى':'أقل'} من أمس بـ <b>${Math.abs(ch)}%</b>`:''}${cw!=null?` و${cw>=0?'أعلى':'أقل'} من ${dn(w,{weekday:'long'})} الماضي بـ <b>${Math.abs(cw)}%</b>`:''}.`]);
+  const bs=rows.filter(x=>x.s0).sort((a,b)=>b.s0.net-a.s0.net);
+  if(bs.length>1) L.push(['🏆',`أعلى فرع <b>${esc(nm(bs[0].b))}</b> بـ ${fmt(bs[0].s0.net)} (${Math.round(bs[0].s0.net/T.s*100)}% من الإجمالي)، والأقل ${esc(nm(bs[bs.length-1].b))} بـ ${fmt(bs[bs.length-1].s0.net)}.`]);
+  const wd=rows.filter(x=>x.s0&&x.s7).map(x=>({b:x.b,v:pct(x.s0.net,x.s7.net)})).sort((a,b)=>a.v-b.v);
+  if(wd.length&&wd[0].v<=-8) L.push(['📉',`<b>${esc(nm(wd[0].b))}</b> نزلت ${Math.abs(wd[0].v)}% عن ${dn(w,{weekday:'long'})} الماضي — تحتاج متابعة.`]);
+  if(wd.length&&wd[wd.length-1].v>=8) L.push(['📈',`<b>${esc(nm(wd[wd.length-1].b))}</b> ارتفعت ${wd[wd.length-1].v}% عن ${dn(w,{weekday:'long'})} الماضي.`]);
+  if(T.c) L.push(['🧾',`${fmt(T.c)} فاتورة بمتوسط <b class="num">${fmt(T.s/T.c)}</b> ر.س للفاتورة.`]);
+  if(R0!=null) L.push([R0>45?'🔴':R0>35?'🟡':'🟢',`نسبة الصرف المباشر من المبيعات <b style="color:${rc(R0)}">${R0}%</b>${R1!=null?` (أمس ${R1}%)`:''} — صرف ${fmt(T.i)} ر.س.`]);
+  rows.filter(x=>x.r0!=null&&x.r0>45).forEach(x=>L.push(['⚠️',`صرف <b>${esc(nm(x.b))}</b> مرتفع: <b style="color:#B42318">${x.r0}%</b> من المبيعات${x.r1!=null?` (أمس ${x.r1}%)`:''}.`]));
+  const ti=(X.top_iss||[]).slice().sort((a,c)=>(+c.a||0)-(+a.a||0))[0]; if(ti) L.push(['📦',`أعلى صنف صرف: <b>${esc(ti.n)}</b> بـ ${fmt(+ti.a)} ر.س (${esc(nm(ti.br))}).`]);
+  if(T.p) L.push(['🛒',`المشتريات <b class="num">${fmt(T.p)}</b> ر.س${T.py?` (أمس ${fmt(T.py)})`:''}.`]);
+  const up=(X.price_up||[]); if(up.length) L.push(['🔔',`${up.length} صنف ارتفع سعره عن آخر شراء: ${up.slice(0,3).map(z=>`<b>${esc(z.n)}</b> ${pct(+z.p,+z.pp)}%`).join('، ')}${up.length>3?' …':''}.`]);
+  h+=`<div class="card dr-sum"><h3>📝 الملخص</h3>${L.map(([i,t])=>`<div class="fa-in"><span>${i}</span><p>${t}</p></div>`).join('')}</div>`;
+  // table
+  const cols=rows.map(x=>({h:nm(x.b),c:brById(x.b).color,x})).concat([{h:'الإجمالي',tot:1}]);
+  const cell=(f)=>cols.map(c=>`<td class="${c.tot?'tot':''}">${f(c)}</td>`).join('');
+  const R=[
+    ['المبيعات',c=>c.tot?`<b class="num">${fmt(T.s)}</b>`:c.x.s0?`<b class="num">${fmt(c.x.s0.net)}</b>`:'—'],
+    ['عن أمس',c=>pv(c.tot?pct(T.cy,T.sy):c.x.s0&&c.x.s1?pct(c.x.s0.net,c.x.s1.net):null)],
+    ['عن الأسبوع الماضي',c=>pv(c.tot?pct(T.cw,T.sw):c.x.s0&&c.x.s7?pct(c.x.s0.net,c.x.s7.net):null)],
+    ['الفواتير',c=>`<span class="num">${c.tot?fmt(T.c):c.x.s0?fmt(c.x.s0.c):'—'}</span>`],
+    ['متوسط الفاتورة',c=>`<span class="num">${c.tot?(T.c?fmt(T.s/T.c):'—'):c.x.s0&&c.x.s0.c?fmt(c.x.s0.net/c.x.s0.c):'—'}</span>`],
+    ['الصرف المباشر',c=>`<span class="num">${fmt(c.tot?T.i:c.x.i0)}</span>`],
+    ['نسبة الصرف',c=>{const v=c.tot?R0:c.x.r0; return v==null?'—':`<b style="color:${rc(v)}">${v}%</b>`;}],
+    ['المشتريات',c=>`<span class="num">${fmt(c.tot?T.p:c.x.p0)}</span>`]];
+  h+=`<div class="card dr-tw"><h3>📊 الأرقام حسب الفرع</h3><div class="fs-wrap"><table class="dr-t"><tr><th></th>${cols.map(c=>`<th class="${c.tot?'tot':''}">${c.tot?'':`<i class="dot" style="background:${c.c}"></i> `}${esc(c.h)}</th>`).join('')}</tr>${R.map(([l,f])=>`<tr><th>${l}</th>${cell(f)}</tr>`).join('')}</table></div></div>`;
   h+=`<p class="muted" style="font-size:10.5px;text-align:center">المبيعات شاملة الضريبة · نسبة الصرف = الصرف المباشر ÷ المبيعات قبل الضريبة</p>`;
   setTimeout(()=>{const i=$('#cmD'); if(i) i.onchange=()=>{ if(i.value){ st.cmD=i.value; render(); } };},0);
   return h; };
