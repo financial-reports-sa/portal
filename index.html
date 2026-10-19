@@ -769,15 +769,9 @@ const SECTIONS=[
   {id:'home',name:'الرئيسية'},
   {id:'ai',name:'المساعد الذكي'},
   {id:'cmp',name:'مقارنة الفروع اليومية',perm:'sales'},
-  {id:'brief',name:'التقرير المسائي',admin:true},
   {id:'sales',name:'مبيعات الفروع',app:'sales'},
-  {id:'daily',name:'التقرير اليومي',page:'daily'},
   {id:'channels',name:'منافذ المبيعات',app:'channels'},
-  {id:'income',name:'قوائم الدخل',app:'income'},
-  {id:'wh',name:'نسبة تكلفة المستودعات'},
-  {id:'waste',name:'مراقبة الهدر'},
   {id:'stock',name:'المستودعات والمشتريات',perm:'wh'},
-  {id:'chicken',name:'أسعار المشتريات',page:'prices'},
   {id:'treasury',name:'خزينة الأرصدة',app:'treasury'},
   {id:'finst',name:'القوائم المالية',perm:'income'},
   {id:'balances',name:'أرصدة العملاء والموردين'},
@@ -807,13 +801,13 @@ const NAV_ICONS={
   hrg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="9" cy="11" r="2.3"/><path d="M5.8 16.2a3.4 3.4 0 0 1 6.4 0"/><path d="M14.5 10h3.5M14.5 13.5h3.5"/></svg>',
   fin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/><path d="M6.5 15h4"/></svg>',
   more:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>'};
-const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me','msgs']},{id:'ai',name:'المساعد الذكي',secs:['ai']},{id:'rep',name:'التقارير',secs:['cmp','brief','sales','daily','channels','stock']},{id:'ops',name:'العمليات',secs:['maint','purch','feedback','mkt','fleet']},{id:'hrg',name:'الموارد البشرية',secs:['hr','att','employees','advances']},{id:'fin',name:'المالية',secs:['finst','treasury','balances','handover','rets','loans','custody']},{id:'more',name:'الإدارة',secs:['users','data'],nav:false}];
+const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','me','msgs']},{id:'ai',name:'المساعد الذكي',secs:['ai']},{id:'rep',name:'التقارير',secs:['cmp','sales','channels','stock']},{id:'ops',name:'العمليات',secs:['maint','purch','feedback','mkt','fleet']},{id:'hrg',name:'الموارد البشرية',secs:['hr','att','employees','advances']},{id:'fin',name:'المالية',secs:['finst','treasury','balances','handover','rets','loans','custody']},{id:'more',name:'الإدارة',secs:['users','data'],nav:false}];
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
-const PERM_GROUPS=[{name:'التقارير',secs:['sales','daily','channels','income','wh','waste','chicken']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['treasury','balances','handover','rets','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
+const PERM_GROUPS=[{name:'التقارير',secs:['sales','channels','wh']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'المالية',secs:['income','treasury','balances','handover','rets','loans','custody','custody_holder']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610190250';
-const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets='تفعيل اشعارات مرتجع الكاشيرات';
+const APP_VER='202610190345';
+const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets='تفعيل اشعارات مرتجع الكاشيرات'; SEC_NAME.income='القوائم المالية'; SEC_NAME.wh='المستودعات والمشتريات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 const CH={ajl:'آجل عملاء',shaden:'تطبيق الشادن',meals:'وجبات',family:'قسم العائلات',keeta:'تطبيق كيتا',hs:'تطبيق هانقرستيشن',dlv:'توصيل',tkl:'سفري / محلي',ninja:'تطبيق نينجا',bonat:'تطبيق بونات',awail:'عوائل',sfr:'سفري',mhl:'محلي'};
@@ -881,13 +875,13 @@ async function boot(){
   try{ const r=await sb.rpc('has_all_branches'); st.allBranches=!!r.data; }catch(e){ st.allBranches=false; }
   st.branches=b.data||[]; st.mySections=(us.data||[]).map(x=>x.section);
   $('#login').hidden=true; $('#app').hidden=false;
-  if(isEmp()) st.tab='me'; else { try{ const t=localStorage.getItem('tab'); if(t&&allowed(t)) st.tab=t; }catch(e){} }
+  if(isEmp()) st.tab='me'; else { try{ const t=localStorage.getItem('tab'); if(t&&canSee(t)) st.tab=t; }catch(e){} }
   try{ const qb=new URLSearchParams(location.search).get('brief'); if(qb&&/^\d{4}-\d\d-\d\d$/.test(qb)) st.brSel=qb; }catch(e){}
   try{ const qh=new URLSearchParams(location.search).get('hrt'); if(qh) st.hrT=qh; }catch(e){}
   try{ if(new URLSearchParams(location.search).get('lv')) st.attT='lv'; }catch(e){}
   try{ if(new URLSearchParams(location.search).get('inf')) st.mkTab='inf'; }catch(e){}
   try{ const qm=new URLSearchParams(location.search).get('m'); if(qm&&/^\d+$/.test(qm)) st.mgOpen=+qm; }catch(e){}
-  try{ const qt=new URLSearchParams(location.search).get('tab'); if(qt&&allowed(qt)) st.tab=qt; if(st.brSel&&isAdmin()) st.tab='brief'; if(qt) history.replaceState(null,'',location.pathname); }catch(e){}
+  try{ const qt=new URLSearchParams(location.search).get('tab'); if(qt&&canSee(qt)) st.tab=qt; if(qt) history.replaceState(null,'',location.pathname); }catch(e){}
   renderShell(); pushSync();
 }
 
@@ -1074,7 +1068,7 @@ V.home=async()=>{
     if(pmTot) ins.push({ic:'🎯',t:`على المعدل الحالي الشهر يقفل عند <b>${fmt(fc)}</b> — ${fc>=pmTot?'أعلى':'أقل'} من ${MONTHS[+pm.slice(5,7)-1]} بـ <b class="${fc>=pmTot?'up':'down'}">${pct(Math.abs(fc/pmTot-1))}</b>.`,go:'sales',lv:fc>=pmTot?'ok':'warn'});
     const wd=new Date(yd+'T12:00:00').getDay(); const same=[1,2,3,4].map(k=>dayVal(shiftD(yd,-7*k))).filter(v=>v>0);
     if(same.length>=2){ const sa=sum(same)/same.length, df=yv/sa-1;
-      if(Math.abs(df)>=0.06) ins.push({ic:df>=0?'⚡':'🔻',t:`مبيعات ${DAYN[wd]} (${fmt(yv)}) ${df>=0?'أعلى':'أقل'} من متوسط آخر ${same.length} أيام ${DAYN[wd]} بـ <b class="${df>=0?'up':'down'}">${pct(Math.abs(df))}</b>.`,go:'daily',lv:df>=0?'ok':'warn'}); }
+      if(Math.abs(df)>=0.06) ins.push({ic:df>=0?'⚡':'🔻',t:`مبيعات ${DAYN[wd]} (${fmt(yv)}) ${df>=0?'أعلى':'أقل'} من متوسط آخر ${same.length} أيام ${DAYN[wd]} بـ <b class="${df>=0?'up':'down'}">${pct(Math.abs(df))}</b>.`,go:'sales',lv:df>=0?'ok':'warn'}); }
     const allDays=[...new Set(S.map(r=>r.day))].sort().slice(-56); const byW=[0,1,2,3,4,5,6].map(w=>{const L=allDays.filter(d=>new Date(d+'T12:00:00').getDay()===w).map(dayVal);return L.length?sum(L)/L.length:0;});
     if(allDays.length>=21){ const bw=byW.indexOf(Math.max(...byW)), ww=byW.indexOf(Math.min(...byW.filter(x=>x>0)));
       ins.push({ic:'📆',t:`أقوى يوم في الأسبوع: <b>${DAYN[bw]}</b> (متوسط ${fmt(byW[bw])}) — والأضعف ${DAYN[ww]} (${fmt(byW[ww])}).`,go:'sales'}); }
@@ -1085,20 +1079,19 @@ V.home=async()=>{
       if(tr.length&&tr[tr.length-1].g>=0.05) ins.push({ic:'🚀',t:`<b>${esc(brById(tr[tr.length-1].b).name)}</b> في صعود: آخر 7 أيام <b class="up">${sgn(tr[tr.length-1].g)}</b> عن الأسبوع اللي قبله.`,go:'sales',lv:'ok'});
     }
     const best=dayKeys[dayTot.indexOf(Math.max(...dayTot))];
-    ins.push({ic:'🏆',t:`أعلى يوم هذا الشهر: <b>${DAYN[new Date(best+'T12:00:00').getDay()]} ${+best.slice(8)}</b> بـ ${fmt(Math.max(...dayTot))}.`,go:'daily'});
+    ins.push({ic:'🏆',t:`أعلى يوم هذا الشهر: <b>${DAYN[new Date(best+'T12:00:00').getDay()]} ${+best.slice(8)}</b> بـ ${fmt(Math.max(...dayTot))}.`,go:'sales'});
   } else {
     h+=`<div class="hx-hero"><div class="hx-glow"></div><div class="hx-top1"><span class="hx-hi">${greet}${nm?'، '+esc(nm):''} 👋</span><span class="hx-date">${dateTxt}</span></div><div style="position:relative;margin-top:10px;opacity:.85;font-size:12.5px">أهلاً بك في منصة الإدارة الموحّدة</div></div>`;
   }
   try{ if(allowed('sales')) h+=await liveCard(); }catch(e){}
   try{ h+=await mkHomeCard(); }catch(e){}
-  try{ h+=await brCard(); }catch(e){}
   // ===== المؤشرات =====
   const tile=(ic,bg,l,v,sub,go)=>`<button class="hx-tile" ${go?`data-t="${go}"`:''}><span class="hx-ic" style="background:${bg}">${ic}</span><span class="hx-tl">${l}</span><b class="num">${v}</b>${sub?`<span class="hx-ts">${sub}</span>`:''}</button>`;
-  if(allowed('income')){ const I=(await loadIncome()).filter(r=>bs.includes(r.branch_id)&&!r.is_estimate); const ms=[...new Set(I.map(r=>r.month))].sort();
+  if(false){ const I=(await loadIncome()).filter(r=>bs.includes(r.branch_id)&&!r.is_estimate); const ms=[...new Set(I.map(r=>r.month))].sort();
     if(ms.length){const mm=ms[ms.length-1];const t=aggTotals(I.filter(r=>r.month===mm));const pmm=ms[ms.length-2];const tp=pmm?aggTotals(I.filter(r=>r.month===pmm)):null;
       tiles.push(tile('💼','rgba(30,90,62,.1)','صافي الربح · '+monShort(mm),`<span class="${t.net>=0?'up':'down'}">${fmt(t.net)}</span>`,`هامش ${pct(t.rev?t.net/t.rev:null)}${tp&&tp.rev?` · كان ${pct(tp.net/tp.rev)}`:''}`,'income'));
       if(tp&&tp.rev&&t.rev){const d=t.net/t.rev-tp.net/tp.rev; if(Math.abs(d)>=0.01) ins.push({ic:'💼',t:`هامش الربح في ${monShort(mm)} <b>${pct(t.net/t.rev)}</b> — ${d>=0?'تحسّن':'تراجع'} <b class="${d>=0?'up':'down'}">${(Math.abs(d)*100).toFixed(1)} نقطة</b> عن ${monShort(pmm)}.`,go:'income',lv:d>=0?'ok':'warn'});}}}
-  if(allowed('wh')){ try{ const DD=(await loadDaily()).filter(r=>bs.includes(r.branch_id)&&r.ratio!=null); const ms=[...new Set(DD.map(r=>r.day.slice(0,7)))].sort();
+  if(false){ try{ const DD=(await loadDaily()).filter(r=>bs.includes(r.branch_id)&&r.ratio!=null); const ms=[...new Set(DD.map(r=>r.day.slice(0,7)))].sort();
     const rt=mm=>{const L=DD.filter(r=>r.day.startsWith(mm));const money=L.some(x=>x.rev!=null);return money?sum(L.map(x=>x.cogs))/(sum(L.map(x=>x.rev))||1):sum(L.map(x=>+x.ratio))/L.length;};
     if(ms.length){const mm=ms[ms.length-1],r=rt(mm),pr=ms.length>1?rt(ms[ms.length-2]):null;
       tiles.push(tile('📦','rgba(212,175,55,.16)','تكلفة المستودعات · '+monShort(mm),pct(r),pr!=null?`<span class="${r<=pr?'up':'down'}">${r<=pr?'▼':'▲'} ${((Math.abs(r-pr))*100).toFixed(1)} نقطة</span> عن ${monShort(ms[ms.length-2])}`:'من الإيرادات','wh'));
@@ -3771,7 +3764,7 @@ async function aiAnswer(q){
   }
   // ---- المستودع ----
   if(aiHas(t,'مستودع','مستودعات','تكلفه البضاعه','تكلفه المواد','نسبه التكلفه','تكلفه المبيعات')){
-    if(!canSee('wh')) return aiNo('ما عندك صلاحية على نسبة تكلفة المستودعات.');
+    if(true) return canSee('stock')?{text:'نسبة الصرف مقابل المبيعات صارت من جروث — افتح «المستودعات والمشتريات» وحدد التاريخ.',go:'stock'}:aiNo('ما عندك صلاحية على المستودعات.');
     const D=(await loadDaily()).filter(r=>r.ratio!=null&&bs.includes(r.branch_id)); if(!D.length) return {text:'ما فيه بيانات مستودع متوفرة.',go:'wh'};
     const days=[...new Set(D.map(r=>r.day))].sort(); let per=P;
     if(!per){const m=days[days.length-1].slice(0,7);per={kind:'month',month:m,from:m+'-01',to:aiMonEnd(m),label:monLbl(m)};}
@@ -3785,7 +3778,7 @@ async function aiAnswer(q){
   }
   // ---- قوائم الدخل ----
   if(aiHas(t,'ربح','صافي','خساره','خسر','ايراد','مصاريف','مصروف','هامش','قائمه الدخل','قوائم الدخل')){
-    if(!canSee('income')) return aiNo('ما عندك صلاحية على قوائم الدخل.');
+    if(true) return canSee('finst')?{text:'قوائم الدخل صارت من جروث — افتح «القوائم المالية» واختر الفترة.',go:'finst'}:aiNo('ما عندك صلاحية على القوائم المالية.');
     const I=(await loadIncome()).filter(r=>bs.includes(r.branch_id)&&!r.is_estimate); const ms=[...new Set(I.map(r=>r.month))].sort(); if(!ms.length) return {text:'ما فيه قوائم دخل متوفرة.',go:'income'};
     let sel, label, note='';
     if(P&&P.kind==='year'){sel=ms.filter(m=>m.startsWith(P.year));label=P.label;}
@@ -3862,8 +3855,8 @@ async function aiAnswer(q){
     const dd=[...new Set(L.map(r=>r.day))].sort(), vals=dd.map(dv), tot=sum(vals);
     const byB=bs.map(b=>[b,sum(L.filter(r=>r.branch_id===b).map(r=>r.amount))]).filter(x=>x[1]).sort((a,c)=>c[1]-a[1]);
     const brLines=byB.length>1?byB.map(([b,v])=>[brById(b).name,`${fmt(v)} <small class="muted">${pct(v/tot)}</small>`,brById(b).color]):[];
-    if(aiHas(t,'افضل يوم','اعلى يوم','اكثر يوم','احسن يوم')){const i=vals.indexOf(Math.max(...vals));return {title:`أعلى يوم مبيعات · ${per.label}`,big:fmt(vals[i]),unit:'ر.س',sub:aiD(dd[i])+' · '+bl,spark:vals,go:'daily'};}
-    if(aiHas(t,'اقل يوم','اضعف يوم','اسوا يوم')){const i=vals.indexOf(Math.min(...vals));return {title:`أقل يوم مبيعات · ${per.label}`,big:fmt(vals[i]),unit:'ر.س',sub:aiD(dd[i])+' · '+bl,spark:vals,go:'daily'};}
+    if(aiHas(t,'افضل يوم','اعلى يوم','اكثر يوم','احسن يوم')){const i=vals.indexOf(Math.max(...vals));return {title:`أعلى يوم مبيعات · ${per.label}`,big:fmt(vals[i]),unit:'ر.س',sub:aiD(dd[i])+' · '+bl,spark:vals,go:'sales'};}
+    if(aiHas(t,'اقل يوم','اضعف يوم','اسوا يوم')){const i=vals.indexOf(Math.min(...vals));return {title:`أقل يوم مبيعات · ${per.label}`,big:fmt(vals[i]),unit:'ر.س',sub:aiD(dd[i])+' · '+bl,spark:vals,go:'sales'};}
     if(aiHas(t,'افضل فرع','اعلى فرع','اكثر فرع','احسن فرع','اقل فرع','اضعف فرع')&&byB.length>1){const lo=aiHas(t,'اقل','اضعف');const x=lo?byB[byB.length-1]:byB[0];return {title:`${lo?'أقل':'أعلى'} فرع مبيعات · ${per.label}`,big:brById(x[0]).name,sub:fmt(x[1])+' ر.س · حصة '+pct(x[1]/tot),lines:brLines,go:'sales'};}
     if(aiHas(t,'متوسط')) return {title:`متوسط المبيعات اليومي · ${per.label}`,big:fmt(tot/dd.length),unit:'ر.س',sub:`${dd.length} يوم · ${bl}`,spark:vals,go:'sales'};
     if(aiHas(t,'توقع','متوقع','بيقفل','نهايه الشهر')){const m=last.slice(0,7);const cur=S.filter(r=>r.day.startsWith(m));const cd=[...new Set(cur.map(r=>r.day))];const ct=sum(cur.map(r=>r.amount));const fc=salesFcOf(S,m,st.branches.map(b=>b.id))??ct/cd.length*daysIn(m);const pm=aiPrevMon(m);const pt=sum(S.filter(r=>r.day.startsWith(pm)).map(r=>r.amount));
@@ -3879,8 +3872,8 @@ async function aiAnswer(q){
 }
 function aiSugg(){const s=['عطني ملخص عن الشركة'];
   if(canSee('sales')) s.push('كم مبيعات أمس؟','كم مبيعات هذا الشهر؟','وش المتوقع لنهاية الشهر؟','أعلى يوم مبيعات هذا الشهر','أعلى فرع مبيعات الشهر الماضي');
-  if(canSee('wh')) s.push('كم نسبة المستودع أمس؟');
-  if(canSee('income')) s.push('كم الربح في شهر يناير؟','كم المصاريف الشهر الماضي؟');
+  
+  
   if(canSee('channels')) s.push('كم مبيعات كيتا الشهر الماضي؟');
   if(canSee('treasury')) s.push('كم الأرصدة في البنوك؟');
   if(canSee('loans')) s.push('متى القسط القادم؟');
@@ -4001,7 +3994,7 @@ async function aiCtx(){
       last_recorded_day:lastAll,monthly,daily_last_62_days:daily,weekday_average_last_8_weeks:wd}; });
 
   // ---------- التقرير اليومي ----------
-  await run('daily',async()=>{ if(!allowed('daily')) return; const P=(await appList('daily','pages')).slice().sort((a,b)=>a.id<b.id?1:-1).slice(0,2); if(!P.length) return;
+  await run('daily',async()=>{ if(!canSee('daily')) return; const P=(await appList('daily','pages')).slice().sort((a,b)=>a.id<b.id?1:-1).slice(0,2); if(!P.length) return;
     fresh['التقرير اليومي']=(P[0].data||{}).date||P[0].id;
     C.daily_report_latest={source:'شاشة «التقرير اليومي»',meaning:'نص آخر تقارير المبيعات اليومية كما تظهر في المنصة (الأحدث أولاً).',reports:P.map((d,i)=>({date:(d.data||{}).date||d.id,text:aiPageText((d.data||{}).html).slice(0,i?2000:4500)})).filter(x=>x.text)}; });
 
@@ -4555,7 +4548,7 @@ document.addEventListener('change',async e=>{
 
 // ================= render =================
 async function render(){
-  if(!allowed(st.tab)&&!(isAdmin()&&SECTIONS.find(s=>s.id===st.tab))) st.tab='home';
+  if(!SECTIONS.find(s=>s.id===st.tab)||(!allowed(st.tab)&&!isAdmin())) st.tab='home';
   if(st.f!=='all'&&!st.branches.some(b=>b.id===st.f)) st.f='all';
   if(st.branches.length===1) st.f=st.branches[0].id;
   const v=$('#view'); v.innerHTML='<div class="loading">جارِ التحميل…</div>';
