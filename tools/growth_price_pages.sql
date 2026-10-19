@@ -196,6 +196,9 @@ begin
       || '<footer>إعداد أمير العريفي · يتحدّث تلقائياً من فواتير جروث مع كل مزامنة</footer></div></body></html>';
 end $$;
 revoke all on function public.growth_price_page_html(date) from public, anon, authenticated;
+create table if not exists public.gpp_dirty (d date primary key, at timestamptz not null default now());
+alter table public.gpp_dirty enable row level security;
+revoke all on public.gpp_dirty from anon, authenticated;
 create or replace function public.growth_price_pages_refresh(p_days date[]) returns int
 language plpgsql volatile security definer set search_path = public as $$
 declare d date; v text; n int := 0; old jsonb;
@@ -205,11 +208,7 @@ begin
     select data into old from app_docs where app = 'prices' and coll = 'pages' and id = d::text;
     if old is not null and coalesce(old->>'auto', '') <> 'growth' then continue; end if;
     v := growth_price_page_html(d);
-    if v is null then
-      if old is not null then delete from app_docs where app = 'prices' and coll = 'pages' and id = d::text; n := n + 1; end if;   -- الفواتير انحذفت من جروث
-      continue;
-    end if;
-    if old is not null and old->>'html' = v then continue; end if;
+    if v is null or (old is not null and old->>'html' = v) then continue; end if;
     insert into app_docs (app, coll, id, data, branches, updated_at)
     values ('prices', 'pages', d::text, jsonb_build_object('date', d::text, 'html', v, 'auto', 'growth'), '{}', now())
     on conflict (app, coll, id) do update set data = excluded.data, updated_at = now();
@@ -218,24 +217,32 @@ begin
   return n;
 end $$;
 revoke all on function public.growth_price_pages_refresh(date[]) from public, anon, authenticated;
-create or replace function public.gpp_trg() returns trigger
-language plpgsql security definer set search_path = public as $$
+create or replace function public.growth_price_pages_flush(p_force boolean default false) returns int
+language plpgsql volatile security definer set search_path = public as $$
 declare ds date[];
 begin
-  if tg_op = 'DELETE' then select array_agg(distinct dt) into ds from old_rows where kind = 'pur';
-  else select array_agg(distinct dt) into ds from new_rows where kind = 'pur'; end if;
-  if ds is not null then
-    begin perform growth_price_pages_refresh(ds);
-    exception when others then raise warning 'growth_price_pages_refresh: %', sqlerrm; end;   -- التقرير ما يوقف المزامنة أبداً
-  end if;
+  if not p_force and exists (select 1 from growth_sync_state where id = 'inv' and last_run > now() - interval '45 seconds') then return 0; end if;
+  if not pg_try_advisory_xact_lock(770411) then return 0; end if;
+  with x as (delete from gpp_dirty returning d) select array_agg(d) into ds from x;
+  if ds is null then return 0; end if;
+  return growth_price_pages_refresh(ds);
+end $$;
+revoke all on function public.growth_price_pages_flush(boolean) from public, anon;
+grant execute on function public.growth_price_pages_flush(boolean) to authenticated;
+create or replace function public.gpp_trg() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  insert into gpp_dirty (d, at) select distinct dt, now() from new_rows
+  where kind = 'pur' and dt > (now() at time zone 'Asia/Riyadh')::date - 40
+  on conflict (d) do update set at = now();
   return null;
+exception when others then return null;
 end $$;
 drop trigger if exists gpp_ins on public.growth_inv_lines;
 drop trigger if exists gpp_upd on public.growth_inv_lines;
 drop trigger if exists gpp_del on public.growth_inv_lines;
 create trigger gpp_ins after insert on public.growth_inv_lines referencing new table as new_rows for each statement execute function public.gpp_trg();
 create trigger gpp_upd after update on public.growth_inv_lines referencing new table as new_rows for each statement execute function public.gpp_trg();
-create trigger gpp_del after delete on public.growth_inv_lines referencing old table as old_rows for each statement execute function public.gpp_trg();
 create or replace function public.price_alerts_push() returns trigger
 language plpgsql security definer set search_path = public as $$
 declare a text[]; o text[] := '{}'; u uuid[]; v_first text;
@@ -258,9 +265,14 @@ begin
   return new;
 exception when others then return new;
 end $$;
+do $$ begin
+  create extension if not exists pg_cron;
+  perform cron.schedule('gpp-flush', '*/2 * * * *', 'select public.growth_price_pages_flush()');
+exception when others then raise notice 'pg_cron: %', sqlerrm; end $$;
 select set_config('app.gpp_quiet', '1', false);
 select growth_price_pages_refresh(array(select distinct dt from gpp_lines where dt > (now() at time zone 'Asia/Riyadh')::date - 40)) as pages_done;
 select set_config('app.gpp_quiet', '', false);
-select 'تم ✓ رادار المشتريات صار يتولّد من جروث مباشرة — آخر يوم: ' ||
-  coalesce((select max(id) from app_docs where app = 'prices' and coll = 'pages'), '—') ||
-  ' · أيام من جروث: ' || (select count(*) from app_docs where app = 'prices' and coll = 'pages' and data->>'auto' = 'growth') as result;
+select 'تم ✓ آخر يوم في الرادار: ' || coalesce((select max(id) from app_docs where app = 'prices' and coll = 'pages'), '—')
+  || ' · آخر مزامنة مخزون: ' || coalesce((select to_char(last_run at time zone 'Asia/Riyadh', 'MM-DD HH24:MI') || ' (' || rows_in || ' سطر)' from growth_sync_state where id = 'inv'), '—')
+  || ' · مشتريات آخر 4 أيام: ' || coalesce((select string_agg(to_char(dt, 'DD') || '=' || c, ' ' order by dt) from (select dt, count(*) c from growth_inv_lines where kind = 'pur' and dt >= (now() at time zone 'Asia/Riyadh')::date - 3 group by dt) z), 'ما فيه')
+  || ' · الجدولة: ' || case when exists (select 1 from pg_extension where extname = 'pg_cron') then 'شغالة' else 'من المنصة' end as result;
