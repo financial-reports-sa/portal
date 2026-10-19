@@ -57,6 +57,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .fa-in{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px dashed var(--line)}.fa-in:last-child{border:0}.fa-in span{flex:none;font-size:16px}.fa-in p{margin:0;font-size:12.5px;line-height:1.7}
 #fsPrint{display:none}
 @media print{body.fsprinting>*:not(#fsPrint){display:none!important}body.fsprinting #fsPrint{display:block;padding:0 4mm;direction:rtl}#fsPrint .fa-ph{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid #143D2A;padding-bottom:8px;margin-bottom:12px}#fsPrint .fa-ph b{font-size:18px;color:#143D2A}#fsPrint .fa-ph span{font-size:12px;color:#555}#fsPrint .card,#fsPrint .fa-hero,#fsPrint .fa-ks{break-inside:avoid;box-shadow:none}#fsPrint .fa-hero,#fsPrint .fa-pdf{-webkit-print-color-adjust:exact;print-color-adjust:exact}#fsPrint *{-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{size:A4;margin:12mm}}
+.pm-sw{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:4px;margin:2px 0 8px}.pm-sw button{border:0;background:none;border-radius:9px;padding:8px 6px;font:inherit;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer}.pm-sw button[aria-pressed="true"]{background:var(--card);color:#143D2A;box-shadow:0 1px 4px rgba(20,24,20,.12)}
 .pm-wrap{overflow:auto;max-height:70vh;border:1px solid var(--line);border-radius:14px;background:var(--card);-webkit-overflow-scrolling:touch}
 .pm{border-collapse:separate;border-spacing:0;font-size:10px}.pm th,.pm td{border-bottom:1px solid #D5D9CF;border-inline-start:1px solid #D5D9CF;padding:0;text-align:center}
 .pm thead th{position:sticky;top:0;z-index:2;background:var(--card)}.pm thead tr:nth-child(2) th{top:26px}
@@ -938,7 +939,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'المبيعات',secs:['sales','channels']},{name:'المستودعات',secs:['wh']},{name:'القوائم المالية والحسابات',secs:['fin_is','fin_bs','fin_tb','balances','treasury']},{name:'الكاشيرات',secs:['handover','rets','rets_view']},{name:'العُهد والتمويلات',secs:['custody','custody_holder','loans']},{name:'العمليات',secs:['maint','maint_sup','maint_view','purch','purch_sup','purch_view','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610192020';
+const APP_VER='202610192025';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -4840,7 +4841,9 @@ V.users=async()=>{
   <div class="muted" id="usqn" style="font-size:10.5px;margin:-6px 2px 0">${P.data.length} مستخدم</div>
   <div class="iv-tabs" style="margin-top:10px">${[['grid','📊','جدول الصلاحيات'],['user','👤','حسب الموظف'],['sec','🗂️','حسب الشاشة']].map(([v,i,n])=>`<button data-umode="${v}" aria-pressed="${(st.uMode||'grid')===v}"><span>${i}</span><b>${n}</b></button>`).join('')}</div>`;
   if((st.uMode||'grid')==='grid'){ const U=P.data.filter(u=>u.role==='user'&&canManage(u)&&(!q||((u.full_name||'')+' '+u.username).toLowerCase().includes(q)));
-    const cols=[{g:'الفروع',c:st.branches.map(b=>['b:'+b.id,b.name])}].concat(PERM_GROUPS.map(g=>({g:g.name,c:g.secs.map(x=>['s:'+x,SEC_NAME[x]||x])})));
+    const pm=st.pmMode||'ops'; const isV=x=>/_view$/.test(x);
+    const cols=[{g:'الفروع',c:st.branches.map(b=>['b:'+b.id,b.name])}].concat(PERM_GROUPS.map(g=>({g:g.name,c:g.secs.filter(x=>pm==='ro'?isV(x):!isV(x)).map(x=>['s:'+x,(SEC_NAME[x]||x).replace(/^👁️\s*/,'').replace(/\s*\(قراءة فقط\)/,'')])})).filter(g=>g.c.length));
+    h+=`<div class="pm-sw">${[['ops','⚙️ صلاحيات العمليات'],['ro','👁️ القراءة فقط']].map(([k,n])=>`<button data-pmm="${k}" aria-pressed="${pm===k}">${n}</button>`).join('')}</div>`;
     const has=(u,k)=>{const [a,id]=k.split(':'); return a==='b'?ub.some(x=>x.user_id===u.id&&x.branch_id===id):us.some(x=>x.user_id===u.id&&x.section===id);};
     h+=`<div class="muted" style="font-size:10.5px;margin:2px 2px 8px">الموظفين في العمود الأول والصلاحيات في الأعمدة — اضغط المربع للتفعيل أو الإلغاء، ينحفظ على طول. اسحب يمين ويسار لباقي الصلاحيات.</div>
     <div class="pm-wrap"><table class="pm"><thead><tr><th class="pm-u" rowspan="2">الموظف</th>${cols.map((g,gi)=>`<th class="pm-g g${gi%2}" colspan="${g.c.length}">${esc(g.g)}</th>`).join('')}</tr>
@@ -4880,7 +4883,7 @@ V.users=async()=>{
   h+=`<div class="card usr"><h3 style="font-size:13.5px">تغيير كلمة المرور الخاصة بك</h3><form class="row" id="cpf"><div class="field"><label for="cpn">كلمة المرور الجديدة</label><input class="inp" id="cpn" type="password" minlength="8" required dir="ltr" autocomplete="new-password"></div><div class="field" style="justify-content:flex-end"><button class="btn" type="submit">تغيير</button></div></form></div>`;
   return h;
 };
-document.addEventListener('click',e=>{ const m=e.target.closest('[data-umode]'); if(m){ st.uMode=m.dataset.umode; render(); return; } const k=e.target.closest('[data-usec]'); if(k){ st.uSec=k.dataset.usec; render(); } });
+document.addEventListener('click',e=>{ const pm=e.target.closest('[data-pmm]'); if(pm){ st.pmMode=pm.dataset.pmm; render(); return; } const m=e.target.closest('[data-umode]'); if(m){ st.uMode=m.dataset.umode; render(); return; } const k=e.target.closest('[data-usec]'); if(k){ st.uSec=k.dataset.usec; render(); } });
 document.addEventListener('change',async e=>{ const sel=e.target.closest('[data-ucopy]'); if(!sel||!sel.value) return; const to=sel.dataset.ucopy, from=sel.value; const nm=sel.options[sel.selectedIndex].text;
   if(!confirm('نسخ فروع وشاشات «'+nm+'» لهذا الموظف؟ صلاحياته الحالية بتنستبدل.')){ sel.value=''; return; } sel.disabled=true;
   const [A,B]=await Promise.all([sb.from('user_sections').select('section').eq('user_id',from),sb.from('user_branches').select('branch_id').eq('user_id',from)]);
