@@ -856,7 +856,7 @@ const SECTIONS=[
   {id:'home',name:'الرئيسية'},
   {id:'hub',name:'التقارير والمالية'},
   {id:'cmp',name:'تقرير اليوم',perm:'sales'},
-  {id:'pradar',name:'رادار المشتريات',perm:'wh'},
+  {id:'pradar',name:'رادار المشتريات',page:'prices',perm:'wh'},
   {id:'pricew',name:'رادار الأسعار',perm:'wh'},
   {id:'ai',name:'المساعد الذكي'},
   {id:'sales',name:'مبيعات الفروع',app:'sales'},
@@ -905,7 +905,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'المبيعات',secs:['sales','channels']},{name:'المستودعات',secs:['wh']},{name:'القوائم المالية والحسابات',secs:['fin_is','fin_bs','fin_tb','balances','treasury']},{name:'الكاشيرات',secs:['handover','rets']},{name:'العُهد والتمويلات',secs:['custody','custody_holder','loans']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610191120';
+const APP_VER='202610191130';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -3115,18 +3115,6 @@ V.cmp=async()=>{
   if(ct0.length){ const p7=k=>{const r=CT.find(z=>String(z.d).slice(0,10)===w&&z.c===k);return r?+r.v:null;};
     h+=`<div class="card"><h3 style="margin:0 0 8px;font-size:14.5px">🍽️ أقسام المنيو</h3>${ct0.map(z=>{const sh=+z.v/ctT; const g=p7(z.c); return `<div class="dr-bar"><div class="dr-bar-t"><b>${esc(z.n||wsCatName(cb,z.c))} <small class="muted num">${fmt(+z.q,+z.q%1?1:0)}</small></b><span class="num">${fmt(+z.v)} <small class="muted">${Math.round(sh*100)}%</small> ${g?pv(pct(+z.v,g)):''}</span></div><i style="width:${Math.max(2,sh*100)}%;background:${c}"></i></div>`;}).join('')}<p class="muted" style="font-size:10.5px;margin:6px 0 0">الرقم الصغير = الكمية المباعة · المقارنة مع ${wdn} الماضي</p></div>`; }
   h+=`<p class="muted" style="font-size:10.5px;text-align:center">المبيعات شاملة الضريبة · مباشر من جروث</p>`;
-  return h; };
-V.pradar=async()=>{
-  const [bizDay,rpD]=drBiz(); const d=st.prD||rpD;
-  let h=drHead('data-prd',d,rpD,`📡 رادار أسعار المشتريات${d===rpD?' ليوم أمس':''}`,`مشتريات ${drDn(d)}`)+drPick('prD',d,bizDay);
-  drPickBind('prD','prD');
-  let A; try{ const pr=await sb.rpc('growth_price_watch',{p_to:d,p_days:30,p_branches:null}); if(pr.error) throw pr.error; A=(pr.data||{}).items||[]; }catch(e){ return h+'<div class="card"><p class="muted">تعذّر التحميل — تأكد من الإنترنت</p></div>'; }
-  const PC=A.filter(x=>String(x.ld).slice(0,10)===d&&+x.pp&&Math.abs(+x.lp/+x.pp-1)>=0.03).map(x=>({...x,ch:+x.lp/+x.pp-1})).sort((a,c)=>(c.ch>0)-(a.ch>0)||Math.abs(c.ch)*(+c.a)-Math.abs(a.ch)*(+a.a));
-  const nu=PC.filter(x=>x.ch>0).length, nd=PC.length-nu;
-  if(!PC.length) return h+'<div class="card"><p class="muted" style="margin:0">✅ ما فيه تغيّر في أسعار مشتريات هذا اليوم.</p></div>';
-  h+=`<div class="pw-al ${nu?'bad':'ok'}"><span>${nu?'🔔':'✅'}</span><div><b>${nu?nu+' صنف ارتفع سعره':'ما فيه ارتفاعات'}</b><small>${nd?nd+' صنف انخفض · ':''}مقارنة بسعر الشراء اللي قبله (تغيّر 3% وأكثر)</small></div></div>
-   <div class="card rt-list">${PC.map(x=>{const c=x.ch>0?'#B42318':'#16794C';return `<button class="rt-it pw-row" data-ivi="${esc(x.i)}"><div class="rt-m"><div class="rt-t">${esc(x.n)}</div><div class="muted rt-s">${fmt(+x.pp,2)} ← <b style="color:${c}">${fmt(+x.lp,2)}</b> ${esc(x.u)}</div></div>${pwSpark(x.s,c)}<b class="num" style="color:${c};min-width:58px;text-align:left">${x.ch>0?'▲':'▼'} ${Math.round(Math.abs(x.ch)*1000)/10}%</b></button>`;}).join('')}</div>
-   <p class="muted" style="font-size:10.5px">اضغط أي صنف لحركته كاملة · الرادار الكامل (30–90 يوم) في التقارير ← المستودعات</p>`;
   return h; };
 document.addEventListener('click',e=>{const t=e.target.closest('[data-cmd],[data-cmb],[data-prd]');if(!t)return;const q=t.dataset; if(q.prd!=null){st.prD=q.prd;render();return;} if(q.cmb!=null){st.cmB=q.cmb||null;window.scrollTo({top:0});render();return;} st.cmD=q.cmd;render();});
 function invRange(P){ const td=todayIso(), d=o=>{const x=new Date(td+'T12:00:00');x.setDate(x.getDate()+o);return x.toISOString().slice(0,10);};
