@@ -251,10 +251,10 @@ textarea.txt{min-height:70px;resize:vertical;line-height:1.5}
   <!-- ============ TAB 3: reports ============ -->
   <section id="tab-rep" class="wrap" style="gap:14px" hidden>
     <div class="card entry">
-      <h3>إنشاء تقرير <small>يومي • شهري • اتجاه السيولة — يُحفظ ويُرسل</small></h3>
-      <div class="field"><label>نوع التقرير</label><div class="seg" style="grid-template-columns:1fr 1fr 1fr"><button type="button" id="rtD" aria-pressed="true">يومي</button><button type="button" id="rtM" aria-pressed="false">شهري</button><button type="button" id="rtT" aria-pressed="false">اتجاه السيولة</button></div></div>
+      <h3>تقرير الأرصدة <small>اتجاه السيولة • النطاق • الدعم والمقاومة — يُحفظ ويُرسل</small></h3>
+      <div class="field" hidden><label>نوع التقرير</label><div class="seg" style="grid-template-columns:1fr 1fr 1fr"><button type="button" id="rtD" aria-pressed="true">يومي</button><button type="button" id="rtM" aria-pressed="false">شهري</button><button type="button" id="rtT" aria-pressed="false">اتجاه السيولة</button></div></div>
       <div class="field" id="fDay"><label for="rDay">يوم التقرير</label><input type="date" id="rDay"></div>
-      <div class="field" id="fPer" hidden><label for="rPer">فترة تحليل المسار</label><select id="rPer"><option value="mtd">من بداية الشهر — والتوقع لنهاية الشهر</option><option value="30">آخر 30 يوماً — والتوقع لـ 7 أيام</option><option value="60">آخر 60 يوماً — والتوقع لـ 7 أيام</option><option value="90">آخر 90 يوماً — والتوقع لـ 7 أيام</option></select></div>
+      <div class="field" id="fPer" hidden><label for="rPer">فترة تحليل المسار</label><select id="rPer"><option value="30">آخر 30 يوماً</option><option value="mtd">من بداية الشهر</option><option value="60">آخر 60 يوماً</option><option value="90">آخر 90 يوماً</option></select></div>
       <div class="field" id="fMonth" hidden><label for="rMonth">شهر التقرير</label><select id="rMonth"></select></div>
       <div class="field"><label for="rNote">ملاحظة (اختياري)</label><textarea id="rNote" class="txt" placeholder="مثال: تم تحويل 50,000 من التجارية إلى المطعم"></textarea></div>
       <button class="btn gold" id="mkRep">إنشاء التقرير وحفظه</button>
@@ -655,12 +655,12 @@ function stmtDaily(p){ // carry forward across the whole period
   };
 
   // ---------- reports ----------
-  st.reports=[]; let repType='daily';
+  st.reports=[]; let repType='bal';
   function monthList(){ const set=new Set(Object.keys(st.daily).map(k=>k.slice(0,7))); set.add(todayIso().slice(0,7)); return [...set].sort().reverse(); }
   function fillMonths(){ const sel=$('#rMonth'); const cur=sel.value||st.month||todayIso().slice(0,7); sel.innerHTML='';
     monthList().forEach(m=>{ const [y,mm]=m.split('-').map(Number); sel.append(el('option',{value:m,text:MONTHS[mm-1]+' '+y})); }); sel.value=monthList().includes(cur)?cur:monthList()[0];
     if(!$('#rDay').value){ const ks=Object.keys(st.daily).sort(); $('#rDay').value= ks.length? ks[ks.length-1] : todayIso(); } }
-  function setRepType(t){ repType=t; $('#rtD').setAttribute('aria-pressed',t==='daily'); $('#rtM').setAttribute('aria-pressed',t==='monthly'); $('#rtT').setAttribute('aria-pressed',t==='trend');
+  function setRepType(t){ repType=t; if(t==='bal'){ $('#fDay').hidden=false; $('#fMonth').hidden=true; $('#fPer').hidden=false; $('#fDay').querySelector('label').textContent='الأرصدة حتى تاريخ'; $('#fPer').querySelector('label').textContent='فترة التحليل'; $('#repHint').textContent='تقرير واحد يشمل: أرصدة الحسابات، وخط اتجاه السيولة (خط انسيابي)، ونطاق السيولة، والدعم والمقاومة.'; return; } $('#rtD').setAttribute('aria-pressed',t==='daily'); $('#rtM').setAttribute('aria-pressed',t==='monthly'); $('#rtT').setAttribute('aria-pressed',t==='trend');
     $('#fDay').hidden=t==='monthly'; $('#fMonth').hidden=t!=='monthly'; $('#fPer').hidden=t!=='trend'; $('#fDay').querySelector('label').textContent=t==='trend'?'آخر يوم في التحليل':'يوم التقرير';
     $('#repHint').textContent= t==='trend'? 'يشمل: خط اتجاه إجمالي السيولة، والنطاق الطبيعي (±1σ) والواسع (±2σ)، والمتوسط المتحرك 7 أيام، والتوقع مع نطاق ثقة 90%، وموقع الرصيد الحالي داخل النطاق، ومستويات الدعم والمقاومة، ومتوسط التغير حسب يوم الأسبوع، وقراءة مكتوبة للمسار.' : t==='daily'? 'يشمل: إجمالي أرصدة اليوم والتغير عن اليوم السابق، ومقارنته بمتوسط الشهر، وأرصدة الحسابات، ومخططات وحركة كل أيام الشهر من أوله حتى يوم التقرير.' : 'يشمل: أرصدة الحسابات، وإجمالي الأرصدة لكل أيام الشهر مع المخططات، وأعلى وأدنى رصيد والمتوسط.'; }
   $('#rtD').onclick=()=>setRepType('daily'); $('#rtM').onclick=()=>setRepType('monthly'); $('#rtT').onclick=()=>setRepType('trend');
@@ -672,7 +672,15 @@ function stmtDaily(p){ // carry forward across the whole period
     const now=new Date(); const base={createdAt:now.toISOString(), createdLabel:dmy(iso(now))+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0'),
       balanceDate:st.meta.balanceDate||'', note:$('#rNote').value.trim(), accounts:snapAccounts()};
     let rep;
-    if(repType==='trend'){
+    if(repType==='bal'){
+      const day=$('#rDay').value; if(!day){ toast('اختر التاريخ'); return; } const per=$('#rPer').value;
+      const from= per==='mtd'? day.slice(0,7)+'-01' : addDays(day,-(Number(per)-1));
+      const daily=Object.values(st.daily).filter(d=>d.date>=from && d.date<=day).map(d=>({date:d.date,total:Number(d.total)})).sort((a,b)=>a.date<b.date?-1:1);
+      if(daily.length<3){ toast('يحتاج التقرير 3 أيام مسجلة على الأقل في الفترة'); return; }
+      const from0=daily[0].date;
+      const dt=st.daily[day]? Number(st.daily[day].total) : null; const as=base.accounts.reduce((t,a)=>t+a.balance,0);
+      rep={...base,type:'bal',day,month:day.slice(0,7),from:from0,period:per,title:'تقرير الأرصدة — حتى '+dmy(day),daily,accMismatch: dt!=null && Math.abs(dt-as)>1};
+    } else if(repType==='trend'){
       const day=$('#rDay').value; if(!day){ toast('اختر آخر يوم في التحليل'); return; } const per=$('#rPer').value;
       const from= per==='mtd'? day.slice(0,7)+'-01' : addDays(day,-(Number(per)-1));
       const daily=Object.values(st.daily).filter(d=>d.date>=from && d.date<=day).map(d=>({date:d.date,total:Number(d.total)})).sort((a,b)=>a.date<b.date?-1:1);
@@ -716,10 +724,10 @@ function stmtDaily(p){ // carry forward across the whole period
     const box=$('#reps'); box.innerHTML=''; const list=[...st.reports].sort((a,b)=>a.createdAt<b.createdAt?1:-1);
     $('#repCount').textContent= list.length? list.length+' تقرير':'';
     if(!list.length){ box.append(el('div',{class:'empty',text:'لا توجد تقارير محفوظة بعد — أنشئ أول تقرير'})); return; }
-    list.forEach(r=>{ const trend=r.type==='trend'; const s=trend?null:repStats(r); const ts=trend?trendStats(r):null; const cb=el('div'); const daily=r.type==='daily';
+    list.forEach(r=>{ const bal=r.type==='bal'; const trend=r.type==='trend'||bal; const s=trend?null:repStats(r); const ts=trend?trendStats(r):null; const cb=el('div'); const daily=r.type==='daily';
       const mainV= trend? (ts.last?ts.last.y:null) : daily? (s.today.total!=null? s.today.total : s.tot) : s.tot;
       const card=el('div',{class:'rep'},[
-        el('div',{class:'hd'},[ el('div',{},[el('span',{class:'badge '+(trend?'bt':daily?'bd':'bm'),text:trend?'اتجاه السيولة':daily?'يومي':'شهري'}),el('div',{class:'tt',text:r.title}),el('div',{class:'mt',text:'أُنشئ '+r.createdLabel+(r.note?' • '+r.note:'')})]),
+        el('div',{class:'hd'},[ el('div',{},[el('span',{class:'badge '+(trend?'bt':daily?'bd':'bm'),text:bal?'الأرصدة':trend?'اتجاه السيولة':daily?'يومي':'شهري'}),el('div',{class:'tt',text:r.title}),el('div',{class:'mt',text:'أُنشئ '+r.createdLabel+(r.note?' • '+r.note:'')})]),
           el('div',{},[el('div',{class:'tv num',text:fmt(mainV)}),el('div',{class:'mt',style:'text-align:left',text:trend?(ts.dir?'آخر رصيد • مسار '+ts.dir:'آخر رصيد'):daily&&s.today.total!=null?'إجمالي اليوم':'إجمالي الحسابات'})]) ]),
         el('div',{class:'acts'},[ el('button',{class:'pr',type:'button',text:'عرض',onclick:()=>previewRep(r)}), el('button',{type:'button',text:'صورة',onclick:()=>savePng(r)}),
           el('button',{type:'button',text:'PDF',onclick:()=>savePdf(r)}), el('button',{type:'button',text:'صفحة ويب',onclick:()=>saveHtml(r)}) ]),
@@ -730,8 +738,120 @@ function stmtDaily(p){ // carry forward across the whole period
       box.append(card); });
   }
 
+
+  // ---------- تقرير الأرصدة (التقرير الوحيد) ----------
+  async function drawBal(r){
+    try{ await document.fonts.ready; await document.fonts.load('600 20px "Readex Pro"'); await document.fonts.load('400 20px "IBM Plex Sans Arabic"'); }catch(e){}
+    const S=trendStats(r); const W=1080, P=56; const FA='"IBM Plex Sans Arabic", Tahoma, sans-serif', FD='"Readex Pro", "IBM Plex Sans Arabic", Tahoma, sans-serif';
+    const acc=(r.accounts||[]); const accSum=acc.reduce((t,a)=>t+(Number(a.balance)||0),0);
+    const showAcc=acc.length>0; const accH=showAcc? 58+56+acc.length*54+66+(r.accMismatch?58:0)+30 : 0;
+    const H=190+190+accH+(58+500+30)+(58+600+30)+(58+590+30)+(r.note?90:0)+90;
+    const c=document.createElement('canvas'); c.width=W*2; c.height=H*2; const x=c.getContext('2d'); x.scale(2,2);
+    const T=(t,px,py,{size=20,w=400,col='#18231C',al='right',f=FA,dir='rtl'}={})=>{ x.font=`${w} ${size}px ${f}`; x.fillStyle=col; x.textAlign=al; x.direction=dir; x.fillText(t,px,py); };
+    const N=(t,px,py,o={})=>T(t,px,py,{f:FD,dir:'ltr',...o});
+    const NS=(t,px,py,o={})=>{ x.save(); x.lineWidth=5; x.strokeStyle='#FFFFFF'; x.lineJoin='round'; x.font=`${o.w||600} ${o.size||13}px ${FD}`; x.textAlign=o.al||'center'; x.direction='ltr'; x.strokeText(t,px,py); x.fillStyle=o.col||'#18231C'; x.fillText(t,px,py); x.restore(); };
+    const NR=(t,px,py,o={})=>{ x.save(); x.translate(px,py); x.rotate(-Math.PI/2); x.lineWidth=5; x.strokeStyle='#FFFFFF'; x.lineJoin='round'; x.font=`${o.w||600} ${o.size||12.5}px ${FD}`; x.textAlign='left'; x.direction='ltr'; x.strokeText(t,0,4); x.fillStyle=o.col||'#18231C'; x.fillText(t,0,4); x.restore(); };
+    const rr=(px,py,w,h,rad,fill,stroke)=>{ x.beginPath(); x.roundRect(px,py,w,h,rad); if(fill){x.fillStyle=fill;x.fill();} if(stroke){x.strokeStyle=stroke;x.lineWidth=1;x.stroke();} };
+    const line=(x1,y1,x2,y2,col,w=1,dash)=>{ x.save(); x.strokeStyle=col; x.lineWidth=w; if(dash) x.setLineDash(dash); x.beginPath(); x.moveTo(x1,y1); x.lineTo(x2,y2); x.stroke(); x.restore(); };
+    const secT=(t,y,sub,n)=>{ rr(W-P-34,y+12,34,34,10,'#D4AF37'); N(String(n),W-P-17,y+36,{size:17,w:700,col:'#1A1406',al:'center'}); T(t,W-P-48,y+37,{size:22,w:600,f:FD}); if(sub) T(sub,P,y+37,{size:14.5,col:'#6B706A',al:'left'}); };
+    const dirCol=S.dir==='صاعد'?'#1FA16B':S.dir==='هابط'?'#D0453A':'#C98A0C'; const zCol=z=>z>1?'#1FA16B':z<-1?'#D0453A':'#18231C';
+    const smooth=(pts,col,w)=>{ const Q=pts.slice().sort((a,b)=>a[0]-b[0]); x.save(); x.beginPath(); smoothPath(x,Q); x.strokeStyle=col; x.lineWidth=w; x.lineJoin='round'; x.lineCap='round'; x.stroke(); x.restore(); };
+    const smoothFill=(pts,yBase,fill)=>{ const Q=pts.slice().sort((a,b)=>a[0]-b[0]); x.save(); x.beginPath(); smoothPath(x,Q); x.lineTo(Q[Q.length-1][0],yBase); x.lineTo(Q[0][0],yBase); x.closePath(); x.fillStyle=fill; x.fill(); x.restore(); };
+    x.fillStyle='#F5F5F1'; x.fillRect(0,0,W,H);
+    // ---- header ----
+    const g=x.createLinearGradient(W,0,0,190); g.addColorStop(0,'#F0F0EB'); g.addColorStop(1,'#FFFFFF'); x.fillStyle=g; x.fillRect(0,0,W,170); x.fillStyle='#D4AF37'; x.fillRect(0,170,W,4);
+    rr(W-P-56,50,56,56,14,'#D4AF37'); T('خ',W-P-28,89,{size:30,w:700,col:'#1A1406',al:'center',f:FD});
+    T(r.title,W-P-76,78,{size:30,w:600,f:FD});
+    T('فترة التحليل: '+dmy(r.from)+' — '+dmy(r.day)+'   •   '+S.n+' يوماً مسجلاً   •   أُعد في '+r.createdLabel,W-P-76,118,{size:16,col:'#9A7B12'});
+    rr(P,34,130,32,16,'rgba(212,175,55,.18)'); T('تقرير الأرصدة',P+65,56,{size:15,w:600,col:'#9A7B12',al:'center'});
+    x.fillStyle='#D4AF37'; x.fillRect(P,84,190,2); T('أُعد بواسطة',P+190,110,{size:14,col:'#6B706A'});
+    x.save(); x.font='600 25px '+FD; x.fillStyle='#9A7B12'; x.textAlign='left'; x.direction='ltr'; x.fillText('Ameer Alarifi',P,143); x.restore();
+    let y=210;
+    if(S.n<3){ T('لا توجد بيانات كافية — يلزم 3 أيام مسجلة على الأقل',W/2,y+80,{size:20,col:'#6B706A',al:'center'}); return c; }
+    const L=S.last, tl=S.tr(L.x); const prev=S.pts[S.n-2]; const chg=prev?L.y-prev.y:null;
+    // ---- KPIs ----
+    const kw=(W-2*P-3*16)/4;
+    const K=[['إجمالي الأرصدة',fmt(L.y),'#9A7B12',DAYS[fromIso(L.key).getDay()]+' '+dmy(L.key),0],
+      ['التغير عن اليوم السابق',chg==null?'—':sgnF(chg),chg>0?'#1FA16B':chg<0?'#D0453A':'#18231C',prev?'مقارنة بـ '+dmy(prev.key):'',0],
+      ['اتجاه السيولة',(S.dir==='هابط'?'▼ ':S.dir==='صاعد'?'▲ ':'● ')+S.dir,dirCol,sgnF(S.b)+' ر.س يومياً',1],
+      ['موقع الرصيد في النطاق',S.z>1?'فوق النطاق':S.z<-1?'تحت النطاق':'ضمن النطاق',zCol(S.z),(S.z>0?'+':'')+S.z.toFixed(2)+'σ عن خط الاتجاه',1]];
+    K.forEach((k,i)=>{ const px=W-P-(i+1)*kw-i*16; rr(px,y,kw,150,16,'#FFFFFF','#E6E6E0'); x.fillStyle='#D4AF37'; x.fillRect(px+16,y,kw-32,3);
+      T(k[0],px+kw-20,y+42,{size:16,col:'#6B706A'}); (k[4]?T:N)(k[1],px+kw-20,y+92,{size:k[4]?26:28,w:600,col:k[2],al:'right',f:FD}); T(k[3],px+kw-20,y+126,{size:13.5,col:'#8E928C'}); });
+    y+=190;
+    // ---- accounts ----
+    if(showAcc){
+      T('أرصدة الحسابات',W-P,y+37,{size:22,w:600,f:FD}); T(r.balanceDate?'كما في '+dmy(r.balanceDate):'',P,y+37,{size:14.5,col:'#6B706A',al:'left'}); y+=58;
+      const th=56+acc.length*54+66+(r.accMismatch?58:0); rr(P,y,W-2*P,th,16,'#FFFFFF','#E6E6E0');
+      const cA=W-P-30, cK=W-P-470, cB=P+230, cS=P+40;
+      T('الحساب',cA,y+34,{size:14.5,w:600,col:'#6B706A'}); T('النوع',cK,y+34,{size:14.5,w:600,col:'#6B706A',al:'center'}); T('الرصيد (ر.س)',cB,y+34,{size:14.5,w:600,col:'#6B706A',al:'center'}); T('الحصة',cS,y+34,{size:14.5,w:600,col:'#6B706A',al:'left'});
+      line(P+20,y+50,W-P-20,y+50,'#E6E6E0'); let ry=y+56;
+      acc.forEach((a,i)=>{ rr(cA-28,ry+13,28,28,8,a.color||'#D4AF37'); N(String(i+1),cA-14,ry+33,{size:14,w:700,col:'#1A1406',al:'center'}); T(a.name,cA-40,ry+33,{size:17,w:500});
+        T(a.kind==='cash'?'صندوق':'بنك',cK,ry+33,{size:15,col:'#6B706A',al:'center'}); N(fmt(a.balance,2),cB,ry+33,{size:18,w:600,col:a.balance<0?'#D0453A':'#18231C',al:'center'});
+        N(accSum?(a.balance/accSum*100).toFixed(1)+'%':'—',cS,ry+33,{size:15,col:'#6B706A',al:'left'}); line(P+20,ry+54,W-P-20,ry+54,'#F0F0EB'); ry+=54; });
+      rr(P+12,ry+8,W-2*P-24,50,12,'rgba(212,175,55,.16)'); T('إجمالي الحسابات',cA,ry+40,{size:18,w:600,f:FD}); N(fmt(accSum,2),cB,ry+40,{size:20,w:700,col:'#9A7B12',al:'center'}); ry+=66;
+      if(r.accMismatch){ rr(P+12,ry,W-2*P-24,46,12,'rgba(224,101,74,.10)','rgba(224,101,74,.45)'); T('تنبيه: مجموع الحسابات لا يطابق إجمالي '+dmy(r.day)+' ('+fmt(L.y,2)+') — أرصدة الحسابات غير محدّثة لهذا التاريخ.',W-P-30,ry+29,{size:14.5,w:600,col:'#C24A33'}); }
+      y+=th+30;
+    }
+    // shared plot geometry
+    const xEnd=L.x; const plot=(top,h,extra)=>{ const cx0=P+82, cx1=W-P-30, cy0=top, cy1=top+h; const X=v=>cx1-(v/Math.max(1,xEnd))*(cx1-cx0);
+      const cand=[...S.pts.map(p=>p.y),...extra]; let lo=Math.min(...cand), hi=Math.max(...cand); const pd=(hi-lo)*.08||1; lo-=pd; hi+=pd; const Y=v=>cy0+(hi-v)/(hi-lo)*(cy1-cy0);
+      for(let i=0;i<=5;i++){ const vv=lo+(hi-lo)*i/5, yy=Y(vv); line(cx0,yy,cx1,yy,'#F0F0EB',1,[4,6]); N(lblK(vv),cx0-10,yy+5,{size:12.5,col:'#8E928C',al:'right'}); }
+      const every=xEnd<=20?1:xEnd<=40?2:Math.ceil(xEnd/18);
+      for(let v=0;v<=xEnd;v++){ if(v%every&&v!==xEnd) continue; const k=addDays(r.from,v); const has=S.pts.some(p=>p.x===v); N(String(Number(k.slice(8))),X(v),cy1+26,{size:12,col:has?'#6B706A':'#C9CBC3',al:'center'}); }
+      return {X,Y,cx0,cx1,cy0,cy1}; };
+    const legend=(items,ly)=>{ let lx=W-P-24; items.forEach(([cl,t,k])=>{ x.font='400 14px '+FA; const tw=x.measureText(t).width;
+      if(k==='b') rr(lx-16,ly-12,16,14,3,cl); else if(k==='d') line(lx-18,ly-5,lx,ly-5,cl,3,[5,3]); else line(lx-18,ly-5,lx,ly-5,cl,3.5); T(t,lx-24,ly,{size:14,col:'#4F554F'}); lx-=tw+52; }); };
+    const dots=(G,labels)=>{ const rot=S.n>12; S.pts.forEach(p=>{ const isL=p===L; x.beginPath(); x.arc(G.X(p.x),G.Y(p.y),isL?7:4.5,0,7); x.fillStyle=isL?'#9A7B12':'#18231C'; x.fill(); x.strokeStyle='#FFFFFF'; x.lineWidth=2; x.stroke();
+      if(!labels||isL) return; const t=lblK(p.y); if(rot) NR(t,G.X(p.x),G.Y(p.y)-11,{col:'#4F554F'}); else NS(t,G.X(p.x),G.Y(p.y)-13,{size:13,col:'#4F554F'}); });
+      const bx=G.X(L.x), by=G.Y(L.y), t=fmt(L.y); x.font='700 15px '+FD; const tw=x.measureText(t).width+20; const ry=by-G.cy0>60?by-46:by+16; const bxx=Math.max(G.cx0,Math.min(G.cx1-tw,bx-tw/2)); rr(bxx,ry,tw,28,8,'#9A7B12'); N(t,bxx+tw/2,ry+19.5,{size:15,w:700,col:'#FFFFFF',al:'center'}); };
+    const PT=G=>S.pts.map(p=>[G.X(p.x),G.Y(p.y)]);
+    // ---- 1) trend ----
+    secT('خط اتجاه السيولة',y,'الرصيد اليومي بخط انسيابي مع خط الاتجاه',1); y+=58; rr(P,y,W-2*P,500,16,'#FFFFFF','#E6E6E0');
+    legend([['#18231C','إجمالي الأرصدة','l'],['#D4AF37','خط الاتجاه','d']],y+36);
+    { const G=plot(y+66,330,[S.tr(0),tl]); smoothFill(PT(G),G.cy1,'rgba(212,175,55,.10)'); line(G.X(0),G.Y(S.tr(0)),G.X(L.x),G.Y(tl),'#D4AF37',2.6,[10,6]); smooth(PT(G),'#18231C',3); dots(G,true);
+      const it=[['الاتجاه',S.dir,dirCol],['الميل اليومي',sgnF(S.b),dirCol],['التغير خلال 30 يوماً',sgnF(S.b*30),dirCol],['قوة الاتجاه (R²)',(S.R2*100).toFixed(0)+'%','#18231C']];
+      const iw=(W-2*P)/it.length; line(P+20,y+432,W-P-20,y+432,'#F0F0EB'); it.forEach((q,i)=>{ const cx=W-P-iw*i-iw/2; if(i) line(W-P-iw*i,y+444,W-P-iw*i,y+490,'#E6E6E0'); T(q[0],cx,y+458,{size:13.5,col:'#6B706A',al:'center'}); N(q[1],cx,y+486,{size:19,w:600,col:q[2],al:'center'}); }); }
+    y+=500+30;
+    // ---- 2) range ----
+    secT('نطاق السيولة',y,'النطاق الطبيعي ±1σ والواسع ±2σ حول خط الاتجاه',2); y+=58; rr(P,y,W-2*P,600,16,'#FFFFFF','#E6E6E0');
+    legend([['#18231C','إجمالي الأرصدة','l'],['rgba(212,175,55,.5)','النطاق الطبيعي','b'],['rgba(212,175,55,.2)','النطاق الواسع','b'],['#D4AF37','خط الاتجاه','d']],y+36);
+    { const G=plot(y+66,330,[S.tr(0)+2*S.s,S.tr(0)-2*S.s,tl+2*S.s,tl-2*S.s]);
+      const band=(k,fill)=>{ x.beginPath(); x.moveTo(G.X(0),G.Y(S.tr(0)+k*S.s)); x.lineTo(G.X(L.x),G.Y(tl+k*S.s)); x.lineTo(G.X(L.x),G.Y(tl-k*S.s)); x.lineTo(G.X(0),G.Y(S.tr(0)-k*S.s)); x.closePath(); x.fillStyle=fill; x.fill(); };
+      band(2,'rgba(212,175,55,.10)'); band(1,'rgba(212,175,55,.22)');
+      [1,-1].forEach(k=>line(G.X(0),G.Y(S.tr(0)+k*S.s),G.X(L.x),G.Y(tl+k*S.s),'rgba(212,175,55,.6)',1.2,[6,5]));
+      line(G.X(0),G.Y(S.tr(0)),G.X(L.x),G.Y(tl),'#D4AF37',2.2,[10,6]); smooth(PT(G),'#18231C',3);
+      S.pts.forEach(p=>{ const isL=p===L; x.beginPath(); x.arc(G.X(p.x),G.Y(p.y),isL?7:4.5,0,7); x.fillStyle=zCol(p.z); x.fill(); x.strokeStyle='#FFFFFF'; x.lineWidth=2; x.stroke(); });
+      // gauge
+      const gy=y+66+330+104, gh=22, gx0=P+60, gx1=W-P-60; const GX=zz=>gx0+(Math.max(-3,Math.min(3,zz))+3)/6*(gx1-gx0);
+      [[-3,-2,'rgba(224,101,74,.85)'],[-2,-1,'rgba(224,101,74,.4)'],[-1,1,'rgba(212,175,55,.45)'],[1,2,'rgba(63,185,138,.4)'],[2,3,'rgba(63,185,138,.85)']].forEach(([a_,b_,cl],i)=>{ x.beginPath(); x.roundRect(GX(a_)+1,gy,GX(b_)-GX(a_)-2,gh,i===0?[11,0,0,11]:i===4?[0,11,11,0]:0); x.fillStyle=cl; x.fill(); });
+      [-2,-1,0,1,2].forEach(k=>{ const gx=GX(k); line(gx,gy-6,gx,gy+gh+6,'#18231C',1.4); N(fmt(tl+k*S.s),gx,gy+gh+26,{size:14,w:600,col:k===0?'#9A7B12':'#18231C',al:'center'}); });
+      T('أدنى',gx0,gy+gh+26,{size:12.5,col:'#8E928C',al:'left'}); T('أعلى',gx1,gy+gh+26,{size:12.5,col:'#8E928C',al:'right'});
+      const mx_=GX(S.z); x.beginPath(); x.moveTo(mx_,gy-3); x.lineTo(mx_-10,gy-18); x.lineTo(mx_+10,gy-18); x.closePath(); x.fillStyle='#18231C'; x.fill();
+      const t='الرصيد '+fmt(L.y)+' — '+S.pos; x.font='600 14px '+FA; const tw=x.measureText(t).width+22; const bx=Math.max(P+10,Math.min(W-P-10-tw,mx_-tw/2)); rr(bx,gy-52,tw,28,8,zCol(S.z)); T(t,bx+tw/2,gy-33,{size:14,w:600,col:'#FFFFFF',al:'center'});
+      T('النطاق الطبيعي اليوم: '+fmt(tl-S.s)+' — '+fmt(tl+S.s)+' ر.س     •     النطاق الواسع: '+fmt(tl-2*S.s)+' — '+fmt(tl+2*S.s)+' ر.س',W/2,y+580,{size:14.5,col:'#4F554F',al:'center'}); }
+    y+=600+30;
+    // ---- 3) support & resistance ----
+    secT('الدعم والمقاومة',y,'مستويات تكرر عندها ارتداد الرصيد خلال الفترة',3); y+=58; rr(P,y,W-2*P,590,16,'#FFFFFF','#E6E6E0');
+    legend([['#18231C','إجمالي الأرصدة','l'],['#1FA16B','المقاومة (أعلى 10%)','d'],['#D0453A','الدعم (أدنى 10%)','d']],y+36);
+    { const G=plot(y+66,350,[S.p10,S.p90]);
+      x.fillStyle='rgba(212,175,55,.08)'; x.fillRect(G.cx0,G.Y(S.p90),G.cx1-G.cx0,G.Y(S.p10)-G.Y(S.p90));
+      line(G.cx0,G.Y(S.p90),G.cx1,G.Y(S.p90),'#1FA16B',2.4,[10,6]); line(G.cx0,G.Y(S.p10),G.cx1,G.Y(S.p10),'#D0453A',2.4,[10,6]);
+      NS('المقاومة '+lblK(S.p90),G.cx0+8,G.Y(S.p90)-8,{size:13.5,col:'#1FA16B',al:'left'}); NS('الدعم '+lblK(S.p10),G.cx0+8,G.Y(S.p10)+20,{size:13.5,col:'#D0453A',al:'left'});
+      smooth(PT(G),'#18231C',3);
+      S.pts.forEach(p=>{ const hiT=p.y>=S.p90, loT=p.y<=S.p10, isL=p===L; x.beginPath(); x.arc(G.X(p.x),G.Y(p.y),hiT||loT||isL?7:4,0,7); x.fillStyle=hiT?'#1FA16B':loT?'#D0453A':isL?'#9A7B12':'#18231C'; x.fill(); x.strokeStyle='#FFFFFF'; x.lineWidth=2; x.stroke(); });
+      const ny=y+66+350+56; line(P+20,ny-22,W-P-20,ny-22,'#F0F0EB');
+      const dR=S.p90-L.y, dS=L.y-S.p10;
+      const lv=[['مستوى المقاومة',fmt(S.p90),'#1FA16B',dR>0?'يبعد عنه '+fmt(dR):'الرصيد فوقه'],['مستوى الدعم',fmt(S.p10),'#D0453A',dS>0?'يبعد عنه '+fmt(dS):'الرصيد تحته'],['أعلى رصيد',fmt(S.mx.y),'#18231C',dmy(S.mx.key)],['أدنى رصيد',fmt(S.mn.y),'#18231C',dmy(S.mn.key)]];
+      const lw=(W-2*P)/4; lv.forEach((q,i)=>{ const cx=W-P-lw*i-lw/2; if(i) line(W-P-lw*i,ny-6,W-P-lw*i,ny+70,'#E6E6E0'); T(q[0],cx,ny+8,{size:14,col:'#6B706A',al:'center'}); N(q[1],cx,ny+42,{size:20,w:600,col:q[2],al:'center'}); T(q[3],cx,ny+68,{size:13,col:'#8E928C',al:'center'}); }); }
+    y+=590+30;
+    if(r.note){ rr(P,y,W-2*P,70,14,'rgba(212,175,55,.10)','#D4AF37'); T('ملاحظة: '+r.note,W-P-24,y+43,{size:18,col:'#9A7B12'}); y+=90; }
+    x.fillStyle='#F0F0EB'; x.fillRect(0,H-56,W,56); T('خزينة الأرصدة  •  سري — للاستخدام الداخلي  •  أُعد بواسطة Ameer Alarifi',W-P,H-22,{size:14,col:'#6B706A'}); T('أُعد في '+r.createdLabel,P,H-22,{size:14,col:'#6B706A',al:'left'});
+    return c;
+  }
+
   // ---- canvas ----
   async function drawRep(r){
+    if(r.type==='bal') return drawBal(r);
     if(r.type==='trend') return drawTrend(r);
     try{ await document.fonts.ready; await document.fonts.load('600 20px "Readex Pro"'); await document.fonts.load('400 20px "IBM Plex Sans Arabic"'); }catch(e){}
     const s=repStats(r); const daily=r.type==='daily'; const W=1080, P=56; const accH=64*r.accounts.length+70;
@@ -955,7 +1075,7 @@ function stmtDaily(p){ // carry forward across the whole period
     x.fillStyle='#F0F0EB'; x.fillRect(0,H-56,W,56); T('خزينة الأرصدة  •  سري — للاستخدام الداخلي  •  أُعد بواسطة Ameer Alarifi',W-P,H-22,{size:14,col:'#6B706A'}); T('أُعد في '+r.createdLabel,P,H-22,{size:14,col:'#6B706A',al:'left'});
     return c;
   }
-  const fname=(r,ext)=>(r.type==='trend'?'تقرير-اتجاه-السيولة-'+r.day:r.type==='daily'?'تقرير-يومي-'+r.day:'تقرير-شهري-'+r.month)+'.'+ext;
+  const fname=(r,ext)=>(r.type==='bal'?'تقرير-الأرصدة-'+r.day:r.type==='trend'?'تقرير-اتجاه-السيولة-'+r.day:r.type==='daily'?'تقرير-يومي-'+r.day:'تقرير-شهري-'+r.month)+'.'+ext;
   async function dlSave(filename,data){
     if(!st.dl){ toast('التنزيل غير متاح في هذا العرض'); return; }
     try{ await st.dl.save({filename,data}); toast('جاهز للحفظ والإرسال'); }
@@ -975,7 +1095,7 @@ function stmtDaily(p){ // carry forward across the whole period
     await dlSave(fname(r,'pdf'),pdf.output('blob'));
   }
   async function saveHtml(r){
-    if(r.type==='trend'){ toast('جارِ تجهيز صفحة الويب…'); const c=await drawTrend(r); const esc=t=>String(t).replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+    if(r.type==='trend'||r.type==='bal'){ toast('جارِ تجهيز صفحة الويب…'); const c=await drawRep(r); const esc=t=>String(t).replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
       const html=`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark only"><meta name="darkreader-lock"><title>${esc(r.title)}</title><style>:root{color-scheme:dark only;forced-color-adjust:none}html,body{margin:0;background:#F5F5F1}main{max-width:1080px;margin:0 auto;padding:10px 8px}img{display:block;width:100%;height:auto;border-radius:10px}</style></head><body><main><img src="${c.toDataURL('image/jpeg',.9)}" alt="${esc(r.title)}"></main></body></html>`;
       return dlSave(fname(r,'html'),html); }
     const s=repStats(r); const daily=r.type==='daily'; const esc=t=>String(t).replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
@@ -1026,7 +1146,7 @@ ${r.note?`<div class="note">ملاحظة: ${esc(r.note)}</div>`:''}<footer>خز�
   function renderAll(){ renderAccounts(); renderDaily(); const bd=st.meta.balanceDate; if(bd && document.activeElement!==$('#balDate')) $('#balDate').value=bd; }
 
   try{ const t=localStorage.getItem('ttab'); showTab(['acc','day','rep'].includes(t)?t:'acc'); }catch(e){ showTab('acc'); }
-  $('#dDate').value=todayIso(); fillEntry(); setRepType('daily');
+  $('#dDate').value=todayIso(); fillEntry(); setRepType('bal');
   renderAll();
   let rz; window.addEventListener('resize',()=>{ clearTimeout(rz); rz=setTimeout(()=>{ if(!$('#tab-day').hidden) renderDaily(); },200); });
 
