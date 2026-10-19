@@ -764,9 +764,9 @@ function stmtDaily(p){ // carry forward across the whole period
     if(r.accMismatch) ins.push({c:DN,t:`تنبيه: مجموع أرصدة الحسابات (${fmt(accSum)}) لا يطابق إجمالي ${dmy(r.day)} (${fmt(L?L.y:0)}) — حدّث أرصدة الحسابات.`});
     const insL=ins.map(o=>wrap(o.t,23,W-2*P-90)); const insH=60+insL.reduce((t,l)=>t+l.length*38+16,0)+14;
     const accH=acc.length? 70+64+acc.length*62+78+24 : 0;
-    const CH=690; // each chart card
-    const H=200+20+(2*180+20)+30+(insH+30)+accH+3*(70+CH+30)+(r.note?100:0)+90;
-    const c=document.createElement('canvas'); c.width=W*2; c.height=H*2; const x=c.getContext('2d'); x.scale(2,2);
+    const CH=620; // each chart card
+    const H=200+20+(2*180+20)+30+(insH+30)+accH+3*(70+CH+24)+(r.note?100:0)+70;
+    const c=document.createElement('canvas'); c.width=W*2; c.height=H*2; const x=c.getContext('2d'); x.scale(2,2); c._breaks=[]; const brk=yy=>c._breaks.push(yy*2);
     const T=(t,px,py,{size=22,w=400,col=INK,al='right',f=FA,dir='rtl'}={})=>{ x.font=`${w} ${size}px ${f}`; x.fillStyle=col; x.textAlign=al; x.direction=dir; x.fillText(t,px,py); };
     const N=(t,px,py,o={})=>T(t,px,py,{f:FD,dir:'ltr',...o});
     const rr=(px,py,w,h,rad,fill,stroke,lw=1)=>{ x.beginPath(); x.roundRect(px,py,w,h,rad); if(fill){x.fillStyle=fill;x.fill();} if(stroke){x.strokeStyle=stroke;x.lineWidth=lw;x.stroke();} };
@@ -793,11 +793,11 @@ function stmtDaily(p){ // carry forward across the whole period
     K.forEach((k,i)=>{ const col=i%2, row=Math.floor(i/2); const px=W-P-(col+1)*kw-col*20, py=y+row*(kh+20);
       rr(px,py,kw,kh,20,'#FFFFFF',LINE); x.fillStyle=k[2]; x.fillRect(px+kw-8,py+28,4,kh-56);
       T(k[0],px+kw-30,py+48,{size:20,col:MUTE}); (k[4]?N:T)(k[1],px+kw-30,py+112,{size:k[4]?44:38,w:700,col:k[2],al:'right',f:FD}); T(k[3],px+kw-30,py+150,{size:17,col:DIM}); });
-    y+=2*kh+20+30;
+    y+=2*kh+20+30; brk(y-15);
     // ---------- key points ----------
     rr(P,y,W-2*P,insH,20,'#FFFFFF',LINE); T('الخلاصة',W-P-30,y+46,{size:26,w:600,f:FD}); let iy=y+70;
     ins.forEach((o,i)=>{ x.beginPath(); x.arc(W-P-38,iy+14,8,0,7); x.fillStyle=o.c; x.fill(); insL[i].forEach((ln,j)=>T(ln,W-P-60,iy+22+j*38,{size:23,col:INK})); iy+=insL[i].length*38+16; });
-    y+=insH+30;
+    y+=insH+30; brk(y-15);
     // ---------- accounts ----------
     if(acc.length){
       T('أرصدة الحسابات',W-P,y+44,{size:28,w:600,f:FD}); T(r.balanceDate?'كما في '+dmy(r.balanceDate):'',P,y+44,{size:18,col:MUTE,al:'left'}); y+=70;
@@ -807,7 +807,7 @@ function stmtDaily(p){ // carry forward across the whole period
       let ry=y+64; acc.forEach((a,i)=>{ rr(cA-32,ry+15,32,32,9,a.color||GOLD); N(String(i+1),cA-16,ry+38,{size:17,w:700,col:'#1A1406',al:'center'}); T(a.name.replace('بنك الراجحي — ','الراجحي — '),cA-46,ry+40,{size:22,w:500});
         N(fmt(a.balance,2),cB,ry+40,{size:23,w:600,col:a.balance<0?DN:INK,al:'center'}); N(accSum?(a.balance/accSum*100).toFixed(1)+'%':'—',cS,ry+40,{size:18,col:MUTE,al:'left'}); if(i<acc.length-1) line(P+20,ry+62,W-P-20,ry+62,'#F0F0EB'); ry+=62; });
       rr(P+14,ry+10,W-2*P-28,58,14,'rgba(212,175,55,.16)'); T('الإجمالي',cA,ry+48,{size:23,w:600,f:FD}); N(fmt(accSum,2),cB,ry+48,{size:26,w:700,col:r.accMismatch?DN:GOLD2,al:'center'});
-      y+=th+24;
+      y+=th+24; brk(y-12);
     }
     // ---------- shared chart helpers ----------
     const xEnd=Math.max(1,L.x);
@@ -815,9 +815,10 @@ function stmtDaily(p){ // carry forward across the whole period
     const lin=v=>{ const P_=S.pts; if(v<=P_[0].x) return P_[0].y; for(let i=1;i<P_.length;i++){ if(v<=P_[i].x){ const a_=P_[i-1],b_=P_[i]; return a_.y+(b_.y-a_.y)*(v-a_.x)/((b_.x-a_.x)||1); } } return P_[P_.length-1].y; };
     const x0_=S.pts[0].x, ed=1.6; const sm=v=>{ const k=v>xEnd-ed?(v-(xEnd-ed))/ed:v<x0_+ed?(x0_+ed-v)/ed:0; const w=k*k*(3-2*k); return gs(v)*(1-w)+lin(v)*w; };
     const smPts=[]; for(let v=x0_;v<=xEnd+1e-9;v+=0.5) smPts.push([v,sm(v)]);
-    const chart=(top,h,extra)=>{ const cx0=P+108, cx1=W-P-34, cy0=top, cy1=top+h; const X=v=>cx1-(v/xEnd)*(cx1-cx0);
-      let lo=Math.min(...S.pts.map(p=>p.y),...extra), hi=Math.max(...S.pts.map(p=>p.y),...extra); const pd=(hi-lo)*.1||1; lo-=pd; hi+=pd; const Y=v=>cy0+(hi-v)/(hi-lo)*(cy1-cy0);
-      for(let i=0;i<=4;i++){ const vv=lo+(hi-lo)*i/4, yy=Y(vv); line(cx0,yy,cx1,yy,'#EFEFEA',1.2); N(lblK(vv/1000)+'K',cx0-14,yy+6,{size:17,col:DIM,al:'right'}); }
+    const chart=(top,h,extra,marks=[])=>{ const cx0=P+112, cx1=W-P-34, cy0=top, cy1=top+h; const X=v=>cx1-(v/xEnd)*(cx1-cx0);
+      let lo=Math.min(...S.pts.map(p=>p.y),...extra), hi=Math.max(...S.pts.map(p=>p.y),...extra); const pd=(hi-lo)||1; lo-=pd*.16; hi+=pd*.2; const Y=v=>cy0+(hi-v)/(hi-lo)*(cy1-cy0);
+      for(let i=0;i<=4;i++){ const vv=lo+(hi-lo)*i/4, yy=Y(vv); line(cx0,yy,cx1,yy,'#EFEFEA',1.2); if(!marks.some(m=>Math.abs(Y(m.v)-yy)<26)) N(lblK(vv/1000)+'K',cx0-14,yy+6,{size:17,col:DIM,al:'right'}); }
+      marks.forEach(m=>{ const t=lblK(m.v/1000)+'K'; x.font='700 15px '+FD; const tw=x.measureText(t).width+16; rr(cx0-8-tw,Y(m.v)-13,tw,26,13,m.col); N(t,cx0-8-tw/2,Y(m.v)+5.5,{size:15,w:700,col:'#FFFFFF',al:'center'}); });
       const every=xEnd<=10?1:xEnd<=20?2:xEnd<=45?3:Math.ceil(xEnd/12);
       for(let v=xEnd;v>=0;v-=every){ const k=addDays(r.from,v); N(String(Number(k.slice(8)))+(Number(k.slice(8))===1||v===0?'/'+Number(k.slice(5,7)):''),X(v),cy1+34,{size:17,col:MUTE,al:'center'}); }
       return {X,Y,cx0,cx1,cy0,cy1}; };
@@ -825,6 +826,13 @@ function stmtDaily(p){ // carry forward across the whole period
       if(fill){ const Z=x.createLinearGradient(0,G.cy0,0,G.cy1); Z.addColorStop(0,fill); Z.addColorStop(1,'rgba(255,255,255,0)'); x.lineTo(Q[Q.length-1][0],G.cy1); x.lineTo(Q[0][0],G.cy1); x.closePath(); x.fillStyle=Z; x.fill(); }
       else { x.strokeStyle=col; x.lineWidth=w; x.lineJoin='round'; x.lineCap='round'; x.stroke(); } x.restore(); };
     const raw=(G)=>{ x.save(); x.beginPath(); S.pts.forEach((p,i)=>i?x.lineTo(G.X(p.x),G.Y(p.y)):x.moveTo(G.X(p.x),G.Y(p.y))); x.strokeStyle='rgba(24,35,28,.18)'; x.lineWidth=1.6; x.stroke(); x.restore(); };
+    const vals=(G,skip)=>{ const rot=S.n>10; S.pts.forEach(p=>{ if(p===L||(skip&&skip.includes(p))) return; const px=G.X(p.x), py=G.Y(p.y); const t=lblK(p.y);
+        x.save(); x.font='600 15px '+FD; x.direction='ltr'; x.lineJoin='round'; x.lineWidth=5; x.strokeStyle='#FFFFFF'; x.fillStyle='#3E443F';
+        if(rot){ const tw=x.measureText(t).width; const up=py-G.cy0>tw+18; x.translate(px,up?py-12:py+12); x.rotate(-Math.PI/2); x.textAlign=up?'left':'right'; x.strokeText(t,0,5); x.fillText(t,0,5); }
+        else { x.textAlign='center'; x.strokeText(t,px,py-14); x.fillText(t,px,py-14); } x.restore(); }); };
+    const today=(G,col)=>{ const px=G.X(L.x), py=G.Y(L.y); line(px,G.cy0-30,px,G.cy1,'rgba(154,123,18,.45)',2,[4,5]); dot(G,L,col,10);
+      const t='اليوم '+Number(L.key.slice(8))+'/'+Number(L.key.slice(5,7))+':  '; const v=fmt(L.y); x.font='700 21px '+FD; const vw=x.measureText(v).width; x.font='600 17px '+FA; const tw0=x.measureText(t).width;
+      const tw=vw+tw0+30, bx=Math.max(P+16,px-12), by=G.cy0-70; rr(bx,by,tw,40,20,col); N(v,bx+15+vw/2,by+27,{size:21,w:700,col:'#FFFFFF',al:'center'}); T(t,bx+tw-15,by+26,{size:17,w:600,col:'rgba(255,255,255,.9)'}); };
     const dot=(G,p,col,r_=5.5)=>{ x.beginPath(); x.arc(G.X(p.x),G.Y(p.y),r_,0,7); x.fillStyle=col; x.fill(); x.strokeStyle='#FFFFFF'; x.lineWidth=2.4; x.stroke(); };
     const callout=(G,p,t,bg)=>{ const px=G.X(p.x), py=G.Y(p.y); const up=py-G.cy0>70; x.font='700 18px '+FD; const tw=x.measureText(t).width+22; const bx=Math.max(G.cx0,Math.min(G.cx1-tw,px-tw/2)); const by=up?py-56:py+20; rr(bx,by,tw,34,17,bg); N(t,bx+tw/2,by+24,{size:18,w:700,col:'#FFFFFF',al:'center'}); };
     const legend=(items,ly)=>{ let lx=W-P-30; items.forEach(([cl,t,k])=>{ x.font='400 18px '+FA; const tw=x.measureText(t).width;
@@ -834,36 +842,35 @@ function stmtDaily(p){ // carry forward across the whole period
     // ---------- 1) trend ----------
     secT('خط اتجاه السيولة',y,1,'المنحنى يوضح حركة السيولة بدون تذبذب اليوم الواحد'); y+=70; rr(P,y,W-2*P,CH,20,'#FFFFFF',LINE);
     legend([[INK,'منحنى السيولة','l'],[GOLD,'خط الاتجاه','d'],['rgba(24,35,28,.45)','الرصيد الفعلي','o']],y+44);
-    { const G=chart(y+90,420,[S.tr(0),tl]); curve(G,smPts,null,0,'rgba(212,175,55,.28)'); raw(G);
+    { const G=chart(y+90,370,[S.tr(0),tl]); curve(G,smPts,null,0,'rgba(212,175,55,.28)'); raw(G);
       line(G.X(0),G.Y(S.tr(0)),G.X(L.x),G.Y(tl),GOLD,3,[12,7]); curve(G,smPts,INK,4.5);
       S.pts.forEach(p=>dot(G,p,p===L?GOLD2:p===mx?UP:p===mn&&p!==L?DN:'rgba(24,35,28,.45)',p===L||p===mx||p===mn?8:4.5));
-      callout(G,mx,'أعلى '+lblK(mx.y),UP); if(mn!==L) callout(G,mn,'أدنى '+lblK(mn.y),DN); callout(G,L,'اليوم '+lblK(L.y),GOLD2);
-      strip([['الاتجاه',S.dir,dirCol],['الميل اليومي',sgnF(S.b),dirCol],['متوسط الفترة',fmt(avg)],['قوة الاتجاه',(S.R2*100).toFixed(0)+'%']],y+CH-118); }
-    y+=CH+30;
+      vals(G); today(G,GOLD2);
+      strip([['الاتجاه',S.dir,dirCol],['الميل اليومي',sgnF(S.b),dirCol],['متوسط الفترة',fmt(avg)],['قوة الاتجاه',(S.R2*100).toFixed(0)+'%']],y+CH-110); }
+    y+=CH+24; brk(y-12);
     // ---------- 2) range ----------
     secT('نطاق السيولة',y,2,'المساحة الطبيعية لحركة الرصيد حول خط الاتجاه'); y+=70; rr(P,y,W-2*P,CH,20,'#FFFFFF',LINE);
     legend([['rgba(212,175,55,.55)','النطاق الطبيعي','b'],['rgba(212,175,55,.2)','النطاق الواسع','b'],[INK,'منحنى السيولة','l']],y+44);
-    { const G=chart(y+90,420,[S.tr(0)+2*S.s,S.tr(0)-2*S.s,tl+2*S.s,tl-2*S.s]);
+    { const G=chart(y+90,370,[S.tr(0)+2*S.s,S.tr(0)-2*S.s,tl+2*S.s,tl-2*S.s],[{v:tl+S.s,col:GOLD2},{v:tl-S.s,col:GOLD2}]);
       const band=(k,fill)=>{ x.beginPath(); x.moveTo(G.X(0),G.Y(S.tr(0)+k*S.s)); x.lineTo(G.X(L.x),G.Y(tl+k*S.s)); x.lineTo(G.X(L.x),G.Y(tl-k*S.s)); x.lineTo(G.X(0),G.Y(S.tr(0)-k*S.s)); x.closePath(); x.fillStyle=fill; x.fill(); };
       band(2,'rgba(212,175,55,.10)'); band(1,'rgba(212,175,55,.26)'); line(G.X(0),G.Y(S.tr(0)),G.X(L.x),G.Y(tl),'rgba(154,123,18,.55)',2,[12,7]);
       curve(G,smPts,INK,4.5); S.pts.forEach(p=>{ if(Math.abs(p.z)>1) dot(G,p,p.z>0?UP:DN,6.5); });
-      [[2,'+2σ'],[1,'+1σ'],[-1,'−1σ'],[-2,'−2σ']].forEach(([k])=>{ const vv=tl+k*S.s; N(lblK(vv/1000)+'K',G.cx1-8,G.Y(vv)+(k>0?-8:20),{size:15.5,w:600,col:Math.abs(k)===1?GOLD2:DIM,al:'right'}); });
-      dot(G,L,zCol(S.z),9); callout(G,L,'اليوم '+lblK(L.y),zCol(S.z)===INK?GOLD2:zCol(S.z));
-      strip([['النطاق الطبيعي اليوم',lblK(tl-S.s)+' – '+lblK(tl+S.s),GOLD2],['أيام داخل النطاق',inN+' / '+S.n],['أيام فوق النطاق',String(S.above),UP],['أيام تحت النطاق',String(S.below),DN]],y+CH-118); }
-    y+=CH+30;
+      raw(G); S.pts.forEach(p=>{ if(Math.abs(p.z)<=1&&p!==L) dot(G,p,'rgba(24,35,28,.45)',4.5); }); vals(G); today(G,zCol(S.z)===INK?GOLD2:zCol(S.z));
+      strip([['النطاق الطبيعي اليوم',lblK(tl-S.s)+' – '+lblK(tl+S.s),GOLD2],['أيام داخل النطاق',inN+' / '+S.n],['أيام فوق النطاق',String(S.above),UP],['أيام تحت النطاق',String(S.below),DN]],y+CH-110); }
+    y+=CH+24; brk(y-12);
     // ---------- 3) support & resistance ----------
     secT('الدعم والمقاومة',y,3,'مستويات يرتد عندها الرصيد عادةً'); y+=70; rr(P,y,W-2*P,CH,20,'#FFFFFF',LINE);
     legend([[UP,'المقاومة','d'],[DN,'الدعم','d'],[INK,'منحنى السيولة','l']],y+44);
-    { const G=chart(y+90,420,[S.p10,S.p90]); const zr=Math.max(6,(G.cy1-G.cy0)*.03);
+    { const G=chart(y+90,370,[S.p10,S.p90],[{v:S.p90,col:UP},{v:S.p10,col:DN}]); const zr=Math.max(6,(G.cy1-G.cy0)*.03);
       x.fillStyle='rgba(31,161,107,.10)'; x.fillRect(G.cx0,G.Y(S.p90)-zr,G.cx1-G.cx0,2*zr); x.fillStyle='rgba(208,69,58,.10)'; x.fillRect(G.cx0,G.Y(S.p10)-zr,G.cx1-G.cx0,2*zr);
       line(G.cx0,G.Y(S.p90),G.cx1,G.Y(S.p90),UP,3,[12,7]); line(G.cx0,G.Y(S.p10),G.cx1,G.Y(S.p10),DN,3,[12,7]);
       curve(G,smPts,INK,4.5);
       S.pts.forEach(p=>{ if(p.y>=S.p90) dot(G,p,UP,7); else if(p.y<=S.p10) dot(G,p,DN,7); });
-      pill('مقاومة '+lblK(S.p90),G.cx1-4,G.Y(S.p90),UP,'#FFFFFF',16,'right'); pill('دعم '+lblK(S.p10),G.cx1-4,G.Y(S.p10),DN,'#FFFFFF',16,'right');
-      dot(G,L,GOLD2,9); callout(G,L,'اليوم '+lblK(L.y),GOLD2);
-      strip([['المقاومة',fmt(S.p90),UP],['المسافة للمقاومة',dR>0?fmt(dR):'تجاوزها',dR>0?INK:UP],['الدعم',fmt(S.p10),DN],['المسافة للدعم',dS>0?fmt(dS):'كسره',dS>0?INK:DN]],y+CH-118); }
-    y+=CH+30;
+      raw(G); S.pts.forEach(p=>{ if(p.y<S.p90&&p.y>S.p10&&p!==L) dot(G,p,'rgba(24,35,28,.45)',4.5); }); vals(G); today(G,L.y<=S.p10?DN:L.y>=S.p90?UP:GOLD2);
+      strip([['المقاومة',fmt(S.p90),UP],['المسافة للمقاومة',dR>0?fmt(dR):'تجاوزها',dR>0?INK:UP],['الدعم',fmt(S.p10),DN],['المسافة للدعم',dS>0?fmt(dS):'كسره',dS>0?INK:DN]],y+CH-110); }
+    y+=CH+24; brk(y-12);
     if(r.note){ rr(P,y,W-2*P,76,16,'rgba(212,175,55,.10)',GOLD); T('ملاحظة: '+r.note,W-P-26,y+48,{size:21,col:GOLD2}); y+=100; }
+    c._breaks=c._breaks.filter(b=>c.height-b>500);
     x.fillStyle='#EEEFE9'; x.fillRect(0,H-64,W,64); T('خزينة الأرصدة  •  سري — للاستخدام الداخلي',W-P,H-26,{size:17,col:MUTE}); T('Ameer Alarifi',P,H-26,{size:17,col:MUTE,al:'left',f:FD,dir:'ltr'});
     return c;
   }
@@ -1108,7 +1115,11 @@ function stmtDaily(p){ // carry forward across the whole period
     if(!window.jspdf){ toast('مكتبة PDF لم تُحمّل — نزّل الصورة بدلاً منها'); return; }
     toast('جارِ تجهيز PDF…'); const c=await drawRep(r); const pdf=new window.jspdf.jsPDF({unit:'pt',format:'a4',orientation:'portrait'});
     const pw=pdf.internal.pageSize.getWidth(), ph=pdf.internal.pageSize.getHeight(); const ratio=c.height/c.width;
-    if(pw*ratio<=ph*1.25){ let w=pw, h=pw*ratio; if(h>ph){ h=ph; w=ph/ratio; } pdf.setFillColor(8,17,31); pdf.rect(0,0,pw,ph,'F'); pdf.addImage(c.toDataURL('image/jpeg',.92),'JPEG',(pw-w)/2,0,w,h); }
+    if(c._breaks&&c._breaks.length){ const pageH=Math.floor(c.width*ph/pw); const B=[...c._breaks.filter(b=>b>0&&b<c.height),c.height]; let y0=0, first=true;
+      while(y0<c.height-4){ let y1=y0; for(const b of B){ if(b-y0<=pageH&&b>y1) y1=b; } if(y1<=y0) y1=Math.min(c.height,y0+pageH); const hh=y1-y0;
+        const sc=document.createElement('canvas'); sc.width=c.width; sc.height=hh; sc.getContext('2d').drawImage(c,0,y0,c.width,hh,0,0,c.width,hh);
+        if(!first) pdf.addPage(); first=false; pdf.setFillColor(245,245,241); pdf.rect(0,0,pw,ph,'F'); pdf.addImage(sc.toDataURL('image/jpeg',.92),'JPEG',0,0,pw,hh*pw/c.width); y0=y1; } }
+    else if(pw*ratio<=ph*1.25){ let w=pw, h=pw*ratio; if(h>ph){ h=ph; w=ph/ratio; } pdf.setFillColor(8,17,31); pdf.rect(0,0,pw,ph,'F'); pdf.addImage(c.toDataURL('image/jpeg',.92),'JPEG',(pw-w)/2,0,w,h); }
     else { const sliceH=Math.floor(c.width*ph/pw); let first=true; for(let y0=0;y0<c.height;y0+=sliceH){ const hh=Math.min(sliceH,c.height-y0); const sc=document.createElement('canvas'); sc.width=c.width; sc.height=hh; const sx=sc.getContext('2d'); sx.drawImage(c,0,y0,c.width,hh,0,0,c.width,hh);
       if(!first) pdf.addPage(); first=false; pdf.setFillColor(8,17,31); pdf.rect(0,0,pw,ph,'F'); pdf.addImage(sc.toDataURL('image/jpeg',.92),'JPEG',0,0,pw,hh*pw/c.width); } }
     await dlSave(fname(r,'pdf'),pdf.output('blob'));
