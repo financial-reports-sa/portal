@@ -822,6 +822,10 @@ html[dir=ltr] .sh-t{direction:ltr}html[dir=ltr] .sh-t i{display:inline-block;tra
 .dr-brc-m{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted)}
 .dr-bar{margin:0 0 9px}.dr-bar-t{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;margin-bottom:4px}.dr-bar-t span{white-space:nowrap}
 .dr-bar>i{display:block;height:6px;border-radius:4px;opacity:.85}
+.dv-k{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 0 12px}.dv-k>div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px 8px;text-align:center}.dv-k b{display:block;font-size:15px}.dv-k small{font-size:10px;color:var(--muted)}
+@media (max-width:520px){.dv-k{grid-template-columns:1fr 1fr}}
+.dv-tw{overflow-x:auto;-webkit-overflow-scrolling:touch}.dv-t{width:100%;border-collapse:collapse;font-size:11px}.dv-t th,.dv-t td{border:1px solid #DDE1D7;padding:7px 6px;text-align:center;white-space:nowrap}.dv-t thead th{background:#F1F3EC;font-size:10.5px;font-weight:700}.dv-t td.s{text-align:start}.dv-t tr.go{cursor:pointer}.dv-t tr.go:hover td{background:#F7F8F4}.dv-t tfoot td{background:#EEF5F0;font-weight:700}
+.dv-bar{height:5px;border-radius:9px;background:#E7EBE3;margin-top:3px;overflow:hidden}.dv-bar i{display:block;height:100%;background:#1E5A3E;border-radius:9px}.dv-o{font-size:9.5px;color:#9A6A06;font-weight:700}.dv-rg{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:0 0 10px}.dv-rg .inp{flex:1;min-width:120px;font-size:12px;padding:7px 8px}
 </style>
 </head>
 <body>
@@ -897,6 +901,7 @@ const SECTIONS=[
   {id:'sales',name:'مبيعات الفروع',app:'sales'},
   {id:'channels',name:'منافذ المبيعات',app:'channels'},
   {id:'stock',name:'المستودعات والمشتريات',perm:'wh'},
+  {id:'deliv',name:'التوصيل والسائقين'},
   {id:'treasury',name:'خزينة الأرصدة',app:'treasury'},
   {id:'finst',name:'القوائم المالية',perm:'income'},
   {id:'income',name:'قوائم الدخل',app:'income',perm:'fin_is'},
@@ -927,21 +932,21 @@ const NAV_ICONS={
   hrg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><circle cx="9" cy="11" r="2.3"/><path d="M5.8 16.2a3.4 3.4 0 0 1 6.4 0"/><path d="M14.5 10h3.5M14.5 13.5h3.5"/></svg>',
   fin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/><path d="M6.5 15h4"/></svg>',
   more:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>'};
-const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','cmp','pradar','me','msgs']},{id:'ai',name:'المساعد الذكي',secs:['ai']},{id:'rep',name:'التقارير',secs:['hub','sales','channels','stock','pricew','income','finst','balances','treasury','handover','rets','custody','loans']},{id:'ops',name:'العمليات',secs:['maint','purch','feedback','mkt','fleet']},{id:'hrg',name:'الموارد البشرية',secs:['hr','att','employees','advances']},{id:'more',name:'الإدارة',secs:['users','data'],nav:false}];
+const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','cmp','pradar','me','msgs']},{id:'ai',name:'المساعد الذكي',secs:['ai']},{id:'rep',name:'التقارير',secs:['hub','sales','channels','deliv','stock','pricew','income','finst','balances','treasury','handover','rets','custody','loans']},{id:'ops',name:'العمليات',secs:['maint','purch','feedback','mkt','fleet']},{id:'hrg',name:'الموارد البشرية',secs:['hr','att','employees','advances']},{id:'more',name:'الإدارة',secs:['users','data'],nav:false}];
 const HUB=[
-  {n:'المبيعات',ic:'💰',c:'#1E5A3E',secs:['sales','channels']},
+  {n:'المبيعات',ic:'💰',c:'#1E5A3E',secs:['sales','channels','deliv']},
   {n:'المستودعات',ic:'📦',c:'#B8860B',secs:['stock','pricew'],items:[['pricew','📡','رادار الأسعار',{}],['stock','🧾','المشتريات',{ivT:'pur'}],['stock','📤','الصرف المباشر',{ivT:'iss'}],['stock','📦','أرصدة المخزون',{ivT:'stock'}],['stock','📊','المخططات اليومية',{ivT:'chart'}]]},
   {n:'القوائم المالية والحسابات',ic:'📊',c:'#2F5D8A',secs:['income','finst','balances','treasury'],items:[['income','📈','قائمة الدخل',{},'fin_is'],['finst','⚖️','الميزانية',{fsT:'bs'},'fin_bs'],['finst','📚','أرصدة الحسابات',{fsT:'tb'},'fin_tb'],['balances','🏭','الموردين',{blK:'vend'}],['balances','👥','العملاء',{blK:'cust'}],['treasury','🏦','خزينة الأرصدة',{}]]},
   {n:'الكاشيرات',ic:'🧾',c:'#9A3E2E',secs:['handover','rets']},
   {n:'العُهد والتمويلات',ic:'💼',c:'#5B5F66',secs:['custody','loans']}];
-const HUB_IT={sales:['📈','المبيعات اليومية والشهرية لكل فرع'],channels:['🛵','التطبيقات والأقسام وفئات المنيو'],stock:['📦','الصرف المباشر والمشتريات وأرصدة الأصناف'],finst:['📑','قائمة الدخل والميزانية وأرصدة الحسابات'],balances:['👥','أرصدة وكشوف العملاء والموردين'],treasury:['🏦','أرصدة البنوك والصناديق'],handover:['🔐','مطابقة عهدة الكاشير مع جروث'],rets:['↩️','تفاصيل المرتجعات وتنزيلها كصورة'],custody:['💼','العُهد واستلامها'],loans:['💳','التمويلات والأقساط']};
+const HUB_IT={deliv:['🏍️','طلبات كل سائق توصيل'],sales:['📈','المبيعات اليومية والشهرية لكل فرع'],channels:['🛵','التطبيقات والأقسام وفئات المنيو'],stock:['📦','الصرف المباشر والمشتريات وأرصدة الأصناف'],finst:['📑','قائمة الدخل والميزانية وأرصدة الحسابات'],balances:['👥','أرصدة وكشوف العملاء والموردين'],treasury:['🏦','أرصدة البنوك والصناديق'],handover:['🔐','مطابقة عهدة الكاشير مع جروث'],rets:['↩️','تفاصيل المرتجعات وتنزيلها كصورة'],custody:['💼','العُهد واستلامها'],loans:['💳','التمويلات والأقساط']};
 const hubOf=t=>HUB.find(g=>g.secs.includes(t));
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
-const PERM_GROUPS=[{name:'المبيعات',secs:['sales','channels']},{name:'المستودعات',secs:['wh']},{name:'القوائم المالية والحسابات',secs:['fin_is','fin_bs','fin_tb','balances','treasury']},{name:'الكاشيرات',secs:['handover','rets','rets_view']},{name:'العُهد والتمويلات',secs:['custody','custody_holder','loans']},{name:'العمليات',secs:['maint','maint_sup','maint_view','purch','purch_sup','purch_view','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'التواصل',secs:['msgs_send']}];
+const PERM_GROUPS=[{name:'المبيعات',secs:['sales','channels','deliv']},{name:'المستودعات',secs:['wh']},{name:'القوائم المالية والحسابات',secs:['fin_is','fin_bs','fin_tb','balances','treasury']},{name:'الكاشيرات',secs:['handover','rets','rets_view']},{name:'العُهد والتمويلات',secs:['custody','custody_holder','loans']},{name:'العمليات',secs:['maint','maint_sup','maint_view','purch','purch_sup','purch_view','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610192045';
-const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
+const APP_VER='202610192110';
+const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 const CH={ajl:'آجل عملاء',shaden:'تطبيق الشادن',meals:'وجبات',family:'قسم العائلات',keeta:'تطبيق كيتا',hs:'تطبيق هانقرستيشن',dlv:'توصيل',tkl:'سفري / محلي',ninja:'تطبيق نينجا',bonat:'تطبيق بونات',awail:'عوائل',sfr:'سفري',mhl:'محلي'};
@@ -4827,6 +4832,36 @@ document.addEventListener('click',e=>{
   const d=e.target.closest('[data-pgdl]'); if(d){ const sec=SECTIONS.find(s=>s.id===d.dataset.pgdl); const r=(st.cache[sec.page+'/pages']||[]).find(x=>x.id===st.page[sec.id]); if(!r) return;
     const url=URL.createObjectURL(new Blob([r.data.html],{type:'text/html'})); const a=document.createElement('a'); a.href=url; a.download=sec.name+' '+r.id+'.html'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),30000); }
 });
+// ----- التوصيل والسائقين (من جروث: تقرير السائقين) -----
+const dvToday=()=>new Date(Date.now()+3*36e5).toISOString().slice(0,10);
+V.deliv=async()=>{ const T=dvToday(); const F=st.dvF||T, To=st.dvT||F; const drv=st.dvD!=null?+st.dvD:null;
+  const r=await sb.rpc('growth_deliv_report',{p_from:F,p_to:To,p_branches:null,p_driver:drv});
+  if(r.error) return `<div class="card"><h3>🏍️ التوصيل والسائقين</h3><p class="muted">${/growth_deliv_report/.test(r.error.message)?'شغّل ملف «growth-deliv» في Supabase أول.':'تعذّر التحميل — تأكد من الإنترنت'}</p></div>`;
+  const D=r.data||{}, DR=(D.drivers||[]).map(x=>({...x,c:+x.c,a:+x.a,o:+x.o}));
+  const tc=sum(DR.map(x=>x.c)), ta=sum(DR.map(x=>x.a)), to=sum(DR.map(x=>x.o)), mx=Math.max(1,...DR.map(x=>x.c));
+  const dn=x=>drDn(x,{weekday:'short',day:'numeric',month:'short'}), tm=x=>new Date(x).toLocaleTimeString('ar-SA-u-nu-latn',{hour:'numeric',minute:'2-digit',timeZone:'Asia/Riyadh'});
+  const y=drShift(T,-1), m1=T.slice(0,8)+'01', w7=drShift(T,-6);
+  const rng=[[T,T,'اليوم'],[y,y,'أمس'],[w7,T,'آخر 7 أيام'],[m1,T,'هذا الشهر']];
+  const per=F===To?drDn(F):dn(F)+' — '+dn(To);
+  let h=`<div class="rt-hd"><h2>🏍️ التوصيل والسائقين</h2><span class="muted">مباشر من جروث (تقرير السائقين)${D.last_run?' · آخر تحديث '+lvAgo(D.last_run):''}</span></div>
+   <div class="chips">${rng.map(([a,b,n])=>`<button data-dvr="${a}|${b}" aria-pressed="${F===a&&To===b}">${n}</button>`).join('')}</div>
+   <div class="dv-rg"><span class="muted" style="font-size:11px">من</span><input type="date" class="inp" id="dvF" value="${F}" max="${T}"><span class="muted" style="font-size:11px">إلى</span><input type="date" class="inp" id="dvT" value="${To}" max="${T}"></div>`;
+  setTimeout(()=>{ const a=$('#dvF'), b=$('#dvT'); if(a) a.onchange=()=>{ if(a.value){ st.dvF=a.value; if(!st.dvT||st.dvT<a.value) st.dvT=a.value; render(); } }; if(b) b.onchange=()=>{ if(b.value){ st.dvT=b.value; if(!st.dvF||st.dvF>b.value) st.dvF=b.value; render(); } }; },0);
+  if(drv!=null){ const x=DR.find(z=>+z.id===drv)||{n:'سائق',c:0,a:0,o:0}; const B=D.bills||[];
+    h+=`<div class="dr-hd"><button class="icb" data-dvd="" aria-label="رجوع">›</button><div><b>${esc(x.n||'بدون سائق')}</b><small>${per}${x.br?' · '+esc(brById(x.br).name):''}</small></div><span style="width:36px"></span></div>
+     <div class="dv-k"><div><b class="num">${fmt(x.c)}</b><small>طلب</small></div><div><b class="num">${fmt(x.a,2)}</b><small>ر.س إجمالي</small></div><div><b class="num">${x.c?fmt(x.a/x.c,1):'—'}</b><small>متوسط الطلب</small></div><div><b class="num">${tc?Math.round(x.c/tc*1000)/10+'%':'—'}</b><small>من طلبات الفترة</small></div></div>`;
+    const DY=D.days||[]; if(DY.length>1) h+=`<div class="card" style="padding:10px"><div class="dv-tw"><table class="dv-t"><thead><tr><th>اليوم</th><th>الطلبات</th><th>المبلغ</th></tr></thead><tbody>${DY.map(z=>`<tr><td class="s">${dn(z.d)}</td><td class="num">${fmt(+z.c)}</td><td class="num">${fmt(+z.a,2)}</td></tr>`).join('')}</tbody></table></div></div>`;
+    h+=`<div class="card" style="padding:10px"><div class="dv-tw"><table class="dv-t"><thead><tr><th>م</th>${F!==To?'<th>اليوم</th>':''}<th>الوقت</th><th>العميل</th><th>المبلغ</th><th>رقم الفاتورة</th><th>الجوال</th><th>العنوان</th></tr></thead><tbody>${B.map((z,i)=>`<tr><td>${B.length-i}</td>${F!==To?`<td>${dn(String(z.dt).slice(0,10))}</td>`:''}<td>${tm(z.dt)}${z.o?' <span class="dv-o">لم يُقفل</span>':''}</td><td class="s">${esc(z.cu||'')}</td><td class="num"><b>${fmt(+z.a,2)}</b></td><td class="num">${esc(z.doc||'')}</td><td class="num">${z.m?`<a href="tel:${esc(z.m)}" style="color:inherit">${esc(z.m)}</a>`:''}</td><td class="s">${esc(z.ad||'')}</td></tr>`).join('')}</tbody><tfoot><tr><td colspan="${F!==To?4:3}">الإجمالي (${fmt(B.length)} طلب)</td><td class="num">${fmt(sum(B.map(z=>+z.a)),2)}</td><td colspan="3"></td></tr></tfoot></table></div></div>`;
+    return h; }
+  h+=`<div class="dv-k"><div><b class="num">${fmt(tc)}</b><small>طلب توصيل</small></div><div><b class="num">${fmt(ta,0)}</b><small>ر.س إجمالي</small></div><div><b class="num">${fmt(DR.length)}</b><small>سائق</small></div><div><b class="num">${tc?fmt(ta/tc,1):'—'}</b><small>متوسط الطلب</small></div></div>`;
+  if(!DR.length) return h+`<div class="card"><p class="muted">ما فيه طلبات توصيل في ${per}.</p></div>`;
+  h+=`<div class="card" style="padding:10px"><div class="dv-tw"><table class="dv-t"><thead><tr><th>#</th><th>السائق</th><th>الفرع</th><th>الطلبات</th><th>المبلغ</th><th>المتوسط</th>${F!==To?'<th>أيام</th>':''}</tr></thead><tbody>${DR.map((x,i)=>`<tr class="go" data-dvd="${+x.id}"><td>${i+1}</td><td class="s"><b>${esc(x.n||'بدون سائق')}</b>${x.o?` <span class="dv-o">${fmt(x.o)} لم يُقفل</span>`:''}<div class="dv-bar"><i style="width:${Math.round(x.c/mx*100)}%"></i></div></td><td>${esc(brById(x.br).name)}</td><td class="num"><b>${fmt(x.c)}</b></td><td class="num">${fmt(x.a,2)}</td><td class="num">${fmt(x.a/x.c,1)}</td>${F!==To?`<td class="num">${fmt(+x.d)}</td>`:''}</tr>`).join('')}</tbody><tfoot><tr><td colspan="3">الإجمالي</td><td class="num">${fmt(tc)}</td><td class="num">${fmt(ta,2)}</td><td class="num">${tc?fmt(ta/tc,1):'—'}</td>${F!==To?'<td></td>':''}</tr></tfoot></table></div></div>
+   <p class="muted" style="font-size:10.5px">${per} · اضغط أي سائق لفواتيره بالتفصيل${to?` · «لم يُقفل» = ما تسكّر في جروث بعد (${fmt(to)})`:''}</p>`;
+  return h; };
+document.addEventListener('click',e=>{ const t=e.target.closest('[data-dvr],[data-dvd]'); if(!t) return; const d=t.dataset;
+  if(d.dvr!=null){ const [a,b]=d.dvr.split('|'); st.dvF=a; st.dvT=b; }
+  if(d.dvd!=null){ st.dvD=d.dvd===''?null:+d.dvd; window.scrollTo({top:0}); }
+  render(); });
 V.hub=async()=>{
   const gs=HUB.map(g=>({...g,v:(g.items||g.secs.map(id=>[id,(HUB_IT[id]||['📄'])[0],(SECTIONS.find(x=>x.id===id)||{}).name||id,{}])).filter(x=>canSee(x[0])&&(!x[4]||isAdmin()||st.mySections.includes(x[4])))})).filter(g=>g.v.length);
   if(!gs.length) return `<div class="card empty">ما عندك صلاحية على أي تقرير</div>`;
