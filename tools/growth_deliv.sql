@@ -76,10 +76,14 @@ begin
     'last_run', (select last_run from growth_sync_state where id = 'deliv'),
     'from', p_from, 'to', p_to,
     'drivers', coalesce((select jsonb_agg(jsonb_build_object('id', driver_id, 'n', driver, 'br', branch, 'c', c, 'a', a, 'o', o, 'd', d, 'f', f, 'l', l) order by c desc, a desc) from (
-        select driver_id, max(driver) driver, mode() within group (order by branch) branch, count(*) c, sum(net) a,
+        select driver_id, max(driver) driver, branch, count(*) c, sum(net) a,
                sum(case when clsd = 0 then 1 else 0 end) o, count(distinct bdate) d, min(dt) f, max(dt) l
         from growth_deliv where bdate between p_from and p_to and (bs is null or branch = any(bs))
-        group by driver_id) t), '[]'::jsonb),
+        group by branch, driver_id) t), '[]'::jsonb),
+    'bdays', coalesce((select jsonb_agg(jsonb_build_object('b', branch, 'd', bdate, 'c', c, 'a', a) order by branch, bdate) from (
+        select branch, bdate, count(*) c, sum(net) a from growth_deliv
+        where bdate between p_from and p_to and (bs is null or branch = any(bs))
+        group by branch, bdate) t), '[]'::jsonb),
     'days', coalesce((select jsonb_agg(jsonb_build_object('d', bdate, 'c', c, 'a', a) order by bdate) from (
         select bdate, count(*) c, sum(net) a from growth_deliv
         where bdate between p_from and p_to and (bs is null or branch = any(bs)) and (p_driver is null or driver_id = p_driver)
