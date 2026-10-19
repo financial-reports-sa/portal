@@ -931,7 +931,7 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'المبيعات',secs:['sales','channels']},{name:'المستودعات',secs:['wh']},{name:'القوائم المالية والحسابات',secs:['fin_is','fin_bs','fin_tb','balances','treasury']},{name:'الكاشيرات',secs:['handover','rets']},{name:'العُهد والتمويلات',secs:['custody','custody_holder','loans']},{name:'العمليات',secs:['maint','maint_sup','purch','purch_sup','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
-const APP_VER='202610191010';
+const APP_VER='202610191020';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -962,7 +962,7 @@ const allowed=id=>{ if(isEmp()) return id==='me'||id==='msgs'; if(id==='me') ret
 const brById=id=>st.branches.find(b=>b.id===id)||(st._cuBr||[]).find(b=>b.id===id)||{id,name:id,color:'#888'};
 const selBranches=()=>st.f==='all'?st.branches.map(b=>b.id):[st.f];
 
-async function q(key,fn){ if(st.cache[key]) return st.cache[key]; const r=await fn(); if(r.error) throw r.error; st.cache[key]=r.data||[]; return st.cache[key]; }
+async function q(key,fn){ if(st.cache[key]) return st.cache[key]; st._inf=st._inf||{}; if(st._inf[key]) return st._inf[key]; const p=(async()=>{ const r=await fn(); if(r.error) throw r.error; st.cache[key]=r.data||[]; return st.cache[key]; })(); st._inf[key]=p; try{ return await p; } finally { delete st._inf[key]; } }
 const appList=(app,coll)=>q(app+'/'+coll,async()=>{const r=await rpcAll('app_list',{p_app:app,p_coll:coll});if(r.error)return r;const seen=new Set();return {data:(r.data||[]).filter(d=>!seen.has(d.id)&&seen.add(d.id)),error:null};});
 const loadSales=async()=>{const r=[];(await appList('sales','sales')).forEach(d=>{const v=d.data||{};if(!v.date)return;for(const k in v){if(k!=='date'&&typeof v[k]==='number')r.push({branch_id:k,day:v.date,amount:v[k]});}});return r.sort((a,b)=>a.day<b.day?-1:1);};
 const loadIncome=async()=>(await appList('income','stmts')).map(d=>({branch_id:d.data.br,month:d.data.month,is_estimate:!!d.data.est,groups:d.data.groups||[]}));
@@ -1152,6 +1152,8 @@ V.home=async()=>{
   const fn_=(st.profile&&(st.profile.full_name||st.profile.username)||'').trim(); const nm=/^(مدير|فرع|حساب)/.test(fn_)?fn_:fn_.split(' ')[0];
   const dateTxt=`${DAYN[now.getDay()]} ${now.getDate()} ${MONTHS[now.getMonth()]}`;
   const greet=hr<5?'مساء الخير':hr<12?'صباح الخير':'مساء الخير';
+  const pre=x=>{ try{ const r=x(); if(r&&r.catch) r.catch(()=>{}); }catch(e){} };
+  if(allowed('sales')){ pre(()=>appList('sales','sales')); pre(()=>liveLoad()); } if(canSee('income')) pre(()=>appList('income','stmts')); if(allowed('loans')) pre(()=>appList('loans','contracts')); if(canSee('fleet')) pre(()=>appList('fleet','vehicles'));
   let h='', tiles=[], ins=[];
   let S=[],months=[],m=null,pm=null,cur=[],lastDay=0,tot=0,prevSame=0,pmTot=0,dayKeys=[],dayTot=[];
   if(allowed('sales')){
@@ -2675,7 +2677,7 @@ async function mkGenerate(day,replace){
   const j=mkParseL(txt)||mkParse(txt); if(!j){ console.warn('mkt raw',txt.slice(0,600)); throw new Error('parse'); }
   const s=await sb.rpc('mkt_save',{p_day:day,p_occasion:j.occasion||'',p_items:j.ideas,p_replace:!!replace}); if(s.error) throw s.error;
   return true; }
-async function liveLoad(force){ if(!force&&st._lv&&Date.now()-st._lvAt<60e3) return st._lv; const r=await sb.rpc('growth_live',{}); if(r.error) throw r.error; st._lv=r.data; st._lvAt=Date.now(); return r.data; }
+async function liveLoad(force){ if(!force&&st._lv&&Date.now()-st._lvAt<60e3) return st._lv; if(!force&&st._lvP) return st._lvP; st._lvP=(async()=>{ const r=await sb.rpc('growth_live',{}); if(r.error) throw r.error; st._lv=r.data; st._lvAt=Date.now(); return r.data; })(); try{ return await st._lvP; } finally { st._lvP=null; } }
 function lvAgo(t){ if(!t) return '—'; const m=Math.round((Date.now()-new Date(t))/6e4); return m<1?'الحين':m<60?`قبل ${m} د`:m<1440?`قبل ${Math.floor(m/60)} س`:`قبل ${Math.floor(m/1440)} يوم`; }
 async function liveCard(){ let L; try{ L=await liveLoad(); }catch(e){ return ''; }
   const bs=selBranches(); const biz=new Date(Date.now()+3*36e5-8*36e5).toISOString().slice(0,10); const old=L.day&&String(L.day).slice(0,10)<biz;
