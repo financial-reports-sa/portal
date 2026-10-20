@@ -86,16 +86,77 @@ begin
         'نأمل المبادرة بإنجاز القائمة وتسجيلها فوراً مع الصور المطلوبة.' || nl || '— إدارة العمليات',
         './?tab=clean', 'high', true) then n := n + 1; end if;
       if late >= 120 then
-        perform alert_send('clean2:' || b.id || ':' || sh || ':' || d, 'clean_late2', null, u || alert_owners(), 'إشعار تقصير رسمي: ' || lbl || ' متأخرة أكثر من ساعتين',
-          'السيد/ مدير فرع ' || b.name || '،' || nl || nl ||
-          'مضى أكثر من ساعتين على موعد ' || lbl || ' (' || alert_t12(due) || ') ولم تُسجَّل حتى الآن رغم التنبيه السابق.' || nl || nl ||
-          'تم تسجيل ذلك تقصيراً في سجل أداء الفرع ورفعه للإدارة. نذكّر بأن الالتزام بالنظافة معيار أساسي في تقييم إدارة الفرع، واستمرار التقصير يستوجب اتخاذ الإجراء الإداري اللازم.' || nl || nl ||
-          'المطلوب تسجيل القائمة فوراً.' || nl || '— نظام المتابعة الآلي', './?tab=clean', 'urgent', true);
+        perform alert_send('clean2:' || b.id || ':' || sh || ':' || d, 'clean_late2', null, u, 'إشعار تقصير رسمي: ' || lbl || ' متأخرة أكثر من ساعتين',
+          'السيد/ مدير فرع ' || b.name || ' المحترم،' || nl || nl ||
+          'مضى أكثر من ساعتين على موعد ' || lbl || ' (' || alert_t12(due) || ') ولم تُسجَّل حتى الآن رغم الإشعار السابق.' || nl || nl ||
+          'تم تسجيل ذلك تقصيراً في سجل أداء الفرع ورفعه للإدارة، واستمرار التقصير يستوجب اتخاذ الإجراء الإداري اللازم.' || nl || nl ||
+          'المطلوب تسجيل القائمة فوراً مع الصور المطلوبة.' || nl || '— إدارة العمليات', './?tab=clean', 'urgent', true);
+        perform alert_send('cleanrep:' || b.id || ':' || sh || ':' || d, 'clean_rep', null, alert_owners(), 'تقرير رقابي: تقصير في نظافة فرع ' || b.name,
+          'تقرير رقابي · النظافة' || nl || nl ||
+          'الفرع: ' || b.name || nl ||
+          'التاريخ: ' || to_char(d, 'YYYY-MM-DD') || nl ||
+          'القائمة: ' || lbl || nl ||
+          'الموعد المحدد: ' || alert_t12(due) || nl ||
+          'الحالة: لم تُسجَّل، ومضى على موعدها أكثر من ساعتين' || nl ||
+          'المسؤول: ' || coalesce(nullif(alert_names(u), ''), 'مدير الفرع') || nl || nl ||
+          'الإجراءات المتخذة آلياً:' || nl ||
+          '1. إشعار رسمي لمدير الفرع عند انتهاء الموعد (' || alert_t12(due) || ').' || nl ||
+          '2. إشعار تقصير رسمي بعد مرور ساعتين دون تسجيل.' || nl || nl ||
+          'وحتى وقت إصدار هذا التقرير (' || alert_t12(now()) || ') لم يتم تسجيل القائمة.' || nl || '— نظام المتابعة الآلي', './?tab=clean', 'high', false);
       end if;
     end loop;
   end loop;
   return n;
 end $$;
 revoke all on function public.clean_alerts_run() from public, anon, authenticated;
+
+create or replace function public.clean_ai_save(p_id uuid, p_items jsonb, p_note text, p_err text default '') returns int
+language plpgsql volatile security definer set search_path = public as $$
+declare c clean_checks; r int; o uuid[]; bn text;
+begin
+  select * into c from clean_checks where id = p_id;
+  if c.id is null then return null; end if;
+  if coalesce(p_err, '') <> '' then
+    update clean_checks set ai_err = left(p_err, 300) where id = p_id;
+    return null;
+  end if;
+  select round(avg(case when coalesce((it->>'ok')::boolean, false)
+                        then greatest(1, least(5, coalesce((select (a->>'score')::numeric from jsonb_array_elements(p_items) a where (a->>'i')::int = (q.n - 1)::int limit 1), 3)))
+                        else 1 end))::int
+    into r
+  from jsonb_array_elements(c.items) with ordinality q(it, n);
+  r := greatest(1, least(5, coalesce(r, 1)));
+  update clean_checks set ai_rating = r, ai_items = coalesce(p_items, '[]'), ai_note = left(coalesce(p_note, ''), 1500), ai_at = now(), ai_err = '' where id = p_id;
+  bn := coalesce((select name from branches where id = c.branch), c.branch);
+  if c.by_uid is not null then
+    perform push_send(array[c.by_uid], '🤖 تقييم النظافة: ' || repeat('★', r) || repeat('☆', 5 - r), left(coalesce(nullif(p_note, ''), 'تم تحليل صور القائمة'), 200), './?tab=clean', 'clean-ai-' || p_id);
+  end if;
+  if r <= 3 and to_regprocedure('public.alert_send(text,text,uuid,uuid[],text,text,text,text,boolean,uuid[])') is not null then
+    perform alert_send('cleanlow:' || p_id, 'clean_low', null, alert_mgrs(c.branch, array['clean']), 'إشعار رسمي: تقييم نظافة منخفض (' || r || ' من 5)',
+      'السيد/ مدير فرع ' || bn || ' المحترم،' || chr(10) || chr(10) ||
+      'حصلت ' || case c.shift when 'open' then 'قائمة نظافة الفتح' when 'mid' then 'قائمة نظافة منتصف اليوم' when 'close' then 'قائمة نظافة الإغلاق' else 'قائمة النظافة' end || ' ليوم ' || c.day ||
+      ' على تقييم ' || repeat('★', r) || repeat('☆', 5 - r) || ' (' || r || ' من 5) بعد تحليل الصور وفق اشتراطات الصحة العامة للمنشآت الغذائية الصادرة عن وزارة البلديات والإسكان.' || chr(10) || chr(10) ||
+      case when coalesce(p_note, '') <> '' then 'أبرز الملاحظات: ' || left(p_note, 600) || chr(10) || chr(10) else '' end ||
+      'هذا التقييم يُحتسب في تقييم أداء الفرع وإدارته، ويعكس مستوى المتابعة والاهتمام. المطلوب معالجة الملاحظات فوراً ورفع المستوى في القائمة القادمة.' || chr(10) || '— إدارة العمليات',
+      './?tab=clean', 'high', true, '{}');
+  end if;
+  if r <= 3 and to_regprocedure('public.alert_send(text,text,uuid,uuid[],text,text,text,text,boolean,uuid[])') is not null then
+    perform alert_send('cleanlowrep:' || p_id, 'clean_rep', null, alert_owners(), 'تقرير رقابي: تقييم نظافة منخفض في فرع ' || bn || ' (' || r || ' من 5)',
+      'تقرير رقابي · تقييم النظافة' || chr(10) || chr(10) ||
+      'الفرع: ' || bn || chr(10) ||
+      'التاريخ: ' || to_char(c.day, 'YYYY-MM-DD') || chr(10) ||
+      'القائمة: ' || case c.shift when 'open' then 'قائمة نظافة الفتح' when 'mid' then 'قائمة نظافة منتصف اليوم' when 'close' then 'قائمة نظافة الإغلاق' else 'قائمة النظافة' end || chr(10) ||
+      'التقييم: ' || repeat('★', r) || repeat('☆', 5 - r) || ' (' || r || ' من 5)' || chr(10) ||
+      'البنود المنفذة: ' || c.ok || ' من ' || c.total || chr(10) ||
+      'سجّلها: ' || coalesce(nullif(c.by_name, ''), '—') || chr(10) ||
+      'المسؤول: ' || coalesce(nullif(alert_names(alert_mgrs(c.branch, array['clean'])), ''), 'مدير الفرع') || chr(10) || chr(10) ||
+      case when coalesce(p_note, '') <> '' then 'ملاحظات التحليل: ' || left(p_note, 800) || chr(10) || chr(10) else '' end ||
+      'تم التقييم آلياً بتحليل صور البنود وفق اشتراطات الصحة العامة للمنشآت الغذائية، وأُرسل إشعار رسمي لمدير الفرع بمعالجة الملاحظات.' || chr(10) || '— نظام المتابعة الآلي',
+      './?tab=clean', 'high', false, '{}');
+  end if;
+  return r;
+end $$;
+revoke all on function public.clean_ai_save(uuid, jsonb, text, text) from public, anon, authenticated;
+grant execute on function public.clean_ai_save(uuid, jsonb, text, text) to service_role;
 
 select 'تم: مواعيد النظافة لكل فرع' as result, (select string_agg(coalesce(b.name, b.id) || ': ' || to_char(public.clean_due(b.id, 'open'), 'HH24:MI') || ' / ' || to_char(public.clean_due(b.id, 'mid'), 'HH24:MI') || ' / ' || to_char(public.clean_due(b.id, 'close'), 'HH24:MI'), ' · ') from public.branches b) as dues;
