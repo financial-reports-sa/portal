@@ -4946,7 +4946,7 @@ document.addEventListener('click',e=>{ const t=e.target.closest('[data-dvr],[dat
   if(d.dvd!=null){ st.dvD=d.dvd===''?null:+d.dvd; window.scrollTo({top:0}); }
   render(); });
 // ----- النظافة -----
-const CL_SH=[['open','🌅','قائمة الفتح'],['mid','🕘','قائمة منتصف اليوم'],['close','🌙','قائمة الإغلاق'],['weekly','🧽','التنظيف الأسبوعي']];
+const CL_SH=[['open','🌅','قائمة الفتح'],['mid','🕘','قائمة منتصف اليوم'],['close','🌙','قائمة الإغلاق']];
 const clT12=hm=>{ if(!hm) return ''; const [h,m]=hm.split(':').map(Number); return `${((h+11)%12)+1}:${String(m).padStart(2,'0')} ${h<12?'ص':'م'}`; };
 const clTm=ts=>new Date(ts).toLocaleTimeString('ar-SA-u-nu-latn',{hour:'numeric',minute:'2-digit',timeZone:'Asia/Riyadh'});
 const clStars=n=>n?'<span class="cl-st">'+'★'.repeat(n)+'<i>'+'☆'.repeat(5-n)+'</i></span>':'';
@@ -4972,7 +4972,6 @@ V.clean=async()=>{ const r=await sb.rpc('clean_board',{p_day:st.clD||null});
   const now=Date.now();
   bs.forEach(b=>{ const c=brById(b).color; const can=D.admin||(!D.ro);
     h+=`<div class="card cl-b" style="--c:${c}"><div class="cl-bh"><i></i><b>${esc(brById(b).name)}</b></div>${CL_SH.map(([k,ic,n])=>{ const x=(D.checks||[]).find(z=>z.branch===b&&z.shift===k); const due=(D.cfg||{})[k];
-      if(k==='weekly'&&!x&&new Date(D.day+'T12:00:00').getDay()!==4&&!(D.items||[]).some(i=>i.s==='weekly')) return '';
       let stt; if(x){ const full=x.ok>=x.total; stt=`<span class="cl-s ${full?'ok':'warn'}">${full?'✅':'⚠️'} ${x.ok}/${x.total}</span><small>${clTm(x.created_at)} · ${esc(x.by_name||'')}${x.rating?' · '+clStars(x.rating):''}</small>`; }
       else { stt=`<span class="cl-s no">⏳ لم تُسجَّل</span><small>${k==='weekly'?'هذا الأسبوع · الموعد الخميس ':'الموعد '}${clT12(due)}</small>`; }
       return `<div class="cl-r"><span class="cl-i">${ic}</span><div class="cl-m"><b>${n}</b><div>${stt}</div></div><div class="cl-a">${x?`<button class="btn sm ghost" data-clview="${x.id}">عرض</button>`:''}${isToday&&can?`<button class="btn sm ${x?'ghost':''}" data-clnew="${b}:${k}">${x?'إعادة':'ابدأ'}</button>`:''}</div></div>`; }).join('')}</div>`; });

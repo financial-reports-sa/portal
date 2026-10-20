@@ -100,6 +100,9 @@ select null, x.s, x.t, x.p, x.o from (values
 ) x(s, t, p, o)
 where not exists (select 1 from public.clean_items where shift <> 'mid');
 
+delete from public.clean_items where shift = 'weekly' and not exists (select 1 from public.clean_checks where shift = 'weekly');
+update public.clean_items set active = false where shift = 'weekly';
+
 create or replace function public.clean_ro() returns boolean
 language plpgsql stable security definer set search_path = public as $$
 declare r boolean := false;
@@ -253,7 +256,7 @@ begin
                          join profiles p on p.id = us.user_id and coalesce(p.active, true) and p.role = 'user' where us.section = 'clean') loop
     u := alert_mgrs(b.id, array['clean']);
     if cardinality(u) = 0 then continue; end if;
-    foreach sh in array array['open', 'mid', 'close', 'weekly'] loop
+    foreach sh in array array['open', 'mid', 'close'] loop
       if sh = 'weekly' then
         if extract(dow from d) <> 4 then continue; end if;
         if exists (select 1 from clean_checks where branch = b.id and shift = 'weekly' and clean_week(day) = clean_week(d)) then continue; end if;
@@ -287,4 +290,4 @@ begin
   perform cron.schedule('auto-clean', '*/15 * * * *', 'select public.clean_alerts_run()');
 end $$;
 
-select 'تم: النظافة (قوائم الفتح ومنتصف اليوم والإغلاق والأسبوعي + الصور + التقييم + تنبيهات التأخير)' as result;
+select 'تم: النظافة (قوائم الفتح ومنتصف اليوم والإغلاق + الصور + التقييم + تنبيهات التأخير)' as result;
