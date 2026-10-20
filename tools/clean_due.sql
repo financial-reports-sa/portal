@@ -8,9 +8,10 @@ alter table public.clean_cfg_br enable row level security;
 revoke all on public.clean_cfg_br from anon, authenticated;
 
 insert into public.clean_cfg_br (branch, shift, due)
-select b.id, x.s, x.t::time from public.branches b,
-  (values ('open', '11:30'), ('mid', '21:00'), ('close', '03:00')) x(s, t)
-where b.id in ('az', 'sh')
+select b.id, x.s, x.t::time from public.branches b
+join (values ('az', 'open', '11:30'), ('az', 'mid', '20:30'), ('az', 'close', '03:00'),
+             ('sh', 'open', '11:30'), ('sh', 'mid', '20:30'), ('sh', 'close', '03:00'),
+             ('pc', 'open', '13:00'), ('pc', 'mid', '20:00'), ('pc', 'close', '04:00')) x(br, s, t) on x.br = b.id
 on conflict (branch, shift) do update set due = excluded.due;
 
 create or replace function public.clean_due(p_branch text, p_shift text) returns time
