@@ -323,9 +323,9 @@ begin
   begin perform cron.unschedule('auto-att'); exception when others then null; end;
   begin perform cron.unschedule('auto-rets'); exception when others then null; end;
   begin perform cron.unschedule('auto-ops'); exception when others then null; end;
-  perform cron.schedule('auto-att', '*/10 * * * *', 'select public.att_alerts_run()');
+  perform cron.schedule('auto-att', '*/5 * * * *', 'select public.att_alerts_run()');
   perform cron.schedule('auto-rets', '*/15 * * * *', 'select public.ret_alerts_run()');
   perform cron.schedule('auto-ops', '45 6 * * *', 'select public.ops_alerts_run()');
 end $$;
 
-select 'تم: المتابعة الآلية (الحضور كل 10 دقائق · المرتجعات كل 3 ساعات · الصيانة والمشتريات يومياً 9:45 صباحاً)' as result;
+select 'تم: المتابعة الآلية (الحضور كل 5 دقائق · المرتجعات كل 3 ساعات · الصيانة والمشتريات يومياً 9:45 صباحاً)' as result;
