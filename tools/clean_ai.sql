@@ -92,6 +92,15 @@ begin
   if c.by_uid is not null then
     perform push_send(array[c.by_uid], '🤖 تقييم النظافة: ' || repeat('★', r) || repeat('☆', 5 - r), left(coalesce(nullif(p_note, ''), 'تم تحليل صور القائمة'), 200), './?tab=clean', 'clean-ai-' || p_id);
   end if;
+  if r <= 3 and to_regprocedure('public.alert_send(text,text,uuid,uuid[],text,text,text,text,boolean,uuid[])') is not null then
+    perform alert_send('cleanlow:' || p_id, 'clean_low', null, alert_mgrs(c.branch, array['clean']), 'إشعار رسمي: تقييم نظافة منخفض (' || r || ' من 5)',
+      'السيد/ مدير فرع ' || bn || '،' || chr(10) || chr(10) ||
+      'حصلت ' || case c.shift when 'open' then 'قائمة نظافة الفتح' when 'mid' then 'قائمة نظافة منتصف اليوم' when 'close' then 'قائمة نظافة الإغلاق' else 'قائمة النظافة' end || ' ليوم ' || c.day ||
+      ' على تقييم ' || repeat('★', r) || repeat('☆', 5 - r) || ' (' || r || ' من 5) بعد تحليل الصور وفق اشتراطات الصحة العامة للمنشآت الغذائية الصادرة عن وزارة البلديات والإسكان.' || chr(10) || chr(10) ||
+      case when coalesce(p_note, '') <> '' then 'أبرز الملاحظات: ' || left(p_note, 600) || chr(10) || chr(10) else '' end ||
+      'هذا التقييم يُحتسب في تقييم أداء الفرع وإدارته، ويعكس مستوى المتابعة والاهتمام. المطلوب معالجة الملاحظات فوراً ورفع المستوى في القائمة القادمة.' || chr(10) || '— نظام المتابعة الآلي',
+      './?tab=clean', 'high', true, '{}');
+  end if;
   if r <= 3 then
     select coalesce(array_agg(id), '{}') into o from profiles where role = 'owner' and coalesce(active, true);
     perform push_send(o, '🤖 نظافة ' || bn || ': ' || r || ' من 5', left(coalesce(nullif(p_note, ''), 'تقييم منخفض للنظافة'), 220), './?tab=clean', 'clean-ai-low-' || p_id);

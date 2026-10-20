@@ -250,7 +250,7 @@ create or replace function public.clean_alerts_run() returns int
 language plpgsql volatile security definer set search_path = public as $$
 declare d date := att_bday(); b record; sh text; due timestamptz; n int := 0; u uuid[]; lbl text; bn text; nl text := chr(10); late int;
 begin
-  if to_regprocedure('public.alert_send(text,text,uuid,uuid[],text,text,text,text,boolean)') is null then return 0; end if;
+  if to_regprocedure('public.alert_send(text,text,uuid,uuid[],text,text,text,text,boolean,uuid[])') is null and to_regprocedure('public.alert_send(text,text,uuid,uuid[],text,text,text,text,boolean)') is null then return 0; end if;
   for b in select br.id, br.name from branches br
            where exists (select 1 from user_sections us join user_branches ub on ub.user_id = us.user_id and ub.branch_id = br.id
                          join profiles p on p.id = us.user_id and coalesce(p.active, true) and p.role = 'user' where us.section = 'clean') loop
@@ -269,14 +269,18 @@ begin
       if d <= ((select min(created_at) from clean_items) at time zone 'Asia/Riyadh' - interval '5 hours')::date then continue; end if;
       late := floor(extract(epoch from (now() - due)) / 60)::int;
       lbl := case sh when 'open' then 'قائمة نظافة الفتح' when 'mid' then 'قائمة نظافة منتصف اليوم' when 'close' then 'قائمة نظافة الإغلاق' else 'التنظيف الأسبوعي' end;
-      if alert_send('clean:' || b.id || ':' || sh || ':' || d, 'clean_late', null, u, 'تنبيه: ' || lbl || ' لم تُسجَّل',
-        'فرع ' || b.name || '،' || nl || 'لم يتم تسجيل ' || lbl || ' لليوم ' || d || '، وكان موعدها الساعة ' || alert_t12(due) || '.' || nl ||
-        'المطلوب إنجازها وتسجيلها فوراً من شاشة «النظافة» مع الصور المطلوبة. التأخر في قوائم النظافة يُعد تقصيراً ويُرفع للإدارة.' || nl || '— نظام المتابعة الآلي',
-        './?tab=clean', 'high', false) then n := n + 1; end if;
+      if alert_send('clean:' || b.id || ':' || sh || ':' || d, 'clean_late', null, u, 'إشعار رسمي: لم تُسجَّل ' || lbl,
+        'السيد/ مدير فرع ' || b.name || '،' || nl || nl ||
+        'لم يتم تسجيل ' || lbl || ' لليوم ' || d || '، وقد انتهى موعدها المحدد الساعة ' || alert_t12(due) || '.' || nl || nl ||
+        'نؤكد أن النظافة من أهم معايير تقييم أداء الفرع وإدارته؛ فهي تعكس بشكل مباشر مستوى اهتمامك وانضباط فريقك، ونجاح الفرع يُقاس بها قبل أي شيء آخر. وأي تهاون فيها ينعكس على تقييمك الشخصي.' || nl || nl ||
+        'المطلوب إنجاز القائمة وتسجيلها فوراً من شاشة «النظافة» مع الصور المطلوبة لكل بند.' || nl || '— نظام المتابعة الآلي',
+        './?tab=clean', 'high', true) then n := n + 1; end if;
       if late >= 120 then
-        perform alert_send('clean2:' || b.id || ':' || sh || ':' || d, 'clean_late2', null, u || alert_owners(), 'تقصير: ' || lbl || ' متأخرة ساعتين',
-          'فرع ' || b.name || '،' || nl || 'مضى أكثر من ساعتين على موعد ' || lbl || ' (' || alert_t12(due) || ') ولم تُسجَّل حتى الآن.' || nl ||
-          'يُعد هذا تقصيراً رسمياً، وتم إبلاغ الإدارة.' || nl || '— نظام المتابعة الآلي', './?tab=clean', 'urgent', false);
+        perform alert_send('clean2:' || b.id || ':' || sh || ':' || d, 'clean_late2', null, u || alert_owners(), 'إشعار تقصير رسمي: ' || lbl || ' متأخرة أكثر من ساعتين',
+          'السيد/ مدير فرع ' || b.name || '،' || nl || nl ||
+          'مضى أكثر من ساعتين على موعد ' || lbl || ' (' || alert_t12(due) || ') ولم تُسجَّل حتى الآن رغم التنبيه السابق.' || nl || nl ||
+          'تم تسجيل ذلك تقصيراً في سجل أداء الفرع ورفعه للإدارة. نذكّر بأن الالتزام بالنظافة معيار أساسي في تقييم إدارة الفرع، واستمرار التقصير يستوجب اتخاذ الإجراء الإداري اللازم.' || nl || nl ||
+          'المطلوب تسجيل القائمة فوراً.' || nl || '— نظام المتابعة الآلي', './?tab=clean', 'urgent', true);
       end if;
     end loop;
   end loop;
