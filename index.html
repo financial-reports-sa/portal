@@ -867,7 +867,10 @@ html[dir=ltr] .sh-t{direction:ltr}html[dir=ltr] .sh-t i{display:inline-block;tra
 .mg-bf button{position:relative}.mg-bf small{opacity:.6;margin-inline-start:3px}.mg-bf i{font-style:normal;background:#D0453A;color:#fff;border-radius:99px;font-size:9.5px;padding:0 6px;margin-inline-start:4px}.mg-cc{font-size:10px;color:#5B6B63;background:#EEF1EA;border-radius:99px;padding:2px 8px}.mg-br{font-size:10px;font-weight:600;color:var(--b);background:color-mix(in srgb,var(--b) 13%,transparent);border-radius:99px;padding:2px 8px}
 .pm-wrap{border-radius:16px!important;box-shadow:0 2px 10px rgba(20,40,30,.05)}
 .pm th,.pm td{border-bottom:1px solid #E6E9E2!important;border-inline-start:1px solid #EEF0EB!important}
-.pm tbody tr:nth-child(even) td{background:#FBFCFA}.pm tbody tr:hover td,.pm tbody tr:hover .pm-u{background:#F2F7F3}
+.pm tr.pm-op th,.pm tr.pm-op td:not(.pm-bb){border-bottom:1px dashed #E3E7DF!important}.pm tr.pm-ro th,.pm tr.pm-ro td,.pm td.pm-bb{border-bottom:2px solid #D4DCD3!important}
+.pm tr.pm-ro td{background:#FCFAF4}.pm tr.pm-ro .pm-u{background:#FCFAF4!important}.pm-u em{display:block;font-style:normal;font-size:8.5px;font-weight:600;color:#5B7A68;margin-top:1px}.pm tbody .pm-u{padding:5px 10px!important;line-height:1.35}.pm-ro .pm-u em{color:#9A7B36;margin:0}.pm td.pm-bb{vertical-align:middle}
+.pm-c.ro[aria-pressed="true"]{background:#F6EBCF!important;border-color:#D2B46A!important}.pm-c.ro[aria-pressed="true"]::after{color:#8A6A1F!important}.pm-c.ro{width:20px!important;height:20px!important;border-radius:6px!important}
+.pm-lg{display:flex;gap:14px;flex-wrap:wrap;font-size:10.5px;color:#3F4D45;margin:2px 2px 6px}.pm-lg span{display:inline-flex;align-items:center;gap:6px}.pm-lg i.pm-c{margin:0;width:16px!important;height:16px!important;cursor:default;pointer-events:none}.pm-lg i.pm-c::after{font-size:10px!important}.pm tbody tr:hover td,.pm tbody tr:hover .pm-u{background:#F2F7F3}
 .pm .g1{background:#F8FAF6}.pm thead .g0{background:#EEF4F0}.pm thead .g1{background:#F6F2E6}
 .pm-g{color:#2F4A3B;font-size:10.5px!important;border-inline-start:2px solid #D4DCD3!important}
 .pm-h span{color:#3F4D45;font-weight:600}
@@ -1013,7 +1016,7 @@ async function applyRole(uid,rk){ const R=PERM_ROLES.find(r=>r.k===rk); const wa
   if(add.length){ const r=await T('user_sections').insert(add.map(x=>({user_id:uid,section:x}))); if(r.error) return r.error; }
   if(st._uroOk){ const r=await T('user_ro').delete().eq('user_id',uid).neq('section',''); if(r.error) return r.error; }
   return null; }
-const APP_VER='202610200115b';
+const APP_VER='202610200800';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.clean='النظافة (قوائم الفتح والإغلاق)'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -5121,16 +5124,17 @@ V.users=async()=>{
     <details class="card rq-help"><summary>وش يشمل كل دور؟</summary>${PERM_ROLES.map(r=>`<div class="rq-hr"><b>${r.i} ${esc(r.n)}</b><div class="rqs">${r.s.map(x=>`<span>${esc((SEC_NAME[x]||x).replace(/\s*\(.*\)$/,''))}</span>`).join('')}</div></div>`).join('')}<div class="muted" style="font-size:10.5px">تبي تعدّل دور لموظف واحد بعد ما تطبّقه؟ من «الجدول» أو «حسب الموظف» — ويتحول لـ «مخصص».</div></details>`;
     return h; }
   if(st.uMode==='grid'){ const U=P.data.filter(u=>u.role==='user'&&canManage(u)&&(!q||((u.full_name||'')+' '+u.username).toLowerCase().includes(q)));
-    const pm=st.pmMode||'ops'; const isV=x=>/_view$/.test(x);
+    const isV=x=>/_view$/.test(x);
     const cols=[{g:'الفروع',c:st.branches.map(b=>['b:'+b.id,b.name])}].concat(PERM_GROUPS.map(g=>({g:g.name,c:g.secs.filter(x=>!isV(x)).map(x=>['s:'+x,(SEC_NAME[x]||x).replace(/^👁️\s*/,'').replace(/\s*\(قراءة فقط\)/,'')])})).filter(g=>g.c.length));
-    h+=`<div class="pm-sw">${[['ops','⚙️ صلاحيات العمليات'],['ro','👁️ القراءة فقط']].map(([k,n])=>`<button data-pmm="${k}" aria-pressed="${pm===k}">${n}</button>`).join('')}</div>`;
     const hs=(u,id)=>us.some(x=>x.user_id===u.id&&x.section===id), hro=(u,id)=>st._uro.some(x=>x.user_id===u.id&&x.section===id), OB=['rets','purch','maint'];
-    const has=(u,k)=>{const [a,id]=k.split(':'); if(a==='b') return ub.some(x=>x.user_id===u.id&&x.branch_id===id);
+    const has=(u,k,pm)=>{const [a,id]=k.split(':'); if(a==='b') return ub.some(x=>x.user_id===u.id&&x.branch_id===id);
       if(pm==='ro') return OB.includes(id)?hs(u,id+'_view'):(hs(u,id)&&hro(u,id)); return hs(u,id)&&!hro(u,id);};
-    h+=`<div class="muted" style="font-size:10.5px;margin:2px 2px 8px">الموظفين في العمود الأول والصلاحيات في الأعمدة — اضغط المربع للتفعيل أو الإلغاء، ينحفظ على طول. <b>اضغط اسم الصلاحية فوق</b> لتفعيلها أو إلغائها لكل الموظفين مرة وحدة.</div>
+    const cell=(u,k,gi,pm)=>k.startsWith('b:')?(pm==='ops'?`<td class="g${gi%2} pm-bb" rowspan="2"><button class="pm-c" data-tb="${u.id}" data-k="${k}" aria-pressed="${has(u,k)}" aria-label="${esc(k)}"></button></td>`:''):`<td class="g${gi%2}"><button class="pm-c ${pm}" data-pmc="${u.id}" data-k="${k}" data-m="${pm}" aria-pressed="${has(u,k,pm)}" aria-label="${esc(k)}"></button></td>`;
+    h+=`<div class="pm-lg"><span><i class="pm-c ops" aria-pressed="true"></i>⚙️ عمليات: يضيف ويعدّل</span><span><i class="pm-c ro" aria-pressed="true"></i>👁️ قراءة: يشوف بس</span></div>
+    <div class="muted" style="font-size:10.5px;margin:2px 2px 8px">كل موظف له سطرين تحت بعض: <b>⚙️ العمليات</b> و<b>👁️ القراءة</b>. اضغط المربع للتفعيل أو الإلغاء، ينحفظ على طول. تفعيل واحد منهم يلغي الثاني لنفس الشاشة. <b>اضغط اسم الصلاحية فوق</b> لتفعيل العمليات لكل الموظفين.</div>
     <div class="pm-wrap"><table class="pm"><thead><tr><th class="pm-u" rowspan="2">الموظف</th>${cols.map((g,gi)=>`<th class="pm-g g${gi%2}" colspan="${g.c.length}">${esc(g.g)}</th>`).join('')}</tr>
-      <tr>${cols.map((g,gi)=>g.c.map(([k,n])=>`<th class="pm-h g${gi%2}"><button class="pm-hb" data-pmcol="${k}" data-m="${pm}" title="تفعيل أو إلغاء للكل"><span>${esc(n)}</span></button></th>`).join('')).join('')}</tr></thead>
-      <tbody>${U.map(u=>`<tr><th class="pm-u">${esc(u.full_name||u.username)}<small>${esc(u.username)}</small></th>${cols.map((g,gi)=>g.c.map(([k])=>`<td class="g${gi%2}"><button class="pm-c" ${k.startsWith('b:')?`data-tb="${u.id}" data-k="${k}"`:`data-pmc="${u.id}" data-k="${k}" data-m="${pm}"`} aria-pressed="${has(u,k)}" aria-label="${esc(k)}"></button></td>`).join('')).join('')}</tr>`).join('')||`<tr><td colspan="99" class="muted">ما فيه مستخدمين</td></tr>`}</tbody></table></div>
+      <tr>${cols.map((g,gi)=>g.c.map(([k,n])=>`<th class="pm-h g${gi%2}"><button class="pm-hb" data-pmcol="${k}" data-m="ops" title="تفعيل أو إلغاء للكل"><span>${esc(n)}</span></button></th>`).join('')).join('')}</tr></thead>
+      <tbody>${U.map(u=>`<tr class="pm-op"><th class="pm-u">${esc(u.full_name||u.username)}<small>${esc(u.username)}</small><em>⚙️ عمليات</em></th>${cols.map((g,gi)=>g.c.map(([k])=>cell(u,k,gi,'ops')).join('')).join('')}</tr><tr class="pm-ro"><th class="pm-u"><em>👁️ قراءة فقط</em></th>${cols.map((g,gi)=>g.c.map(([k])=>cell(u,k,gi,'ro')).join('')).join('')}</tr>`).join('')||`<tr><td colspan="99" class="muted">ما فيه مستخدمين</td></tr>`}</tbody></table></div>
     <div class="muted" style="font-size:10.5px;margin-top:8px">الآدمن والمالك يشوفون كل شيء ومو ظاهرين في الجدول. لتعديل الاسم أو كلمة المرور افتح «حسب الموظف».</div>`;
     return h; }
   if(st.uMode==='sec'){ const U=P.data.filter(u=>u.role==='user'&&canManage(u)); const K=st.uSec||'s:'+PERM_GROUPS[0].secs[0]; const [kk,kid]=K.split(':');
@@ -5174,13 +5178,13 @@ document.addEventListener('click',async e=>{ const c=e.target.closest('[data-pmc
   if(!ro){ if(on){ await run(()=>addS(sec)); if(OB.includes(sec)) await run(()=>delS(sec+'_view')); else if(st._uroOk) await run(delR); } else { await run(()=>delS(sec)); if(!OB.includes(sec)&&st._uroOk) await run(delR); } }
   else if(OB.includes(sec)){ if(on){ await run(()=>addS(sec+'_view')); await run(()=>delS(sec)); } else await run(()=>delS(sec+'_view')); }
   else { if(on){ await run(()=>addS(sec)); await run(addR); } else { await run(delR); await run(()=>delS(sec)); } }
-  c.disabled=false; if(r.error){ toast('تعذّر الحفظ: '+r.error.message); return; } c.setAttribute('aria-pressed',String(on)); toast('تم الحفظ ✓'); });
+  c.disabled=false; if(r.error){ toast('تعذّر الحفظ: '+r.error.message); return; } c.setAttribute('aria-pressed',String(on)); if(on){ const o=document.querySelector(`.pm [data-pmc="${uid}"][data-k="${c.dataset.k}"][data-m="${ro?'ops':'ro'}"]`); if(o) o.setAttribute('aria-pressed','false'); } toast('تم الحفظ ✓'); });
 document.addEventListener('change',async e=>{ const r=e.target.closest('[data-rqrole]'); if(r){ if(r.value==='custom') return; r.disabled=true; const er=await applyRole(r.dataset.rqrole,r.value); r.disabled=false; if(er){ toast('تعذّر الحفظ: '+er.message); return; } toast(r.value?'تم تطبيق الدور ✓':'تم إلغاء الصلاحيات'); uRender(); return; }
   const c=e.target.closest('[data-rqsel]'); if(c){ st._uSel=st._uSel||new Set(); c.checked?st._uSel.add(c.dataset.rqsel):st._uSel.delete(c.dataset.rqsel); uRender(); } });
 document.addEventListener('click',async e=>{ if(e.target.closest('[data-rqclr]')){ st._uSel=new Set(); render(); return; }
   const b=e.target.closest('[data-rqbulk]'); if(b){ const rk=($('#rqRole')||{}).value; if(!rk){ toast('اختر الدور أول'); return; } const ids=[...(st._uSel||[])]; if(!ids.length) return; const R=PERM_ROLES.find(r=>r.k===rk);
     if(!confirm(`تطبيق دور «${R.n}» على ${ids.length} موظف؟ (صلاحياتهم الحالية تنستبدل)`)) return; b.disabled=true; let bad=0; for(const id of ids){ if(await applyRole(id,rk)) bad++; } b.disabled=false; st._uSel=new Set(); toast(bad?`تم مع ${bad} خطأ`:`تم تطبيق «${R.n}» على ${ids.length} ✓`); render(); return; }
-  const h=e.target.closest('[data-pmcol]'); if(h){ const [a,id]=h.dataset.pmcol.split(':'); const ro=h.dataset.m==='ro'; const rows=[...document.querySelectorAll(`.pm [data-k="${h.dataset.pmcol}"]`)]; if(!rows.length) return;
+  const h=e.target.closest('[data-pmcol]'); if(h){ const [a,id]=h.dataset.pmcol.split(':'); const ro=h.dataset.m==='ro'; const rows=[...document.querySelectorAll(`.pm [data-k="${h.dataset.pmcol}"]:not([data-m="ro"])`)]; if(!rows.length) return;
     const allOn=rows.every(x=>x.getAttribute('aria-pressed')==='true'); const nm=h.textContent.trim();
     if(!confirm(`${allOn?'إلغاء':'تفعيل'} «${nm}»${ro&&a!=='b'?' (قراءة فقط)':''} لكل الموظفين الظاهرين (${rows.length})؟`)) return;
     const tg=rows.filter(x=>(x.getAttribute('aria-pressed')==='true')===allOn);
