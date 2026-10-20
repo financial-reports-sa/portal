@@ -22,6 +22,8 @@ param(
   [switch]$FullTb,          # trial balance from "0000-00" (opening + all 2026) instead of the current month
   [switch]$DelivOnly,       # run only the delivery-drivers sync
   [switch]$FullDeliv,       # delivery bills from 2026-01-01 instead of the last 3 days
+  [switch]$CashOnly,        # run only the cashier-sales sync
+  [switch]$FullCash,        # cashier sales from 2026-01-01 instead of the last 3 days
   [string]$SecretsDir = '',
   [string]$SqlServer = 'GROWTHSERVER,1433',
   [string]$SqlDb = 'RMV3',
@@ -477,6 +479,56 @@ function Sync-Deliv($auth, [bool]$Send, [datetime]$From) {
   }
 }
 
+# Cashier sales per cashier (SalMan) per branch per day, from $From on. SELECT only, NOLOCK.
+$CashSql = @"
+SELECT h.BranchId, h.SalMan, MAX(COALESCE(NULLIF(LTRIM(RTRIM(sm.Name)),''), NULLIF(LTRIM(RTRIM(u.EmpName)),''), u.UserName)) AS Cashier,
+       CONVERT(varchar(10), h.Dt, 120) AS Bdate,
+       SUM(CASE WHEN h.BillType <> 6 THEN 1 ELSE 0 END) AS Bills,
+       SUM(CASE WHEN h.BillType <> 6 AND h.PayType <> 4 THEN h.Net ELSE 0 END) AS Sales,
+       SUM(CASE WHEN h.BillType <> 6 AND h.PayType = 4 THEN h.Net ELSE 0 END) AS Credit,
+       SUM(CASE WHEN h.BillType <> 6 THEN ISNULL(h.VisaAmt,0) + ISNULL(h.MasterAmt,0) + ISNULL(h.SpamAmt,0) ELSE 0 END) AS Card,
+       -SUM(CASE WHEN h.BillType = 6 THEN h.Net ELSE 0 END) AS Refunds,
+       SUM(CASE WHEN h.BillType = 6 THEN 1 ELSE 0 END) AS RefCnt,
+       SUM(CASE WHEN h.BillType <> 6 THEN ISNULL(h.DiscAmt,0) ELSE 0 END) AS Disc,
+       MIN(h.Dt) AS FirstAt, MAX(h.Dt) AS LastAt
+FROM KitchPOSH h WITH (NOLOCK)
+LEFT JOIN SalesMenTble sm WITH (NOLOCK) ON sm.Id = h.SalMan
+LEFT JOIN Users u WITH (NOLOCK) ON u.UserId = h.UserId
+WHERE h.Dt >= @from AND h.BranchId IN (2,3,5)
+GROUP BY h.BranchId, h.SalMan, CONVERT(varchar(10), h.Dt, 120)
+"@
+
+function Sync-Cash($auth, [bool]$Send, [datetime]$From) {
+  $c = Open-Growth
+  $k = $c.CreateCommand(); $k.CommandText = $CashSql; $k.CommandTimeout = 120
+  [void]$k.Parameters.AddWithValue('@from', $From)
+  $r = $k.ExecuteReader()
+  $list = New-Object System.Collections.Generic.List[object]
+  while ($r.Read()) {
+    $sales = N $r['Sales']; $card = N $r['Card']; $ref = N $r['Refunds']
+    $list.Add([ordered]@{
+      branch = $BranchMap[[int]$r['BranchId']]; bdate = [string]$r['Bdate']; salman = [int](N $r['SalMan'])
+      cashier = $(if ($r['Cashier'] -is [DBNull]) { '' } else { ([string]$r['Cashier']).Trim() })
+      bills = [int](N $r['Bills']); sales = [math]::Round($sales, 2); credit = [math]::Round((N $r['Credit']), 2)
+      card = [math]::Round($card, 2); cash = [math]::Round($sales - $card - $ref, 2); refunds = [math]::Round($ref, 2)
+      ref_cnt = [int](N $r['RefCnt']); disc = [math]::Round((N $r['Disc']), 2)
+      first_at = ([datetime]$r['FirstAt']).ToString("yyyy-MM-dd'T'HH:mm:ss") + '+03:00'
+      last_at  = ([datetime]$r['LastAt']).ToString("yyyy-MM-dd'T'HH:mm:ss") + '+03:00'
+    })
+  }
+  $r.Close(); $c.Close()
+  $pFrom = $From.ToString('yyyy-MM-dd')
+  $batches = [math]::Max(1, [int][math]::Ceiling($list.Count / 8000.0))
+  Log ("cash read: {0} cashier-days from {1} ({2} batch(es))" -f $list.Count, $pFrom, $batches)
+  if (-not $Send) { Log 'cash: dry-run, not sent'; return }
+  for ($i = 0; $i -lt $batches; $i++) {
+    $chunk = $list.GetRange($i * 8000, [math]::Min(8000, $list.Count - $i * 8000))
+    $res = Post-Rpc $auth 'growth_ingest_cashiers' @{ p_rows = $chunk.ToArray(); p_from = $pFrom; p_reset = ($i -eq 0) }
+    if ($res.ok -ne $true) { throw ("cash ingest not ok (batch {0}): {1}" -f ($i + 1), ($res | ConvertTo-Json -Compress)) }
+    Log ("cash ingest ok, batch {0}/{1}, rows={2}" -f ($i + 1), $batches, $res.rows)
+  }
+}
+
 # Ledger lines from $From on, pages of 8000 (first page p_reset=true, the rest false, same p_from)
 function Sync-Gl($auth, [bool]$Send, [datetime]$From) {
   $c = Open-Growth
@@ -578,6 +630,9 @@ try {
   $catsFrom = if ($fullCats) { [datetime]'2026-01-01' } else { Get-Date -Day 1 -Hour 0 -Minute 0 -Second 0 -Millisecond 0 }
   $fullDeliv = $FullDeliv -or ($now.Hour -eq 3 -and $now.Minute -lt 5)
   $delivFrom = if ($fullDeliv) { [datetime]'2026-01-01' } else { $now.Date.AddDays(-3) }
+  $fullCash = $FullCash -or ($now.Hour -eq 3 -and $now.Minute -lt 5)
+  $cashFrom = if ($fullCash) { [datetime]'2026-01-01' } else { $now.Date.AddDays(-3) }
+  if ($CashOnly) { $a = if ($DryRun) { $null } else { Get-Login }; Sync-Cash $a (-not $DryRun) $cashFrom; return }
   if ($DelivOnly) { $a = if ($DryRun) { $null } else { Get-Login }; Sync-Deliv $a (-not $DryRun) $delivFrom; return }
   if ($CatsOnly) { $a = if ($DryRun) { $null } else { Get-Login }; Sync-Cats $a (-not $DryRun) $catsFrom; return }
   if ($ChannelsOnly) { $a = if ($DryRun) { $null } else { Get-Login }; Sync-Channels $a (-not $DryRun) $chFrom; return }
@@ -747,6 +802,7 @@ GROUP BY d.BranchId, d.SalMan, sm.Name, CONVERT(varchar(10), d.Dt, 120)
     Sync-Channels $null $false $chFrom
     Sync-Cats $null $false $catsFrom
     Sync-Deliv $null $false $delivFrom
+    Sync-Cash $null $false $cashFrom
     return
   }
 
@@ -790,6 +846,9 @@ GROUP BY d.BranchId, d.SalMan, sm.Name, CONVERT(varchar(10), d.Dt, 120)
 
   # ---- 11) Delivery drivers: last 3 days every run; from 2026-01-01 once a day at 03:00 ----
   Sync-Deliv $auth $true $delivFrom
+
+  # ---- 12) Cashier sales: last 3 days every run; from 2026-01-01 once a day at 03:00 ----
+  Sync-Cash $auth $true $cashFrom
 }
 catch {
   $msg = $_.Exception.Message
