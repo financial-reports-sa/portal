@@ -2595,16 +2595,17 @@ V.msgs=async()=>{
       <div class="mg-h">${mgBadge(m)}${m.auto?'<span class="mg-auto">🤖 تلقائي</span>':''}${m.cc?'<span class="mg-cc">📋 للاطلاع</span>':''}${brsOf(m).map(b=>`<span class="mg-br" style="--b:${brById(b).color||'#888'}">${esc(brById(b).name)}</span>`).join('')}<span class="mg-t">${mgAgo(m.at)}</span></div>
       <b class="mg-ttl">${esc(m.title)}</b>${m.body?`<div class="mg-sn">${esc(m.body)}</div>`:''}
       <div class="mg-f"><span>من ${esc(m.from||'')}</span>${m.cc?`<span>إلى: ${esc(m.target&&m.target.scope?mgTargetTxt(m.target):(m.to||''))}</span>`:''}${m.files?`<span>📎 ${m.files}</span>`:''}${m.nrep?`<span>💬 ${m.nrep}</span>`:''}${m.ack?(m.acked?'<span class="ok">✓ أقررت</span>':'<span class="need">مطلوب إقرارك</span>'):''}</div></button>`;};
-  const brsOf=m=>{const t=m.target||{}; return t.scope==='branches'&&(t.branches||[]).length?t.branches:[];};
+  const brsOf=m=>{const t=m.target||{}; if(t.scope==='branches'&&(t.branches||[]).length) return t.branches; return Array.isArray(m.sbr)?m.sbr:[];};
   if(tab==='in'){
+    const bf=fb; const inB=(m,b)=>b==='all'||(b==='gen'?!brsOf(m).length:brsOf(m).includes(b));
+    const R=IN.filter(m=>inB(m,bf)&&(kf==='all'||m.kind===kf));
+    const fb=st.mgB||'all'; const fIn=x=>fb==='all'||(fb==='gen'?!(x.br||[]).length:(x.br||[]).includes(fb));
+    const brChips=()=>{ const bf=st.mgB||'all'; const inB=(m,b)=>b==='all'||(b==='gen'?!brsOf(m).length:brsOf(m).includes(b)); return `<div class="chips sc mg-bf">${[['all','الكل']].concat(st.branches.map(b=>[b.id,b.name])).concat([['gen','عام']]).map(([k,n])=>{const c=IN.filter(m=>inB(m,k)).length, nn=IN.filter(m=>inB(m,k)&&mgPend(m)).length; return c||k==='all'||k===bf?`<button data-mgb="${k}" aria-pressed="${bf===k}">${esc(n)} <small>${c}</small>${nn?`<i>${nn}</i>`:''}</button>`:'';}).join('')}</div>`; };
     let OV=[]; if(isAdmin()){ try{ const r=await sb.rpc('msg_sent'); OV=((!r.error&&r.data)||[]).filter(m=>!m.mine&&!(m.auto||(m.target&&m.target.auto))&&!L.some(x=>x.id===m.id)).map(m=>({...m,cc:true,read:true,acked:true,ack:false})); }catch(e){} }
     const IN=L.filter(m=>!m.mine).concat(OV).sort((a,b)=>new Date(b.at)-new Date(a.at));
-    const bf=st.mgB||'all'; const bIds=st.branches.map(b=>b.id);
-    const inB=(m,b)=>b==='all'||(b==='gen'?!brsOf(m).length:brsOf(m).includes(b));
-    h+=`<div class="chips sc mg-bf">${[['all','الكل']].concat(st.branches.map(b=>[b.id,b.name])).concat([['gen','عام']]).map(([k,n])=>{const c=IN.filter(m=>inB(m,k)).length, nn=IN.filter(m=>inB(m,k)&&mgPend(m)).length; return c||k==='all'?`<button data-mgb="${k}" aria-pressed="${bf===k}">${esc(n)} <small>${c}</small>${nn?`<i>${nn}</i>`:''}</button>`:'';}).join('')}</div>`;
-    const R=IN.filter(m=>inB(m,bf)&&(kf==='all'||m.kind===kf));
-    if(canOut){ try{ const f=await sb.rpc('msg_reply_feed',{p_days:14}); const F=(!f.error&&f.data)||[];
-      if(F.length) h+=`<div class="card mg-rf"><h3>💬 ردود على مراسلاتك <small>آخر 14 يوم</small></h3>${F.slice(0,st.mgRfAll?30:3).map(x=>`<button class="mg-rfi" data-mgo="${x.mid}"><div class="mg-rfh"><b>${esc(x.by)}</b><span class="muted">${mgAgo(x.at)}</span></div><div class="mg-rfb">${esc(x.body)}</div><div class="muted mg-rft">على: ${esc(x.title)}</div></button>`).join('')}${F.length>3&&!st.mgRfAll?`<button class="btn ghost sm" data-mgrfall="1" style="margin-top:6px">عرض كل الردود (${F.length})</button>`:''}</div>`; }catch(e){} }
+    h+=brChips();
+    if(canOut){ try{ const f=await sb.rpc('msg_reply_feed',{p_days:14}); const F=((!f.error&&f.data)||[]).filter(fIn);
+      if(F.length) h+=`<div class="card mg-rf"><h3>💬 ردود على مراسلاتك <small>آخر 14 يوم${fb!=='all'?' · '+esc(fb==='gen'?'عام':brById(fb).name):''}</small></h3>${F.slice(0,st.mgRfAll?30:3).map(x=>`<button class="mg-rfi" data-mgo="${x.mid}"><div class="mg-rfh"><b>${esc(x.by)}</b>${(x.br||[]).map(b=>`<span class="mg-br" style="--b:${brById(b).color||'#888'}">${esc(brById(b).name)}</span>`).join('')}<span class="muted" style="margin-inline-start:auto">${mgAgo(x.at)}</span></div><div class="mg-rfb">${esc(x.body)}</div><div class="muted mg-rft">على: ${esc(x.title)}</div></button>`).join('')}${F.length>3&&!st.mgRfAll?`<button class="btn ghost sm" data-mgrfall="1" style="margin-top:6px">عرض كل الردود (${F.length})</button>`:''}</div>`; }catch(e){} }
     h+=kchips;
     if(!R.length) return h+`<div class="card empty">📭 ما فيه مراسلات${kf!=='all'?' من هذا النوع':''}</div>`;
     const N=R.filter(mgPend), O=R.filter(m=>!mgPend(m));
