@@ -497,6 +497,22 @@ LEFT JOIN Users u WITH (NOLOCK) ON u.UserId = h.UserId
 WHERE h.Dt >= @from AND h.BranchId IN (2,3,5)
 GROUP BY h.BranchId, h.SalMan, CONVERT(varchar(10), h.Dt, 120)
 "@
+# Same cashier-days split by sale type, using the "مفصل المبيعات حسب النوع" classification (credit first, then SalType name, then order type)
+$CashChSql = @"
+SELECT h.BranchId, h.SalMan, CONVERT(varchar(10), h.Dt, 120) AS Bdate,
+       CASE WHEN h.PayType = 4 THEN N'اجل عملاء'
+            WHEN h.SalType <> 0 THEN COALESCE(st.AraName, N'نوع ' + CAST(h.SalType AS varchar(10)))
+            ELSE COALESCE(it.Name, N'نوع طلب ' + CAST(h.InvType AS varchar(10))) END AS ChName,
+       CASE WHEN h.PayType <> 4 AND h.SalType <> 0 THEN 1 ELSE 0 END AS IsType,
+       SUM(h.Net) AS Net
+FROM KitchPOSH h WITH (NOLOCK)
+LEFT JOIN KitchSalTypes st WITH (NOLOCK) ON st.Id = h.SalType
+LEFT JOIN KitchInvTypes it WITH (NOLOCK) ON it.InvType = h.InvType
+WHERE h.Dt >= @from AND h.BranchId IN (2,3,5) AND h.BillType <> 6
+GROUP BY h.BranchId, h.SalMan, CONVERT(varchar(10), h.Dt, 120),
+         CASE WHEN h.PayType = 4 THEN N'اجل عملاء' WHEN h.SalType <> 0 THEN COALESCE(st.AraName, N'نوع ' + CAST(h.SalType AS varchar(10))) ELSE COALESCE(it.Name, N'نوع طلب ' + CAST(h.InvType AS varchar(10))) END,
+         CASE WHEN h.PayType <> 4 AND h.SalType <> 0 THEN 1 ELSE 0 END
+"@
 
 function Sync-Cash($auth, [bool]$Send, [datetime]$From) {
   $c = Open-Growth
@@ -504,19 +520,36 @@ function Sync-Cash($auth, [bool]$Send, [datetime]$From) {
   [void]$k.Parameters.AddWithValue('@from', $From)
   $r = $k.ExecuteReader()
   $list = New-Object System.Collections.Generic.List[object]
+  $idx = @{}
   while ($r.Read()) {
-    $sales = N $r['Sales']; $card = N $r['Card']; $ref = N $r['Refunds']
-    $list.Add([ordered]@{
+    $row = [ordered]@{
       branch = $BranchMap[[int]$r['BranchId']]; bdate = [string]$r['Bdate']; salman = [int](N $r['SalMan'])
       cashier = $(if ($r['Cashier'] -is [DBNull]) { '' } else { ([string]$r['Cashier']).Trim() })
-      bills = [int](N $r['Bills']); sales = [math]::Round($sales, 2); credit = [math]::Round((N $r['Credit']), 2)
-      card = [math]::Round($card, 2); cash = [math]::Round($sales - $card - $ref, 2); refunds = [math]::Round($ref, 2)
+      bills = [int](N $r['Bills']); sales = N $r['Sales']; credit = [math]::Round((N $r['Credit']), 2)
+      card = N $r['Card']; cash = 0.0; apps = 0.0; refunds = N $r['Refunds']
       ref_cnt = [int](N $r['RefCnt']); disc = [math]::Round((N $r['Disc']), 2)
       first_at = ([datetime]$r['FirstAt']).ToString("yyyy-MM-dd'T'HH:mm:ss") + '+03:00'
       last_at  = ([datetime]$r['LastAt']).ToString("yyyy-MM-dd'T'HH:mm:ss") + '+03:00'
-    })
+      channels = [ordered]@{}
+    }
+    $list.Add($row); $idx[('{0}|{1}|{2}' -f $row.branch, $row.salman, $row.bdate)] = $row
   }
-  $r.Close(); $c.Close()
+  $r.Close()
+  $k2 = $c.CreateCommand(); $k2.CommandText = $CashChSql; $k2.CommandTimeout = 120
+  [void]$k2.Parameters.AddWithValue('@from', $From)
+  $r2 = $k2.ExecuteReader()
+  while ($r2.Read()) {
+    $row = $idx[('{0}|{1}|{2}' -f $BranchMap[[int]$r2['BranchId']], [int](N $r2['SalMan']), [string]$r2['Bdate'])]
+    if (-not $row) { continue }
+    $nm = ([string]$r2['ChName']).Trim(); $v = N $r2['Net']
+    $row.channels[$nm] = [math]::Round([double]$row.channels[$nm] + $v, 2)
+    if ([int]$r2['IsType'] -eq 1 -and $nm -like '*تطبيق*') { $row.apps += $v }
+  }
+  $r2.Close(); $c.Close()
+  foreach ($row in $list) {
+    $row.cash = [math]::Round($row.sales - $row.card - $row.apps - $row.refunds, 2)
+    foreach ($f in 'sales','card','apps','refunds') { $row[$f] = [math]::Round($row[$f], 2) }
+  }
   $pFrom = $From.ToString('yyyy-MM-dd')
   $batches = [math]::Max(1, [int][math]::Ceiling($list.Count / 8000.0))
   Log ("cash read: {0} cashier-days from {1} ({2} batch(es))" -f $list.Count, $pFrom, $batches)

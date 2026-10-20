@@ -28,6 +28,8 @@ create table if not exists public.growth_cashier_daily (
   synced_at timestamptz not null default now(),
   primary key (branch, bdate, salman)
 );
+alter table public.growth_cashier_daily add column if not exists apps numeric(14,2) not null default 0;
+alter table public.growth_cashier_daily add column if not exists channels jsonb not null default '{}';
 create index if not exists growth_cashier_daily_day_idx on public.growth_cashier_daily (bdate, branch);
 alter table public.growth_cashier_daily enable row level security;
 revoke all on public.growth_cashier_daily from anon, authenticated;
@@ -45,16 +47,17 @@ begin
   if p_reset and p_from is not null then
     delete from growth_cashier_daily where bdate >= p_from;
   end if;
-  insert into growth_cashier_daily (branch, bdate, salman, cashier, bills, sales, credit, card, cash, refunds, ref_cnt, disc, first_at, last_at, synced_at)
+  insert into growth_cashier_daily (branch, bdate, salman, cashier, bills, sales, credit, card, cash, refunds, ref_cnt, disc, first_at, last_at, apps, channels, synced_at)
   select x->>'branch', (x->>'bdate')::date, coalesce(nullif(x->>'salman', '')::int, 0), left(coalesce(x->>'cashier', ''), 80),
          coalesce((x->>'bills')::int, 0), coalesce((x->>'sales')::numeric, 0), coalesce((x->>'credit')::numeric, 0), coalesce((x->>'card')::numeric, 0),
          coalesce((x->>'cash')::numeric, 0), coalesce((x->>'refunds')::numeric, 0), coalesce((x->>'ref_cnt')::int, 0), coalesce((x->>'disc')::numeric, 0),
-         nullif(x->>'first_at', '')::timestamptz, nullif(x->>'last_at', '')::timestamptz, now()
+         nullif(x->>'first_at', '')::timestamptz, nullif(x->>'last_at', '')::timestamptz,
+         coalesce((x->>'apps')::numeric, 0), case when jsonb_typeof(x->'channels') = 'object' then x->'channels' else '{}'::jsonb end, now()
   from jsonb_array_elements(coalesce(p_rows, '[]')) x
   where coalesce(x->>'branch', '') <> '' and x->>'bdate' is not null
   on conflict (branch, bdate, salman) do update set cashier = excluded.cashier, bills = excluded.bills, sales = excluded.sales, credit = excluded.credit,
     card = excluded.card, cash = excluded.cash, refunds = excluded.refunds, ref_cnt = excluded.ref_cnt, disc = excluded.disc,
-    first_at = excluded.first_at, last_at = excluded.last_at, synced_at = now();
+    first_at = excluded.first_at, last_at = excluded.last_at, apps = excluded.apps, channels = excluded.channels, synced_at = now();
   get diagnostics n = row_count;
   insert into growth_sync_state (id, last_run, rows_in, info) values ('cashiers', now(), n, jsonb_build_object('from', p_from))
   on conflict (id) do update set last_run = now(), rows_in = case when p_reset then excluded.rows_in else growth_sync_state.rows_in + excluded.rows_in end, info = excluded.info;
@@ -76,17 +79,23 @@ begin
   return jsonb_build_object(
     'last_run', (select last_run from growth_sync_state where id = 'cashiers'),
     'from', p_from, 'to', p_to,
-    'cashiers', coalesce((select jsonb_agg(jsonb_build_object('id', salman, 'n', cashier, 'br', branch, 'd', d, 'b', b, 's', s, 'cr', cr, 'cd', cd, 'ca', ca, 'r', r, 'rc', rc, 'ds', ds) order by s + cr - r desc) from (
+    'cashiers', coalesce((select jsonb_agg(jsonb_build_object('id', salman, 'n', cashier, 'br', branch, 'd', d, 'b', b, 's', s, 'cr', cr, 'cd', cd, 'ca', ca, 'r', r, 'rc', rc, 'ds', ds, 'ap', ap,
+        'ch', (select coalesce(jsonb_object_agg(k, v), '{}'::jsonb) from (select e.key k, round(sum(e.value::numeric), 2) v from growth_cashier_daily g2, jsonb_each_text(g2.channels) e
+               where g2.branch = t.branch and g2.salman = t.salman and g2.bdate between p_from and p_to group by e.key) q)) order by s + cr - r desc) from (
         select branch, salman, max(cashier) cashier, count(distinct bdate) d, sum(bills) b, sum(sales) s, sum(credit) cr, sum(card) cd, sum(cash) ca,
-               sum(refunds) r, sum(ref_cnt) rc, sum(disc) ds
+               sum(refunds) r, sum(ref_cnt) rc, sum(disc) ds, sum(apps) ap
         from growth_cashier_daily where bdate between p_from and p_to and (bs is null or branch = any(bs))
         group by branch, salman) t), '[]'::jsonb),
+    'prev', (select jsonb_build_object('n', coalesce(sum(sales + credit - refunds), 0), 'b', coalesce(sum(bills), 0), 'r', coalesce(sum(refunds), 0)) from growth_cashier_daily
+        where bdate between p_from - (p_to - p_from + 1) and p_from - 1 and (bs is null or branch = any(bs))),
+    'prevb', coalesce((select jsonb_object_agg(branch, n) from (select branch, sum(sales + credit - refunds) n from growth_cashier_daily
+        where bdate between p_from - (p_to - p_from + 1) and p_from - 1 and (bs is null or branch = any(bs)) group by branch) t), '{}'::jsonb),
     'bdays', coalesce((select jsonb_agg(jsonb_build_object('b', branch, 'd', bdate, 'n', n, 'c', c) order by branch, bdate) from (
         select branch, bdate, sum(sales + credit - refunds) n, sum(bills) c from growth_cashier_daily
         where bdate between p_from and p_to and (bs is null or branch = any(bs))
         group by branch, bdate) t), '[]'::jsonb),
     'days', case when p_cashier is null then '[]'::jsonb else coalesce((select jsonb_agg(jsonb_build_object('d', bdate, 'b', bills, 's', sales, 'cr', credit, 'cd', card,
-        'ca', cash, 'r', refunds, 'rc', ref_cnt, 'ds', disc, 'f', first_at, 'l', last_at) order by bdate desc) from growth_cashier_daily
+        'ca', cash, 'r', refunds, 'rc', ref_cnt, 'ds', disc, 'ap', apps, 'f', first_at, 'l', last_at) order by bdate desc) from growth_cashier_daily
         where bdate between p_from and p_to and (bs is null or branch = any(bs)) and salman = p_cashier and (p_branch is null or branch = p_branch)), '[]'::jsonb) end);
 end $$;
 
