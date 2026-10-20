@@ -3,7 +3,7 @@ language sql stable security definer set search_path = public as $$
   select coalesce(jsonb_agg(x order by x->>'at' desc), '[]') from (
     select jsonb_build_object('id', m.id, 'kind', m.kind, 'prio', m.prio, 'title', m.title, 'body', left(m.body, 160),
              'ack', m.need_ack, 'from', m.sender_name, 'at', m.created_at, 'read', r.read_at, 'acked', r.ack_at,
-             'files', jsonb_array_length(m.files), 'auto', m.target->>'auto') x
+             'files', jsonb_array_length(m.files), 'auto', m.target->>'auto', 'target', m.target, 'mine', m.sender = auth.uid()) x
       from msg_rcpt r join msgs m on m.id = r.msg_id
      where r.user_id = auth.uid()
      order by m.id desc limit 300) t

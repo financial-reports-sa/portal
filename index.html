@@ -864,6 +864,7 @@ html[dir=ltr] .sh-t{direction:ltr}html[dir=ltr] .sh-t i{display:inline-block;tra
 .mg-tabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;margin:0 0 8px}.mg-tabs button{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 4px;border-radius:14px;border:1px solid var(--line);background:var(--card);font:inherit;cursor:pointer}.mg-tabs button span{font-size:17px}.mg-tabs button b{font-size:11px}.mg-tabs button[aria-pressed=true]{background:#16432E;color:#fff;border-color:#16432E}.mg-tabs em{position:absolute;top:5px;left:8px;min-width:19px;height:19px;border-radius:99px;background:#D0453A;color:#fff;font-style:normal;font-size:10.5px;font-weight:700;display:grid;place-items:center;padding:0 5px}
 .mg-new2{width:100%;margin:0 0 10px}.mg-sec{display:flex;justify-content:space-between;align-items:center;margin:12px 2px 6px}.mg-sec b{font-size:12.5px}.mg-sec em{font-style:normal;background:#D0453A;color:#fff;border-radius:99px;padding:0 7px;font-size:10.5px;margin-inline-start:4px}.mg-ok{text-align:center;font-size:12px;color:#16794C;background:#EEF7F1;border-radius:12px;padding:9px;margin:10px 0}
 .mg-auto{font-size:10.5px;font-weight:700;color:#5B4BA8;background:#EFEBFA;border-radius:99px;padding:2px 9px}.mg-to{font-size:11.5px;margin:4px 0 2px;color:var(--muted)}.mg-to b{color:var(--fg,#1A1F1C);font-weight:600}.mg-ai .mg-h{gap:6px}
+.mg-bf button{position:relative}.mg-bf small{opacity:.6;margin-inline-start:3px}.mg-bf i{font-style:normal;background:#D0453A;color:#fff;border-radius:99px;font-size:9.5px;padding:0 6px;margin-inline-start:4px}.mg-cc{font-size:10px;color:#5B6B63;background:#EEF1EA;border-radius:99px;padding:2px 8px}.mg-br{font-size:10px;font-weight:600;color:var(--b);background:color-mix(in srgb,var(--b) 13%,transparent);border-radius:99px;padding:2px 8px}
 </style>
 </head>
 <body>
@@ -2586,16 +2587,22 @@ V.msgs=async()=>{
   const canOut=mgCanSend()||isAdmin(); const tab=(st.mgT==='out'||st.mgT==='auto')&&canOut?st.mgT:'in';
   const L=await mgInbox(); if(!L) return `<div class="card empty">نظام المراسلات يحتاج تشغيل ملف msgs.sql في Supabase أولاً</div>`;
   const pend=L.filter(mgPend).length;
-  let h=`<div class="mg-tabs">${[['in','📥','الوارد',pend]].concat(canOut?[['out','📤',isAdmin()?'المراسلات المرسلة':'المرسلة',0],['auto','🤖','التنبيهات التلقائية',0]]:[]).map(([k,i,n,c])=>`<button data-mgt="${k}" aria-pressed="${tab===k}"><span>${i}</span><b>${n}</b>${c?`<em>${c}</em>`:''}</button>`).join('')}</div>
+  let h=`<div class="mg-tabs">${[['in','📥','الوارد',pend]].concat(canOut?[['out','📤','المرسلة مني',0],['auto','🤖','التنبيهات التلقائية',0]]:[]).map(([k,i,n,c])=>`<button data-mgt="${k}" aria-pressed="${tab===k}"><span>${i}</span><b>${n}</b>${c?`<em>${c}</em>`:''}</button>`).join('')}</div>
    ${mgCanSend()?`<button class="btn mg-new2" data-mgt="new">＋ مراسلة جديدة</button>`:''}`;
   const kf=st.mgK||'all';
   const kchips=`<div class="chips sc mg-kf"><button data-mgk="all" aria-pressed="${kf==='all'}">الكل</button>${Object.entries(MG_K).map(([k,v])=>`<button data-mgk="${k}" aria-pressed="${kf===k}">${v[0]} ${v[1]}</button>`).join('')}</div>`;
   const item=m=>{const k=MG_K[m.kind]||MG_K.gen;return `<button class="mg-it${mgPend(m)?' new':''}" data-mgo="${m.id}" style="--c:${k[2]}">
-      <div class="mg-h">${mgBadge(m)}${m.auto?'<span class="mg-auto">🤖 تلقائي</span>':''}<span class="mg-t">${mgAgo(m.at)}</span></div>
+      <div class="mg-h">${mgBadge(m)}${m.auto?'<span class="mg-auto">🤖 تلقائي</span>':''}${m.cc?'<span class="mg-cc">📋 للاطلاع</span>':''}${brsOf(m).map(b=>`<span class="mg-br" style="--b:${brById(b).color||'#888'}">${esc(brById(b).name)}</span>`).join('')}<span class="mg-t">${mgAgo(m.at)}</span></div>
       <b class="mg-ttl">${esc(m.title)}</b>${m.body?`<div class="mg-sn">${esc(m.body)}</div>`:''}
-      <div class="mg-f"><span>من ${esc(m.from||'')}</span>${m.files?`<span>📎 ${m.files}</span>`:''}${m.ack?(m.acked?'<span class="ok">✓ أقررت</span>':'<span class="need">مطلوب إقرارك</span>'):''}</div></button>`;};
+      <div class="mg-f"><span>من ${esc(m.from||'')}</span>${m.cc?`<span>إلى: ${esc(m.target&&m.target.scope?mgTargetTxt(m.target):(m.to||''))}</span>`:''}${m.files?`<span>📎 ${m.files}</span>`:''}${m.nrep?`<span>💬 ${m.nrep}</span>`:''}${m.ack?(m.acked?'<span class="ok">✓ أقررت</span>':'<span class="need">مطلوب إقرارك</span>'):''}</div></button>`;};
+  const brsOf=m=>{const t=m.target||{}; return t.scope==='branches'&&(t.branches||[]).length?t.branches:[];};
   if(tab==='in'){
-    const R=L.filter(m=>kf==='all'||m.kind===kf);
+    let OV=[]; if(isAdmin()){ try{ const r=await sb.rpc('msg_sent'); OV=((!r.error&&r.data)||[]).filter(m=>!m.mine&&!(m.auto||(m.target&&m.target.auto))&&!L.some(x=>x.id===m.id)).map(m=>({...m,cc:true,read:true,acked:true,ack:false})); }catch(e){} }
+    const IN=L.filter(m=>!m.mine).concat(OV).sort((a,b)=>new Date(b.at)-new Date(a.at));
+    const bf=st.mgB||'all'; const bIds=st.branches.map(b=>b.id);
+    const inB=(m,b)=>b==='all'||(b==='gen'?!brsOf(m).length:brsOf(m).includes(b));
+    h+=`<div class="chips sc mg-bf">${[['all','الكل']].concat(st.branches.map(b=>[b.id,b.name])).concat([['gen','عام']]).map(([k,n])=>{const c=IN.filter(m=>inB(m,k)).length, nn=IN.filter(m=>inB(m,k)&&mgPend(m)).length; return c||k==='all'?`<button data-mgb="${k}" aria-pressed="${bf===k}">${esc(n)} <small>${c}</small>${nn?`<i>${nn}</i>`:''}</button>`:'';}).join('')}</div>`;
+    const R=IN.filter(m=>inB(m,bf)&&(kf==='all'||m.kind===kf));
     if(canOut){ try{ const f=await sb.rpc('msg_reply_feed',{p_days:14}); const F=(!f.error&&f.data)||[];
       if(F.length) h+=`<div class="card mg-rf"><h3>💬 ردود على مراسلاتك <small>آخر 14 يوم</small></h3>${F.slice(0,st.mgRfAll?30:3).map(x=>`<button class="mg-rfi" data-mgo="${x.mid}"><div class="mg-rfh"><b>${esc(x.by)}</b><span class="muted">${mgAgo(x.at)}</span></div><div class="mg-rfb">${esc(x.body)}</div><div class="muted mg-rft">على: ${esc(x.title)}</div></button>`).join('')}${F.length>3&&!st.mgRfAll?`<button class="btn ghost sm" data-mgrfall="1" style="margin-top:6px">عرض كل الردود (${F.length})</button>`:''}</div>`; }catch(e){} }
     h+=kchips;
@@ -2618,9 +2625,10 @@ V.msgs=async()=>{
       return `<button class="mg-it mg-ai" data-mgo="${m.id}" style="--c:${k[2]}"><div class="mg-h"><span class="mg-auto">🤖 ${esc(m.title.replace(/^(تنبيه رسمي|تنبيه|تذكير|إشعار تقصير|تقصير|تقرير يومي):\s*/,''))}</span><span class="mg-t">${mgAgo(m.at)}</span></div>
         <div class="mg-to">إلى: <b>${esc(m.to||'—')}</b></div><div class="mg-f"><span class="${done>=m.n?'ok':''}">${m.ack?'أقرّ':'قرأ'} ${done} من ${m.n}</span>${m.nrep?`<span>💬 ${m.nrep} رد</span>`:''}</div></button>`;}).join('')}</div>${S.length>40&&!st.mgAutoAll?`<button class="btn ghost sm" data-mgautoall="1" style="margin-top:8px">عرض الكل (${S.length})</button>`:''}`;
     return h; }
-  const S=ALL.filter(m=>!m.auto&&(kf==='all'||m.kind===kf));
+  const S=ALL.filter(m=>m.mine&&!m.auto&&(kf==='all'||m.kind===kf));
   h+=kchips;
   if(!S.length) return h+`<div class="card empty">ما أرسلت مراسلات للحين${mgCanSend()?' — اضغط «＋ مراسلة جديدة»':''}</div>`;
+  h+=`<div class="muted" style="font-size:10.5px;margin:0 2px 6px">مراسلاتك أنت فقط — افتح أي وحدة تشوف مين قرأ ومين أقرّ والردود عليها.</div>`;
   h+=`<div class="mg-list">${S.map(m=>{const k=MG_K[m.kind]||MG_K.gen; const done=m.ack?m.na:m.nr; const pc=m.n?done/m.n:0;
     return `<button class="mg-it" data-mgo="${m.id}" style="--c:${k[2]}">
       <div class="mg-h">${mgBadge(m)}<span class="mg-t">${mgAgo(m.at)}</span></div>
@@ -2629,7 +2637,8 @@ V.msgs=async()=>{
       <div class="mg-st"><div class="meter" style="--c:${pc>=1?'var(--up)':'var(--gold)'}"><i style="width:${Math.round(pc*100)}%"></i></div><span>${m.ack?'أقرّ':'قرأ'} ${done} من ${m.n}</span></div></button>`;}).join('')}</div>`;
   return h;
 };
-document.addEventListener('click',async e=>{ const t=e.target.closest('[data-mga],[data-mgreadall],[data-mgoldall],[data-mgautoall]'); if(!t) return; const d=t.dataset;
+document.addEventListener('click',async e=>{ const t=e.target.closest('[data-mga],[data-mgb],[data-mgreadall],[data-mgoldall],[data-mgautoall]'); if(!t) return; const d=t.dataset;
+  if(d.mgb){ st.mgB=d.mgb; render(); return; }
   if(d.mga){ st.mgA=d.mga; render(); return; } if(d.mgoldall){ st.mgOldAll=1; render(); return; } if(d.mgautoall){ st.mgAutoAll=1; render(); return; }
   if(d.mgreadall){ t.disabled=true; const r=await sb.rpc('msg_read_all'); t.disabled=false; if(r.error){ toast(/msg_read_all|function|schema/i.test(r.error.message)?'شغّل ملف «msgs-v2» في Supabase أول':r.error.message); return; } st._mgIn=null; toast('تم ✓'); render(); } });
 
