@@ -49,7 +49,7 @@ create table if not exists public.clean_cfg (
   shift text primary key check (shift in ('open', 'close', 'weekly')),
   due   time not null
 );
-insert into public.clean_cfg (shift, due) values ('open', '12:00'), ('close', '04:00'), ('weekly', '22:00') on conflict (shift) do nothing;
+insert into public.clean_cfg (shift, due) values ('open', '09:00'), ('close', '04:00'), ('weekly', '22:00') on conflict (shift) do nothing;
 alter table public.clean_cfg enable row level security;
 revoke all on public.clean_cfg from anon, authenticated;
 
