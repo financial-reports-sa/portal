@@ -13,7 +13,7 @@ end $$;
 create table if not exists public.clean_items (
   id         uuid primary key default gen_random_uuid(),
   branch     text,
-  shift      text not null check (shift in ('open', 'close', 'weekly')),
+  shift      text not null check (shift in ('open', 'mid', 'close', 'weekly')),
   title      text not null,
   need_photo boolean not null default false,
   sort       int not null default 0,
@@ -27,7 +27,7 @@ create table if not exists public.clean_checks (
   id          uuid primary key default gen_random_uuid(),
   branch      text not null,
   day         date not null,
-  shift       text not null check (shift in ('open', 'close', 'weekly')),
+  shift       text not null check (shift in ('open', 'mid', 'close', 'weekly')),
   items       jsonb not null default '[]',
   total       int not null default 0,
   ok          int not null default 0,
@@ -46,12 +46,31 @@ alter table public.clean_checks enable row level security;
 revoke all on public.clean_checks from anon, authenticated;
 
 create table if not exists public.clean_cfg (
-  shift text primary key check (shift in ('open', 'close', 'weekly')),
+  shift text primary key check (shift in ('open', 'mid', 'close', 'weekly')),
   due   time not null
 );
-insert into public.clean_cfg (shift, due) values ('open', '09:00'), ('close', '04:00'), ('weekly', '22:00') on conflict (shift) do nothing;
+insert into public.clean_cfg (shift, due) values ('open', '12:00'), ('close', '04:00'), ('weekly', '22:00') on conflict (shift) do nothing;
 alter table public.clean_cfg enable row level security;
 revoke all on public.clean_cfg from anon, authenticated;
+
+alter table public.clean_items drop constraint if exists clean_items_shift_check;
+alter table public.clean_items add constraint clean_items_shift_check check (shift in ('open', 'mid', 'close', 'weekly'));
+alter table public.clean_checks drop constraint if exists clean_checks_shift_check;
+alter table public.clean_checks add constraint clean_checks_shift_check check (shift in ('open', 'mid', 'close', 'weekly'));
+alter table public.clean_cfg drop constraint if exists clean_cfg_shift_check;
+alter table public.clean_cfg add constraint clean_cfg_shift_check check (shift in ('open', 'mid', 'close', 'weekly'));
+insert into public.clean_cfg (shift, due) values ('mid', '21:00') on conflict (shift) do nothing;
+
+insert into public.clean_items (branch, shift, title, need_photo, sort)
+select null, x.s, x.t, x.p, x.o from (values
+  ('mid', 'الصالة والطاولات نظيفة بعد ذروة الغداء', true, 1),
+  ('mid', 'دورات المياه نظيفة ومزودة بالصابون والمناديل', true, 2),
+  ('mid', 'أسطح المطبخ ومنطقة التجهيز نظيفة', true, 3),
+  ('mid', 'أرضية المطبخ والصالة ممسوحة', false, 4),
+  ('mid', 'سلال النفايات فُرّغت وبأكياس جديدة', false, 5),
+  ('mid', 'الموظفين ملتزمين بالزي والنظافة الشخصية', false, 6)
+) x(s, t, p, o)
+where not exists (select 1 from public.clean_items where shift = 'mid');
 
 insert into public.clean_items (branch, shift, title, need_photo, sort)
 select null, x.s, x.t, x.p, x.o from (values
@@ -79,7 +98,7 @@ select null, x.s, x.t, x.p, x.o from (values
   ('weekly', 'فحص مصائد الحشرات ومكافحتها', false, 5),
   ('weekly', 'تنظيف خزان المياه والفلاتر', false, 6)
 ) x(s, t, p, o)
-where not exists (select 1 from public.clean_items);
+where not exists (select 1 from public.clean_items where shift <> 'mid');
 
 create or replace function public.clean_ro() returns boolean
 language plpgsql stable security definer set search_path = public as $$
@@ -124,7 +143,7 @@ language plpgsql volatile security definer set search_path = public as $$
 declare d date := att_bday(); rid uuid; nm text; t int; k int; bad text; o uuid[];
 begin
   if not clean_can(p_branch, true) then raise exception 'ليس لديك صلاحية على نظافة هذا الفرع'; end if;
-  if p_shift not in ('open', 'close', 'weekly') then raise exception 'نوع غير صحيح'; end if;
+  if p_shift not in ('open', 'mid', 'close', 'weekly') then raise exception 'نوع غير صحيح'; end if;
   if jsonb_typeof(p_items) <> 'array' or jsonb_array_length(p_items) = 0 then raise exception 'القائمة فاضية'; end if;
   if exists (select 1 from jsonb_array_elements(p_items) x where (x->>'p')::boolean and coalesce(x->>'ph', '') = '' and coalesce((x->>'ok')::boolean, false)) then
     raise exception 'فيه بنود تحتاج صورة'; end if;
@@ -145,7 +164,7 @@ begin
     select string_agg('• ' || (x->>'t') || ' — ' || coalesce(x->>'n', ''), chr(10)) into bad from jsonb_array_elements(p_items) x where not coalesce((x->>'ok')::boolean, false);
     select coalesce(array_agg(id), '{}') into o from profiles where role = 'owner' and coalesce(active, true);
     perform push_send(o, '⚠️ نظافة ' || coalesce((select name from branches where id = p_branch), p_branch) || ': ' || (t - k) || ' بند ما تم',
-      left(case p_shift when 'open' then 'قائمة الفتح' when 'close' then 'قائمة الإغلاق' else 'التنظيف الأسبوعي' end || ' — ' || coalesce(nm, '') || chr(10) || bad, 240), './?tab=clean', 'clean-' || p_branch);
+      left(case p_shift when 'open' then 'قائمة الفتح' when 'mid' then 'قائمة منتصف اليوم' when 'close' then 'قائمة الإغلاق' else 'التنظيف الأسبوعي' end || ' — ' || coalesce(nm, '') || chr(10) || bad, 240), './?tab=clean', 'clean-' || p_branch);
   end if;
   return rid;
 end $$;
@@ -234,7 +253,7 @@ begin
                          join profiles p on p.id = us.user_id and coalesce(p.active, true) and p.role = 'user' where us.section = 'clean') loop
     u := alert_mgrs(b.id, array['clean']);
     if cardinality(u) = 0 then continue; end if;
-    foreach sh in array array['open', 'close', 'weekly'] loop
+    foreach sh in array array['open', 'mid', 'close', 'weekly'] loop
       if sh = 'weekly' then
         if extract(dow from d) <> 4 then continue; end if;
         if exists (select 1 from clean_checks where branch = b.id and shift = 'weekly' and clean_week(day) = clean_week(d)) then continue; end if;
@@ -246,7 +265,7 @@ begin
       if due < coalesce((select since from alert_cfg where id = 1), now()) then continue; end if;
       if d <= ((select min(created_at) from clean_items) at time zone 'Asia/Riyadh' - interval '5 hours')::date then continue; end if;
       late := floor(extract(epoch from (now() - due)) / 60)::int;
-      lbl := case sh when 'open' then 'قائمة نظافة الفتح' when 'close' then 'قائمة نظافة الإغلاق' else 'التنظيف الأسبوعي' end;
+      lbl := case sh when 'open' then 'قائمة نظافة الفتح' when 'mid' then 'قائمة نظافة منتصف اليوم' when 'close' then 'قائمة نظافة الإغلاق' else 'التنظيف الأسبوعي' end;
       if alert_send('clean:' || b.id || ':' || sh || ':' || d, 'clean_late', null, u, 'تنبيه: ' || lbl || ' لم تُسجَّل',
         'فرع ' || b.name || '،' || nl || 'لم يتم تسجيل ' || lbl || ' لليوم ' || d || '، وكان موعدها الساعة ' || alert_t12(due) || '.' || nl ||
         'المطلوب إنجازها وتسجيلها فوراً من شاشة «النظافة» مع الصور المطلوبة. التأخر في قوائم النظافة يُعد تقصيراً ويُرفع للإدارة.' || nl || '— نظام المتابعة الآلي',
@@ -268,4 +287,4 @@ begin
   perform cron.schedule('auto-clean', '*/15 * * * *', 'select public.clean_alerts_run()');
 end $$;
 
-select 'تم: النظافة (قوائم الفتح والإغلاق والأسبوعي + الصور + التقييم + تنبيهات التأخير)' as result;
+select 'تم: النظافة (قوائم الفتح ومنتصف اليوم والإغلاق والأسبوعي + الصور + التقييم + تنبيهات التأخير)' as result;
