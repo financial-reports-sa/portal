@@ -1016,7 +1016,7 @@ async function applyRole(uid,rk){ const R=PERM_ROLES.find(r=>r.k===rk); const wa
   if(add.length){ const r=await T('user_sections').insert(add.map(x=>({user_id:uid,section:x}))); if(r.error) return r.error; }
   if(st._uroOk){ const r=await T('user_ro').delete().eq('user_id',uid).neq('section',''); if(r.error) return r.error; }
   return null; }
-const APP_VER='202610201200';
+const APP_VER='202610201215';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.clean='النظافة (قوائم الفتح والإغلاق)'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -1888,7 +1888,7 @@ async function attLoad(bs,from,to){ const LVq=sb.rpc('lv_list',{p_from:from,p_to
   const cfg={}; ((CF&&CF.data)||[]).forEach(x=>cfg[x.branch]=x);
   const lv={}; (((LV&&!LV.error&&LV.data)||[])).filter(x=>x.status==='approved').forEach(x=>(lv[x.emp]=lv[x.emp]||[]).push([x.from,x.to,x.kind]));
   return {emps:(E.data||[]).filter(e=>bs.includes(e.branch)),sh,recs:R.data||[],by,geo,acc,opt,cfg,lv,sites:(ST&&!ST.error&&ST.data)||[]}; }
-const ATT_SL={lv:['في إجازة','#2F8F7A'],exempt:['معفى من البصمة','#6B5BA8'],nogeo:['موقع الفرع غير محدد','#8A908A'],trial:['تجربة — ما ينحسب','#8A6A10'],in:['حاضر','#1B8A5C'],out:['انصرف','#3C6FB0'],mid:['بين الشفتين','#8A6A10'],abs:['غايب','#C0392B'],off:['إجازة','#8A908A'],wait:['لم يبدأ دوامه','#8A6A10'],nos:['بدون دوام محدد','#8A908A']};
+const ATT_SL={lv:['إجازة معتمدة','#2F8F7A'],exempt:['معفى من البصمة','#6B5BA8'],nogeo:['موقع الفرع غير محدد','#8A908A'],trial:['تجربة — ما ينحسب','#8A6A10'],in:['حاضر','#1B8A5C'],out:['انصرف','#3C6FB0'],mid:['بين الشفتين','#8A6A10'],abs:['غايب','#C0392B'],off:['راحة أسبوعية','#8A908A'],wait:['لم يبدأ دوامه','#8A6A10'],nos:['بدون دوام محدد','#8A908A']};
 V.att=async()=>{ const bs=selBranches(); const today=attToday(); const tab=st.attT||'day';
   if(tab==='lv') return lvAdmin(bs);
   if(tab==='day'){ const day=st.attDay||today; const D=await attLoad(bs,day,day); if(D.missing) return `<div class="card empty">الحضور والانصراف يحتاج تشغيل ملف «الحضور والانصراف» في Supabase أولاً</div>`;
