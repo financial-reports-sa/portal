@@ -855,6 +855,12 @@ html[dir=ltr] .sh-t{direction:ltr}html[dir=ltr] .sh-t i{display:inline-block;tra
 .cl-cfg b{font-size:12.5px}.cl-dues{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:8px 0}.cl-dues label{display:flex;flex-direction:column;gap:3px;font-size:10.5px;color:var(--muted)}.cl-dues .inp{font-size:12px;padding:6px}
 .cl-ed{padding:10px 12px!important}.cl-edh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}.cl-edh b{font-size:12.5px}.cl-er{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);font-size:12px}.cl-er:last-child{border-bottom:0}.cl-er span{flex:1}.cl-er em{font-style:normal;font-size:9.5px;color:var(--muted);background:#F3F4F0;border-radius:6px;padding:1px 6px}.cl-er.off{opacity:.5}
 .lnk{border:0;background:none;padding:0;font:inherit;color:inherit;text-decoration:underline;cursor:pointer}
+.rq-bulk{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px!important;margin-bottom:10px}.rq-bulk b{font-size:12px}.rq-bulk .inp{flex:1;min-width:140px;font-size:12px;padding:6px 8px}
+.rq-list{display:flex;flex-direction:column;gap:8px}.rq-u{padding:10px 12px!important}.rq-u.on{box-shadow:0 0 0 2px #1E5A3E inset}.rq-h{display:flex;align-items:center;gap:8px}.rq-ck input{width:18px;height:18px}.rq-n{flex:1;min-width:0}.rq-n b{display:block;font-size:13px}.rq-n small{font-size:10px;color:var(--muted)}.rq-r{max-width:48%;font-size:12px;padding:6px 8px}
+.rq-b{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}.tg.sm{padding:4px 10px;font-size:11px}.rqs{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}.rqs span{font-size:9.5px;background:#EEF1EA;color:#4F5B53;border-radius:6px;padding:2px 7px}
+.rq-help summary{font-size:12px;font-weight:700;cursor:pointer}.rq-hr{padding:8px 0;border-bottom:1px solid var(--line)}.rq-hr b{font-size:12px}
+.us-tabs{grid-template-columns:repeat(4,1fr)!important;gap:6px!important}.us-tabs button{min-height:64px!important;padding:8px 4px!important;gap:3px!important;border-radius:14px!important}.us-tabs button span{font-size:18px}.us-tabs button b{font-size:11px}
+.pm-hb{border:0;background:none;padding:0;font:inherit;color:inherit;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}
 </style>
 </head>
 <body>
@@ -975,6 +981,22 @@ const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
 const PERM_GROUPS=[{name:'المبيعات',secs:['sales','channels','deliv']},{name:'المستودعات',secs:['wh']},{name:'القوائم المالية والحسابات',secs:['fin_is','fin_bs','fin_tb','balances','treasury']},{name:'الكاشيرات',secs:['handover','rets','rets_view']},{name:'العُهد والتمويلات',secs:['custody','custody_holder','loans']},{name:'العمليات',secs:['clean','maint','maint_sup','maint_view','purch','purch_sup','purch_view','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
+const PERM_ROLES=[
+  {k:'mgr',i:'🏪',n:'مدير فرع',s:['sales','channels','deliv','handover','rets','clean','maint','purch','feedback','att','employees','advances']},
+  {k:'sup',i:'🧭',n:'مشرف تشغيل',s:['sales','channels','deliv','wh','handover','rets','clean','maint','purch','feedback','mkt','att','employees','advances','msgs_send']},
+  {k:'acc',i:'🧮',n:'محاسب',s:['sales','channels','deliv','wh','fin_is','fin_bs','fin_tb','balances','treasury','handover','rets','custody','loans']},
+  {k:'hr',i:'🪪',n:'الموارد البشرية',s:['hr','att','employees','advances','msgs_send']},
+  {k:'maint',i:'🔧',n:'مسؤول الصيانة',s:['maint_sup']},
+  {k:'purch',i:'🛒',n:'مسؤول المشتريات',s:['purch_sup','wh']},
+  {k:'wh',i:'📦',n:'أمين مستودع',s:['wh','purch']},
+  {k:'cash',i:'🧾',n:'مسؤول عهدة',s:['custody_holder']}];
+async function applyRole(uid,rk){ const R=PERM_ROLES.find(r=>r.k===rk); const want=R?R.s:[]; const T=t=>sb.from(t);
+  const ex=await T('user_sections').select('section').eq('user_id',uid); if(ex.error) return ex.error; const have=(ex.data||[]).map(x=>x.section);
+  const del=have.filter(x=>!want.includes(x)), add=want.filter(x=>!have.includes(x));
+  if(del.length){ const r=await T('user_sections').delete().eq('user_id',uid).in('section',del); if(r.error) return r.error; }
+  if(add.length){ const r=await T('user_sections').insert(add.map(x=>({user_id:uid,section:x}))); if(r.error) return r.error; }
+  if(st._uroOk){ const r=await T('user_ro').delete().eq('user_id',uid).neq('section',''); if(r.error) return r.error; }
+  return null; }
 const APP_VER='202610200115b';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.clean='النظافة (قوائم الفتح والإغلاق)'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
@@ -3279,7 +3301,7 @@ function ivRatioCard(days,sal,iss,dl,rc){
   const iMax=R.reduce((a,r,i)=>r!=null&&(a<0||r>R[a])?i:a,-1), iMin=R.reduce((a,r,i)=>r!=null&&(a<0||r<R[a])?i:a,-1);
   const over=V.filter(r=>r>.45).length, ok=V.filter(r=>r<=.35).length;
   const dS=x=>new Date(x+'T12:00:00').toLocaleDateString('ar-SA-u-ca-gregory-nu-latn',{weekday:'short',day:'numeric'});
-  const st4=(l,v,sub,c)=>`<div class="rq-s"><small>${l}</small><b class="num" style="color:${c||'inherit'}">${v}</b>${sub?`<em>${sub}</em>`:''}</div>`;
+  const st4=(l,v,sub,c)=>`<div class="rqs"><small>${l}</small><b class="num" style="color:${c||'inherit'}">${v}</b>${sub?`<em>${sub}</em>`:''}</div>`;
   return `<div class="card rq"><div class="rq-hd"><div><h3 style="margin:0">📊 نسبة الصرف من المبيعات</h3><div class="muted" style="font-size:11px;margin-top:2px">الصرف ÷ المبيعات قبل الضريبة · ${n-miss} يوم</div>${miss?`<div style="font-size:10.5px;color:#9A6A06;margin-top:3px">⚠️ ${miss} يوم بدون مبيعات — مستبعدة من النسبة</div>`:''}</div>
     <div class="rq-big" style="color:${rc(avg)}">${Math.round(avg*1000)/10}%<small>متوسط الفترة</small></div></div>
     <div class="rq-grid">${st4('أعلى نسبة',iMax>=0?Math.round(R[iMax]*1000)/10+'%':'—',iMax>=0?dS(days[iMax]):'',iMax>=0?rc(R[iMax]):'')}${st4('أقل نسبة',iMin>=0?Math.round(R[iMin]*1000)/10+'%':'—',iMin>=0?dS(days[iMin]):'',iMin>=0?rc(R[iMin]):'')}${st4('أيام ممتازة',ok,'≤ 35%','#16794C')}${st4('أيام مرتفعة',over,'> 45%',over?'#B42318':'')}</div>
@@ -5041,17 +5063,29 @@ V.users=async()=>{
   const q=(st.uq||'').trim().toLowerCase(); st.uOpen=st.uOpen||{};
   let h=`<div class="usr-top"><div class="usr-s"><input class="inp" id="usq" type="search" placeholder="🔍 ابحث بالاسم أو اسم المستخدم" value="${esc(st.uq||'')}" autocomplete="off"></div><button class="btn sm" data-uadd="1">${st.uAdd?'إغلاق':'＋ مستخدم'}</button></div>
   <div class="muted" id="usqn" style="font-size:10.5px;margin:-6px 2px 0">${P.data.length} مستخدم</div>
-  <div class="iv-tabs" style="margin-top:10px">${[['grid','📊','جدول الصلاحيات'],['user','👤','حسب الموظف'],['sec','🗂️','حسب الشاشة']].map(([v,i,n])=>`<button data-umode="${v}" aria-pressed="${(st.uMode||'grid')===v}"><span>${i}</span><b>${n}</b></button>`).join('')}</div>`;
-  if((st.uMode||'grid')==='grid'){ const U=P.data.filter(u=>u.role==='user'&&canManage(u)&&(!q||((u.full_name||'')+' '+u.username).toLowerCase().includes(q)));
+  <div class="iv-tabs us-tabs" style="margin-top:10px">${[['quick','⚡','الأدوار'],['grid','📊','الجدول'],['user','👤','حسب الموظف'],['sec','🗂️','حسب الشاشة']].map(([v,i,n])=>`<button data-umode="${v}" aria-pressed="${(st.uMode||'quick')===v}"><span>${i}</span><b>${n}</b></button>`).join('')}</div>`;
+  if((st.uMode||'quick')==='quick'){ const U=P.data.filter(u=>u.role==='user'&&canManage(u)&&(!q||((u.full_name||'')+' '+u.username).toLowerCase().includes(q)));
+    const mine=u=>us.filter(x=>x.user_id===u.id).map(x=>x.section).sort(); const roOf=u=>st._uro.filter(x=>x.user_id===u.id).length;
+    const roleOf=u=>{ const m=mine(u).join(','); const r=PERM_ROLES.find(r=>r.s.slice().sort().join(',')===m); return r?r.k:(m?'custom':''); };
+    const sel=st._uSel||(st._uSel=new Set());
+    h+=`<div class="muted" style="font-size:10.5px;margin:2px 2px 8px">اختر الدور لكل موظف وحدد فروعه — ينحفظ على طول. أو حدد أكثر من موظف وطبّق عليهم دور واحد.</div>
+    <div class="rq-bulk card"><b>${sel.size?`✓ ${sel.size} محدد`:'تطبيق جماعي'}</b><select class="inp" id="rqRole"><option value="">اختر الدور…</option>${PERM_ROLES.map(r=>`<option value="${r.k}">${r.i} ${esc(r.n)}</option>`).join('')}</select><button class="btn sm" data-rqbulk="1" ${sel.size?'':'disabled'}>طبّق على المحددين</button>${sel.size?'<button class="btn sm ghost" data-rqclr="1">إلغاء التحديد</button>':''}</div>
+    <div class="rq-list">${U.map(u=>{ const rk=roleOf(u), n=mine(u).length; return `<div class="card rq-u ${sel.has(u.id)?'on':''}"><div class="rq-h"><label class="rq-ck"><input type="checkbox" data-rqsel="${u.id}" ${sel.has(u.id)?'checked':''}></label><div class="rq-n"><b>${esc(u.full_name||u.username)}</b><small>${esc(u.username)}${roOf(u)?' · 👁️ فيه قراءة فقط':''}</small></div>
+      <select class="inp rq-r" data-rqrole="${u.id}"><option value="" ${!rk?'selected':''}>— بدون صلاحيات —</option>${PERM_ROLES.map(r=>`<option value="${r.k}" ${rk===r.k?'selected':''}>${r.i} ${esc(r.n)}</option>`).join('')}${rk==='custom'?`<option value="custom" selected>✳️ مخصص (${n} صلاحية)</option>`:''}</select></div>
+      <div class="rq-b">${st.branches.map(b=>{const on=ub.some(x=>x.user_id===u.id&&x.branch_id===b.id);return `<button class="tg sm" data-tb="${u.id}" data-k="b:${b.id}" aria-pressed="${on}"><i class="dot" style="background:${b.color}"></i>${esc(b.name)}</button>`;}).join('')}</div>
+      ${rk&&rk!=='custom'?`<div class="rqs">${(PERM_ROLES.find(r=>r.k===rk).s).map(x=>`<span>${esc((SEC_NAME[x]||x).replace(/\s*\(.*\)$/,''))}</span>`).join('')}</div>`:''}</div>`; }).join('')||'<div class="card empty">ما فيه مستخدمين</div>'}</div>
+    <details class="card rq-help"><summary>وش يشمل كل دور؟</summary>${PERM_ROLES.map(r=>`<div class="rq-hr"><b>${r.i} ${esc(r.n)}</b><div class="rqs">${r.s.map(x=>`<span>${esc((SEC_NAME[x]||x).replace(/\s*\(.*\)$/,''))}</span>`).join('')}</div></div>`).join('')}<div class="muted" style="font-size:10.5px">تبي تعدّل دور لموظف واحد بعد ما تطبّقه؟ من «الجدول» أو «حسب الموظف» — ويتحول لـ «مخصص».</div></details>`;
+    return h; }
+  if(st.uMode==='grid'){ const U=P.data.filter(u=>u.role==='user'&&canManage(u)&&(!q||((u.full_name||'')+' '+u.username).toLowerCase().includes(q)));
     const pm=st.pmMode||'ops'; const isV=x=>/_view$/.test(x);
     const cols=[{g:'الفروع',c:st.branches.map(b=>['b:'+b.id,b.name])}].concat(PERM_GROUPS.map(g=>({g:g.name,c:g.secs.filter(x=>!isV(x)).map(x=>['s:'+x,(SEC_NAME[x]||x).replace(/^👁️\s*/,'').replace(/\s*\(قراءة فقط\)/,'')])})).filter(g=>g.c.length));
     h+=`<div class="pm-sw">${[['ops','⚙️ صلاحيات العمليات'],['ro','👁️ القراءة فقط']].map(([k,n])=>`<button data-pmm="${k}" aria-pressed="${pm===k}">${n}</button>`).join('')}</div>`;
     const hs=(u,id)=>us.some(x=>x.user_id===u.id&&x.section===id), hro=(u,id)=>st._uro.some(x=>x.user_id===u.id&&x.section===id), OB=['rets','purch','maint'];
     const has=(u,k)=>{const [a,id]=k.split(':'); if(a==='b') return ub.some(x=>x.user_id===u.id&&x.branch_id===id);
       if(pm==='ro') return OB.includes(id)?hs(u,id+'_view'):(hs(u,id)&&hro(u,id)); return hs(u,id)&&!hro(u,id);};
-    h+=`<div class="muted" style="font-size:10.5px;margin:2px 2px 8px">الموظفين في العمود الأول والصلاحيات في الأعمدة — اضغط المربع للتفعيل أو الإلغاء، ينحفظ على طول. اسحب يمين ويسار لباقي الصلاحيات.</div>
+    h+=`<div class="muted" style="font-size:10.5px;margin:2px 2px 8px">الموظفين في العمود الأول والصلاحيات في الأعمدة — اضغط المربع للتفعيل أو الإلغاء، ينحفظ على طول. <b>اضغط اسم الصلاحية فوق</b> لتفعيلها أو إلغائها لكل الموظفين مرة وحدة.</div>
     <div class="pm-wrap"><table class="pm"><thead><tr><th class="pm-u" rowspan="2">الموظف</th>${cols.map((g,gi)=>`<th class="pm-g g${gi%2}" colspan="${g.c.length}">${esc(g.g)}</th>`).join('')}</tr>
-      <tr>${cols.map((g,gi)=>g.c.map(([k,n])=>`<th class="pm-h g${gi%2}"><span>${esc(n)}</span></th>`).join('')).join('')}</tr></thead>
+      <tr>${cols.map((g,gi)=>g.c.map(([k,n])=>`<th class="pm-h g${gi%2}"><button class="pm-hb" data-pmcol="${k}" data-m="${pm}" title="تفعيل أو إلغاء للكل"><span>${esc(n)}</span></button></th>`).join('')).join('')}</tr></thead>
       <tbody>${U.map(u=>`<tr><th class="pm-u">${esc(u.full_name||u.username)}<small>${esc(u.username)}</small></th>${cols.map((g,gi)=>g.c.map(([k])=>`<td class="g${gi%2}"><button class="pm-c" ${k.startsWith('b:')?`data-tb="${u.id}" data-k="${k}"`:`data-pmc="${u.id}" data-k="${k}" data-m="${pm}"`} aria-pressed="${has(u,k)}" aria-label="${esc(k)}"></button></td>`).join('')).join('')}</tr>`).join('')||`<tr><td colspan="99" class="muted">ما فيه مستخدمين</td></tr>`}</tbody></table></div>
     <div class="muted" style="font-size:10.5px;margin-top:8px">الآدمن والمالك يشوفون كل شيء ومو ظاهرين في الجدول. لتعديل الاسم أو كلمة المرور افتح «حسب الموظف».</div>`;
     return h; }
@@ -5097,6 +5131,17 @@ document.addEventListener('click',async e=>{ const c=e.target.closest('[data-pmc
   else if(OB.includes(sec)){ if(on){ await run(()=>addS(sec+'_view')); await run(()=>delS(sec)); } else await run(()=>delS(sec+'_view')); }
   else { if(on){ await run(()=>addS(sec)); await run(addR); } else { await run(delR); await run(()=>delS(sec)); } }
   c.disabled=false; if(r.error){ toast('تعذّر الحفظ: '+r.error.message); return; } toast('تم الحفظ'); render(); });
+document.addEventListener('change',async e=>{ const r=e.target.closest('[data-rqrole]'); if(r){ if(r.value==='custom') return; r.disabled=true; const er=await applyRole(r.dataset.rqrole,r.value); r.disabled=false; if(er){ toast('تعذّر الحفظ: '+er.message); return; } toast(r.value?'تم تطبيق الدور ✓':'تم إلغاء الصلاحيات'); render(); return; }
+  const c=e.target.closest('[data-rqsel]'); if(c){ st._uSel=st._uSel||new Set(); c.checked?st._uSel.add(c.dataset.rqsel):st._uSel.delete(c.dataset.rqsel); render(); } });
+document.addEventListener('click',async e=>{ if(e.target.closest('[data-rqclr]')){ st._uSel=new Set(); render(); return; }
+  const b=e.target.closest('[data-rqbulk]'); if(b){ const rk=($('#rqRole')||{}).value; if(!rk){ toast('اختر الدور أول'); return; } const ids=[...(st._uSel||[])]; if(!ids.length) return; const R=PERM_ROLES.find(r=>r.k===rk);
+    if(!confirm(`تطبيق دور «${R.n}» على ${ids.length} موظف؟ (صلاحياتهم الحالية تنستبدل)`)) return; b.disabled=true; let bad=0; for(const id of ids){ if(await applyRole(id,rk)) bad++; } b.disabled=false; st._uSel=new Set(); toast(bad?`تم مع ${bad} خطأ`:`تم تطبيق «${R.n}» على ${ids.length} ✓`); render(); return; }
+  const h=e.target.closest('[data-pmcol]'); if(h){ const [a,id]=h.dataset.pmcol.split(':'); const ro=h.dataset.m==='ro'; const rows=[...document.querySelectorAll(`.pm [data-k="${h.dataset.pmcol}"]`)]; if(!rows.length) return;
+    const allOn=rows.every(x=>x.getAttribute('aria-pressed')==='true'); const nm=h.textContent.trim();
+    if(!confirm(`${allOn?'إلغاء':'تفعيل'} «${nm}»${ro&&a!=='b'?' (قراءة فقط)':''} لكل الموظفين الظاهرين (${rows.length})؟`)) return;
+    const tg=rows.filter(x=>(x.getAttribute('aria-pressed')==='true')===allOn);
+    if(a==='b'){ const uids=tg.map(x=>x.dataset.tb); const r=allOn?await sb.from('user_branches').delete().eq('branch_id',id).in('user_id',uids):await sb.from('user_branches').insert(uids.map(u=>({user_id:u,branch_id:id}))); toast(r.error?'تعذّر الحفظ: '+r.error.message:'تم ✓'); render(); return; }
+    for(const x of tg) x.click(); return; } });
 document.addEventListener('click',e=>{ const pm=e.target.closest('[data-pmm]'); if(pm){ st.pmMode=pm.dataset.pmm; render(); return; } const m=e.target.closest('[data-umode]'); if(m){ st.uMode=m.dataset.umode; render(); return; } const k=e.target.closest('[data-usec]'); if(k){ st.uSec=k.dataset.usec; render(); } });
 document.addEventListener('change',async e=>{ const sel=e.target.closest('[data-ucopy]'); if(!sel||!sel.value) return; const to=sel.dataset.ucopy, from=sel.value; const nm=sel.options[sel.selectedIndex].text;
   if(!confirm('نسخ فروع وشاشات «'+nm+'» لهذا الموظف؟ صلاحياته الحالية بتنستبدل.')){ sel.value=''; return; } sel.disabled=true;
