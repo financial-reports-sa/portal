@@ -897,7 +897,7 @@ html[dir=ltr] .sh-t{direction:ltr}html[dir=ltr] .sh-t i{display:inline-block;tra
 .cs-r{display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;width:100%;padding:9px 12px;border:0;border-top:1px solid var(--line);background:none;font:inherit;color:inherit;text-align:start;cursor:pointer}.cs-r:active{background:#F4F7F3}.cs-m{display:flex;flex-direction:column;gap:4px;min-width:0}.cs-t{display:flex;justify-content:space-between;gap:8px;font-size:12px}.cs-t b:last-child{color:#1F3A2C}
 .cs-tags{display:flex;flex-wrap:wrap;gap:4px}.cs-tags em{font-style:normal;font-size:9.5px;padding:1px 7px;border-radius:99px;background:#F3F5F0;color:#55625A}.cs-tags em.g{background:#E7F4EC;color:#16794C}.cs-tags em.b{background:#FBEDEC;color:#B42318}.cs-tags em.bb{background:#B42318;color:#fff}
 .cs .dv-r{display:none}
-.pm-lg{display:flex;gap:14px;flex-wrap:wrap;font-size:10.5px;color:#3F4D45;margin:2px 2px 6px}.pm-lg span{display:inline-flex;align-items:center;gap:6px}.pm-lg i.pm-c{margin:0;width:16px!important;height:16px!important;cursor:default;pointer-events:none}.pm-lg i.pm-c::after{font-size:10px!important}.pm tbody tr:hover td,.pm tbody tr:hover .pm-u{background:#F2F7F3}
+.cl-dt{width:100%;border-collapse:collapse;font-size:11px;margin:8px 0}.cl-dt th{font-size:10px;color:var(--muted);font-weight:700;padding:4px}.cl-dt td{padding:3px;text-align:center}.cl-dt td:first-child{text-align:start;font-weight:700;white-space:nowrap}.cl-dt .inp{padding:6px 4px;font-size:11px;min-width:0;width:100%}.pm-lg{display:flex;gap:14px;flex-wrap:wrap;font-size:10.5px;color:#3F4D45;margin:2px 2px 6px}.pm-lg span{display:inline-flex;align-items:center;gap:6px}.pm-lg i.pm-c{margin:0;width:16px!important;height:16px!important;cursor:default;pointer-events:none}.pm-lg i.pm-c::after{font-size:10px!important}.pm tbody tr:hover td,.pm tbody tr:hover .pm-u{background:#F2F7F3}
 .pm .g1{background:#F8FAF6}.pm thead .g0{background:#EEF4F0}.pm thead .g1{background:#F6F2E6}
 .pm-g{color:#2F4A3B;font-size:10.5px!important;border-inline-start:2px solid #D4DCD3!important}
 .pm-h span{color:#3F4D45;font-weight:600}
@@ -1044,7 +1044,7 @@ async function applyRole(uid,rk){ const R=PERM_ROLES.find(r=>r.k===rk); const wa
   if(add.length){ const r=await T('user_sections').insert(add.map(x=>({user_id:uid,section:x}))); if(r.error) return r.error; }
   if(st._uroOk){ const r=await T('user_ro').delete().eq('user_id',uid).neq('section',''); if(r.error) return r.error; }
   return null; }
-const APP_VER='202610210130b';
+const APP_VER='202610210135';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.csales='مبيعات الكاشيرات'; SEC_NAME.clean='النظافة (قوائم الفتح والإغلاق)'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -5133,7 +5133,7 @@ V.clean=async()=>{ const r=await sb.rpc('clean_board',{p_day:st.clD||null});
   let h=`<div class="rt-hd"><h2>النظافة</h2><span class="muted">${drDn(D.day)}${isToday?' · اليوم':''}</span></div>
    <div class="chips">${[['day','اليوم'],['hist','السجل']].concat(D.admin?[['items','البنود والمواعيد']]:[]).map(([k,n])=>`<button data-clt="${k}" aria-pressed="${tab===k}">${n}</button>`).join('')}</div>`;
   if(tab==='items'&&D.admin){
-    h+=`<div class="card cl-cfg"><b>مواعيد التسجيل</b><div class="cl-dues">${CL_SH.map(([k,,n])=>`<label><span>${n}${k==='weekly'?' (الخميس)':''}</span><input type="time" class="inp" data-cldue="${k}" value="${esc((D.cfg||{})[k]||'')}"></label>`).join('')}</div><small class="muted">بعد الموعد بدون تسجيل يوصل تنبيه لمسؤول الفرع، وبعد ساعتين يوصلك نسخة.</small></div>`;
+    h+=`<div class="card cl-cfg"><b>مواعيد التسجيل لكل فرع</b><div class="tw"><table class="cl-dt"><thead><tr><th>الفرع</th>${CL_SH.map(([k,ic,n])=>`<th>${ic} ${n.replace('قائمة ','')}</th>`).join('')}</tr></thead><tbody>${(D.branches||[]).map(b=>`<tr><td>${esc(brById(b).name)}</td>${CL_SH.map(([k])=>`<td><input type="time" class="inp" data-cldue="${k}" data-clbr="${b}" value="${esc(((D.cfgb||{})[b]||{})[k]||(D.cfg||{})[k]||'')}"></td>`).join('')}</tr>`).join('')}</tbody></table></div><small class="muted">بعد الموعد بدون تسجيل يوصل إشعار رسمي لمدير الفرع، وبعد ساعتين إشعار تقصير ونسخة لك.</small></div>`;
     CL_SH.forEach(([k,ic,n])=>{ const L=(D.items||[]).filter(x=>x.s===k);
       h+=`<div class="card cl-ed"><div class="cl-edh"><b>${ic} ${n}</b><button class="btn sm ghost" data-cledit="new:${k}">➕ بند</button></div>${L.map(x=>`<div class="cl-er ${x.a?'':'off'}"><span>${esc(x.t)}${x.p?' <em>📷 صورة إلزامية</em>':''}${x.br?' <em>'+esc(brById(x.br).name)+' فقط</em>':''}${x.a?'':' <em>موقوف</em>'}</span><button class="icb" data-cledit="${x.id}">✎</button></div>`).join('')||'<p class="muted">ما فيه بنود</p>'}</div>`; });
     return h; }
@@ -5148,7 +5148,7 @@ V.clean=async()=>{ const r=await sb.rpc('clean_board',{p_day:st.clD||null});
   if(!isToday) h+=`<div class="pw-al ok" style="margin-bottom:10px"><span>📅</span><div><b>تعرض يوم سابق</b><small><button class="lnk" data-cld="">ارجع لليوم</button></small></div></div>`;
   const now=Date.now();
   bs.forEach(b=>{ const c=brById(b).color; const can=D.admin||(!D.ro);
-    h+=`<div class="card cl-b" style="--c:${c}"><div class="cl-bh"><i></i><b>${esc(brById(b).name)}</b></div>${CL_SH.map(([k,ic,n])=>{ const x=(D.checks||[]).find(z=>z.branch===b&&z.shift===k); const due=(D.cfg||{})[k];
+    h+=`<div class="card cl-b" style="--c:${c}"><div class="cl-bh"><i></i><b>${esc(brById(b).name)}</b></div>${CL_SH.map(([k,ic,n])=>{ const x=(D.checks||[]).find(z=>z.branch===b&&z.shift===k); const due=((D.cfgb||{})[b]||{})[k]||(D.cfg||{})[k];
       let stt; if(x){ const full=x.ok>=x.total; stt=`<span class="cl-s ${full?'ok':'warn'}">${full?'✅':'⚠️'} ${x.ok}/${x.total}</span><small>${clTm(x.created_at)} · ${esc(x.by_name||'')}${x.rating?' · '+clStars(x.rating):x.ai_rating?' · 🤖 '+clStars(x.ai_rating):(x.ok?' · 🤖 ⏳':'')}</small>`; }
       else { stt=`<span class="cl-s no">⏳ لم تُسجَّل</span><small>${k==='weekly'?'هذا الأسبوع · الموعد الخميس ':'الموعد '}${clT12(due)}</small>`; }
       return `<div class="cl-r"><span class="cl-i">${ic}</span><div class="cl-m"><b>${n}</b><div>${stt}</div></div><div class="cl-a">${x?`<button class="btn sm ghost" data-clview="${x.id}">عرض</button>`:''}${isToday&&can?`<button class="btn sm ${x?'ghost':''}" data-clnew="${b}:${k}">${x?'إعادة':'ابدأ'}</button>`:''}</div></div>`; }).join('')}</div>`; });
@@ -5203,7 +5203,7 @@ document.addEventListener('click',e=>{ const t=e.target.closest('[data-clt],[dat
   if(d.clnew){ const [b,k]=d.clnew.split(':'); clFill(b,k); return; }
   if(d.clview){ clView(d.clview); return; }
   if(d.cledit){ clEdit(d.cledit); return; } });
-document.addEventListener('change',async e=>{ const k=e.target&&e.target.dataset&&e.target.dataset.cldue; if(!k||!e.target.value) return; const r=await sb.rpc('clean_cfg_save',{p_shift:k,p_due:e.target.value}); toast(r.error?r.error.message:'تم حفظ الموعد ✓'); });
+document.addEventListener('change',async e=>{ const k=e.target&&e.target.dataset&&e.target.dataset.cldue; if(!k||!e.target.value) return; const br=e.target.dataset.clbr; const r=br?await sb.rpc('clean_cfg_save_br',{p_branch:br,p_shift:k,p_due:e.target.value}):await sb.rpc('clean_cfg_save',{p_shift:k,p_due:e.target.value}); toast(r.error?(/clean_cfg_save_br/.test(r.error.message)?'شغّل ملف «clean-due» في Supabase أول':r.error.message):'تم حفظ الموعد ✓'); });
 V.hub=async()=>{
   const gs=HUB.map(g=>({...g,v:(g.items||g.secs.map(id=>[id,(HUB_IT[id]||['📄'])[0],(SECTIONS.find(x=>x.id===id)||{}).name||id,{}])).filter(x=>canSee(x[0])&&(!x[4]||isAdmin()||st.mySections.includes(x[4])))})).filter(g=>g.v.length);
   if(!gs.length) return `<div class="card empty">ما عندك صلاحية على أي تقرير</div>`;
