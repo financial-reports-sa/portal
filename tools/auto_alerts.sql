@@ -38,12 +38,14 @@ language sql immutable as $$
          end
 $$;
 
-create or replace function public.alert_send(p_key text, p_kind text, p_emp uuid, p_users uuid[], p_title text, p_body text, p_url text, p_prio text default 'high', p_ack boolean default true)
+drop function if exists public.alert_send(text, text, uuid, uuid[], text, text, text, text, boolean);
+create or replace function public.alert_send(p_key text, p_kind text, p_emp uuid, p_users uuid[], p_title text, p_body text, p_url text, p_prio text default 'high', p_ack boolean default true, p_cc uuid[] default '{}')
 returns boolean language plpgsql volatile security definer set search_path = public as $$
-declare u uuid[]; mid bigint; snd uuid;
+declare u uuid[]; c uuid[]; mid bigint; snd uuid;
 begin
   u := array(select distinct x from unnest(coalesce(p_users, '{}')) x where x is not null);
   if cardinality(u) = 0 then return false; end if;
+  c := array(select distinct x from unnest(coalesce(p_cc, '{}')) x where x is not null and not (x = any(u)));
   insert into alert_log (key, kind, emp_id, users) values (p_key, p_kind, p_emp, u) on conflict (key) do nothing;
   if not found then return false; end if;
   select id into snd from profiles where role = 'owner' order by created_at limit 1;
@@ -55,12 +57,16 @@ begin
   select mid, p.id, coalesce(nullif(p.full_name, ''), p.username), case when p.role in ('owner', 'admin') then 'admin' when p.role = 'employee' then 'emp' else 'mgr' end
   from profiles p where p.id = any(u)
   on conflict do nothing;
+  insert into msg_rcpt (msg_id, user_id, name, kind)
+  select mid, p.id, coalesce(nullif(p.full_name, ''), p.username), 'cc'
+  from profiles p where p.id = any(c) and coalesce(p.active, true)
+  on conflict do nothing;
   perform push_send(u, p_title, left(split_part(p_body, chr(10) || '—' || chr(10), 1), 240), p_url, 'auto-' || p_kind);
   return true;
 exception when others then
   return false;
 end $$;
-revoke all on function public.alert_send(text, text, uuid, uuid[], text, text, text, text, boolean) from public, anon, authenticated;
+revoke all on function public.alert_send(text, text, uuid, uuid[], text, text, text, text, boolean, uuid[]) from public, anon, authenticated;
 
 create or replace function public.alert_mgrs(p_branch text, p_secs text[]) returns uuid[]
 language plpgsql stable security definer set search_path = public as $$
@@ -95,6 +101,41 @@ language sql stable security definer set search_path = public as $$
   select coalesce(array_agg(id), '{}') from profiles where role = 'owner' and coalesce(active, true)
 $$;
 revoke all on function public.alert_owners() from public, anon, authenticated;
+
+create or replace function public.alert_ops(p_sec text) returns uuid[]
+language plpgsql stable security definer set search_path = public as $$
+declare r uuid[];
+begin
+  if to_regclass('public.user_ro') is not null then
+    execute 'select coalesce(array_agg(distinct p.id), ''{}'') from profiles p join user_sections us on us.user_id = p.id and us.section = $1
+             where coalesce(p.active, true) and p.role in (''user'', ''admin'')
+               and not exists (select 1 from user_ro ro where ro.user_id = p.id and ro.section = $1)' into r using p_sec;
+  else
+    r := alert_sup(p_sec);
+  end if;
+  return r;
+end $$;
+revoke all on function public.alert_ops(text) from public, anon, authenticated;
+
+create or replace function public.alert_ro(p_views text[], p_sec text, p_skip uuid[]) returns uuid[]
+language plpgsql stable security definer set search_path = public as $$
+declare r uuid[];
+begin
+  select coalesce(array_agg(distinct p.id), '{}') into r from profiles p join user_sections us on us.user_id = p.id and us.section = any(p_views)
+   where coalesce(p.active, true) and p.role in ('user', 'admin') and not (p.id = any(coalesce(p_skip, '{}')));
+  if to_regclass('public.user_ro') is not null then
+    execute 'select coalesce(array_agg(distinct x), ''{}'') from (select unnest($1) x union select p.id from profiles p join user_ro ro on ro.user_id = p.id and ro.section = $2
+             where coalesce(p.active, true) and p.role in (''user'', ''admin'') and not (p.id = any(coalesce($3, ''{}'')))) t' into r using r, p_sec, p_skip;
+  end if;
+  return r;
+end $$;
+revoke all on function public.alert_ro(text[], text, uuid[]) from public, anon, authenticated;
+
+create or replace function public.alert_names(p_users uuid[]) returns text
+language sql stable security definer set search_path = public as $$
+  select coalesce(string_agg(coalesce(nullif(full_name, ''), username), '، ' order by full_name), '') from profiles where id = any(coalesce(p_users, '{}'))
+$$;
+revoke all on function public.alert_names(uuid[]) from public, anon, authenticated;
 
 create or replace function public.att_alerts_run() returns int
 language plpgsql volatile security definer set search_path = public as $$
@@ -254,7 +295,7 @@ revoke all on function public.ret_alerts_run() from public, anon, authenticated;
 create or replace function public.ops_alerts_run() returns int
 language plpgsql volatile security definer set search_path = public as $$
 declare u record; n int := 0; lst text; cnt int; dk text := to_char(now() at time zone 'Asia/Riyadh', 'YYYY-MM-DD'); nl text := chr(10);
-  rep text := ''; mc int := 0; pc int := 0; bc int := 0;
+  rep text := ''; to_u uuid[]; cc_u uuid[]; nms text; mc int := 0; pc int := 0; bc int := 0;
 begin
   if not coalesce((select ops from alert_cfg where id = 1), true) then return 0; end if;
 
@@ -266,13 +307,12 @@ begin
   where (m.status = 'new' and m.created_at < now() - interval '24 hours')
      or (m.status in ('assigned', 'progress', 'hold') and (m.due_date < (now() at time zone 'Asia/Riyadh')::date or coalesce(m.started_at, m.assigned_at, m.created_at) < now() - interval '3 days'));
   if mc > 0 then
-    for u in select p.id, coalesce(nullif(p.full_name, ''), p.username) nm from profiles p where p.id = any(alert_sup('maint_sup')) loop
-      if alert_send('ops:maint:' || u.id || ':' || dk, 'maint_late', null, array[u.id], 'إشعار تقصير: طلبات صيانة متأخرة',
-        'السيد/ ' || u.nm || '،' || nl || 'لوحظ وجود ' || mc || ' طلب صيانة متأخر لم يتم إتمامه حتى تاريخه:' || nl || lst || nl ||
+    to_u := alert_ops('maint_sup'); cc_u := alert_ro(array['maint_view'], 'maint_sup', to_u); nms := alert_names(to_u);
+    if cardinality(to_u) > 0 and alert_send('ops:maint:' || dk, 'maint_late', null, to_u, 'إشعار تقصير: طلبات صيانة متأخرة',
+        case when cardinality(to_u) > 1 then 'السادة/ ' else 'السيد/ ' end || nms || '،' || nl || 'لوحظ وجود ' || mc || ' طلب صيانة متأخر لم يتم إتمامه حتى تاريخه:' || nl || lst || nl ||
         'يُعد التأخر في إتمام الطلبات تقصيراً في أداء المهام الموكلة إليك، وسيُرفع تقرير بذلك للإدارة. المطلوب إتمام الطلبات أو تحديث حالتها مع ذكر السبب اليوم.' || nl || '— نظام المتابعة الآلي',
-        './?tab=maint', 'urgent') then n := n + 1; end if;
-    end loop;
-    rep := rep || '🔧 الصيانة: ' || mc || ' طلب متأخر' || nl || lst || nl || nl;
+        './?tab=maint', 'urgent', true, cc_u) then n := n + 1; end if;
+    rep := rep || '🔧 الصيانة: ' || mc || ' طلب متأخر — وُجّه إلى: ' || coalesce(nullif(nms, ''), 'لا يوجد مسؤول صيانة محدد بصلاحية عمليات') || nl || lst || nl || nl;
   end if;
 
   select count(*), string_agg('• #' || r.no || ' ' || r.title || ' — ' || coalesce((select name from branches where id = r.branch), r.branch) || ' — ' ||
@@ -284,13 +324,12 @@ begin
   where (r.status = 'new' and r.created_at < now() - case when r.priority = 'urgent' then interval '4 hours' else interval '24 hours' end)
      or (r.status = 'progress' and (r.need_by < (now() at time zone 'Asia/Riyadh')::date or coalesce(r.started_at, r.created_at) < now() - interval '3 days'));
   if pc > 0 then
-    for u in select p.id, coalesce(nullif(p.full_name, ''), p.username) nm from profiles p where p.id = any(alert_sup('purch_sup')) loop
-      if alert_send('ops:purch:' || u.id || ':' || dk, 'purch_late', null, array[u.id], 'إشعار تقصير: طلبات شراء متأخرة',
-        'السيد/ ' || u.nm || '،' || nl || 'لوحظ وجود ' || pc || ' طلب شراء متأخر لم يتم إتمامه حتى تاريخه:' || nl || lst || nl ||
+    to_u := alert_ops('purch_sup'); cc_u := alert_ro(array['purch_view'], 'purch_sup', to_u); nms := alert_names(to_u);
+    if cardinality(to_u) > 0 and alert_send('ops:purch:' || dk, 'purch_late', null, to_u, 'إشعار تقصير: طلبات شراء متأخرة',
+        case when cardinality(to_u) > 1 then 'السادة/ ' else 'السيد/ ' end || nms || '،' || nl || 'لوحظ وجود ' || pc || ' طلب شراء متأخر لم يتم إتمامه حتى تاريخه:' || nl || lst || nl ||
         'يُعد التأخر في إتمام الطلبات تقصيراً في أداء المهام الموكلة إليك، وسيُرفع تقرير بذلك للإدارة. المطلوب إتمام الطلبات أو تحديث حالتها مع ذكر السبب اليوم.' || nl || '— نظام المتابعة الآلي',
-        './?tab=purch', 'urgent') then n := n + 1; end if;
-    end loop;
-    rep := rep || '🛒 المشتريات: ' || pc || ' طلب متأخر' || nl || lst || nl || nl;
+        './?tab=purch', 'urgent', true, cc_u) then n := n + 1; end if;
+    rep := rep || '🛒 المشتريات: ' || pc || ' طلب متأخر — وُجّه إلى: ' || coalesce(nullif(nms, ''), 'لا يوجد مسؤول مشتريات محدد بصلاحية عمليات') || nl || lst || nl || nl;
   end if;
 
   for u in
@@ -311,7 +350,7 @@ begin
 
   if rep <> '' then
     perform alert_send('ops:report:' || dk, 'ops_report', null, alert_owners(), 'تقرير يومي: الطلبات المتأخرة',
-      'تقرير المتابعة الآلية ليوم ' || dk || nl || nl || rep || 'تم إرسال إشعار تقصير رسمي للمسؤولين.' || nl || '— نظام المتابعة الآلي',
+      'تقرير المتابعة الآلية ليوم ' || dk || nl || nl || rep || 'تم إرسال إشعار تقصير رسمي للمسؤول المختص، ومن لديه صلاحية القراءة يطّلع عليه فقط.' || nl || '— نظام المتابعة الآلي',
       './?tab=maint', 'high', false);
   end if;
   return n;

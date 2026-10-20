@@ -870,7 +870,7 @@ html[dir=ltr] .sh-t{direction:ltr}html[dir=ltr] .sh-t i{display:inline-block;tra
 .pm tr.pm-op th,.pm tr.pm-op td:not(.pm-bb){border-bottom:1px dashed #E3E7DF!important}.pm tr.pm-ro th,.pm tr.pm-ro td,.pm td.pm-bb{border-bottom:2px solid #D4DCD3!important}
 .pm tr.pm-ro td{background:#FCFAF4}.pm tr.pm-ro .pm-u{background:#FCFAF4!important}.pm-u em{display:block;font-style:normal;font-size:8.5px;font-weight:600;color:#5B7A68;margin-top:1px}.pm tbody .pm-u{padding:5px 10px!important;line-height:1.35}.pm-ro .pm-u em{color:#9A7B36;margin:0}.pm td.pm-bb{vertical-align:middle}
 .pm-c.ro[aria-pressed="true"]{background:#F6EBCF!important;border-color:#D2B46A!important}.pm-c.ro[aria-pressed="true"]::after{color:#8A6A1F!important}.pm-c.ro{width:20px!important;height:20px!important;border-radius:6px!important}
-.pm-lg{display:flex;gap:14px;flex-wrap:wrap;font-size:10.5px;color:#3F4D45;margin:2px 2px 6px}.pm-lg span{display:inline-flex;align-items:center;gap:6px}.pm-lg i.pm-c{margin:0;width:16px!important;height:16px!important;cursor:default;pointer-events:none}.pm-lg i.pm-c::after{font-size:10px!important}.pm tbody tr:hover td,.pm tbody tr:hover .pm-u{background:#F2F7F3}
+.mg-ccb{margin:8px 0 2px;padding:8px 10px;border-radius:10px;background:#F6F1E3;border:1px solid #E4D6B0;color:#6B5420;font-size:11.5px;line-height:1.7}.pm-lg{display:flex;gap:14px;flex-wrap:wrap;font-size:10.5px;color:#3F4D45;margin:2px 2px 6px}.pm-lg span{display:inline-flex;align-items:center;gap:6px}.pm-lg i.pm-c{margin:0;width:16px!important;height:16px!important;cursor:default;pointer-events:none}.pm-lg i.pm-c::after{font-size:10px!important}.pm tbody tr:hover td,.pm tbody tr:hover .pm-u{background:#F2F7F3}
 .pm .g1{background:#F8FAF6}.pm thead .g0{background:#EEF4F0}.pm thead .g1{background:#F6F2E6}
 .pm-g{color:#2F4A3B;font-size:10.5px!important;border-inline-start:2px solid #D4DCD3!important}
 .pm-h span{color:#3F4D45;font-weight:600}
@@ -1016,7 +1016,7 @@ async function applyRole(uid,rk){ const R=PERM_ROLES.find(r=>r.k===rk); const wa
   if(add.length){ const r=await T('user_sections').insert(add.map(x=>({user_id:uid,section:x}))); if(r.error) return r.error; }
   if(st._uroOk){ const r=await T('user_ro').delete().eq('user_id',uid).neq('section',''); if(r.error) return r.error; }
   return null; }
-const APP_VER='202610200800';
+const APP_VER='202610200900';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.clean='النظافة (قوائم الفتح والإغلاق)'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -2668,6 +2668,7 @@ async function mgDetail(id){
     <div class="mg-h">${mgBadge(m)}<span class="mg-t">رقم ${m.id}</span></div>
     <h2 class="mg-dt">${esc(m.title)}</h2>
     <div class="mg-meta">من <b>${esc(m.from||'')}</b> · ${mgDT(m.at)}${m.boss?` · إلى: ${esc(mgTargetTxt(m.target))}`:''}</div>
+    ${m.cc?`<div class="mg-ccb">📋 للاطلاع فقط — هذا التنبيه موجّه إلى <b>${esc(m.to||'المسؤول')}</b>، وأنت تشوفه لأن عندك صلاحية القراءة.</div>`:''}
     ${m.body?`<div class="mg-body">${esc(m.body)}</div>`:''}
     ${files.length?`<div class="mg-files">${files.map((f,i)=>f.t==='pdf'?`<a class="mg-pdf" href="${esc(srcs[i])}" target="_blank" rel="noopener">📄 ${esc(f.n||'ملف PDF')}</a>`:`<a class="mg-img" href="${esc(srcs[i])}" target="_blank" rel="noopener"><img src="${esc(srcs[i])}" alt="" loading="lazy"></a>`).join('')}</div>`:''}
     <div class="mg-acts"><button class="btn ghost sm" data-mgprint="1">🖨️ طباعة / PDF</button>${isOwner()?`<button class="btn ghost sm" data-mgdel="${m.id}" style="color:var(--down)">حذف</button>`:''}</div>
@@ -2677,7 +2678,7 @@ async function mgDetail(id){
     else if(m.ack) h+=`<div class="card mg-acked">✅ أقررت بالاطلاع · ${mgDT(m.me.acked)}</div>`;
   }
   if(m.boss&&m.rcpt){
-    const R=m.rcpt, n=R.length, nr=R.filter(x=>x.read).length, na=R.filter(x=>x.acked).length; const left=R.filter(x=>m.ack?!x.acked:!x.read).length;
+    const R=m.rcpt.filter(x=>x.kind!=='cc'), n=R.length, nr=R.filter(x=>x.read).length, na=R.filter(x=>x.acked).length; const left=R.filter(x=>m.ack?!x.acked:!x.read).length;
     const fl=st.mgRF||'all'; const RL=R.filter(x=>fl==='all'||(fl==='no'?(m.ack?!x.acked:!x.read):(m.ack?x.acked:x.read)));
     h+=`<div class="card"><h3>حالة الاستلام <small>${n} مستلم</small></h3>
       <div class="mg-kp"><div><b class="num">${nr}</b><span>قرأ</span></div>${m.ack?`<div><b class="num">${na}</b><span>أقرّ</span></div>`:''}<div><b class="num" style="color:${left?'var(--down)':'var(--up)'}">${left}</b><span>${m.ack?'ما أقرّ':'ما قرأ'}</span></div></div>
