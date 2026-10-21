@@ -235,6 +235,7 @@ language plpgsql security definer set search_path = public as $$
 declare e employees; tin timestamptz; tout timestamptz; sq int := greatest(1, least(2, coalesce(p_seq, 1)));
 begin
   select * into e from employees where id = p_emp;
+  if not exists (select 1 from profiles where id = auth.uid() and role = 'owner') then raise exception 'تصحيح سجل الحضور للمالك فقط'; end if;
   if e.id is null or not att_ok(p_emp) then raise exception 'ليس لديك صلاحية على هذا الموظف'; end if;
   if p_day is null or p_day > att_bday() then raise exception 'التاريخ غير صحيح'; end if;
   if nullif(btrim(coalesce(p_note, '')), '') is null then raise exception 'اكتب سبب التصحيح'; end if;
