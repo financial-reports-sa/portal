@@ -1022,12 +1022,13 @@ const NAV_ICONS={
   more:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>'};
 const GROUPS=[{id:'home',name:'الرئيسية',secs:['home','cmp','pradar','me','msgs']},{id:'ai',name:'المساعد الذكي',secs:['ai']},{id:'rep',name:'التقارير',secs:['hub','score','sales','channels','deliv','csales','stock','pricew','income','finst','balances','treasury','handover','rets','custody','loans']},{id:'ops',name:'العمليات',secs:['maint','clean','purch','feedback','mkt','fleet']},{id:'hrg',name:'الموارد البشرية',secs:['hr','att','employees','advances']},{id:'more',name:'الإدارة',secs:['users','data'],nav:false}];
 const HUB=[
+  {n:'الأداء',ic:'🏆',c:'#8A6A10',secs:['score']},
   {n:'المبيعات',ic:'💰',c:'#1E5A3E',secs:['sales','channels','deliv','csales']},
   {n:'المستودعات',ic:'📦',c:'#B8860B',secs:['stock','pricew'],items:[['pricew','📡','رادار الأسعار',{}],['stock','🧾','المشتريات',{ivT:'pur'}],['stock','📤','الصرف المباشر',{ivT:'iss'}],['stock','📦','أرصدة المخزون',{ivT:'stock'}],['stock','📊','المخططات اليومية',{ivT:'chart'}]]},
   {n:'القوائم المالية والحسابات',ic:'📊',c:'#2F5D8A',secs:['income','finst','balances','treasury'],items:[['income','📈','قائمة الدخل',{},'fin_is'],['finst','⚖️','الميزانية',{fsT:'bs'},'fin_bs'],['finst','📚','أرصدة الحسابات',{fsT:'tb'},'fin_tb'],['balances','🏭','الموردين',{blK:'vend'}],['balances','👥','العملاء',{blK:'cust'}],['treasury','🏦','خزينة الأرصدة',{}]]},
   {n:'الكاشيرات',ic:'🧾',c:'#9A3E2E',secs:['handover','rets']},
   {n:'العُهد والتمويلات',ic:'💼',c:'#5B5F66',secs:['custody','loans']}];
-const HUB_IT={deliv:['🏍️','طلبات كل سائق توصيل'],csales:['🧾','مبيعات كل كاشير وطرق الدفع والمرتجعات'],sales:['📈','المبيعات اليومية والشهرية لكل فرع'],channels:['🛵','التطبيقات والأقسام وفئات المنيو'],stock:['📦','الصرف المباشر والمشتريات وأرصدة الأصناف'],finst:['📑','قائمة الدخل والميزانية وأرصدة الحسابات'],balances:['👥','أرصدة وكشوف العملاء والموردين'],treasury:['🏦','أرصدة البنوك والصناديق'],handover:['🔐','مطابقة عهدة الكاشير مع جروث'],rets:['↩️','تفاصيل المرتجعات وتنزيلها كصورة'],custody:['💼','العُهد واستلامها'],loans:['💳','التمويلات والأقساط']};
+const HUB_IT={score:['🏆','نتيجة كل فرع من 100 والترتيب الشهري'],deliv:['🏍️','طلبات كل سائق توصيل'],csales:['🧾','مبيعات كل كاشير وطرق الدفع والمرتجعات'],sales:['📈','المبيعات اليومية والشهرية لكل فرع'],channels:['🛵','التطبيقات والأقسام وفئات المنيو'],stock:['📦','الصرف المباشر والمشتريات وأرصدة الأصناف'],finst:['📑','قائمة الدخل والميزانية وأرصدة الحسابات'],balances:['👥','أرصدة وكشوف العملاء والموردين'],treasury:['🏦','أرصدة البنوك والصناديق'],handover:['🔐','مطابقة عهدة الكاشير مع جروث'],rets:['↩️','تفاصيل المرتجعات وتنزيلها كصورة'],custody:['💼','العُهد واستلامها'],loans:['💳','التمويلات والأقساط']};
 const hubOf=t=>HUB.find(g=>g.secs.includes(t));
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
@@ -1050,7 +1051,7 @@ async function applyRole(uid,rk){ const R=PERM_ROLES.find(r=>r.k===rk); const wa
   if(add.length){ const r=await T('user_sections').insert(add.map(x=>({user_id:uid,section:x}))); if(r.error) return r.error; }
   if(st._uroOk){ const r=await T('user_ro').delete().eq('user_id',uid).neq('section',''); if(r.error) return r.error; }
   return null; }
-const APP_VER='202610211000';
+const APP_VER='202610211005';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.csales='مبيعات الكاشيرات'; SEC_NAME.clean='النظافة (قوائم الفتح والإغلاق)'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const ujob=(uid,kind)=>(uid&&(st._jobs||{})[uid])||(kind==='emp'?'موظف':kind==='admin'?'إدارة':'مستخدم');
