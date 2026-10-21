@@ -13,9 +13,12 @@ declare
   r_ref numeric; r_gross numeric; r_score numeric;
   mt_n int; mt_ok int; mt_open int; mt_score numeric;
   s_cur numeric; s_prev numeric; s_score numeric;
-  w numeric; tot numeric; mgr text;
+  w numeric; tot numeric; mgr text; adm boolean := coalesce(is_admin(), false); mine text[];
 begin
-  if not coalesce(is_admin(), false) then raise exception 'بطاقة الأداء للإدارة فقط'; end if;
+  if not adm and not (coalesce(has_section('clean'), false) or coalesce(has_section('att'), false) or coalesce(has_section('employees'), false)) then
+    raise exception 'غير مصرح';
+  end if;
+  mine := coalesce(my_branches(), '{}');
   if d1 < d0 then d1 := d0; end if;
   for b in select id, name from branches order by sort, id loop
     select count(*), avg(coalesce(rating, ai_rating)) into c_done, c_rate from clean_checks
@@ -54,8 +57,14 @@ begin
 
     select string_agg(distinct coalesce(nullif(p.full_name, ''), p.username), '، ') into mgr
       from profiles p join user_branches ub on ub.user_id = p.id and ub.branch_id = b.id
-      join user_sections us on us.user_id = p.id and us.section = 'clean'
-     where p.role = 'user' and coalesce(p.active, true);
+      join emp_accounts a on a.user_id = p.id join employees e on e.id = a.emp_id
+     where p.role = 'user' and coalesce(p.active, true) and e.job like '%مدير%';
+    if mgr is null then
+      select string_agg(n, '، ') into mgr from (select distinct coalesce(nullif(p.full_name, ''), p.username) n
+        from profiles p join user_branches ub on ub.user_id = p.id and ub.branch_id = b.id
+        join user_sections us on us.user_id = p.id and us.section = 'clean'
+       where p.role = 'user' and coalesce(p.active, true) and (select count(*) from user_branches z where z.user_id = p.id) = 1 limit 2) q;
+    end if;
 
     res := res || jsonb_build_array(jsonb_build_object(
       'b', b.id, 'name', b.name, 'mgr', coalesce(mgr, ''),
@@ -66,7 +75,10 @@ begin
       'ret', jsonb_build_object('s', r_score, 'r', round(r_ref), 'pct', case when r_gross > 0 then round(r_ref / r_gross * 100, 2) end),
       'maint', jsonb_build_object('s', mt_score, 'n', mt_n, 'ok', mt_ok, 'open', mt_open)));
   end loop;
-  return jsonb_build_object('month', m, 'from', d0, 'to', d1, 'days', nd, 'prev_from', p0, 'prev_to', p1, 'rows', res);
+  select coalesce(jsonb_agg(q.x || jsonb_build_object('rank', q.rn, 'of', q.cnt) order by q.rn), '[]'::jsonb) into res from (
+    select x, rank() over (order by (x->>'score')::numeric desc nulls last) rn, count(*) over () cnt from jsonb_array_elements(res) x) q
+   where adm or (q.x->>'b') = any(mine);
+  return jsonb_build_object('month', m, 'from', d0, 'to', d1, 'days', nd, 'prev_from', p0, 'prev_to', p1, 'admin', adm, 'rows', res);
 end $$;
 revoke all on function public.branch_scorecard(text) from public, anon;
 grant execute on function public.branch_scorecard(text) to authenticated;
