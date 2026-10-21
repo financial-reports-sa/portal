@@ -13,7 +13,7 @@ declare
   r_ref numeric; r_gross numeric; r_score numeric;
   mt_n int; mt_ok int; mt_open int; mt_score numeric;
   s_cur numeric; s_prev numeric; s_score numeric;
-  w numeric; tot numeric; mgr text; adm boolean := coalesce(is_admin(), false); mine text[];
+  w numeric; tot numeric; mgr text; a_late int; a_abs int; a_early int; a_out int; c_low int; s_bills int; mt_late int; n_emp int; adm boolean := coalesce(is_admin(), false); mine text[];
 begin
   if not adm and not (coalesce(has_section('clean'), false) or coalesce(has_section('att'), false) or coalesce(has_section('employees'), false)) then
     raise exception 'غير مصرح';
@@ -27,9 +27,12 @@ begin
     c_score := case when c_exp = 0 then null
                     else round(0.5 * least(100, c_done * 100.0 / c_exp) + 0.5 * coalesce(c_rate / 5 * 100, least(100, c_done * 100.0 / c_exp)), 1) end;
 
-    select count(*) into a_n from alert_log l join employees e on e.id = l.emp_id
+    select count(*), count(*) filter (where l.kind = 'att_late'), count(*) filter (where l.kind in ('att_abs', 'att_sh2')), count(*) filter (where l.kind = 'att_early'), count(*) filter (where l.kind = 'att_noout')
+      into a_n, a_late, a_abs, a_early, a_out from alert_log l join employees e on e.id = l.emp_id
      where e.branch = b.id and l.kind in ('att_late', 'att_abs', 'att_early', 'att_noout', 'att_sh2')
        and (l.created_at at time zone 'Asia/Riyadh')::date between d0 and d1;
+    select count(*) into n_emp from employees where branch = b.id and status = 'active';
+    select count(*) into c_low from clean_checks where branch = b.id and day between d0 and d1 and coalesce(rating, ai_rating) <= 3;
     select count(*) into a_emp from employees e where e.branch = b.id and e.status = 'active'
        and exists (select 1 from emp_accounts x where x.emp_id = e.id)
        and not coalesce((select exempt from att_emp z where z.emp_id = e.id), false);
@@ -44,7 +47,8 @@ begin
       into mt_n, mt_ok, mt_open from maint_requests where branch = b.id and (created_at at time zone 'Asia/Riyadh')::date between d0 and d1 and status not in ('cancelled', 'rejected');
     mt_score := case when mt_n = 0 then null else round(mt_ok * 100.0 / mt_n, 1) end;
 
-    select coalesce(sum(sales + credit - refunds), 0) into s_cur from growth_cashier_daily where branch = b.id and bdate between d0 and d1;
+    select coalesce(sum(sales + credit - refunds), 0), coalesce(sum(bills), 0) into s_cur, s_bills from growth_cashier_daily where branch = b.id and bdate between d0 and d1;
+    select count(*) into mt_late from maint_requests where branch = b.id and status not in ('done', 'closed', 'cancelled', 'rejected') and created_at < now() - interval '3 days';
     select coalesce(sum(sales + credit - refunds), 0) into s_prev from growth_cashier_daily where branch = b.id and bdate between p0 and p1;
     s_score := case when s_prev <= 0 or s_cur <= 0 then null else round(greatest(0, least(100, 50 + ((s_cur / s_prev - 1) * 100) * 2.5)), 1) end;
 
@@ -69,11 +73,12 @@ begin
     res := res || jsonb_build_array(jsonb_build_object(
       'b', b.id, 'name', b.name, 'mgr', coalesce(mgr, ''),
       'score', case when w = 0 then null else round(tot / w, 1) end,
-      'clean', jsonb_build_object('s', c_score, 'done', c_done, 'exp', c_exp, 'rate', round(c_rate, 2)),
-      'att', jsonb_build_object('s', a_score, 'n', a_n, 'emps', a_emp),
-      'sales', jsonb_build_object('s', s_score, 'cur', round(s_cur), 'prev', round(s_prev), 'g', case when s_prev > 0 then round((s_cur / s_prev - 1) * 100, 1) end),
+      'emps_all', n_emp,
+      'clean', jsonb_build_object('s', c_score, 'done', c_done, 'exp', c_exp, 'rate', round(c_rate, 2), 'low', c_low),
+      'att', jsonb_build_object('s', a_score, 'n', a_n, 'emps', a_emp, 'late', a_late, 'abs', a_abs, 'early', a_early, 'out', a_out),
+      'sales', jsonb_build_object('s', s_score, 'cur', round(s_cur), 'prev', round(s_prev), 'bills', s_bills, 'avg', case when s_bills > 0 then round(s_cur / s_bills, 1) end, 'daily', round(s_cur / nd), 'g', case when s_prev > 0 then round((s_cur / s_prev - 1) * 100, 1) end),
       'ret', jsonb_build_object('s', r_score, 'r', round(r_ref), 'pct', case when r_gross > 0 then round(r_ref / r_gross * 100, 2) end),
-      'maint', jsonb_build_object('s', mt_score, 'n', mt_n, 'ok', mt_ok, 'open', mt_open)));
+      'maint', jsonb_build_object('s', mt_score, 'n', mt_n, 'ok', mt_ok, 'open', mt_open, 'late', mt_late)));
   end loop;
   select coalesce(jsonb_agg(q.x || jsonb_build_object('rank', q.rn, 'of', q.cnt) order by q.rn), '[]'::jsonb) into res from (
     select x, rank() over (order by (x->>'score')::numeric desc nulls last) rn, count(*) over () cnt from jsonb_array_elements(res) x) q
