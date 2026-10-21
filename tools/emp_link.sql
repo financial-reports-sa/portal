@@ -76,4 +76,12 @@ $$;
 revoke all on function public.emp_link_user(uuid, uuid), public.emp_unlink_user(uuid), public.emp_links() from public, anon;
 grant execute on function public.emp_link_user(uuid, uuid), public.emp_unlink_user(uuid), public.emp_links(), public.emp_account_delete(uuid), public.emp_set_pin(uuid, text) to authenticated;
 
+create or replace function public.user_jobs() returns jsonb
+language sql stable security definer set search_path = public as $$
+  select coalesce(jsonb_object_agg(a.user_id, nullif(btrim(e.job), '')) filter (where nullif(btrim(e.job), '') is not null), '{}'::jsonb)
+  from emp_accounts a join employees e on e.id = a.emp_id
+$$;
+revoke all on function public.user_jobs() from public, anon;
+grant execute on function public.user_jobs() to authenticated;
+
 select 'تم: دمج حساب الموظف مع حساب المستخدم' as result;
