@@ -44,10 +44,25 @@ Q 'tables having a DocSeq column (header children)' "SELECT OBJECT_NAME(object_i
 Q 'document types (SysMenu DocTId with names)' "SELECT DocTId, MIN(DisplayName) AS name, COUNT(*) AS n FROM SysMenu WITH (NOLOCK) WHERE DocTId > 0 GROUP BY DocTId ORDER BY DocTId" 200
 Q 'doc types used in last 60 days (count, min/max DocNo)' "SELECT h.DocType, COUNT(*) AS docs, MIN(h.DocNo) AS min_no, MAX(h.DocNo) AS max_no, MAX(h.DtTim) AS last_dt FROM TransHds2 h WITH (NOLOCK) WHERE h.DtTim >= DATEADD(day, -60, GETDATE()) GROUP BY h.DocType ORDER BY docs DESC" 100
 Q 'Other13 values on lines (status flag?)' "SELECT Other13, COUNT(*) AS n FROM TransBdyFA2 WITH (NOLOCK) GROUP BY Other13 ORDER BY Other13" 30
-Q 'latest 3 journal headers (all columns) - type with most docs named قيود' "SELECT TOP 3 h.* FROM TransHds2 h WITH (NOLOCK) WHERE h.DocType IN (SELECT DocTId FROM SysMenu WITH (NOLOCK) WHERE DocTId > 0 AND DisplayName LIKE N'%قيود%') ORDER BY h.DocSeq DESC" 3
-Q 'lines of the latest journal (all columns)' "SELECT f.* FROM TransBdyFA2 f WITH (NOLOCK) WHERE f.DocSeq = (SELECT TOP 1 h.DocSeq FROM TransHds2 h WITH (NOLOCK) WHERE h.DocType IN (SELECT DocTId FROM SysMenu WITH (NOLOCK) WHERE DocTId > 0 AND DisplayName LIKE N'%قيود%') ORDER BY h.DocSeq DESC)" 40
-Q 'latest 2 bank payment voucher headers (سند صرف / تحويل)' "SELECT TOP 2 h.* FROM TransHds2 h WITH (NOLOCK) WHERE h.DocType IN (SELECT DocTId FROM SysMenu WITH (NOLOCK) WHERE DocTId > 0 AND (DisplayName LIKE N'%صرف%' OR DisplayName LIKE N'%تحويل%')) ORDER BY h.DocSeq DESC" 2
-Q 'lines of the latest bank payment voucher' "SELECT f.* FROM TransBdyFA2 f WITH (NOLOCK) WHERE f.DocSeq = (SELECT TOP 1 h.DocSeq FROM TransHds2 h WITH (NOLOCK) WHERE h.DocType IN (SELECT DocTId FROM SysMenu WITH (NOLOCK) WHERE DocTId > 0 AND (DisplayName LIKE N'%صرف%' OR DisplayName LIKE N'%تحويل%')) ORDER BY h.DocSeq DESC)" 40
+Q 'menu entries for the two target documents' "SELECT DocTId, DisplayName FROM SysMenu WITH (NOLOCK) WHERE DocTId > 0 AND (DisplayName LIKE N'%قيود آلية%' OR DisplayName LIKE N'%AI%' OR DisplayName LIKE N'%تحويل بنكي%' OR DisplayName LIKE N'%صرف شيك%' OR DisplayName LIKE N'%صرف آلي%')" 50
+# For each target document: latest 2 headers + every row in every DocSeq child table for the latest one
+$targets = @(
+  @{ n = 'قيود آلية (قيود اليومية)'; w = "DisplayName LIKE N'%قيود آلية%'" },
+  @{ n = 'AI تحويل بنكي (سند صرف شيك)'; w = "(DisplayName LIKE N'%AI%' OR DisplayName LIKE N'%تحويل بنكي%' OR DisplayName LIKE N'%صرف شيك%' OR DisplayName LIKE N'%صرف آلي%')" }
+)
+$kids = @()
+try { $k = $c.CreateCommand(); $k.CommandText = "SELECT OBJECT_NAME(object_id) FROM sys.columns WHERE name = 'DocSeq' AND OBJECTPROPERTY(object_id, 'IsUserTable') = 1 AND OBJECT_NAME(object_id) <> 'TransHds2'"; $r = $k.ExecuteReader(); while ($r.Read()) { $kids += [string]$r.GetValue(0) }; $r.Close() } catch {}
+foreach ($t in $targets) {
+  $sub = "SELECT DocTId FROM SysMenu WITH (NOLOCK) WHERE DocTId > 0 AND $($t.w)"
+  Q ("[{0}] latest 2 headers (all columns)" -f $t.n) "SELECT TOP 2 h.* FROM TransHds2 h WITH (NOLOCK) WHERE h.DocType IN ($sub) ORDER BY h.DocSeq DESC" 2
+  $seq = $null
+  try { $k = $c.CreateCommand(); $k.CommandText = "SELECT TOP 1 h.DocSeq FROM TransHds2 h WITH (NOLOCK) WHERE h.DocType IN ($sub) ORDER BY h.DocSeq DESC"; $seq = $k.ExecuteScalar() } catch {}
+  if ($seq -eq $null -or $seq -is [DBNull]) { W ("[{0}] no document found" -f $t.n); continue }
+  W ("[{0}] latest DocSeq = {1}" -f $t.n, $seq)
+  foreach ($kt in $kids) {
+    Q ("[{0}] rows in {1} for DocSeq {2}" -f $t.n, $kt, $seq) "SELECT * FROM [$kt] WITH (NOLOCK) WHERE DocSeq = $seq" 40
+  }
+}
 Q 'max DocSeq / max line Id (numbering)' "SELECT (SELECT MAX(DocSeq) FROM TransHds2 WITH (NOLOCK)) AS max_docseq, (SELECT MAX(Id) FROM TransBdyFA2 WITH (NOLOCK)) AS max_line_id" 1
 Q 'stored procedures that insert into TransHds2' "SELECT o.name FROM sys.sql_modules m JOIN sys.objects o ON o.object_id = m.object_id WHERE m.definition LIKE '%INSERT%TransHds2%' OR m.definition LIKE '%INSERT INTO%TransBdyFA2%'" 50
 Q 'branches' "SELECT ID, Code, Name FROM BranchsTable WITH (NOLOCK) ORDER BY ID" 50
