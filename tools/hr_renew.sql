@@ -82,4 +82,12 @@ end $$;
 revoke all on function public.hr_renew(text, uuid, int, text, date, numeric, text, text, uuid), public.hr_renew_undo(uuid) from public, anon;
 grant execute on function public.hr_renew(text, uuid, int, text, date, numeric, text, text, uuid), public.hr_renew_undo(uuid) to authenticated;
 
+do $$
+begin
+  if to_regclass('public.employee_photos') is not null then
+    execute 'drop policy if exists ep_hr_sel on public.employee_photos';
+    execute 'create policy ep_hr_sel on public.employee_photos for select to authenticated using (hr_can())';
+  end if;
+end $$;
+
 select 'تم: التجديد التلقائي وسجل التجديدات' as result;
