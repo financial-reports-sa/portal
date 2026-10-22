@@ -1171,7 +1171,7 @@ async function applyRole(uid,rk){ const R=PERM_ROLES.find(r=>r.k===rk); const wa
   if(add.length){ const r=await T('user_sections').insert(add.map(x=>({user_id:uid,section:x}))); if(r.error) return r.error; }
   if(st._uroOk){ const r=await T('user_ro').delete().eq('user_id',uid).neq('section',''); if(r.error) return r.error; }
   return null; }
-const APP_VER='202610221400';
+const APP_VER='202610221405';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.csales='مبيعات الكاشيرات'; SEC_NAME.glq='قيود جروث (تسجيل القيود في جروث)'; SEC_NAME.clean='النظافة (قوائم الفتح والإغلاق)'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const ujob=(uid,kind)=>(uid&&(st._jobs||{})[uid])||(kind==='emp'?'موظف':kind==='admin'?'إدارة':'مستخدم');
@@ -2799,6 +2799,7 @@ function openAdvDoc(a,e){
 }
 V.me=async()=>{
   const [m,A]=await Promise.all([sb.rpc('my_emp'),sb.from('advances').select('*').order('created_at',{ascending:false})]);
+  if(m.error) return `<div class="card" style="text-align:center;padding:22px 16px"><div style="font-size:30px">📡</div><b style="display:block;margin:6px 0 4px">تعذّر تحميل بياناتك</b><p class="muted" style="font-size:12px;margin:0 0 12px">فيه مشكلة اتصال مؤقتة بالخادم — حاول مرة ثانية بعد قليل.</p><button class="btn" onclick="render()">إعادة المحاولة</button></div>`;
   const e=m.data; if(!e) return `<div class="card" style="text-align:center;padding:22px 16px"><div style="font-size:30px">🔗</div><b style="display:block;margin:6px 0 4px">حسابك غير مرتبط ببيانات موظف</b><p class="muted" style="font-size:12px;margin:0 0 12px;line-height:1.8">إذا تم دمج حسابك أو تغيير بيانات دخولك، سجّل خروج وادخل من جديد بالبيانات الجديدة.<br>وإذا استمرت المشكلة تواصل مع مدير الفرع لربط حسابك.</p><button class="btn" onclick="document.getElementById('logout').click()">تسجيل خروج</button></div>`;
   const adv=A.data||[]; const act=adv.filter(a=>a.status==='approved'&&advCalc(a).rem>0); const pend=adv.find(a=>a.status==='pending_mgr'||a.status==='pending_owner');
   const rem=act.reduce((t,a)=>t+advCalc(a).rem,0), mo=act.reduce((t,a)=>t+advCalc(a).mo,0);
