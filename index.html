@@ -1198,7 +1198,7 @@ async function applyRole(uid,rk){ const R=PERM_ROLES.find(r=>r.k===rk); const wa
   if(add.length){ const r=await T('user_sections').insert(add.map(x=>({user_id:uid,section:x}))); if(r.error) return r.error; }
   if(st._uroOk){ const r=await T('user_ro').delete().eq('user_id',uid).neq('section',''); if(r.error) return r.error; }
   return null; }
-const APP_VER='202610222225';
+const APP_VER='202610222230';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.csales='مبيعات الكاشيرات'; SEC_NAME.glq='قيود جروث (تسجيل القيود في جروث)'; SEC_NAME.clean='النظافة (قوائم الفتح والإغلاق)'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const ujob=(uid,kind)=>(uid&&(st._jobs||{})[uid])||(kind==='emp'?'موظف':kind==='admin'?'إدارة':'مستخدم');
@@ -1800,7 +1800,7 @@ async function hrLoad(force){ if(st._hr&&!force&&Date.now()-st._hr.at<60000) ret
   const err=[D,E,X,R].find(r=>r.error); if(err&&/hr_|relation|does not exist|schema cache/i.test(err.error.message||'')) return st._hr={at:Date.now(),missing:true};
   const emps=(E.data||[]).filter(e=>st.branches.some(b=>b.id===e.branch)); const xd={}; (X.data||[]).forEach(x=>{(xd[x.emp_id]=xd[x.emp_id]||{})[x.kind]=x;});
   const info={}; (I&&!I.error&&I.data||[]).forEach(x=>info[x.emp_id]=x);
-  return st._hr={at:Date.now(),docs:D.data||[],emps,xd,reqs:R.data||[],info,noInfo:!!(I&&I.error),ren:(RN&&!RN.error&&RN.data)||[],noRen:!!(RN&&RN.error)}; }
+  return st._hr={at:Date.now(),docs:D.data||[],emps,xd,reqs:R.data||[],info,noInfo:(e=>!!(e&&/does not exist|relation|schema cache|PGRST20/i.test((e.message||'')+' '+(e.code||''))))(I&&I.error),ren:(RN&&!RN.error&&RN.data)||[],noRen:(e=>!!(e&&/does not exist|relation|schema cache|PGRST20/i.test((e.message||'')+' '+(e.code||''))))(RN&&RN.error)}; }
 const HR_SP={ours:['على كفالتنا','#1E5A3E'],other:['كفالة جهة أخرى','#3C6FB0'],none:['ما عنده إقامة','#8A6A10']};
 const hrSp=(H,e)=>(H.info[e.id]||{}).sponsor||null;
 function hrIqSt(H,e){ if(hrSp(H,e)==='none') return 'noiq'; const v=H.xd[e.id]&&H.xd[e.id].iqama&&H.xd[e.id].iqama.expiry; if(!v) return 'nodate'; const n=hrDays(v); return n<0?'exp':n<=30?'soon':'ok'; }
