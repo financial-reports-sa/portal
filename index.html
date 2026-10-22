@@ -1025,6 +1025,8 @@ html[dir=ltr] .sh-t{direction:ltr}html[dir=ltr] .sh-t i{display:inline-block;tra
   body.hasnav #app footer{display:none}
   body.hasnav #view .card{border-radius:14px;border:1px solid #E1E5DF;box-shadow:0 1px 2px rgba(16,40,28,.04)}
 }
+.hx-srch{position:relative;margin:0 0 10px}.hx-srch>svg{position:absolute;inset-inline-start:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:#8A948C;pointer-events:none}.hx-srch input{width:100%;height:46px;border:1px solid #DDE1DA;border-radius:13px;background:#fff;font:inherit;font-size:13.5px;padding:0 44px 0 14px;outline:none;box-shadow:0 1px 2px rgba(16,40,28,.04)}.hx-srch input:focus{border-color:#1E5A3E;box-shadow:0 0 0 3px rgba(30,90,62,.1)}
+.hx-res{position:absolute;inset-inline:0;top:calc(100% + 6px);z-index:20;background:#fff;border:1px solid #DDE1DA;border-radius:14px;box-shadow:0 18px 40px -16px rgba(10,35,24,.35);max-height:60vh;overflow-y:auto;padding:4px 12px}
 .pm-lg{display:flex;gap:14px;flex-wrap:wrap;font-size:10.5px;color:#3F4D45;margin:2px 2px 6px}.pm-lg span{display:inline-flex;align-items:center;gap:6px}.pm-lg i.pm-c{margin:0;width:16px!important;height:16px!important;cursor:default;pointer-events:none}.pm-lg i.pm-c::after{font-size:10px!important}.pm tbody tr:hover td,.pm tbody tr:hover .pm-u{background:#F2F7F3}
 .pm .g1{background:#F8FAF6}.pm thead .g0{background:#EEF4F0}.pm thead .g1{background:#F6F2E6}
 .pm-g{color:#2F4A3B;font-size:10.5px!important;border-inline-start:2px solid #D4DCD3!important}
@@ -1196,7 +1198,7 @@ async function applyRole(uid,rk){ const R=PERM_ROLES.find(r=>r.k===rk); const wa
   if(add.length){ const r=await T('user_sections').insert(add.map(x=>({user_id:uid,section:x}))); if(r.error) return r.error; }
   if(st._uroOk){ const r=await T('user_ro').delete().eq('user_id',uid).neq('section',''); if(r.error) return r.error; }
   return null; }
-const APP_VER='202610222220';
+const APP_VER='202610222225';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.csales='مبيعات الكاشيرات'; SEC_NAME.glq='قيود جروث (تسجيل القيود في جروث)'; SEC_NAME.clean='النظافة (قوائم الفتح والإغلاق)'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const ujob=(uid,kind)=>(uid&&(st._jobs||{})[uid])||(kind==='emp'?'موظف':kind==='admin'?'إدارة':'مستخدم');
@@ -1793,7 +1795,7 @@ const hrLastRen=(H,id)=>(H.ren||[]).find(r=>r.doc_id===id);
 const hrCost=(H,id,c)=>c!=null?+c:((hrLastRen(H,id)||{}).cost!=null?+hrLastRen(H,id).cost:null);
 async function hrLoad(force){ if(st._hr&&!force&&Date.now()-st._hr.at<60000) return st._hr; const F=hrFull();
   const [D,E,X,R,I,RN]=await Promise.all([F?sb.from('hr_docs').select('*').order('expiry',{ascending:true,nullsFirst:false}):Promise.resolve({data:[]}),
-    sb.from('employees').select('id,name,branch,job,nationality,id_type,status,iqama').neq('status','left'),
+    sb.from('employees').select('id,name,branch,job,nationality,id_type,status,iqama,phone').neq('status','left'),
     sb.from('hr_emp_docs').select('*'), sb.from('hr_requests').select('*').order('created_at',{ascending:false}).limit(300), sb.from('hr_emp_info').select('*'), F?sb.from('hr_renewals').select('*').order('created_at',{ascending:false}).limit(1500):Promise.resolve({data:[]})]);
   const err=[D,E,X,R].find(r=>r.error); if(err&&/hr_|relation|does not exist|schema cache/i.test(err.error.message||'')) return st._hr={at:Date.now(),missing:true};
   const emps=(E.data||[]).filter(e=>st.branches.some(b=>b.id===e.branch)); const xd={}; (X.data||[]).forEach(x=>{(xd[x.emp_id]=xd[x.emp_id]||{})[x.kind]=x;});
@@ -1866,6 +1868,7 @@ function hrTiles(tab,F,ex,so,H,bs,op){
   return `<section class="hx-hero"><div class="hx-ht"><div><small>الموارد البشرية · امتثال الإقامات</small><b>نسبة الإقامات السارية</b><span>${esc(dt)} · ${E.length} موظف على إقامة</span></div>
       <div class="hx-ring" style="--p:${pct};--k:${rc}"><b class="num">${pct}<i>%</i></b></div></div>
     <div class="hx-k">${K.map(([k,n,v,col])=>`<button data-hrstat="${k}"><b class="num" style="color:${col}">${v}</b><small>${n}</small></button>`).join('')}</div></section>
+  <div class="hx-srch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="hrGQ" placeholder="ابحث عن موظف بالاسم أو رقم الإقامة أو الجوال…" autocomplete="off"><div class="hx-res" id="hrGR" hidden></div></div>
   <nav class="hx-tabs">${T.map(([k,n,v])=>`<button data-hrt="${k}" class="${tab===k?'on':''}">${n}${v?`<i class="${k==='soon'&&ex?'r':''}">${v}</i>`:''}</button>`).join('')}</nav>`;
 }
 const hrAv=(name,br)=>{ const w=String(name||'').trim().split(/\s+/); const c=brById(br).color||'#1E5A3E'; return `<span class="hx-av" style="--c:${c}">${esc((w[0]||'')[0]||'')}${esc((w[1]||'')[0]||'')}</span>`; };
@@ -2100,6 +2103,12 @@ document.addEventListener('click',async e=>{
   if(d.hrdel){if(!confirm('حذف الوثيقة نهائياً؟'))return;const r=await sb.from('hr_docs').delete().eq('id',d.hrdel);if(r.error){toast(r.error.message);return;}const w=t.closest('.cu-modal');if(w)w.remove();document.body.style.overflow='';toast('تم الحذف');await hrLoad(true);render();return;}
   if(d.hrdelreq){if(!confirm('حذف الطلب؟'))return;const r=await sb.from('hr_requests').delete().eq('id',d.hrdelreq);if(r.error){toast(r.error.message);return;}const w=t.closest('.cu-modal');if(w)w.remove();document.body.style.overflow='';await hrLoad(true);render();return;}
 });
+document.addEventListener('input',e=>{ if(e.target.id!=='hrGQ') return; const box=$('#hrGR'), H=st._hr; if(!box||!H) return; const q=toEnD(e.target.value.trim()).toLowerCase();
+  if(q.length<2){ box.hidden=true; box.innerHTML=''; return; } const bs=selBranches();
+  const L=H.emps.filter(x=>bs.includes(x.branch)&&[x.name,x.iqama,x.phone,x.job,x.nationality].some(v=>toEnD(String(v||'')).toLowerCase().includes(q))).slice(0,12);
+  box.innerHTML=L.length?L.map(x=>{ const d=(H.xd[x.id]||{}).iqama; return `<button class="hr-row" data-hremp="${x.id}">${hrAv(x.name,x.branch)}<span class="hr-m"><b>${esc(x.name)}</b><small>${esc(brById(x.branch).name)}${x.job?' · '+esc(x.job):''}${x.iqama?' · <span class="num">'+esc(x.iqama)+'</span>':''}</small></span>${x.id_type==='citizen'?'<span class="hr-b mut">سعودي</span>':hrBadge(d&&d.expiry)}</button>`; }).join(''):'<div class="empty" style="padding:14px">ما فيه موظف بهذا البحث</div>';
+  box.hidden=false; });
+document.addEventListener('click',e=>{ const b=$('#hrGR'); if(b&&!b.hidden&&!e.target.closest('.hx-srch')) b.hidden=true; });
 let hrQT; document.addEventListener('input',e=>{ if(e.target.id!=='hrQ') return; clearTimeout(hrQT); const v=e.target.value; hrQT=setTimeout(async()=>{ st.hrQ=v; await render(); const i=$('#hrQ'); if(i){i.focus();i.setSelectionRange(v.length,v.length);} },350); });
 
 // ----- الحضور والانصراف -----
