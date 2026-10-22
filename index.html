@@ -358,7 +358,37 @@ body:not(.hasnav) .ai-bar{padding-bottom:calc(12px + env(safe-area-inset-bottom)
 .aiv .ai-inp{box-shadow:0 2px 10px rgba(20,40,30,.06)}
 .aiv .ai-dev{font-size:9.5px}
 /* login */
-#login{min-height:100vh;display:grid;place-items:center;padding-inline:16px;padding-block:40px}
+#login{min-height:100vh;min-height:100dvh;display:block;padding:0;background:#F3F4F1}
+.lx{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
+.lx-brand{position:relative;overflow:hidden;color:#fff;padding:calc(34px + env(safe-area-inset-top)) 24px 74px;background:radial-gradient(120% 90% at 85% 0%,#2F7653 0%,#1B4F37 38%,#0E2E20 72%,#0A2318 100%)}
+.lx-brand::before{content:'';position:absolute;width:420px;height:420px;left:-160px;bottom:-230px;border-radius:50%;background:radial-gradient(circle,rgba(201,162,39,.30),transparent 65%)}
+.lx-brand::after{content:'';position:absolute;inset:auto 0 0 0;height:1px;background:linear-gradient(90deg,transparent,rgba(232,212,138,.55),transparent)}
+.lx-grid{position:absolute;inset:0;width:100%;height:100%;-webkit-mask-image:linear-gradient(180deg,#000 10%,transparent 95%);mask-image:linear-gradient(180deg,#000 10%,transparent 95%)}
+.lx-in{position:relative;max-width:440px;margin:0 auto;text-align:center}
+.lx-logo{width:76px;height:76px;margin:0 auto 16px;border-radius:22px;padding:3px;background:linear-gradient(145deg,#F6E7B0,#C9A227 55%,#8E6F12);box-shadow:0 18px 40px -14px rgba(0,0,0,.6),0 0 0 6px rgba(255,255,255,.04)}.lx-logo img{width:100%;height:100%;display:block;border-radius:19px}
+.lx-tag{display:inline-block;font-family:Montserrat,sans-serif;font-size:10.5px;letter-spacing:2px;text-transform:uppercase;color:#E8D48A;border:1px solid rgba(232,212,138,.35);border-radius:99px;padding:4px 12px;background:rgba(0,0,0,.15)}
+.lx-brand h1{color:#fff;text-shadow:0 2px 18px rgba(0,0,0,.25);font-family:var(--f-disp);font-size:27px;line-height:1.35;margin:12px 0 6px;font-weight:700;letter-spacing:-.2px}
+.lx-brand p{margin:0 auto;max-width:330px;font-size:12.5px;line-height:1.9;color:rgba(255,255,255,.72)}
+.lx-mods{list-style:none;padding:0;margin:20px 0 0;display:grid;grid-template-columns:1fr 1fr;gap:8px}.lx-mods li{display:flex;align-items:center;gap:8px;font-size:11.5px;color:rgba(255,255,255,.88);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:9px 10px;backdrop-filter:blur(4px)}.lx-mods svg{width:17px;height:17px;flex:none;color:#E8D48A}
+.lx-main{flex:1;display:flex;flex-direction:column;align-items:center;padding:0 16px 18px;margin-top:-50px;position:relative;z-index:2}
+.lx-card{width:100%;max-width:420px;background:#fff;border-radius:24px;padding:24px 20px 20px;display:flex;flex-direction:column;gap:14px;box-shadow:0 30px 60px -30px rgba(10,35,24,.45),0 2px 6px rgba(10,35,24,.06);border:1px solid #E6E9E4}
+.lx-head{padding-bottom:12px;border-bottom:1px solid #EEF0EC;margin-bottom:2px}.lx-head b{display:block;color:#10271B;font-family:var(--f-disp);font-size:19px;color:#10271B}.lx-head span{font-size:12px;color:#6B756E}
+.lx-f label{display:block;font-size:11.5px;font-weight:600;color:#3F4B43;margin-bottom:6px}
+.lx-i{position:relative;display:flex;align-items:center;height:52px;border:1.5px solid #E1E5DF;border-radius:14px;background:#F8F9F7;transition:border-color .15s,box-shadow .15s,background .15s}
+.lx-i:focus-within{border-color:#1E5A3E;background:#fff;box-shadow:0 0 0 4px rgba(30,90,62,.1)}
+.lx-i>svg{width:19px;height:19px;flex:none;margin-inline:14px 4px;color:#8A948C}.lx-i:focus-within>svg{color:#1E5A3E}
+.lx-i input{flex:1;min-width:0;height:100%;border:0;background:none;outline:none;font:inherit;font-size:15px;color:#10271B;padding:0 8px}.lx-i input::placeholder{color:#A9B1AB;font-size:13px}
+.lx-eye{flex:none;width:44px;height:100%;border:0;background:none;color:#8A948C;cursor:pointer;display:grid;place-items:center}.lx-eye svg{width:19px;height:19px}.lx-eye.on{color:#1E5A3E}
+#login .err{font-size:12px;color:#B42318;min-height:0}#login .err:not(:empty){background:#FEF0EE;border:1px solid #F7CFC9;border-radius:10px;padding:8px 10px}
+.lx-btn{position:relative;height:54px;border:0;border-radius:14px;cursor:pointer;font:inherit;font-family:var(--f-disp);font-size:16px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(135deg,#21643F,#143F2A);box-shadow:0 14px 28px -14px rgba(20,63,42,.9),inset 0 1px 0 rgba(255,255,255,.12);transition:transform .12s,filter .15s}
+.lx-btn:active{transform:scale(.985)}.lx-btn svg{width:19px;height:19px;color:#E8D48A}.lx-btn:hover{filter:brightness(1.08)}
+.lx-sp{display:none;width:18px;height:18px;border-radius:50%;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;animation:lxs .7s linear infinite}.lx-btn:disabled{cursor:wait;filter:saturate(.7)}.lx-btn:disabled .lx-sp{display:block}.lx-btn:disabled svg{display:none}
+@keyframes lxs{to{transform:rotate(360deg)}}
+.lx-note{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11.5px;color:#6B756E;padding-top:4px}.lx-note svg{width:15px;height:15px}
+.lx-foot{margin-top:auto;padding-top:18px;display:flex;flex-wrap:wrap;justify-content:center;gap:6px 14px;font-size:10.5px;color:#7D877F}.lx-foot span{display:inline-flex;align-items:center;gap:5px}.lx-foot svg{width:13px;height:13px;color:#1E5A3E}.lx-foot a{color:#1E5A3E;text-decoration:none;font-weight:600}
+@media (min-width:900px){.lx{flex-direction:row}.lx-brand{flex:1.1;display:flex;align-items:center;padding:60px}.lx-in{text-align:start;margin:0;max-width:480px}.lx-logo{margin:0 0 22px}.lx-brand h1{font-size:38px}.lx-brand p{margin:0;font-size:14px;max-width:420px}.lx-main{flex:1;justify-content:center;margin:0;padding:40px}.lx-card{padding:34px 30px 26px}.lx-foot{margin-top:0;padding-top:24px}}
+@media (prefers-color-scheme:dark){html:not([data-theme="light"]) #login{background:#0C1A13}}
+
 .login-card{width:100%;max-width:400px;display:flex;flex-direction:column;gap:14px}
 
 /* header + nav */
@@ -1003,16 +1033,35 @@ if(seen){s.remove();return;}if(ever)s.classList.add('quick');s.addEventListener(
 
 <!-- ============ LOGIN ============ -->
 <section id="login" hidden>
-  <div class="card login-card">
-    <div class="brand"><div><h1 style="font-size:17px">منصة الإدارة الموحّدة</h1><div style="font-size:11.5px;color:var(--gold-ink);font-weight:600">تطوير بواسطة أمير العريفي</div></div></div>
-    <form id="loginForm" class="login-card" style="gap:10px" novalidate>
-      <div class="field"><label for="lu">اسم المستخدم أو رقم الجوال</label><input class="inp" id="lu" autocomplete="username" dir="ltr" autocapitalize="none" spellcheck="false"></div>
-      <div class="field"><label for="lp">كلمة المرور</label><input class="inp" id="lp" type="password" autocomplete="current-password" dir="ltr"></div>
-      <div class="err" id="lerr"></div>
-      <button class="btn" type="submit" id="lbtn">دخول</button>
-    </form>
-    <div class="muted" style="font-size:11px;text-align:center">للحصول على حساب تواصل مع مدير النظام</div>
+  <div class="lx">
+    <aside class="lx-brand">
+      <svg class="lx-grid" aria-hidden="true"><defs><pattern id="lxp" width="34" height="34" patternUnits="userSpaceOnUse"><path d="M34 0H0V34" fill="none" stroke="rgba(255,255,255,.06)"/></pattern></defs><rect width="100%" height="100%" fill="url(#lxp)"/></svg>
+      <div class="lx-in">
+        <div class="lx-logo"><img src="icon.svg" alt=""></div>
+        <small class="lx-tag">MyHub · Enterprise Suite</small>
+        <h1>منصة الإدارة الموحّدة</h1>
+        <p>منظومة تشغيل متكاملة لإدارة الموارد البشرية والفروع والعمليات اليومية.</p>
+        <ul class="lx-mods">
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 5.5a3 3 0 0 1 0 5.6M18 19a5 5 0 0 0-2.5-4.3"/></svg>الموارد البشرية</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>الحضور والانصراف</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.4 2.4-2.6-.4-.4-2.6z"/></svg>التشغيل والصيانة</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>التقارير والتحليلات</li>
+        </ul>
+      </div>
+    </aside>
+    <main class="lx-main">
+      <form id="loginForm" class="lx-card" novalidate>
+        <div class="lx-head"><b>تسجيل الدخول</b><span>أهلاً بك، أدخل بيانات حسابك للمتابعة</span></div>
+        <div class="lx-f"><label for="lu">اسم المستخدم أو رقم الجوال</label><div class="lx-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><input id="lu" autocomplete="username" dir="ltr" autocapitalize="none" spellcheck="false" placeholder="username / 05xxxxxxxx"></div></div>
+        <div class="lx-f"><label for="lp">كلمة المرور</label><div class="lx-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg><input id="lp" type="password" autocomplete="current-password" dir="ltr" placeholder="••••••••"><button type="button" class="lx-eye" id="leye" aria-label="إظهار كلمة المرور"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+        <div class="err" id="lerr"></div>
+        <button class="lx-btn" type="submit" id="lbtn"><span>دخول</span><i class="lx-sp"></i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
+        <div class="lx-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>للحصول على حساب تواصل مع مدير النظام</div>
+      </form>
+      <footer class="lx-foot"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>اتصال آمن ومشفّر</span><a href="privacy.html">سياسة الخصوصية</a><span>© 2026 · تطوير أمير العريفي</span></footer>
+    </main>
   </div>
+  <script>document.getElementById('leye').onclick=function(){var i=document.getElementById('lp');var t=i.type==='password';i.type=t?'text':'password';this.classList.toggle('on',t);i.focus();};</script>
 </section>
 
 <!-- ============ SETUP NEEDED ============ -->
@@ -1122,7 +1171,7 @@ async function applyRole(uid,rk){ const R=PERM_ROLES.find(r=>r.k===rk); const wa
   if(add.length){ const r=await T('user_sections').insert(add.map(x=>({user_id:uid,section:x}))); if(r.error) return r.error; }
   if(st._uroOk){ const r=await T('user_ro').delete().eq('user_id',uid).neq('section',''); if(r.error) return r.error; }
   return null; }
-const APP_VER='202610220400';
+const APP_VER='202610220920';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.csales='مبيعات الكاشيرات'; SEC_NAME.glq='قيود جروث (تسجيل القيود في جروث)'; SEC_NAME.clean='النظافة (قوائم الفتح والإغلاق)'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const ujob=(uid,kind)=>(uid&&(st._jobs||{})[uid])||(kind==='emp'?'موظف':kind==='admin'?'إدارة':'مستخدم');
