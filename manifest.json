@@ -1,13 +1,20 @@
 {
+ "id": "/",
  "name": "MyHub · منصة الإدارة الموحّدة",
  "short_name": "MyHub",
+ "description": "منصة إدارية داخلية لموظفي ومديري مطاعم الشادن وبروست الباتشينو: الحضور والانصراف، الموظفين، النظافة، الصيانة، والتقارير.",
  "lang": "ar",
  "dir": "rtl",
  "start_url": "./",
  "scope": "./",
  "display": "standalone",
+ "orientation": "portrait",
  "background_color": "#F5F5F1",
  "theme_color": "#143F2A",
+ "categories": [
+  "business",
+  "productivity"
+ ],
  "icons": [
   {
    "src": "icon-192.png?v=4",
@@ -20,7 +27,7 @@
    "type": "image/png"
   },
   {
-   "src": "icon-512.png?v=4",
+   "src": "icon-maskable-512.png?v=1",
    "sizes": "512x512",
    "type": "image/png",
    "purpose": "maskable"
