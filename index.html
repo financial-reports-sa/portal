@@ -1171,7 +1171,7 @@ async function applyRole(uid,rk){ const R=PERM_ROLES.find(r=>r.k===rk); const wa
   if(add.length){ const r=await T('user_sections').insert(add.map(x=>({user_id:uid,section:x}))); if(r.error) return r.error; }
   if(st._uroOk){ const r=await T('user_ro').delete().eq('user_id',uid).neq('section',''); if(r.error) return r.error; }
   return null; }
-const APP_VER='202610222130';
+const APP_VER='202610222200';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.csales='مبيعات الكاشيرات'; SEC_NAME.glq='قيود جروث (تسجيل القيود في جروث)'; SEC_NAME.clean='النظافة (قوائم الفتح والإغلاق)'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const ujob=(uid,kind)=>(uid&&(st._jobs||{})[uid])||(kind==='emp'?'موظف':kind==='admin'?'إدارة':'مستخدم');
@@ -1220,15 +1220,27 @@ $('#loginForm').onsubmit=async e=>{
   const {error}=await sb.auth.signInWithPassword({email,password:p});
   $('#lbtn').disabled=false;
   if(error){$('#lerr').textContent=/confirm/i.test(error.message)?'الحساب غير مفعّل بعد — تواصل مع مدير النظام':'اسم المستخدم أو كلمة المرور غير صحيحة';return;}
-  boot();
+  idleMark(true); boot();
 };
 $('#logout').onclick=async()=>{try{const sub=await pushSub();if(sub) await sb.rpc('push_unregister',{p_endpoint:sub.endpoint});}catch(e){} await sb.auth.signOut(); location.reload();};
 $('#av').onclick=e=>{e.stopPropagation();$('#npanel').hidden=true;const m=$('#umenu');m.hidden=!m.hidden;$('#av').setAttribute('aria-expanded',String(!m.hidden));};
 document.addEventListener('click',e=>{const m=$('#umenu');if(m&&!m.hidden&&!e.target.closest('.who'))m.hidden=true;});
 
+// انتهاء الجلسة بعد ساعتين بدون نشاط
+const IDLE_MS=2*36e5; let idleW=0;
+function idleGet(){ try{ return +localStorage.getItem('lastAct')||0; }catch(e){ return 0; } }
+function idleMark(force){ const n=Date.now(); if(!force&&n-idleW<60000) return; idleW=n; try{ localStorage.setItem('lastAct',String(n)); }catch(e){} }
+async function idleCheck(){ const t=idleGet(); if(!t||Date.now()-t<=IDLE_MS) return false;
+  const {data:{session}}=await sb.auth.getSession(); if(!session) return false;
+  try{ localStorage.removeItem('lastAct'); }catch(e){} await sb.auth.signOut();
+  $('#app').hidden=true; $('#login').hidden=false; $('#lerr').textContent='انتهت الجلسة لعدم النشاط لمدة ساعتين — سجّل دخولك من جديد'; return true; }
+['pointerdown','keydown','touchstart','scroll'].forEach(ev=>document.addEventListener(ev,()=>{ if(!$('#app').hidden) idleMark(); },{passive:true,capture:true}));
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') idleCheck(); });
+setInterval(()=>{ if(document.visibilityState==='visible') idleCheck(); },60000);
 async function boot(){
   const {data:{session}}=await sb.auth.getSession();
   if(!session){ $('#app').hidden=true; $('#login').hidden=false; return; }
+  if(await idleCheck()) return; idleMark(true);
   st.user=session.user; st.cache={};
   const [p,b,ub,us,uro]=await Promise.all([
     sb.from('profiles').select('*').eq('id',st.user.id).maybeSingle(),
