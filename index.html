@@ -1037,6 +1037,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%;text-size-adjus
 @keyframes skl{from{background-position:100% 0}to{background-position:-100% 0}}
 @media (max-width:700px){input.inp,select.inp,textarea.inp,.lx-i input,.hx-srch input,#hrQ,#advQ{font-size:16px!important}}
 @media (prefers-reduced-motion:reduce){#view.v-in>*,.v-skel i,#navbar.on{animation:none}}
+#exitT{position:fixed;left:50%;bottom:calc(110px + env(safe-area-inset-bottom));transform:translate(-50%,12px);z-index:130;background:rgba(28,34,30,.92);color:#fff;font-size:13px;font-weight:500;padding:11px 20px;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;white-space:nowrap;backdrop-filter:blur(6px)}#exitT.on{opacity:1;transform:translate(-50%,0)}
 .pm-lg{display:flex;gap:14px;flex-wrap:wrap;font-size:10.5px;color:#3F4D45;margin:2px 2px 6px}.pm-lg span{display:inline-flex;align-items:center;gap:6px}.pm-lg i.pm-c{margin:0;width:16px!important;height:16px!important;cursor:default;pointer-events:none}.pm-lg i.pm-c::after{font-size:10px!important}.pm tbody tr:hover td,.pm tbody tr:hover .pm-u{background:#F2F7F3}
 .pm .g1{background:#F8FAF6}.pm thead .g0{background:#EEF4F0}.pm thead .g1{background:#F6F2E6}
 .pm-g{color:#2F4A3B;font-size:10.5px!important;border-inline-start:2px solid #D4DCD3!important}
@@ -1208,7 +1209,7 @@ async function applyRole(uid,rk){ const R=PERM_ROLES.find(r=>r.k===rk); const wa
   if(add.length){ const r=await T('user_sections').insert(add.map(x=>({user_id:uid,section:x}))); if(r.error) return r.error; }
   if(st._uroOk){ const r=await T('user_ro').delete().eq('user_id',uid).neq('section',''); if(r.error) return r.error; }
   return null; }
-const APP_VER='202610230520';
+const APP_VER='202610231010';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.csales='مبيعات الكاشيرات'; SEC_NAME.glq='قيود جروث (تسجيل القيود في جروث)'; SEC_NAME.clean='النظافة (قوائم الفتح والإغلاق)'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const ujob=(uid,kind)=>(uid&&(st._jobs||{})[uid])||(kind==='emp'?'موظف':kind==='admin'?'إدارة':'مستخدم');
@@ -1329,13 +1330,18 @@ function renderShell(){ try{ window.I18N&&I18N.emp(isEmp()); }catch(_){}
 }
 // ===== زر الرجوع في الجوال: يقفل النافذة المفتوحة أو يرجع للصفحة السابقة بدل ما يطلع من التطبيق =====
 let navTab=null, navSkip=0, navPop=false;
-function navPush(){ try{ if(navPop||!st.tab) return; if(navTab===null){ history.replaceState({tab:st.tab},''); navTab=st.tab; return; } if(st.tab!==navTab){ history.pushState({tab:st.tab},''); navTab=st.tab; } }catch(e){} }
+function exitToast(){ let b=document.getElementById('exitT'); if(!b){ b=document.createElement('div'); b.id='exitT'; document.body.appendChild(b); } b.textContent='اضغط رجوع مرة ثانية للخروج'; b.className='on'; clearTimeout(b._t); b._t=setTimeout(()=>{ b.className=''; },2100); }
+function navPush(){ try{ if(navPop||!st.tab) return; if(navTab===null){ history.replaceState({root:1},''); history.pushState({tab:st.tab},''); navTab=st.tab; return; } if(st.tab!==navTab){ history.pushState({tab:st.tab},''); navTab=st.tab; } }catch(e){} }
 const isOv=el=>el&&el.nodeType===1&&el.id!=='toast'&&el.id!=='splash'&&(el.classList.contains('cu-modal')||['fbqr','mtdet','cudet'].includes(el.id)||(el.style&&el.style.position==='fixed'&&el.style.inset==='0px'));
 const ovList=()=>[...document.body.children].filter(isOv);
 new MutationObserver(ms=>{ ms.forEach(m=>{ m.addedNodes.forEach(n=>{ if(isOv(n)){ n._nav=1; try{ history.pushState({ov:1,tab:st.tab},''); }catch(e){} } });
   m.removedNodes.forEach(n=>{ if(n._nav&&!n._byPop){ try{ if(history.state&&history.state.ov){ navSkip++; history.back(); } }catch(e){} } }); }); }).observe(document.body,{childList:true});
 window.addEventListener('popstate',e=>{ if(navSkip>0){ navSkip--; return; }
   const L=ovList(); if(L.length){ const top=L[L.length-1]; top._byPop=true; top.remove(); if(!ovList().length) document.body.style.overflow=''; return; }
+  if(e.state&&e.state.root){ if(!st.profile){ history.back(); return; }
+    if(st.tab!=='home'&&canSee('home')){ history.pushState({tab:'home'},''); navPop=true; st.tab='home'; navTab='home'; try{localStorage.setItem('tab','home');}catch(_){} try{ renderShell(); }finally{ navPop=false; } window.scrollTo({top:0}); return; }
+    if(Date.now()-(st._exitAt||0)<2200){ st._exitAt=0; history.back(); return; }
+    st._exitAt=Date.now(); history.pushState({tab:st.tab},''); exitToast(); return; }
   const t=e.state&&e.state.tab; if(t&&t!==st.tab&&typeof canSee==='function'&&canSee(t)){ navPop=true; st.tab=t; navTab=t; try{localStorage.setItem('tab',t);}catch(_){} try{ renderShell(); }finally{ navPop=false; } window.scrollTo({top:0}); } });
 document.addEventListener('click',async e=>{const b=e.target.closest('[data-share]');if(!b)return;$('#umenu').hidden=true;const url='https://unifiedplatform.app/';const text='منصة الإدارة الموحّدة — التقارير والعمليات والموارد البشرية في مكان واحد';
   try{ if(navigator.share){ await navigator.share({title:'منصة الإدارة الموحّدة',text,url}); return; } }catch(err){ if(err&&err.name==='AbortError') return; }
