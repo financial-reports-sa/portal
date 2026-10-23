@@ -66,12 +66,21 @@ textarea:focus,input:focus{border-color:var(--g)}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#16231B;color:#fff;padding:10px 18px;border-radius:12px;font-size:14px;z-index:9;max-width:90vw}
 [dir=ltr] body{font-family:'Readex Pro','IBM Plex Sans Arabic',system-ui,sans-serif}
 .lbl.req::after{content:' *';color:#C0392B}input.bad{border-color:#C0392B!important;box-shadow:0 0 0 3px rgba(192,57,43,.12)}
+
+.eyb{display:inline-block;font-size:11px;letter-spacing:1.5px;color:#E8D48A;border:1px solid rgba(232,212,138,.4);border-radius:99px;padding:3px 11px;margin-bottom:8px;background:rgba(0,0,0,.12)}
+.trust{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}.trust span{font-size:11px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);border-radius:99px;padding:4px 10px}
+.faces{display:flex!important;justify-content:center;gap:6px;direction:ltr}
+.st{width:52px;height:52px;display:grid;place-items:center;transition:transform .15s}.st svg{width:44px;height:44px;fill:#E7E3D3;stroke:#D6D0BA;stroke-width:.6;transition:fill .15s}.st.on svg{fill:var(--gold);stroke:#B8932A}.st:active{transform:scale(.9)}
+.stars{flex-direction:column;align-items:center;gap:2px;margin-top:8px;font-size:inherit!important;color:inherit!important;direction:inherit!important}.stars .rl{font-family:'Readex Pro';font-size:16px}.stars .rl.r1,.stars .rl.r2{color:#A33B30}.stars .rl.r3{color:#9A6A06}.stars .rl.r4,.stars .rl.r5{color:var(--g)}.stars span{font-size:12px;color:var(--mut)}.stars .rh{font-size:12.5px}
+.card h2{display:flex;align-items:center;gap:8px}.card h2::before{content:'';width:4px;height:18px;border-radius:3px;background:var(--gold)}
+.phw{position:relative}.phw input{padding-inline-start:48px;text-align:left;letter-spacing:.5px}.phc{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:20px;pointer-events:none}
+.foot{font-size:12.5px!important;color:var(--g)!important;font-weight:600;margin-top:10px!important}
 </style>
 </head>
 <body>
 <div class="hero"><div class="glow"></div>
   <div class="hrow"><div class="brand"><div class="logo" id="logo">ش</div><div><b id="bName">—</b><small id="bSub"></small></div></div><button class="lang" id="langBtn">English</button></div>
-  <div class="htitle"><h1 id="t_h1"></h1><p id="t_p"></p></div>
+  <div class="htitle"><span class="eyb" id="t_eyb"></span><h1 id="t_h1"></h1><p id="t_p"></p><div class="trust"><span id="t_tr1"></span><span id="t_tr2"></span><span id="t_tr3"></span></div></div>
 </div>
 <div class="wrap" id="app">
   <div class="card"><h2 id="t_q1"></h2>
@@ -86,8 +95,8 @@ textarea:focus,input:focus{border-color:var(--g)}
     <textarea id="comment"></textarea>
     <div id="contactBox">
       <div class="callout hide" id="neg"><span>🤝</span><span id="t_neg"></span></div>
-      <label class="lbl" id="t_nm"></label><input id="name" autocomplete="name">
-      <label class="lbl" id="t_ph"></label><input id="phone" inputmode="tel" autocomplete="tel" dir="ltr" style="text-align:start" placeholder="05xxxxxxxx">
+      <input id="name" type="hidden">
+      <label class="lbl" id="t_ph"></label><div class="phw"><span class="phc">🇸🇦</span><input id="phone" inputmode="tel" autocomplete="tel" dir="ltr" placeholder="05xxxxxxxx"></div>
       <p class="hint" id="t_priv"></p>
     </div>
   </div>
@@ -103,17 +112,17 @@ const BR={
   pc:{ar:'بروست الباتشينو',arS:'',en:'Al-Pacino Broast',enS:'',logo:'P',acc:'#A07BE6',maps:''}
 };
 const T={
- ar:{h1:'رأيك يهمّنا',p:'دقيقة وحدة تساعدنا نقدّم لك أفضل',q1:'كيف كانت تجربتك اليوم؟',f:['سيئة','ضعيفة','مقبولة','جيدة','ممتازة'],
-  q2p:'وش اللي عجبك؟',q2n:'وش اللي ما عجبك؟',q3:'تفاصيل الزيارة',v:['داخل المطعم','سفري','توصيل'],cm:'تعليقك (اختياري)',cmN:'وضّح لنا المشكلة',cmPh:'اكتب ملاحظتك هنا…',
+ ar:{eyb:'تجربة العملاء',h1:'شاركنا تقييم زيارتك',p:'رضاكم أولويتنا — كل تقييم يصل مباشرة إلى إدارة الفرع ويُتابَع باهتمام.',tr:['🔒 بياناتك سرية','⏱️ متابعة خلال 24 ساعة','✓ يصل للإدارة مباشرة'],q1:'١. تقييمك العام للزيارة',f:['سيئة','ضعيفة','مقبولة','جيدة','ممتازة'],
+  q2p:'٢. ما الذي أعجبك؟',q2n:'٢. ما الذي يحتاج تحسين؟',q3:'٣. تفاصيل الزيارة',v:['داخل المطعم','سفري','توصيل'],cm:'تعليقك (اختياري)',cmN:'وضّح لنا المشكلة',cmPh:'اكتب ملاحظتك هنا…',
   neg:'نعتذر عن تجربتك 🙏 اترك رقمك ويتواصل معك مدير الفرع شخصياً لحل المشكلة.',nm:'الاسم (اختياري)',ph:'رقم الجوال (اختياري)',phR:'رقم الجوال (إلزامي)',needPh:'رقم الجوال إلزامي لإرسال التقييم — اكتبه بصيغة 05xxxxxxxx',priv:'بياناتك تُستخدم فقط للتواصل معك بخصوص ملاحظتك.',privR:'رقم الجوال مطلوب للتحقق من صحة التقييم، ويُستخدم فقط للتواصل معك بخصوص ملاحظتك.',
-  send:'إرسال التقييم',sending:'جارِ الإرسال…',foot:'شكراً لوقتك',dh:'شكراً لك!',dpP:'سعدنا بزيارتك، ونتطلع نشوفك مرة ثانية 💛',dpN:'وصلت ملاحظتك لإدارة الفرع وبيتم التواصل معك في أقرب وقت.',
+  send:'إرسال التقييم',sending:'جارِ الإرسال…',foot:'نشكر لكم ثقتكم واختياركم لنا',dh:'شكراً لك!',dpP:'سعدنا بزيارتك، ونتطلع نشوفك مرة ثانية 💛',dpN:'وصلت ملاحظتك لإدارة الفرع وبيتم التواصل معك في أقرب وقت.',
   g:'شاركنا تقييمك في قوقل ماب',pick:'اختر التقييم أولاً',needC:'اكتب لنا وش صار عشان نقدر نساعدك',bad:'رابط غير صحيح — امسح الكود الموجود في المطعم',net:'ما فيه اتصال — حاول مرة ثانية',
   tagsP:['الطعم','جودة الأكل','سرعة الخدمة','النظافة','تعامل الموظفين','الكمية','الأسعار','الأجواء'],
   tagsN:['الطعم','الأكل بارد','وقت الانتظار','الطلب ناقص أو غلط','النظافة','تعامل الموظفين','الكمية','الأسعار']},
- en:{h1:'Your opinion matters',p:'One minute helps us serve you better',q1:'How was your experience today?',f:['Bad','Poor','Okay','Good','Excellent'],
-  q2p:'What did you like?',q2n:'What went wrong?',q3:'Visit details',v:['Dine-in','Takeaway','Delivery'],cm:'Your comment (optional)',cmN:'Tell us what happened',cmPh:'Write your note here…',
+ en:{eyb:'Customer Experience',h1:'Rate your visit',p:'Your satisfaction is our priority — every review reaches the branch management directly.',tr:['🔒 Confidential','⏱️ Follow-up within 24h','✓ Sent to management'],q1:'1. Overall rating of your visit',f:['Bad','Poor','Okay','Good','Excellent'],
+  q2p:'2. What did you like?',q2n:'2. What needs improvement?',q3:'3. Visit details',v:['Dine-in','Takeaway','Delivery'],cm:'Your comment (optional)',cmN:'Tell us what happened',cmPh:'Write your note here…',
   neg:'We are sorry 🙏 Leave your number and the branch manager will contact you personally.',nm:'Name (optional)',ph:'Mobile number (optional)',phR:'Mobile number (required)',needPh:'A valid mobile number (05xxxxxxxx) is required to submit feedback',priv:'Your details are only used to follow up on your feedback.',privR:'Your mobile number is required to verify the feedback and is only used to follow up with you.',
-  send:'Submit feedback',sending:'Sending…',foot:'Thank you for your time',dh:'Thank you!',dpP:'We were happy to serve you — see you again 💛',dpN:'Your feedback reached the branch management and we will contact you soon.',
+  send:'Submit feedback',sending:'Sending…',foot:'Thank you for choosing us',dh:'Thank you!',dpP:'We were happy to serve you — see you again 💛',dpN:'Your feedback reached the branch management and we will contact you soon.',
   g:'Share your rating on Google Maps',pick:'Please choose a rating',needC:'Please tell us what happened so we can help',bad:'Invalid link — scan the code in the restaurant',net:'No connection — try again',
   tagsP:['Taste','Food quality','Fast service','Cleanliness','Staff','Portion size','Prices','Atmosphere'],
   tagsN:['Taste','Food was cold','Waiting time','Missing or wrong order','Cleanliness','Staff','Portion size','Prices']}
@@ -134,16 +143,16 @@ function paint(){
   const t=T[L]; document.documentElement.lang=L; document.documentElement.dir=L==='ar'?'rtl':'ltr';
   $('#langBtn').textContent=L==='ar'?'English':'العربية';
   if(B){$('#bName').textContent=B[L];$('#bSub').textContent=B[L+'S']||'';$('#logo').textContent=B.logo;document.documentElement.style.setProperty('--acc',B.acc);}
-  $('#t_h1').textContent=t.h1;$('#t_p').textContent=t.p;$('#t_q1').textContent=t.q1;$('#t_q3').textContent=t.q3;
-  $('#faces').innerHTML=FACES.map((f,i)=>`<button class="face ${S.r===i+1?'on':''}" data-r="${i+1}"><span>${f}</span><small>${t.f[i]}</small></button>`).join('');
-  $('#stars').innerHTML=S.r?[1,2,3,4,5].map(i=>`<i class="${i<=S.r?'on':''}">★</i>`).join(''):'';
+  $('#t_eyb').textContent=t.eyb;$('#t_h1').textContent=t.h1;$('#t_p').textContent=t.p;['#t_tr1','#t_tr2','#t_tr3'].forEach((k,i)=>$(k).textContent=t.tr[i]);$('#t_q1').textContent=t.q1;$('#t_q3').textContent=t.q3;
+  $('#faces').innerHTML=[1,2,3,4,5].map(i=>`<button class="st ${i<=S.r?'on':''}" data-r="${i}" aria-label="${t.f[i-1]}"><svg viewBox="0 0 24 24"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.3L12 17.1l-5.7 3.1 1.2-6.3L2.8 9.5l6.4-.8z"/></svg></button>`).join('');
+  $('#stars').innerHTML=S.r?`<b class="rl r${S.r}">${t.f[S.r-1]}</b><span>${S.r} / 5</span>`:`<span class="rh">${L==='ar'?'اضغط على النجوم للتقييم':'Tap a star to rate'}</span>`;
   const neg=S.r&&S.r<=3; const list=neg?t.tagsN:t.tagsP; const enList=neg?T.en.tagsN:T.en.tagsP;
   $('#t_q2').textContent=neg?t.q2n:t.q2p;
   $('#tags').innerHTML=list.map((x,i)=>{const k=(neg?'n':'p')+enList[i];return `<button class="chip ${neg?'neg':''} ${S.tags.includes(k)?'on':''}" data-t="${k}">${x}</button>`}).join('');
   $('#visit').innerHTML=VIS.map((v,i)=>`<button class="${S.visit===v?'on':''}" data-v="${v}">${t.v[i]}</button>`).join('');
   $('#t_cm').textContent=neg?t.cmN:t.cm;$('#comment').placeholder=t.cmPh;
   $('#neg').classList.toggle('hide',!neg);$('#t_neg').textContent=t.neg;
-  $('#t_nm').textContent=t.nm;phLbl();
+  phLbl();
   $('#send').textContent=t.send;$('#t_foot').textContent=t.foot;
   ['#c2','#c3','#c4'].forEach(s=>$(s).classList.toggle('hide',!S.r));
 }
