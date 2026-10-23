@@ -101,7 +101,7 @@ textarea{min-height:54px!important;padding:9px 11px!important;font-size:14px!imp
 <div class="wrap" id="app">
   <div class="card one">
     <div class="sec"><div class="sh" id="t_q1"></div><div class="faces" id="faces"></div><div class="stars" id="stars"></div></div>
-    <div class="sec" id="c2"><div class="sh" id="t_q2"></div><div class="chips" id="tags"></div></div>
+    <div class="sec hide" id="c2"><div class="sh" id="t_q2"></div><div class="chips" id="tags"></div></div>
     <div id="c3">
       <div class="sec"><div class="sh" id="t_q3"></div><div class="seg" id="visit"></div></div>
       <div class="sec"><label class="sh" id="t_cm" for="comment"></label><textarea id="comment" rows="2"></textarea>
@@ -156,7 +156,7 @@ function paint(){
   $('#faces').innerHTML=[1,2,3,4,5].map(i=>`<button class="st ${i<=S.r?'on':''}" data-r="${i}" aria-label="${t.f[i-1]}"><svg viewBox="0 0 24 24"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.3L12 17.1l-5.7 3.1 1.2-6.3L2.8 9.5l6.4-.8z"/></svg></button>`).join('');
   $('#stars').innerHTML=S.r?`<b class="rl r${S.r}">${t.f[S.r-1]}</b><span>${S.r} / 5</span>`:`<span class="rh">${L==='ar'?'اضغط على النجوم للتقييم':'Tap a star to rate'}</span>`;
   const neg=S.r&&S.r<=3; const list=neg?t.tagsN:t.tagsP; const enList=neg?T.en.tagsN:T.en.tagsP;
-  $('#t_q2').textContent=neg?t.q2n:t.q2p;
+  $('#t_q2').textContent=neg?t.q2n:t.q2p;$('#c2').classList.toggle('hide',!S.r);
   $('#tags').innerHTML=list.map((x,i)=>{const k=(neg?'n':'p')+enList[i];return `<button class="chip ${neg?'neg':''} ${S.tags.includes(k)?'on':''}" data-t="${k}">${x}</button>`}).join('');
   $('#visit').innerHTML=VIS.map((v,i)=>`<button class="${S.visit===v?'on':''}" data-v="${v}">${t.v[i]}</button>`).join('');
   $('#t_cm').textContent=neg?t.cmN:t.cm;$('#comment').placeholder=t.cmPh;
