@@ -105,14 +105,14 @@ const BR={
 const T={
  ar:{h1:'رأيك يهمّنا',p:'دقيقة وحدة تساعدنا نقدّم لك أفضل',q1:'كيف كانت تجربتك اليوم؟',f:['سيئة','ضعيفة','مقبولة','جيدة','ممتازة'],
   q2p:'وش اللي عجبك؟',q2n:'وش اللي ما عجبك؟',q3:'تفاصيل الزيارة',v:['داخل المطعم','سفري','توصيل'],cm:'تعليقك (اختياري)',cmN:'وضّح لنا المشكلة',cmPh:'اكتب ملاحظتك هنا…',
-  neg:'نعتذر عن تجربتك 🙏 اترك رقمك ويتواصل معك مدير الفرع شخصياً لحل المشكلة.',nm:'الاسم (اختياري)',ph:'رقم الجوال (اختياري)',phR:'رقم الجوال (إلزامي)',needPh:'رقم الجوال إلزامي مع أي تعليق أو ملاحظة — اكتبه بصيغة 05xxxxxxxx',priv:'بياناتك تُستخدم فقط للتواصل معك بخصوص ملاحظتك.',privR:'رقم الجوال مطلوب للتحقق من صحة التقييم، ويُستخدم فقط للتواصل معك بخصوص ملاحظتك.',
+  neg:'نعتذر عن تجربتك 🙏 اترك رقمك ويتواصل معك مدير الفرع شخصياً لحل المشكلة.',nm:'الاسم (اختياري)',ph:'رقم الجوال (اختياري)',phR:'رقم الجوال (إلزامي)',needPh:'رقم الجوال إلزامي لإرسال التقييم — اكتبه بصيغة 05xxxxxxxx',priv:'بياناتك تُستخدم فقط للتواصل معك بخصوص ملاحظتك.',privR:'رقم الجوال مطلوب للتحقق من صحة التقييم، ويُستخدم فقط للتواصل معك بخصوص ملاحظتك.',
   send:'إرسال التقييم',sending:'جارِ الإرسال…',foot:'شكراً لوقتك',dh:'شكراً لك!',dpP:'سعدنا بزيارتك، ونتطلع نشوفك مرة ثانية 💛',dpN:'وصلت ملاحظتك لإدارة الفرع وبيتم التواصل معك في أقرب وقت.',
   g:'شاركنا تقييمك في قوقل ماب',pick:'اختر التقييم أولاً',needC:'اكتب لنا وش صار عشان نقدر نساعدك',bad:'رابط غير صحيح — امسح الكود الموجود في المطعم',net:'ما فيه اتصال — حاول مرة ثانية',
   tagsP:['الطعم','جودة الأكل','سرعة الخدمة','النظافة','تعامل الموظفين','الكمية','الأسعار','الأجواء'],
   tagsN:['الطعم','الأكل بارد','وقت الانتظار','الطلب ناقص أو غلط','النظافة','تعامل الموظفين','الكمية','الأسعار']},
  en:{h1:'Your opinion matters',p:'One minute helps us serve you better',q1:'How was your experience today?',f:['Bad','Poor','Okay','Good','Excellent'],
   q2p:'What did you like?',q2n:'What went wrong?',q3:'Visit details',v:['Dine-in','Takeaway','Delivery'],cm:'Your comment (optional)',cmN:'Tell us what happened',cmPh:'Write your note here…',
-  neg:'We are sorry 🙏 Leave your number and the branch manager will contact you personally.',nm:'Name (optional)',ph:'Mobile number (optional)',phR:'Mobile number (required)',needPh:'A valid mobile number (05xxxxxxxx) is required with any comment or complaint',priv:'Your details are only used to follow up on your feedback.',privR:'Your mobile number is required to verify the feedback and is only used to follow up with you.',
+  neg:'We are sorry 🙏 Leave your number and the branch manager will contact you personally.',nm:'Name (optional)',ph:'Mobile number (optional)',phR:'Mobile number (required)',needPh:'A valid mobile number (05xxxxxxxx) is required to submit feedback',priv:'Your details are only used to follow up on your feedback.',privR:'Your mobile number is required to verify the feedback and is only used to follow up with you.',
   send:'Submit feedback',sending:'Sending…',foot:'Thank you for your time',dh:'Thank you!',dpP:'We were happy to serve you — see you again 💛',dpN:'Your feedback reached the branch management and we will contact you soon.',
   g:'Share your rating on Google Maps',pick:'Please choose a rating',needC:'Please tell us what happened so we can help',bad:'Invalid link — scan the code in the restaurant',net:'No connection — try again',
   tagsP:['Taste','Food quality','Fast service','Cleanliness','Staff','Portion size','Prices','Atmosphere'],
@@ -121,7 +121,7 @@ const T={
 const TAG_AR={};T.en.tagsP.forEach((x,i)=>TAG_AR['p'+x]=T.ar.tagsP[i]);T.en.tagsN.forEach((x,i)=>TAG_AR['n'+x]=T.ar.tagsN[i]);
 const VIS=['dine','takeaway','delivery'];
 const normPh=v=>{let d=String(v||'').replace(/[٠-٩]/g,c=>'٠١٢٣٤٥٦٧٨٩'.indexOf(c)).replace(/\D/g,'');if(d.startsWith('00966'))d=d.slice(5);else if(d.startsWith('966'))d=d.slice(3);if(/^5\d{8}$/.test(d))d='0'+d;return /^05\d{8}$/.test(d)?d:'';};
-const needPh=()=>S.r&&(S.r<=3||!!$('#comment').value.trim());
+const needPh=()=>true;
 function phLbl(){const t=T[L],r=needPh();$('#t_ph').textContent=r?t.phR:t.ph;$('#t_ph').classList.toggle('req',r);$('#t_priv').textContent=r?t.privR:t.priv;}
 const FACES=['😠','😕','😐','🙂','😍'];
 const $=s=>document.querySelector(s);

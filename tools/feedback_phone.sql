@@ -12,8 +12,8 @@ begin
   if v_ph ~ '^00966' then v_ph := substr(v_ph, 6); elsif v_ph ~ '^966' then v_ph := substr(v_ph, 4); end if;
   if v_ph ~ '^5\d{8}$' then v_ph := '0' || v_ph; end if;
   if v_ph !~ '^05\d{8}$' then v_ph := ''; end if;
-  if (p_rating <= 3 or v_cm is not null) and v_ph = '' then
-    return jsonb_build_object('ok', false, 'message', case when v_en then 'A valid mobile number (05xxxxxxxx) is required with any comment or complaint' else 'رقم الجوال إلزامي مع أي تعليق أو ملاحظة — اكتبه بصيغة 05xxxxxxxx' end);
+  if v_ph = '' then
+    return jsonb_build_object('ok', false, 'message', case when v_en then 'A valid mobile number (05xxxxxxxx) is required to submit feedback' else 'رقم الجوال إلزامي لإرسال التقييم — اكتبه بصيغة 05xxxxxxxx' end);
   end if;
   if (select count(*) from feedback where ip = v_ip and created_at > now() - interval '1 hour') >= 5 then
     return jsonb_build_object('ok', false, 'message', 'تم استلام تقييمك مسبقاً — شكراً لك');
@@ -29,4 +29,4 @@ begin
   return jsonb_build_object('ok', true, 'ref', 'CF-' || lpad(v_no::text, 5, '0'));
 end $$;
 
-select 'تم: رقم الجوال إلزامي مع التعليقات والشكاوى' as result;
+select 'تم: رقم الجوال إلزامي في كل التقييمات' as result;
