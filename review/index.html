@@ -65,6 +65,7 @@ textarea:focus,input:focus{border-color:var(--g)}
 .err{background:#FBE9E7;color:#8E1F17;border-radius:12px;padding:10px 12px;font-size:13.5px}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#16231B;color:#fff;padding:10px 18px;border-radius:12px;font-size:14px;z-index:9;max-width:90vw}
 [dir=ltr] body{font-family:'Readex Pro','IBM Plex Sans Arabic',system-ui,sans-serif}
+.lbl.req::after{content:' *';color:#C0392B}input.bad{border-color:#C0392B!important;box-shadow:0 0 0 3px rgba(192,57,43,.12)}
 </style>
 </head>
 <body>
@@ -104,14 +105,14 @@ const BR={
 const T={
  ar:{h1:'رأيك يهمّنا',p:'دقيقة وحدة تساعدنا نقدّم لك أفضل',q1:'كيف كانت تجربتك اليوم؟',f:['سيئة','ضعيفة','مقبولة','جيدة','ممتازة'],
   q2p:'وش اللي عجبك؟',q2n:'وش اللي ما عجبك؟',q3:'تفاصيل الزيارة',v:['داخل المطعم','سفري','توصيل'],cm:'تعليقك (اختياري)',cmN:'وضّح لنا المشكلة',cmPh:'اكتب ملاحظتك هنا…',
-  neg:'نعتذر عن تجربتك 🙏 اترك رقمك ويتواصل معك مدير الفرع شخصياً لحل المشكلة.',nm:'الاسم (اختياري)',ph:'رقم الجوال (اختياري)',priv:'بياناتك تُستخدم فقط للتواصل معك بخصوص ملاحظتك.',
+  neg:'نعتذر عن تجربتك 🙏 اترك رقمك ويتواصل معك مدير الفرع شخصياً لحل المشكلة.',nm:'الاسم (اختياري)',ph:'رقم الجوال (اختياري)',phR:'رقم الجوال (إلزامي)',needPh:'رقم الجوال إلزامي مع أي تعليق أو ملاحظة — اكتبه بصيغة 05xxxxxxxx',priv:'بياناتك تُستخدم فقط للتواصل معك بخصوص ملاحظتك.',privR:'رقم الجوال مطلوب للتحقق من صحة التقييم، ويُستخدم فقط للتواصل معك بخصوص ملاحظتك.',
   send:'إرسال التقييم',sending:'جارِ الإرسال…',foot:'شكراً لوقتك',dh:'شكراً لك!',dpP:'سعدنا بزيارتك، ونتطلع نشوفك مرة ثانية 💛',dpN:'وصلت ملاحظتك لإدارة الفرع وبيتم التواصل معك في أقرب وقت.',
   g:'شاركنا تقييمك في قوقل ماب',pick:'اختر التقييم أولاً',needC:'اكتب لنا وش صار عشان نقدر نساعدك',bad:'رابط غير صحيح — امسح الكود الموجود في المطعم',net:'ما فيه اتصال — حاول مرة ثانية',
   tagsP:['الطعم','جودة الأكل','سرعة الخدمة','النظافة','تعامل الموظفين','الكمية','الأسعار','الأجواء'],
   tagsN:['الطعم','الأكل بارد','وقت الانتظار','الطلب ناقص أو غلط','النظافة','تعامل الموظفين','الكمية','الأسعار']},
  en:{h1:'Your opinion matters',p:'One minute helps us serve you better',q1:'How was your experience today?',f:['Bad','Poor','Okay','Good','Excellent'],
   q2p:'What did you like?',q2n:'What went wrong?',q3:'Visit details',v:['Dine-in','Takeaway','Delivery'],cm:'Your comment (optional)',cmN:'Tell us what happened',cmPh:'Write your note here…',
-  neg:'We are sorry 🙏 Leave your number and the branch manager will contact you personally.',nm:'Name (optional)',ph:'Mobile number (optional)',priv:'Your details are only used to follow up on your feedback.',
+  neg:'We are sorry 🙏 Leave your number and the branch manager will contact you personally.',nm:'Name (optional)',ph:'Mobile number (optional)',phR:'Mobile number (required)',needPh:'A valid mobile number (05xxxxxxxx) is required with any comment or complaint',priv:'Your details are only used to follow up on your feedback.',privR:'Your mobile number is required to verify the feedback and is only used to follow up with you.',
   send:'Submit feedback',sending:'Sending…',foot:'Thank you for your time',dh:'Thank you!',dpP:'We were happy to serve you — see you again 💛',dpN:'Your feedback reached the branch management and we will contact you soon.',
   g:'Share your rating on Google Maps',pick:'Please choose a rating',needC:'Please tell us what happened so we can help',bad:'Invalid link — scan the code in the restaurant',net:'No connection — try again',
   tagsP:['Taste','Food quality','Fast service','Cleanliness','Staff','Portion size','Prices','Atmosphere'],
@@ -119,6 +120,9 @@ const T={
 };
 const TAG_AR={};T.en.tagsP.forEach((x,i)=>TAG_AR['p'+x]=T.ar.tagsP[i]);T.en.tagsN.forEach((x,i)=>TAG_AR['n'+x]=T.ar.tagsN[i]);
 const VIS=['dine','takeaway','delivery'];
+const normPh=v=>{let d=String(v||'').replace(/[٠-٩]/g,c=>'٠١٢٣٤٥٦٧٨٩'.indexOf(c)).replace(/\D/g,'');if(d.startsWith('00966'))d=d.slice(5);else if(d.startsWith('966'))d=d.slice(3);if(/^5\d{8}$/.test(d))d='0'+d;return /^05\d{8}$/.test(d)?d:'';};
+const needPh=()=>S.r&&(S.r<=3||!!$('#comment').value.trim());
+function phLbl(){const t=T[L],r=needPh();$('#t_ph').textContent=r?t.phR:t.ph;$('#t_ph').classList.toggle('req',r);$('#t_priv').textContent=r?t.privR:t.priv;}
 const FACES=['😠','😕','😐','🙂','😍'];
 const $=s=>document.querySelector(s);
 const q=new URLSearchParams(location.search); const bk=(q.get('b')||'').toLowerCase(); const B=BR[bk];
@@ -139,7 +143,7 @@ function paint(){
   $('#visit').innerHTML=VIS.map((v,i)=>`<button class="${S.visit===v?'on':''}" data-v="${v}">${t.v[i]}</button>`).join('');
   $('#t_cm').textContent=neg?t.cmN:t.cm;$('#comment').placeholder=t.cmPh;
   $('#neg').classList.toggle('hide',!neg);$('#t_neg').textContent=t.neg;
-  $('#t_nm').textContent=t.nm;$('#t_ph').textContent=t.ph;$('#t_priv').textContent=t.priv;
+  $('#t_nm').textContent=t.nm;phLbl();
   $('#send').textContent=t.send;$('#t_foot').textContent=t.foot;
   ['#c2','#c3','#c4'].forEach(s=>$(s).classList.toggle('hide',!S.r));
 }
@@ -148,17 +152,19 @@ document.addEventListener('click',e=>{
   const t=e.target.closest('[data-t]');if(t){const k=t.dataset.t;S.tags=S.tags.includes(k)?S.tags.filter(x=>x!==k):S.tags.concat(k);t.classList.toggle('on');return}
   const v=e.target.closest('[data-v]');if(v){S.visit=v.dataset.v;paint();return}
 });
+document.addEventListener('input',e=>{if(e.target.id==='comment')phLbl();if(e.target.id==='phone')e.target.classList.remove('bad');});
 $('#langBtn').onclick=()=>{L=L==='ar'?'en':'ar';try{localStorage.setItem('fb_lang',L)}catch(e){}paint();};
 $('#send').onclick=async()=>{
   const t=T[L],err=$('#err');err.classList.add('hide');
   if(!S.r){toast(t.pick);return}
   const cm=$('#comment').value.trim();
   if(S.r<=2&&!cm&&!S.tags.length){err.textContent=t.needC;err.classList.remove('hide');$('#comment').focus();return}
+  const ph=normPh($('#phone').value); if(needPh()&&!ph){err.textContent=t.needPh;err.classList.remove('hide');$('#phone').focus();$('#phone').classList.add('bad');return}
   const btn=$('#send');btn.disabled=true;btn.textContent=t.sending;
   try{
     if(!SB) throw new Error('net');
     const tags=S.tags.map(k=>TAG_AR[k]||k.slice(1));
-    const {data:j,error}=await SB.rpc('feedback_submit',{p_branch:bk,p_rating:S.r,p_tags:tags,p_comment:cm||null,p_name:$('#name').value.trim()||null,p_phone:$('#phone').value.trim()||null,p_visit:S.visit,p_lang:L});
+    const {data:j,error}=await SB.rpc('feedback_submit',{p_branch:bk,p_rating:S.r,p_tags:tags,p_comment:cm||null,p_name:$('#name').value.trim()||null,p_phone:ph||null,p_visit:S.visit,p_lang:L});
     if(error) throw error;
     if(!j||!j.ok){err.textContent=(j&&j.message)||t.net;err.classList.remove('hide');btn.disabled=false;btn.textContent=t.send;return}
     $('#app').classList.add('hide');$('#thanks').classList.remove('hide');window.scrollTo(0,0);
