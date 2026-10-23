@@ -1228,7 +1228,7 @@ async function applyRole(uid,rk){ const R=PERM_ROLES.find(r=>r.k===rk); const wa
   if(add.length){ const r=await T('user_sections').insert(add.map(x=>({user_id:uid,section:x}))); if(r.error) return r.error; }
   if(st._uroOk){ const r=await T('user_ro').delete().eq('user_id',uid).neq('section',''); if(r.error) return r.error; }
   return null; }
-const APP_VER='202610240020';
+const APP_VER='202610240225';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.csales='مبيعات الكاشيرات'; SEC_NAME.glq='قيود جروث (تسجيل القيود في جروث)'; SEC_NAME.clean='النظافة (قوائم الفتح والإغلاق)'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول عهدة (يشوف عهدته فقط)'; SEC_NAME.custody='العُهد — إدارة ومراجعة كل العهد (للمحاسب)'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const ujob=(uid,kind)=>(uid&&(st._jobs||{})[uid])||(kind==='emp'?'موظف':kind==='admin'?'إدارة':'مستخدم');
@@ -1289,7 +1289,7 @@ function idleGet(){ try{ return +localStorage.getItem('lastAct')||0; }catch(e){ 
 function idleMark(force){ const n=Date.now(); if(!force&&n-idleW<60000) return; idleW=n; try{ localStorage.setItem('lastAct',String(n)); }catch(e){} presPing(); }
 const presDev=()=>{ const u=navigator.userAgent; const os=/iPhone|iPad/.test(u)?'iPhone':/Android/.test(u)?'Android':/Windows/.test(u)?'Windows':/Mac/.test(u)?'Mac':'جهاز'; const app=(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone?'تطبيق':'متصفح'; return os+' · '+app; };
 let presAt=0; function presPing(login){ if(!st.profile||isEmp()) return; const n=Date.now(); if(!login&&n-presAt<120000) return; presAt=n; sb.rpc('presence_ping',{p_tab:st.tab||'',p_device:presDev(),p_login:!!login}).then(()=>{},()=>{}); }
-async function idleCheck(){ const t=idleGet(); if(!t||Date.now()-t<=IDLE_MS) return false;
+async function idleCheck(){ let rl=''; try{ rl=(st.profile&&st.profile.role)||localStorage.getItem('myRole')||''; }catch(_){} if(rl==='employee') return false; const t=idleGet(); if(!t||Date.now()-t<=IDLE_MS) return false;
   const {data:{session}}=await sb.auth.getSession(); if(!session) return false;
   try{ localStorage.removeItem('lastAct'); }catch(e){} try{ await sb.rpc('presence_out',{p_reason:'idle'}); }catch(e){} await sb.auth.signOut();
   $('#app').hidden=true; $('#login').hidden=false; $('#lerr').textContent=''; $('#linfo').hidden=false; return true; }
@@ -1308,7 +1308,7 @@ async function boot(){
     sb.from('user_sections').select('section').eq('user_id',st.user.id),
     sb.from('user_ro').select('section').eq('user_id',st.user.id)
   ]);
-  st.profile=p.data;
+  st.profile=p.data; try{ localStorage.setItem('myRole',(p.data&&p.data.role)||''); }catch(_){}
   if(!st.profile||!st.profile.active){ await sb.auth.signOut(); $('#login').hidden=false; $('#app').hidden=true; $('#lerr').textContent='هذا الحساب موقوف — تواصل مع مدير النظام'; return; }
   try{ const r=await sb.rpc('has_all_branches'); st.allBranches=!!r.data; }catch(e){ st.allBranches=false; }
   st.myEmpId=null; if(st.profile.role!=='employee'){ try{ const me=await sb.rpc('my_emp_id'); st.myEmpId=me.data||null; }catch(e){} }
