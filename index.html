@@ -1054,6 +1054,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%;text-size-adjus
 .ack-box{max-width:460px;width:100%;display:flex;flex-direction:column;gap:12px;border-top:4px solid #B42318}.ack-hd{display:flex;gap:10px;align-items:center}.ack-hd>span{font-size:26px}.ack-hd b{display:block;font-size:15px;color:#B42318}.ack-hd small{font-size:10.5px;color:var(--muted)}
 .ack-tx{margin:0;font-size:12px;line-height:1.8;color:#3F4B43}.ack-ls{display:flex;flex-direction:column;gap:8px;max-height:44vh;overflow-y:auto}.ack-it{border:1px solid #F3D3CE;background:#FFF7F5;border-radius:12px;padding:10px 12px}.ack-it b{display:block;font-size:12.5px;color:#7A1F12}.ack-it small{font-size:10px;color:var(--muted)}.ack-it p{margin:5px 0 0;font-size:11.5px;line-height:1.8;white-space:pre-line}
 .ack-ck{display:flex;gap:9px;align-items:flex-start;font-size:12px;line-height:1.6;background:#F6F8F5;border-radius:10px;padding:10px}.ack-ck input{width:20px;height:20px;flex:none;margin-top:2px}.ack-ck small{font-size:10.5px;color:var(--muted)}
+.cu-hs{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px;scrollbar-width:none}.cu-hs::-webkit-scrollbar{display:none}.cu-hs button{position:relative;flex:none;min-width:112px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 10px 9px;border-radius:16px;border:1.5px solid #E3E6E1;background:#fff;font:inherit;cursor:pointer}.cu-hs button.on{border-color:#1E5A3E;background:#F1F7F3;box-shadow:0 6px 14px -10px rgba(30,90,62,.7)}.cu-ha{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#F6E7B0,#C9A227);color:#3E2F05;font-weight:800;font-size:15px}.cu-hs button.on .cu-ha{background:#1E5A3E;color:#F3DE9C}.cu-hs b{font-size:12px;white-space:nowrap}.cu-hs small{font-size:10px;color:var(--muted)}.cu-hs i{position:absolute;top:6px;inset-inline-end:8px;font-style:normal;min-width:18px;height:18px;border-radius:9px;background:#D0453A;color:#fff;font-size:10px;font-weight:800;display:grid;place-items:center;padding:0 4px}
 .pm-lg{display:flex;gap:14px;flex-wrap:wrap;font-size:10.5px;color:#3F4D45;margin:2px 2px 6px}.pm-lg span{display:inline-flex;align-items:center;gap:6px}.pm-lg i.pm-c{margin:0;width:16px!important;height:16px!important;cursor:default;pointer-events:none}.pm-lg i.pm-c::after{font-size:10px!important}.pm tbody tr:hover td,.pm tbody tr:hover .pm-u{background:#F2F7F3}
 .pm .g1{background:#F8FAF6}.pm thead .g0{background:#EEF4F0}.pm thead .g1{background:#F6F2E6}
 .pm-g{color:#2F4A3B;font-size:10.5px!important;border-inline-start:2px solid #D4DCD3!important}
@@ -1227,7 +1228,7 @@ async function applyRole(uid,rk){ const R=PERM_ROLES.find(r=>r.k===rk); const wa
   if(add.length){ const r=await T('user_sections').insert(add.map(x=>({user_id:uid,section:x}))); if(r.error) return r.error; }
   if(st._uroOk){ const r=await T('user_ro').delete().eq('user_id',uid).neq('section',''); if(r.error) return r.error; }
   return null; }
-const APP_VER='202610240010';
+const APP_VER='202610240020';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.csales='مبيعات الكاشيرات'; SEC_NAME.glq='قيود جروث (تسجيل القيود في جروث)'; SEC_NAME.clean='النظافة (قوائم الفتح والإغلاق)'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول عهدة (يشوف عهدته فقط)'; SEC_NAME.custody='العُهد — إدارة ومراجعة كل العهد (للمحاسب)'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const ujob=(uid,kind)=>(uid&&(st._jobs||{})[uid])||(kind==='emp'?'موظف':kind==='admin'?'إدارة':'مستخدم');
@@ -4143,7 +4144,9 @@ V.custody=async()=>{
   if(!cuStaff()){ let mine=''; try{ mine=await cuMine(); }catch(e){} return mine||`<div class="card empty">ما عندك عهدة مفتوحة حالياً — لما تنفتح لك عهدة يوصلك إشعار وتظهر هنا.</div>`; }
   let D; try{ D=await cuLoad(); }catch(e){ if(cuMissing(e)) return `<div class="card empty">ميزة العُهد تحتاج تشغيل ملف custody.sql في Supabase أولاً</div>`; throw e; }
   const myTop=cuHolder()&&D.C.some(c=>cuIsMine(c)&&c.status==='open')?await cuMine():'';
-  const fb=st.cuF||'all', tab=st.cuT||'review', inB=x=>fb==='all'||x.branch===fb||!x.branch;
+  const fb=st.cuF||'all', tab=st.cuT||'review', hk=c=>String(c.holder_user||c.emp_id||c.emp_name||''), cById0=Object.fromEntries(D.C.map(c=>[c.id,c]));
+  const HL=[]; D.C.forEach(c=>{ const k=hk(c); if(!HL.some(x=>x.k===k)) HL.push({k,n:c.emp_name||'—'}); }); const fh=HL.some(x=>x.k===st.cuH)?st.cuH:'all';
+  const inB=x=>{ const c=x.custody_id?cById0[x.custody_id]:x; return (fb==='all'||x.branch===fb||!x.branch)&&(fh==='all'||(c&&hk(c)===fh)); };
   const C=D.C.filter(inB), open=C.filter(c=>c.status==='open'), closed=C.filter(c=>c.status==='closed');
   const ks=Object.fromEntries(C.map(c=>[c.id,cuCalc(D.by[c.id]||[])]));
   const toRev=D.T.filter(t=>inB(t)&&t.status==='pending'&&t.side==='emp'&&open.some(c=>c.id===t.custody_id));
@@ -4151,7 +4154,9 @@ V.custody=async()=>{
   const totBal=sum(open.map(c=>Math.max(0,ks[c.id].bal))), nonTaxM=sum(D.T.filter(t=>inB(t)&&t.kind==='expense'&&t.status!=='rejected'&&t.taxable===false&&t.date.startsWith(todayIso().slice(0,7))).map(t=>t.amount));
   const brs=st.branches.map(b=>b.id);
   let h=myTop+(brs.length>1?`<div class="chips">${[['all','كل الفروع']].concat(brs.map(b=>[b,brById(b).name])).map(([k,n])=>`<button data-cuf="${k}" aria-pressed="${fb===k}">${k!=='all'?`<i class="dot" style="background:${brById(k).color}"></i>`:''}${esc(n)}</button>`).join('')}</div>`:'');
-  h+=`<div class="card cu-hero"><div style="font-size:11px;opacity:.8">العُهد المفتوحة عند مسؤولي العهد</div><div class="num" style="font-size:24.5px;font-weight:700;color:#F6E7B0">${fmt(totBal,2)} <small style="font-size:11px;color:#fff;opacity:.8">ر.س</small></div>
+  if(HL.length>1){ const bal=k=>sum(D.C.filter(c=>hk(c)===k&&c.status==='open').map(c=>Math.max(0,cuCalc(D.by[c.id]||[]).bal))); const pn=k=>D.T.filter(t=>t.status==='pending'&&t.side==='emp'&&cById0[t.custody_id]&&hk(cById0[t.custody_id])===k).length;
+    h+=`<div class="cu-hs"><button data-cuh="all" class="${fh==='all'?'on':''}"><span class="cu-ha">👥</span><b>كل المسؤولين</b><small>${HL.length} مسؤول</small></button>${HL.map(x=>{ const p=pn(x.k); return `<button data-cuh="${esc(x.k)}" class="${fh===x.k?'on':''}"><span class="cu-ha">${esc(String(x.n).trim().charAt(0))}</span><b>${esc(x.n)}</b><small class="num">${fmt(bal(x.k))} ر.س</small>${p?`<i>${p}</i>`:''}</button>`; }).join('')}</div>`; }
+  h+=`<div class="card cu-hero"><div style="font-size:11px;opacity:.8">${fh==='all'?'العُهد المفتوحة عند مسؤولي العهد':'عهدة '+esc((HL.find(x=>x.k===fh)||{}).n||'')}</div><div class="num" style="font-size:24.5px;font-weight:700;color:#F6E7B0">${fmt(totBal,2)} <small style="font-size:11px;color:#fff;opacity:.8">ر.س</small></div>
     <div class="cu-hg"><div><span>عهد مفتوحة</span><b class="num">${open.length}</b></div><div><span>بانتظار مراجعتك</span><b class="num" style="color:${toRev.length?'#FFB4A8':'#fff'}">${toRev.length}</b></div><div><span>غير ضريبية · ${monShort(todayIso())}</span><b class="num">${fmt(nonTaxM)}</b></div></div></div>
     <button class="btn" data-cunew="1" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:13px">💼 فتح عهدة جديدة</button>
     <div class="cu-tabs">${[['review','المراجعة',toRev.length],['open','المفتوحة',open.length],['closed','المصفّاة',closed.length]].map(([k,n,c])=>`<button data-cut="${k}" aria-selected="${tab===k}">${n}${c?` <span class="cu-cnt">${c}</span>`:''}</button>`).join('')}</div>`;
@@ -4255,8 +4260,8 @@ async function cuMine(){
 }
 
 document.addEventListener('click',async e=>{
-  const t=e.target.closest('[data-cuf],[data-cut],[data-cunew],[data-cuopen],[data-cuclose],[data-cuadd],[data-curev],[data-cudel],[data-cuph],[data-cusettle],[data-cuxl],[data-cudelc]'); if(!t) return; const d=t.dataset;
-  if(d.cuf){st.cuF=d.cuf;render();return;}
+  const t=e.target.closest('[data-cuf],[data-cuh],[data-cut],[data-cunew],[data-cuopen],[data-cuclose],[data-cuadd],[data-curev],[data-cudel],[data-cuph],[data-cusettle],[data-cuxl],[data-cudelc]'); if(!t) return; const d=t.dataset;
+  if(d.cuf){st.cuF=d.cuf;render();return;} if(d.cuh){st.cuH=d.cuh;render();return;}
   if(d.cut){st.cuT=d.cut;render();return;}
   if(d.cunew){cuNew();return;}
   if(d.cuopen){ if(!st._cu) await cuLoad(); cuDetail(d.cuopen); return; }
