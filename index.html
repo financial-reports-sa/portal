@@ -1048,6 +1048,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%;text-size-adjus
 .gs-in{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #E6E9E4}.gs-in svg{width:20px;height:20px;color:#1E5A3E;flex:none}.gs-in input{flex:1;min-width:0;border:0;outline:none;font:inherit;font-size:16px;height:36px;background:none}.gs-x{border:0;background:#F1F3EF;border-radius:9px;font:inherit;font-size:12px;padding:7px 11px;cursor:pointer;color:#3F4B43}
 .gs-res{overflow-y:auto;padding:6px 8px 10px}.gs-hint{padding:22px 12px;text-align:center;color:var(--muted);font-size:12.5px}.gs-g{margin-top:6px}.gs-gt{font-size:10.5px;font-weight:700;color:#9A7B12;padding:6px 8px 4px;letter-spacing:.3px}
 .gs-it{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;font:inherit;text-align:start;padding:9px 8px;border-radius:11px;cursor:pointer}.gs-it:hover,.gs-it:active{background:#F3F6F2}.gs-ic{flex:none;width:34px;height:34px;border-radius:10px;background:#EEF3EF;display:grid;place-items:center;font-size:15px}.gs-m{flex:1;min-width:0}.gs-m b{display:block;font-size:13px;color:#15281D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.gs-m small{display:block;font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.gs-tg{flex:none;font-size:9.5px;font-weight:700;background:#F1F3EF;color:#4B574F;border-radius:99px;padding:3px 8px}.gs-it>i{font-style:normal;color:#B7BEB9;font-size:16px}
+.lx-info{display:flex;gap:9px;align-items:flex-start;font-size:12px;line-height:1.75;color:#1E4D36;background:#EEF6F1;border:1px solid #CFE4D7;border-radius:10px;padding:9px 11px}.lx-info svg{width:17px;height:17px;flex:none;margin-top:2px;color:#1E5A3E}
 .pm-lg{display:flex;gap:14px;flex-wrap:wrap;font-size:10.5px;color:#3F4D45;margin:2px 2px 6px}.pm-lg span{display:inline-flex;align-items:center;gap:6px}.pm-lg i.pm-c{margin:0;width:16px!important;height:16px!important;cursor:default;pointer-events:none}.pm-lg i.pm-c::after{font-size:10px!important}.pm tbody tr:hover td,.pm tbody tr:hover .pm-u{background:#F2F7F3}
 .pm .g1{background:#F8FAF6}.pm thead .g0{background:#EEF4F0}.pm thead .g1{background:#F6F2E6}
 .pm-g{color:#2F4A3B;font-size:10.5px!important;border-inline-start:2px solid #D4DCD3!important}
@@ -1100,6 +1101,7 @@ if(seen){s.remove();return;}if(ever)s.classList.add('quick');s.addEventListener(
         <div class="lx-head"><b>تسجيل الدخول</b><span>أهلاً بك، أدخل بيانات حسابك للمتابعة</span></div>
         <div class="lx-f"><label for="lu">اسم المستخدم أو رقم الجوال</label><div class="lx-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><input id="lu" autocomplete="username" dir="ltr" autocapitalize="none" spellcheck="false" placeholder="username / 05xxxxxxxx"></div></div>
         <div class="lx-f"><label for="lp">كلمة المرور</label><div class="lx-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg><input id="lp" type="password" autocomplete="current-password" dir="ltr" placeholder="••••••••"><button type="button" class="lx-eye" id="leye" aria-label="إظهار كلمة المرور"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div></div>
+        <div class="lx-info" id="linfo" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg><span>حمايةً لبياناتك، تم تسجيل خروجك تلقائياً لعدم النشاط. يُرجى تسجيل الدخول للمتابعة.</span></div>
         <div class="err" id="lerr"></div>
         <button class="lx-btn" type="submit" id="lbtn"><span>دخول</span><i class="lx-sp"></i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
         <div class="lx-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>للحصول على حساب تواصل مع مدير النظام</div>
@@ -1220,7 +1222,7 @@ async function applyRole(uid,rk){ const R=PERM_ROLES.find(r=>r.k===rk); const wa
   if(add.length){ const r=await T('user_sections').insert(add.map(x=>({user_id:uid,section:x}))); if(r.error) return r.error; }
   if(st._uroOk){ const r=await T('user_ro').delete().eq('user_id',uid).neq('section',''); if(r.error) return r.error; }
   return null; }
-const APP_VER='202610231100';
+const APP_VER='202610231300';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.csales='مبيعات الكاشيرات'; SEC_NAME.glq='قيود جروث (تسجيل القيود في جروث)'; SEC_NAME.clean='النظافة (قوائم الفتح والإغلاق)'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const ujob=(uid,kind)=>(uid&&(st._jobs||{})[uid])||(kind==='emp'?'موظف':kind==='admin'?'إدارة':'مستخدم');
@@ -1264,7 +1266,7 @@ const loadDaily=()=>q('daily-cogs',async()=>{const r=await rpcAll('get_cogs_dail
 $('#loginForm').onsubmit=async e=>{
   e.preventDefault(); const u=$('#lu').value.trim().toLowerCase(), p=$('#lp').value;
   if(!u||!p){$('#lerr').textContent='أدخل اسم المستخدم وكلمة المرور';return;}
-  $('#lbtn').disabled=true; $('#lerr').textContent='';
+  $('#lbtn').disabled=true; $('#lerr').textContent=''; $('#linfo').hidden=true;
   const ph=u.replace(/[^\d]/g,'');const email=u.includes('@')?u:(/^05\d{8}$/.test(ph)?'p'+ph+'@'+DOMAIN:u+'@'+DOMAIN);
   const {error}=await sb.auth.signInWithPassword({email,password:p});
   $('#lbtn').disabled=false;
@@ -1282,7 +1284,7 @@ function idleMark(force){ const n=Date.now(); if(!force&&n-idleW<60000) return; 
 async function idleCheck(){ const t=idleGet(); if(!t||Date.now()-t<=IDLE_MS) return false;
   const {data:{session}}=await sb.auth.getSession(); if(!session) return false;
   try{ localStorage.removeItem('lastAct'); }catch(e){} await sb.auth.signOut();
-  $('#app').hidden=true; $('#login').hidden=false; $('#lerr').textContent='انتهت الجلسة لعدم النشاط لمدة ساعتين — سجّل دخولك من جديد'; return true; }
+  $('#app').hidden=true; $('#login').hidden=false; $('#lerr').textContent=''; $('#linfo').hidden=false; return true; }
 ['pointerdown','keydown','touchstart','scroll'].forEach(ev=>document.addEventListener(ev,()=>{ if(!$('#app').hidden) idleMark(); },{passive:true,capture:true}));
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') idleCheck(); });
 setInterval(()=>{ if(document.visibilityState==='visible') idleCheck(); },60000);
