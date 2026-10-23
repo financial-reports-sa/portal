@@ -1049,6 +1049,8 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%;text-size-adjus
 .gs-res{overflow-y:auto;padding:6px 8px 10px}.gs-hint{padding:22px 12px;text-align:center;color:var(--muted);font-size:12.5px}.gs-g{margin-top:6px}.gs-gt{font-size:10.5px;font-weight:700;color:#9A7B12;padding:6px 8px 4px;letter-spacing:.3px}
 .gs-it{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;font:inherit;text-align:start;padding:9px 8px;border-radius:11px;cursor:pointer}.gs-it:hover,.gs-it:active{background:#F3F6F2}.gs-ic{flex:none;width:34px;height:34px;border-radius:10px;background:#EEF3EF;display:grid;place-items:center;font-size:15px}.gs-m{flex:1;min-width:0}.gs-m b{display:block;font-size:13px;color:#15281D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.gs-m small{display:block;font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.gs-tg{flex:none;font-size:9.5px;font-weight:700;background:#F1F3EF;color:#4B574F;border-radius:99px;padding:3px 8px}.gs-it>i{font-style:normal;color:#B7BEB9;font-size:16px}
 .lx-info{display:flex;gap:9px;align-items:flex-start;font-size:12px;line-height:1.75;color:#1E4D36;background:#EEF6F1;border:1px solid #CFE4D7;border-radius:10px;padding:9px 11px}.lx-info svg{width:17px;height:17px;flex:none;margin-top:2px;color:#1E5A3E}
+.pr-kp{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:4px 0 8px}.pr-kp>div{background:#fff;border:1px solid #E3E6E1;border-top:3px solid var(--c);border-radius:12px;padding:10px 6px;text-align:center}.pr-kp b{display:block;font-size:20px;color:var(--c)}.pr-kp small{font-size:10px;color:var(--muted)}
+.pr-row{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid #F0F2EF}.pr-row:last-child{border-bottom:0}.pr-dot{flex:none;width:10px;height:10px;border-radius:50%;background:var(--c);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 20%,transparent)}.pr-m{flex:1;min-width:0}.pr-m b{display:block;font-size:12.5px}.pr-m small,.pr-st small{display:block;font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pr-st{text-align:left;flex:none;max-width:48%}.pr-st b{font-size:11px;display:block}
 .pm-lg{display:flex;gap:14px;flex-wrap:wrap;font-size:10.5px;color:#3F4D45;margin:2px 2px 6px}.pm-lg span{display:inline-flex;align-items:center;gap:6px}.pm-lg i.pm-c{margin:0;width:16px!important;height:16px!important;cursor:default;pointer-events:none}.pm-lg i.pm-c::after{font-size:10px!important}.pm tbody tr:hover td,.pm tbody tr:hover .pm-u{background:#F2F7F3}
 .pm .g1{background:#F8FAF6}.pm thead .g0{background:#EEF4F0}.pm thead .g1{background:#F6F2E6}
 .pm-g{color:#2F4A3B;font-size:10.5px!important;border-inline-start:2px solid #D4DCD3!important}
@@ -1222,7 +1224,7 @@ async function applyRole(uid,rk){ const R=PERM_ROLES.find(r=>r.k===rk); const wa
   if(add.length){ const r=await T('user_sections').insert(add.map(x=>({user_id:uid,section:x}))); if(r.error) return r.error; }
   if(st._uroOk){ const r=await T('user_ro').delete().eq('user_id',uid).neq('section',''); if(r.error) return r.error; }
   return null; }
-const APP_VER='202610231300';
+const APP_VER='202610231320';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.csales='مبيعات الكاشيرات'; SEC_NAME.glq='قيود جروث (تسجيل القيود في جروث)'; SEC_NAME.clean='النظافة (قوائم الفتح والإغلاق)'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const ujob=(uid,kind)=>(uid&&(st._jobs||{})[uid])||(kind==='emp'?'موظف':kind==='admin'?'إدارة':'مستخدم');
@@ -1271,27 +1273,29 @@ $('#loginForm').onsubmit=async e=>{
   const {error}=await sb.auth.signInWithPassword({email,password:p});
   $('#lbtn').disabled=false;
   if(error){$('#lerr').textContent=/confirm/i.test(error.message)?'الحساب غير مفعّل بعد — تواصل مع مدير النظام':'اسم المستخدم أو كلمة المرور غير صحيحة';return;}
-  idleMark(true); boot();
+  st._justLogged=true; idleMark(true); boot();
 };
-$('#logout').onclick=async()=>{try{const sub=await pushSub();if(sub) await sb.rpc('push_unregister',{p_endpoint:sub.endpoint});}catch(e){} await sb.auth.signOut(); location.reload();};
+$('#logout').onclick=async()=>{try{ await sb.rpc('presence_out',{p_reason:'logout'}); }catch(e){} try{const sub=await pushSub();if(sub) await sb.rpc('push_unregister',{p_endpoint:sub.endpoint});}catch(e){} await sb.auth.signOut(); location.reload();};
 $('#av').onclick=e=>{e.stopPropagation();$('#npanel').hidden=true;const m=$('#umenu');m.hidden=!m.hidden;$('#av').setAttribute('aria-expanded',String(!m.hidden));};
 document.addEventListener('click',e=>{const m=$('#umenu');if(m&&!m.hidden&&!e.target.closest('.who'))m.hidden=true;});
 
 // انتهاء الجلسة بعد ساعتين بدون نشاط
 const IDLE_MS=2*36e5; let idleW=0;
 function idleGet(){ try{ return +localStorage.getItem('lastAct')||0; }catch(e){ return 0; } }
-function idleMark(force){ const n=Date.now(); if(!force&&n-idleW<60000) return; idleW=n; try{ localStorage.setItem('lastAct',String(n)); }catch(e){} }
+function idleMark(force){ const n=Date.now(); if(!force&&n-idleW<60000) return; idleW=n; try{ localStorage.setItem('lastAct',String(n)); }catch(e){} presPing(); }
+const presDev=()=>{ const u=navigator.userAgent; const os=/iPhone|iPad/.test(u)?'iPhone':/Android/.test(u)?'Android':/Windows/.test(u)?'Windows':/Mac/.test(u)?'Mac':'جهاز'; const app=(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone?'تطبيق':'متصفح'; return os+' · '+app; };
+let presAt=0; function presPing(login){ if(!st.profile||isEmp()) return; const n=Date.now(); if(!login&&n-presAt<120000) return; presAt=n; sb.rpc('presence_ping',{p_tab:st.tab||'',p_device:presDev(),p_login:!!login}).then(()=>{},()=>{}); }
 async function idleCheck(){ const t=idleGet(); if(!t||Date.now()-t<=IDLE_MS) return false;
   const {data:{session}}=await sb.auth.getSession(); if(!session) return false;
-  try{ localStorage.removeItem('lastAct'); }catch(e){} await sb.auth.signOut();
+  try{ localStorage.removeItem('lastAct'); }catch(e){} try{ await sb.rpc('presence_out',{p_reason:'idle'}); }catch(e){} await sb.auth.signOut();
   $('#app').hidden=true; $('#login').hidden=false; $('#lerr').textContent=''; $('#linfo').hidden=false; return true; }
 ['pointerdown','keydown','touchstart','scroll'].forEach(ev=>document.addEventListener(ev,()=>{ if(!$('#app').hidden) idleMark(); },{passive:true,capture:true}));
-document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') idleCheck(); });
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') idleCheck().then(o=>{ if(!o){ presAt=0; presPing(); } }); });
 setInterval(()=>{ if(document.visibilityState==='visible') idleCheck(); },60000);
 async function boot(){
   const {data:{session}}=await sb.auth.getSession();
   if(!session){ $('#app').hidden=true; $('#login').hidden=false; return; }
-  if(await idleCheck()) return; idleMark(true); st._vc={}; st._vShown=null;
+  if(await idleCheck()) return; idleMark(true); st._vc={}; st._vShown=null; st._presLogin=!!st._justLogged; st._justLogged=false;
   st.user=session.user; st.cache={};
   const [p,b,ub,us,uro]=await Promise.all([
     sb.from('profiles').select('*').eq('id',st.user.id).maybeSingle(),
@@ -1338,7 +1342,7 @@ function renderShell(){ try{ window.I18N&&I18N.emp(isEmp()); }catch(_){}
   if(g==='rep'){ const hg=hubOf(st.tab); const sib=hg?hg.secs.filter(canSee):[];
     $('#tabs').innerHTML=st.tab==='hub'?'':`<button data-t="${hubOf(st.tab)?'hub':'home'}" class="hb-back" aria-label="رجوع"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>رجوع</button>`; }
   else $('#tabs').innerHTML=subs.length>1?SECTIONS.filter(s=>subs.includes(s.id)).map(s=>`<button data-t="${s.id}" aria-pressed="${st.tab===s.id}">${s.name}</button>`).join(''):'';
-  $('#gsBtn').hidden=isEmp(); loadAlerts();
+  $('#gsBtn').hidden=isEmp(); if(st._presLogin!==undefined){ presAt=0; presPing(st._presLogin); st._presLogin=undefined; } else presPing(); loadAlerts();
   render(); navPush();
 }
 // ===== زر الرجوع في الجوال: يقفل النافذة المفتوحة أو يرجع للصفحة السابقة بدل ما يطلع من التطبيق =====
@@ -5742,7 +5746,7 @@ V.users=async()=>{
   const q=(st.uq||'').trim().toLowerCase(); st.uOpen=st.uOpen||{};
   let h=`<div class="usr-top"><div class="usr-s"><input class="inp" id="usq" type="search" placeholder="🔍 ابحث بالاسم أو اسم المستخدم" value="${esc(st.uq||'')}" autocomplete="off"></div><button class="btn sm" data-uadd="1">${st.uAdd?'إغلاق':'＋ مستخدم'}</button></div>
   <div class="muted" id="usqn" style="font-size:10.5px;margin:-6px 2px 0">${P.data.length} مستخدم</div>
-  <div class="iv-tabs us-tabs" style="margin-top:10px">${[['quick','⚡','الأدوار'],['grid','📊','الجدول'],['user','👤','حسب الموظف'],['sec','🗂️','حسب الشاشة']].concat(isAdmin()?[['link','🔗','الدمج']]:[]).map(([v,i,n])=>`<button data-umode="${v}" aria-pressed="${(st.uMode||'quick')===v}"><span>${i}</span><b>${n}</b></button>`).join('')}</div>`;
+  <div class="iv-tabs us-tabs" style="margin-top:10px">${[['quick','⚡','الأدوار'],['grid','📊','الجدول'],['user','👤','حسب الموظف'],['sec','🗂️','حسب الشاشة']].concat(isAdmin()?[['link','🔗','الدمج'],['act','🟢','النشاط']]:[]).map(([v,i,n])=>`<button data-umode="${v}" aria-pressed="${(st.uMode||'quick')===v}"><span>${i}</span><b>${n}</b></button>`).join('')}</div>`;
   if((st.uMode||'quick')==='quick'){ const U=P.data.filter(u=>u.role==='user'&&canManage(u)&&(!q||((u.full_name||'')+' '+u.username).toLowerCase().includes(q)));
     const mine=u=>us.filter(x=>x.user_id===u.id).map(x=>x.section).sort(); const roOf=u=>st._uro.filter(x=>x.user_id===u.id).length;
     const roleOf=u=>{ const m=mine(u).join(','); const r=PERM_ROLES.find(r=>r.s.slice().sort().join(',')===m); return r?r.k:(m?'custom':''); };
@@ -5768,6 +5772,15 @@ V.users=async()=>{
       <tr>${cols.map((g,gi)=>g.c.map(([k,n])=>`<th class="pm-h g${gi%2}"><button class="pm-hb" data-pmcol="${k}" data-m="ops" title="تفعيل أو إلغاء للكل"><span>${esc(n)}</span></button></th>`).join('')).join('')}</tr></thead>
       <tbody>${U.map(u=>`<tr class="pm-op"><th class="pm-u">${esc(u.full_name||u.username)}<small>${esc(u.username)}</small><em>⚙️ عمليات</em></th>${cols.map((g,gi)=>g.c.map(([k])=>cell(u,k,gi,'ops')).join('')).join('')}</tr><tr class="pm-ro"><th class="pm-u"><em>👁️ قراءة فقط</em></th>${cols.map((g,gi)=>g.c.map(([k])=>cell(u,k,gi,'ro')).join('')).join('')}</tr>`).join('')||`<tr><td colspan="99" class="muted">ما فيه مستخدمين</td></tr>`}</tbody></table></div>
     <div class="muted" style="font-size:10.5px;margin-top:8px">الآدمن والمالك يشوفون كل شيء ومو ظاهرين في الجدول. لتعديل الاسم أو كلمة المرور افتح «حسب الموظف».</div>`;
+    return h; }
+  if(st.uMode==='act'&&isAdmin()){ const r=await sb.rpc('presence_list'); if(r.error) return h+`<div class="card"><p class="muted">${/presence_list/.test(r.error.message)?'شغّل ملف «presence» في Supabase أول.':esc(r.error.message)}</p></div>`;
+    const now=Date.now(), ago=t=>{ const m=Math.max(0,Math.round((now-new Date(t))/6e4)); return m<1?'الآن':m<60?'قبل '+m+' د':m<1440?'قبل '+Math.floor(m/60)+' س'+(m%60?' و'+(m%60)+' د':''):'قبل '+Math.floor(m/1440)+' يوم'; };
+    const stOf=x=>{ if(!x.last_seen) return ['never','لم يدخل بعد','#9AA39D']; const m=(now-new Date(x.last_seen))/6e4; if(x.out_at&&x.out_reason==='logout') return ['out','سجّل خروج','#6B756E']; if(x.out_at||m>120) return ['idle','خرج تلقائياً (عدم نشاط)','#B7791F']; if(m<=5) return ['on','نشط الآن','#16A34A']; return ['open','الجلسة مفتوحة','#2F67B0']; };
+    const L=(r.data||[]).filter(x=>!q||(x.name+' '+x.username).toLowerCase().includes(q)).map(x=>({...x,s:stOf(x)})); const o={on:0,open:1,idle:2,out:3,never:4}; L.sort((a,b)=>o[a.s[0]]-o[b.s[0]]||(new Date(b.last_seen||0)-new Date(a.last_seen||0)));
+    const c=k=>L.filter(x=>x.s[0]===k).length; const sn=id=>(SECTIONS.find(z=>z.id===id)||{}).name||'';
+    h+=`<div class="pr-kp">${[['on','نشط الآن','#16A34A'],['open','جلسة مفتوحة','#2F67B0'],['idle','خرج تلقائياً','#B7791F'],['out','سجّل خروج','#6B756E']].map(([k,n,col])=>`<div style="--c:${col}"><b class="num">${c(k)}</b><small>${n}</small></div>`).join('')}</div>
+      <div class="muted" style="font-size:10.5px;margin:2px 2px 8px">«نشط الآن» = استخدم التطبيق خلال آخر 5 دقائق · بعد ساعتين بدون نشاط يُسجَّل خروجه تلقائياً · الموظفين غير مشمولين.</div>
+      <div class="card">${L.map(x=>`<div class="pr-row"><span class="pr-dot" style="--c:${x.s[2]}"></span><div class="pr-m"><b>${esc(x.name)}</b><small>${esc(x.username)}${x.role!=='user'?' · '+ROLE_NAME[x.role]:''}${x.device?' · '+esc(x.device):''}</small></div><div class="pr-st"><b style="color:${x.s[2]}">${x.s[1]}</b><small>${x.last_seen?(x.s[0]==='out'||x.s[0]==='idle'?'آخر نشاط '+ago(x.last_seen):ago(x.last_seen)+(x.tab&&sn(x.tab)?' · '+esc(sn(x.tab)):'')):'—'}</small></div></div>`).join('')||'<div class="empty">لا يوجد مستخدمين</div>'}</div>`;
     return h; }
   if(st.uMode==='link'&&isAdmin()){ const [EM,LK]=await Promise.all([sb.from('employees').select('id,name,branch,status,phone').neq('status','left').order('name'),sb.rpc('emp_links')]);
     if(LK.error) return h+`<div class="card"><p class="muted">${/emp_links/.test(LK.error.message)?'شغّل ملف «emp-link» في Supabase أول.':esc(LK.error.message)}</p></div>`;
