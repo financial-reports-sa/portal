@@ -75,6 +75,22 @@ textarea:focus,input:focus{border-color:var(--g)}
 .card h2{display:flex;align-items:center;gap:8px}.card h2::before{content:'';width:4px;height:18px;border-radius:3px;background:var(--gold)}
 .phw{position:relative}.phw input{padding-inline-start:48px;text-align:left;letter-spacing:.5px}.phc{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:20px;pointer-events:none}
 .foot{font-size:12.5px!important;color:var(--g)!important;font-weight:600;margin-top:10px!important}
+
+/* ===== صفحة واحدة مدمجة ===== */
+.hero{padding:14px 16px 40px!important}.htitle{margin-top:10px!important}.htitle h1{font-size:19px!important}.htitle p{font-size:12px!important;margin-top:2px!important}.eyb{font-size:9.5px!important;padding:2px 9px!important;margin-bottom:5px!important}.trust{display:none!important}
+.logo{width:36px!important;height:36px!important;font-size:16px!important;border-radius:11px!important}.brand b{font-size:14px!important}.brand small{font-size:11px!important}.lang{padding:4px 10px!important;font-size:11.5px!important}
+.wrap{margin-top:-30px!important;gap:10px!important;padding-bottom:16px!important}
+.card.one{padding:4px 14px!important;border-radius:18px}.sec{padding:10px 0;border-bottom:1px solid #EFEEE7}.sec:last-child{border-bottom:0}
+.sh{display:flex;align-items:center;gap:7px;font-family:'Readex Pro';font-size:13px;font-weight:600;color:var(--ink);margin:0 0 8px}.sh::before{content:'';width:3px;height:14px;border-radius:2px;background:var(--gold)}
+.sh.req::after{content:' *';color:#C0392B}
+.faces{gap:2px!important}.st{width:44px!important;height:40px!important}.st svg{width:34px!important;height:34px!important}
+.stars{flex-direction:row!important;justify-content:center;gap:8px!important;margin-top:4px!important}.stars .rl{font-size:13.5px!important}.stars span{font-size:11px!important}
+.chips{flex-wrap:nowrap!important;overflow-x:auto;gap:6px!important;padding-bottom:2px;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}.chip{flex:none;padding:6px 12px!important;font-size:12.5px!important}
+.seg{padding:3px!important;border-radius:12px!important}.seg button{padding:7px 4px!important;font-size:12.5px!important}
+textarea{min-height:54px!important;padding:9px 11px!important;font-size:14px!important;border-radius:12px!important}
+#contactBox{margin-top:8px}#contactBox .sh{margin-top:2px}.phw input{padding-top:10px!important;padding-bottom:10px!important;border-radius:12px!important}
+.hint{font-size:11px!important;margin-top:4px!important}.callout{font-size:11.5px!important;padding:7px 10px!important;margin:0 0 6px!important}
+.send{padding:13px!important;border-radius:14px!important;font-size:15px!important}.foot{font-size:11px!important;margin-top:6px!important}
 </style>
 </head>
 <body>
@@ -83,24 +99,17 @@ textarea:focus,input:focus{border-color:var(--g)}
   <div class="htitle"><span class="eyb" id="t_eyb"></span><h1 id="t_h1"></h1><p id="t_p"></p><div class="trust"><span id="t_tr1"></span><span id="t_tr2"></span><span id="t_tr3"></span></div></div>
 </div>
 <div class="wrap" id="app">
-  <div class="card"><h2 id="t_q1"></h2>
-    <div class="faces" id="faces"></div>
-    <div class="stars" id="stars"></div>
-  </div>
-  <div class="card hide" id="c2"><h2 id="t_q2"></h2><div class="chips" id="tags"></div></div>
-  <div class="card hide" id="c3">
-    <h2 id="t_q3"></h2>
-    <div class="seg" id="visit"></div>
-    <label class="lbl" id="t_cm"></label>
-    <textarea id="comment"></textarea>
-    <div id="contactBox">
-      <div class="callout hide" id="neg"><span>🤝</span><span id="t_neg"></span></div>
-      <input id="name" type="hidden">
-      <label class="lbl" id="t_ph"></label><div class="phw"><span class="phc">🇸🇦</span><input id="phone" inputmode="tel" autocomplete="tel" dir="ltr" placeholder="05xxxxxxxx"></div>
-      <p class="hint" id="t_priv"></p>
+  <div class="card one">
+    <div class="sec"><div class="sh" id="t_q1"></div><div class="faces" id="faces"></div><div class="stars" id="stars"></div></div>
+    <div class="sec" id="c2"><div class="sh" id="t_q2"></div><div class="chips" id="tags"></div></div>
+    <div id="c3">
+      <div class="sec"><div class="sh" id="t_q3"></div><div class="seg" id="visit"></div></div>
+      <div class="sec"><label class="sh" id="t_cm" for="comment"></label><textarea id="comment" rows="2"></textarea>
+        <div id="contactBox"><div class="callout hide" id="neg"><span>🤝</span><span id="t_neg"></span></div><input id="name" type="hidden">
+          <label class="sh" id="t_ph" for="phone"></label><div class="phw"><span class="phc">🇸🇦</span><input id="phone" inputmode="tel" autocomplete="tel" dir="ltr" placeholder="05xxxxxxxx"></div><p class="hint" id="t_priv"></p></div></div>
     </div>
   </div>
-  <div class="hide" id="c4"><div class="err hide" id="err"></div><button class="send" id="send"></button><p class="foot" id="t_foot"></p></div>
+  <div id="c4"><div class="err hide" id="err"></div><button class="send" id="send"></button><p class="foot" id="t_foot"></p></div>
 </div>
 <div class="wrap hide" id="thanks"><div class="card done"><div class="ok" id="dIc">✓</div><h2 id="d_h"></h2><p class="hint" id="d_p" style="font-size:14px"></p><div class="ref" id="d_ref"></div><a class="gbtn hide" id="gBtn" target="_blank" rel="noopener">⭐ <span id="d_g"></span></a></div></div>
 <script>
@@ -112,17 +121,17 @@ const BR={
   pc:{ar:'بروست الباتشينو',arS:'',en:'Al-Pacino Broast',enS:'',logo:'P',acc:'#A07BE6',maps:''}
 };
 const T={
- ar:{eyb:'تجربة العملاء',h1:'شاركنا تقييم زيارتك',p:'رضاكم أولويتنا — كل تقييم يصل مباشرة إلى إدارة الفرع ويُتابَع باهتمام.',tr:['🔒 بياناتك سرية','⏱️ متابعة خلال 24 ساعة','✓ يصل للإدارة مباشرة'],q1:'١. تقييمك العام للزيارة',f:['سيئة','ضعيفة','مقبولة','جيدة','ممتازة'],
-  q2p:'٢. ما الذي أعجبك؟',q2n:'٢. ما الذي يحتاج تحسين؟',q3:'٣. تفاصيل الزيارة',v:['داخل المطعم','سفري','توصيل'],cm:'تعليقك (اختياري)',cmN:'وضّح لنا المشكلة',cmPh:'اكتب ملاحظتك هنا…',
-  neg:'نعتذر عن تجربتك 🙏 اترك رقمك ويتواصل معك مدير الفرع شخصياً لحل المشكلة.',nm:'الاسم (اختياري)',ph:'رقم الجوال (اختياري)',phR:'رقم الجوال (إلزامي)',needPh:'رقم الجوال إلزامي لإرسال التقييم — اكتبه بصيغة 05xxxxxxxx',priv:'بياناتك تُستخدم فقط للتواصل معك بخصوص ملاحظتك.',privR:'رقم الجوال مطلوب للتحقق من صحة التقييم، ويُستخدم فقط للتواصل معك بخصوص ملاحظتك.',
-  send:'إرسال التقييم',sending:'جارِ الإرسال…',foot:'نشكر لكم ثقتكم واختياركم لنا',dh:'شكراً لك!',dpP:'سعدنا بزيارتك، ونتطلع نشوفك مرة ثانية 💛',dpN:'وصلت ملاحظتك لإدارة الفرع وبيتم التواصل معك في أقرب وقت.',
+ ar:{eyb:'تجربة العملاء',h1:'شاركنا تقييم زيارتك',p:'رضاكم أولويتنا — تقييمك يصل مباشرة إلى إدارة الفرع',tr:['🔒 بياناتك سرية','⏱️ متابعة خلال 24 ساعة','✓ يصل للإدارة مباشرة'],q1:'تقييمك العام',f:['سيئة','ضعيفة','مقبولة','جيدة','ممتازة'],
+  q2p:'ما الذي أعجبك؟',q2n:'ما الذي يحتاج تحسين؟',q3:'نوع الزيارة',v:['داخل المطعم','سفري','توصيل'],cm:'ملاحظاتك (اختياري)',cmN:'وضّح لنا الملاحظة',cmPh:'اكتب ملاحظتك هنا…',
+  neg:'نعتذر عن تجربتك 🙏 اترك رقمك ويتواصل معك مدير الفرع شخصياً لحل المشكلة.',nm:'الاسم (اختياري)',ph:'رقم الجوال (اختياري)',phR:'رقم الجوال (إلزامي)',needPh:'رقم الجوال إلزامي لإرسال التقييم — اكتبه بصيغة 05xxxxxxxx',priv:'بياناتك تُستخدم فقط للتواصل معك بخصوص ملاحظتك.',privR:'للتحقق من التقييم والتواصل معك فقط · 🔒 بياناتك سرية',
+  send:'إرسال التقييم',sending:'جارِ الإرسال…',foot:'⏱️ نتابع كل ملاحظة خلال 24 ساعة · نشكر ثقتكم',dh:'شكراً لك!',dpP:'سعدنا بزيارتك، ونتطلع نشوفك مرة ثانية 💛',dpN:'وصلت ملاحظتك لإدارة الفرع وبيتم التواصل معك في أقرب وقت.',
   g:'شاركنا تقييمك في قوقل ماب',pick:'اختر التقييم أولاً',needC:'اكتب لنا وش صار عشان نقدر نساعدك',bad:'رابط غير صحيح — امسح الكود الموجود في المطعم',net:'ما فيه اتصال — حاول مرة ثانية',
   tagsP:['الطعم','جودة الأكل','سرعة الخدمة','النظافة','تعامل الموظفين','الكمية','الأسعار','الأجواء'],
   tagsN:['الطعم','الأكل بارد','وقت الانتظار','الطلب ناقص أو غلط','النظافة','تعامل الموظفين','الكمية','الأسعار']},
- en:{eyb:'Customer Experience',h1:'Rate your visit',p:'Your satisfaction is our priority — every review reaches the branch management directly.',tr:['🔒 Confidential','⏱️ Follow-up within 24h','✓ Sent to management'],q1:'1. Overall rating of your visit',f:['Bad','Poor','Okay','Good','Excellent'],
-  q2p:'2. What did you like?',q2n:'2. What needs improvement?',q3:'3. Visit details',v:['Dine-in','Takeaway','Delivery'],cm:'Your comment (optional)',cmN:'Tell us what happened',cmPh:'Write your note here…',
-  neg:'We are sorry 🙏 Leave your number and the branch manager will contact you personally.',nm:'Name (optional)',ph:'Mobile number (optional)',phR:'Mobile number (required)',needPh:'A valid mobile number (05xxxxxxxx) is required to submit feedback',priv:'Your details are only used to follow up on your feedback.',privR:'Your mobile number is required to verify the feedback and is only used to follow up with you.',
-  send:'Submit feedback',sending:'Sending…',foot:'Thank you for choosing us',dh:'Thank you!',dpP:'We were happy to serve you — see you again 💛',dpN:'Your feedback reached the branch management and we will contact you soon.',
+ en:{eyb:'Customer Experience',h1:'Rate your visit',p:'Your satisfaction is our priority — every review reaches the branch management directly.',tr:['🔒 Confidential','⏱️ Follow-up within 24h','✓ Sent to management'],q1:'Overall rating',f:['Bad','Poor','Okay','Good','Excellent'],
+  q2p:'What did you like?',q2n:'What needs improvement?',q3:'Visit type',v:['Dine-in','Takeaway','Delivery'],cm:'Your comment (optional)',cmN:'Tell us what happened',cmPh:'Write your note here…',
+  neg:'We are sorry 🙏 Leave your number and the branch manager will contact you personally.',nm:'Name (optional)',ph:'Mobile number (optional)',phR:'Mobile number (required)',needPh:'A valid mobile number (05xxxxxxxx) is required to submit feedback',priv:'Your details are only used to follow up on your feedback.',privR:'Used only to verify and follow up · 🔒 confidential',
+  send:'Submit feedback',sending:'Sending…',foot:'⏱️ Every note is followed up within 24h · Thank you',dh:'Thank you!',dpP:'We were happy to serve you — see you again 💛',dpN:'Your feedback reached the branch management and we will contact you soon.',
   g:'Share your rating on Google Maps',pick:'Please choose a rating',needC:'Please tell us what happened so we can help',bad:'Invalid link — scan the code in the restaurant',net:'No connection — try again',
   tagsP:['Taste','Food quality','Fast service','Cleanliness','Staff','Portion size','Prices','Atmosphere'],
   tagsN:['Taste','Food was cold','Waiting time','Missing or wrong order','Cleanliness','Staff','Portion size','Prices']}
@@ -154,7 +163,6 @@ function paint(){
   $('#neg').classList.toggle('hide',!neg);$('#t_neg').textContent=t.neg;
   phLbl();
   $('#send').textContent=t.send;$('#t_foot').textContent=t.foot;
-  ['#c2','#c3','#c4'].forEach(s=>$(s).classList.toggle('hide',!S.r));
 }
 document.addEventListener('click',e=>{
   const r=e.target.closest('[data-r]');if(r){const was=S.r&&S.r<=3;S.r=+r.dataset.r;if((S.r<=3)!==was)S.tags=[];paint();if(!was&&S.r)setTimeout(()=>$('#c2').scrollIntoView({behavior:'smooth',block:'start'}),120);return}
