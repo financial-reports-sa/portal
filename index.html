@@ -1051,6 +1051,9 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%;text-size-adjus
 .lx-info{display:flex;gap:9px;align-items:flex-start;font-size:12px;line-height:1.75;color:#1E4D36;background:#EEF6F1;border:1px solid #CFE4D7;border-radius:10px;padding:9px 11px}.lx-info svg{width:17px;height:17px;flex:none;margin-top:2px;color:#1E5A3E}
 .pr-kp{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:4px 0 8px}.pr-kp>div{background:#fff;border:1px solid #E3E6E1;border-top:3px solid var(--c);border-radius:12px;padding:10px 6px;text-align:center}.pr-kp b{display:block;font-size:20px;color:var(--c)}.pr-kp small{font-size:10px;color:var(--muted)}
 .pr-row{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid #F0F2EF}.pr-row:last-child{border-bottom:0}.pr-dot{flex:none;width:10px;height:10px;border-radius:50%;background:var(--c);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 20%,transparent)}.pr-m{flex:1;min-width:0}.pr-m b{display:block;font-size:12.5px}.pr-m small,.pr-st small{display:block;font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pr-st{text-align:left;flex:none;max-width:48%}.pr-st b{font-size:11px;display:block}
+.ack-box{max-width:460px;width:100%;display:flex;flex-direction:column;gap:12px;border-top:4px solid #B42318}.ack-hd{display:flex;gap:10px;align-items:center}.ack-hd>span{font-size:26px}.ack-hd b{display:block;font-size:15px;color:#B42318}.ack-hd small{font-size:10.5px;color:var(--muted)}
+.ack-tx{margin:0;font-size:12px;line-height:1.8;color:#3F4B43}.ack-ls{display:flex;flex-direction:column;gap:8px;max-height:44vh;overflow-y:auto}.ack-it{border:1px solid #F3D3CE;background:#FFF7F5;border-radius:12px;padding:10px 12px}.ack-it b{display:block;font-size:12.5px;color:#7A1F12}.ack-it small{font-size:10px;color:var(--muted)}.ack-it p{margin:5px 0 0;font-size:11.5px;line-height:1.8;white-space:pre-line}
+.ack-ck{display:flex;gap:9px;align-items:flex-start;font-size:12px;line-height:1.6;background:#F6F8F5;border-radius:10px;padding:10px}.ack-ck input{width:20px;height:20px;flex:none;margin-top:2px}.ack-ck small{font-size:10.5px;color:var(--muted)}
 .pm-lg{display:flex;gap:14px;flex-wrap:wrap;font-size:10.5px;color:#3F4D45;margin:2px 2px 6px}.pm-lg span{display:inline-flex;align-items:center;gap:6px}.pm-lg i.pm-c{margin:0;width:16px!important;height:16px!important;cursor:default;pointer-events:none}.pm-lg i.pm-c::after{font-size:10px!important}.pm tbody tr:hover td,.pm tbody tr:hover .pm-u{background:#F2F7F3}
 .pm .g1{background:#F8FAF6}.pm thead .g0{background:#EEF4F0}.pm thead .g1{background:#F6F2E6}
 .pm-g{color:#2F4A3B;font-size:10.5px!important;border-inline-start:2px solid #D4DCD3!important}
@@ -1224,7 +1227,7 @@ async function applyRole(uid,rk){ const R=PERM_ROLES.find(r=>r.k===rk); const wa
   if(add.length){ const r=await T('user_sections').insert(add.map(x=>({user_id:uid,section:x}))); if(r.error) return r.error; }
   if(st._uroOk){ const r=await T('user_ro').delete().eq('user_id',uid).neq('section',''); if(r.error) return r.error; }
   return null; }
-const APP_VER='202610231335';
+const APP_VER='202610231430';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.csales='مبيعات الكاشيرات'; SEC_NAME.glq='قيود جروث (تسجيل القيود في جروث)'; SEC_NAME.clean='النظافة (قوائم الفتح والإغلاق)'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const ujob=(uid,kind)=>(uid&&(st._jobs||{})[uid])||(kind==='emp'?'موظف':kind==='admin'?'إدارة':'مستخدم');
@@ -2220,7 +2223,17 @@ function attSelfie(){ return new Promise(res=>{ const m=document.createElement('
   document.body.appendChild(m); const inp=m.querySelector('input'); let fin=false; const done=v=>{ if(fin) return; fin=true; m.remove(); res(v); };
   inp.addEventListener('change',async()=>{ const f=inp.files&&inp.files[0]; if(!f) return; m.querySelector('.att-sb').textContent='جاري تجهيز الصورة…'; try{ done(await flImg(f,720,.7)); }catch(e){ done(null); } });
   m.querySelector('button').onclick=()=>done(null); }); }
-async function attGo(kind,btn){ const A=st._attMe; if(!A||!A.geo) return; btn.disabled=true; const old=btn.textContent; btn.textContent='📡 جاري تحديد موقعك…';
+async function attAckGate(){ let r; try{ r=await sb.rpc('att_ack_pending'); }catch(e){ return true; } if(r.error) return true; const L=r.data||[]; if(!L.length) return true;
+  return new Promise(res=>{ const {m,close}=hrModal(`<div class="card ack-box"><div class="ack-hd"><span>⚠️</span><div><b>إنذارات تحتاج إقرارك</b><small>Warnings require your acknowledgement · ${L.length}</small></div></div>
+    <p class="ack-tx">لازم تقرأ الإنذارات التالية وتقر باستلامها قبل تسجيل الحضور أو الانصراف.<br><span dir="ltr">Please read and acknowledge before checking in/out.</span></p>
+    <div class="ack-ls">${L.map(x=>`<div class="ack-it"><b>${esc(x.title)}</b><small>${esc(dLbl(String(x.at).slice(0,10)))} · ${new Date(x.at).toLocaleTimeString('ar-SA-u-nu-latn',{hour:'numeric',minute:'2-digit',timeZone:'Asia/Riyadh'})}</small><p>${esc(String(x.body||'').split('\n—\n')[0])}</p></div>`).join('')}</div>
+    <label class="ack-ck"><input type="checkbox" id="ackC"><span>أقر بأني اطلعت على الإنذارات أعلاه وفهمت محتواها<br><small dir="ltr">I confirm I have read and understood the above</small></span></label>
+    <button class="btn" id="ackB" disabled>✓ اطلعت وأقر بالاستلام · I acknowledge</button><button class="btn ghost sm" data-x="1">لاحقاً</button></div>`);
+    m.classList.add('ack-modal'); let done=false; const fin=v=>{ if(done) return; done=true; res(v); };
+    const c=m.querySelector('#ackC'), b=m.querySelector('#ackB'); c.addEventListener('change',()=>{ b.disabled=!c.checked; });
+    b.addEventListener('click',async()=>{ b.disabled=true; b.textContent='جاري الحفظ…'; const x=await sb.rpc('att_ack_all'); if(x.error){ toast(x.error.message); b.disabled=false; return; } close(); toast('تم تسجيل إقرارك ✓'); fin(true); });
+    new MutationObserver((_,o)=>{ if(!document.body.contains(m)){ o.disconnect(); fin(false); } }).observe(document.body,{childList:true}); }); }
+async function attGo(kind,btn){ const A=st._attMe; if(!A||!A.geo) return; if(!(await attAckGate())) return; btn.disabled=true; const old=btn.textContent; btn.textContent='📡 جاري تحديد موقعك…';
   let g; try{ g=await attGeo(); }catch(e){ toast(e.message); btn.disabled=false; btn.textContent=old; return; }
   const GS=(A.geos&&A.geos.length?A.geos:[A.geo]).map(q=>({...q,d:attDist(g.lat,g.lng,q.lat,q.lng)})).map(q=>({...q,ok:q.d<=q.radius+Math.min(g.acc||0,100)})).sort((a,b)=>(b.ok-a.ok)||((a.d-a.radius)-(b.d-b.radius))); const P0=GS[0], d=P0.d; if(!P0.ok){ toast((g.acc||0)>300?`الموقع غير دقيق (±${fmt(g.acc)} م) — فعّل «الموقع الدقيق» من إعدادات الجوال وحاول مرة ثانية`:GS.length>1||P0.name?`أنت بعيد عن مكان دوامك${P0.name?' «'+P0.name+'»':''} (${fmt(d)} متر) — سجّل وأنت في مكان الدوام`:`أنت بعيد عن الفرع (${fmt(d)} متر) — سجّل وأنت داخل الفرع`); btn.disabled=false; btn.textContent=old; return; }
   btn.textContent=old; btn.disabled=false; let ph=null;
@@ -2229,7 +2242,7 @@ async function attGo(kind,btn){ const A=st._attMe; if(!A||!A.geo) return; btn.di
   btn.disabled=true; btn.textContent='جاري التسجيل…'; ph=await mediaPut('att',A.branch,img,A.emp); }
   btn.disabled=true; btn.textContent='جاري التسجيل…';
   const r=await sb.rpc('att_check',{p_kind:kind,p_lat:g.lat,p_lng:g.lng,p_acc:g.acc,p_photo:ph,p_device:attDev()});
-  if(r.error){ toast(r.error.message); btn.disabled=false; btn.textContent=old; return; }
+  if(r.error){ btn.disabled=false; btn.textContent=old; if(/ACK_REQUIRED/.test(r.error.message)){ if(await attAckGate()) attGo(kind,btn); return; } toast(r.error.message); return; }
   toast(kind==='in'?'تم تسجيل حضورك ✓':'تم تسجيل انصرافك ✓ — يعطيك العافية'); render(); }
 // ===== الإجازات =====
 const LV_K={annual:['🏖️','إجازة سنوية'],sick:['🤒','إجازة مرضية'],emergency:['⚡','إجازة اضطرارية'],unpaid:['📄','إجازة بدون راتب'],other:['📝','إجازة أخرى']};

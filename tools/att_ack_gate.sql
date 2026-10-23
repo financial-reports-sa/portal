@@ -1,0 +1,39 @@
+create or replace function public.att_ack_pending() returns jsonb
+language sql stable security definer set search_path = public as $$
+  select coalesce(jsonb_agg(jsonb_build_object('id', m.id, 'title', m.title, 'body', m.body, 'at', m.created_at) order by m.created_at), '[]'::jsonb)
+  from msg_rcpt r join msgs m on m.id = r.msg_id
+  where r.user_id = auth.uid() and r.ack_at is null and coalesce(r.hidden, false) = false and m.need_ack and m.kind = 'warn'
+    and coalesce(r.kind, '') <> 'cc' and m.created_at > now() - interval '45 days'
+$$;
+
+create or replace function public.att_ack_block() returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from msg_rcpt r join msgs m on m.id = r.msg_id
+    where r.user_id = auth.uid() and r.ack_at is null and coalesce(r.hidden, false) = false and m.need_ack and m.kind = 'warn'
+      and coalesce(r.kind, '') <> 'cc' and m.created_at > now() - interval '45 days')
+$$;
+
+create or replace function public.att_ack_all() returns int
+language plpgsql security definer set search_path = public as $$
+declare n int;
+begin
+  update msg_rcpt r set ack_at = now(), read_at = coalesce(r.read_at, now())
+    from msgs m where m.id = r.msg_id and r.user_id = auth.uid() and r.ack_at is null and m.need_ack and m.kind = 'warn' and coalesce(r.kind, '') <> 'cc';
+  get diagnostics n = row_count;
+  return n;
+end $$;
+
+revoke all on function public.att_ack_pending(), public.att_ack_block(), public.att_ack_all() from public, anon;
+grant execute on function public.att_ack_pending(), public.att_ack_block(), public.att_ack_all() to authenticated;
+
+do $$
+declare d text;
+begin
+  d := pg_get_functiondef('public.att_check(text, double precision, double precision, double precision, text, text)'::regprocedure);
+  if position('ACK_REQUIRED' in d) = 0 then
+    d := regexp_replace(d, E'\nbegin\\s*\n', E'\nbegin\n  if att_ack_block() then raise exception ''ACK_REQUIRED''; end if;\n');
+    execute d;
+  end if;
+end $$;
+
+select 'تم: الإقرار بالإنذارات قبل البصمة' as result;
