@@ -1224,7 +1224,7 @@ async function applyRole(uid,rk){ const R=PERM_ROLES.find(r=>r.k===rk); const wa
   if(add.length){ const r=await T('user_sections').insert(add.map(x=>({user_id:uid,section:x}))); if(r.error) return r.error; }
   if(st._uroOk){ const r=await T('user_ro').delete().eq('user_id',uid).neq('section',''); if(r.error) return r.error; }
   return null; }
-const APP_VER='202610231320';
+const APP_VER='202610231315';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.csales='مبيعات الكاشيرات'; SEC_NAME.glq='قيود جروث (تسجيل القيود في جروث)'; SEC_NAME.clean='النظافة (قوائم الفتح والإغلاق)'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const ujob=(uid,kind)=>(uid&&(st._jobs||{})[uid])||(kind==='emp'?'موظف':kind==='admin'?'إدارة':'مستخدم');
@@ -2814,7 +2814,7 @@ async function loadAlerts(){
       if(f.status==='new') out.push({k:'fb:'+f.id,ic:f.rating<=2?'⚠️':'⭐',bad:f.rating<=2,t:(f.rating<=3?'شكوى عميل':'تقييم جديد')+' · '+'★'.repeat(f.rating),s:(f.comment?f.comment.slice(0,70)+' · ':'')+brById(f.branch).name,go:'feedback'});
       else if(fbLate(f)) out.push({k:'fbl:'+f.id+':'+Math.floor(fbAge(f)/24),ic:'⏱',bad:true,t:'شكوى عميل لم تُحل منذ '+hrsTxt(fbAge(f)),s:brById(f.branch).name+' · '+fbRef(f),go:'feedback'}); }); } }catch(e){}
   ALERTS=out.sort((a,b)=>(b.bad?1:0)-(a.bad?1:0)); paintBell(); paintTicker(ALERTS); paintHomeTasks();
-  if(!isEmp()) inboxLoad().then(()=>{ const ib=document.querySelector('.ib-ban b'); if(st.tab==='home'&&!ib&&st._inbN){ const v=$('#view'); if(v&&!v.querySelector('.ib-ban')) v.insertAdjacentHTML('afterbegin',inboxBanner()); } else if(ib) ib.textContent=st._inbN+' '+(st._inbN===1?'أمر ينتظر':'أمور تنتظر')+' قرارك'; const tb=document.querySelector('#tabs [data-t="inbox"],#side [data-st="inbox"]'); document.querySelectorAll('#tabs [data-t="inbox"],#side [data-st="inbox"]').forEach(x=>{ x.textContent='يحتاج قرارك'+(st._inbN?' · '+st._inbN:''); }); }).catch(()=>{});
+  if(!isEmp()) inboxLoad().then(()=>{ document.querySelectorAll('#tabs [data-t="inbox"],#side [data-st="inbox"]').forEach(x=>{ x.textContent='يحتاج قرارك'+(st._inbN?' · '+st._inbN:''); }); }).catch(()=>{});
 }
 // ----- الشريط المتحرك (كل مستخدم يشوف أقسامه فقط) -----
 async function paintTicker(out){
@@ -6008,7 +6008,7 @@ async function render(){
   const OBS={purch:['purch_view',['purch','purch_sup']],maint:['maint_view',['maint','maint_sup']],rets:['rets_view',['rets']]}; const ob=OBS[st.tab]; const ro=!!ob&&!isAdmin()&&st.mySections.includes(ob[0])&&!ob[1].some(k=>st.mySections.includes(k));
   ['purch','maint','rets'].forEach(k=>document.body.classList.toggle('ro-'+k,ro&&st.tab===k));
   const secX=SECTIONS.find(x=>x.id===st.tab)||{}; const roG=!ro&&!isAdmin()&&(st.myRO||[]).includes(secX.perm||st.tab); document.body.classList.toggle('ro-gen',roG); roWatch(roG);
-  try{ const html=(ro||roG?'<div class="ro-bar">👁️ وضع المراقبة — تشوف كل شي بدون موافقة أو تعديل</div>':'')+(st.tab==='home'?pushBox(false)+inboxBanner():st.tab==='me'?pushBox(false)+await mgBanner():'')+await V[st.tab]();
+  try{ const html=(ro||roG?'<div class="ro-bar">👁️ وضع المراقبة — تشوف كل شي بدون موافقة أو تعديل</div>':'')+(st.tab==='home'?pushBox(false):st.tab==='me'?pushBox(false)+await mgBanner():'')+await V[st.tab]();
     if(tk!==st._rtk) return; navBar(false); v.classList.remove('v-busy');
     const ae=document.activeElement, aid=ae&&v.contains(ae)&&ae.id?ae.id:null;
     v.innerHTML=html; st._vShown=vk; if(!cached&&!same){ v.classList.remove('v-in'); void v.offsetWidth; v.classList.add('v-in'); }
