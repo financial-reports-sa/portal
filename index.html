@@ -1224,7 +1224,7 @@ async function applyRole(uid,rk){ const R=PERM_ROLES.find(r=>r.k===rk); const wa
   if(add.length){ const r=await T('user_sections').insert(add.map(x=>({user_id:uid,section:x}))); if(r.error) return r.error; }
   if(st._uroOk){ const r=await T('user_ro').delete().eq('user_id',uid).neq('section',''); if(r.error) return r.error; }
   return null; }
-const APP_VER='202610231315';
+const APP_VER='202610231330';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.csales='مبيعات الكاشيرات'; SEC_NAME.glq='قيود جروث (تسجيل القيود في جروث)'; SEC_NAME.clean='النظافة (قوائم الفتح والإغلاق)'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const ujob=(uid,kind)=>(uid&&(st._jobs||{})[uid])||(kind==='emp'?'موظف':kind==='admin'?'إدارة':'مستخدم');
@@ -4957,6 +4957,18 @@ async function aiCtx(){
       reports:P.map((d,i)=>({date:(d.data||{}).date||d.id,text:aiPageText((d.data||{}).html).slice(0,i<3?4500:1800)})).filter(x=>x.text)}; });
 
   // ---------- الخزينة ----------
+  run('balances',async()=>{ if(!canSee('balances')) return; const r=await sb.rpc('growth_balances'); if(r.error) return; const D=r.data||{}; const BR={}; (D.branches||[]).forEach(b=>BR[b.code]=b);
+    const M=new Map(); (D.rows||[]).forEach(x=>{ const key=x.k+':'+x.id; const o=M.get(key)||{type:x.k==='vend'?'مورد':'عميل',name:x.n,code:x.c,group:x.g||null,b:0,dr:0,cr:0,last_move:null,by_entity:{}}; o.b+=+x.b; o.dr+=+x.dr; o.cr+=+x.cr; if(x.lm&&(!o.last_move||x.lm>o.last_move)) o.last_move=x.lm; const en=(BR[x.br]||{}).entity||(BR[x.br]||{}).name||x.br||'غير محدد'; o.by_entity[en]=aiR2((o.by_entity[en]||0)+ +x.b); M.set(key,o); });
+    const L=[...M.values()].filter(x=>Math.abs(x.b)>=0.5).sort((a,b)=>Math.abs(b.b)-Math.abs(a.b)).slice(0,300).map(x=>({type:x.type,name:x.name,balance:aiR2(x.b),meaning:x.type==='مورد'?(x.b<0?'لهم علينا (مستحق للمورد)':'دفعة مقدمة لهم'):(x.b>0?'عليهم لنا (مستحق على العميل)':'رصيد دائن للعميل'),last_move:x.last_move,by_entity:Object.keys(x.by_entity).length>1?x.by_entity:undefined}));
+    const V=L.filter(x=>x.type==='مورد'), Cu=L.filter(x=>x.type==='عميل');
+    if(D.last_run) fresh['أرصدة العملاء والموردين']=String(D.last_run).slice(0,16).replace('T',' ');
+    C.customer_supplier_balances={source:'شاشة «أرصدة العملاء والموردين» — مباشر من جروث',meaning:'رصيد كل مورد وعميل. للمورد: الرصيد السالب = مبلغ مستحق له علينا. للعميل: الموجب = مستحق لنا عليه. by_entity = الرصيد مفصّل حسب المنشأة. ابحث بالاسم حتى لو كتبه المستخدم ناقص أو بدون «ال».',last_sync:D.last_run||null,
+      totals:{owed_to_suppliers:aiR2(Math.abs(sum(V.filter(x=>x.balance<0).map(x=>x.balance)))),supplier_advances:aiR2(sum(V.filter(x=>x.balance>0).map(x=>x.balance))),owed_by_customers:aiR2(sum(Cu.filter(x=>x.balance>0).map(x=>x.balance)))},suppliers:V,customers:Cu}; });
+  run('ledger',async()=>{ if(!canSee('finst')) return; const cm=todayIso().slice(0,7); const D=await fsLoad(cm,cm,null); const N={}; (D.coa||[]).forEach(c=>N[c.a]=c);
+    const L=(D.rows||[]).map(x=>({acc:x.a,bal:(+x.ob||0)+(+x.dr||0)-(+x.cr||0),dr:+x.dr||0,cr:+x.cr||0})).filter(x=>Math.abs(x.bal)>=0.5||x.dr||x.cr).sort((a,b)=>String(a.acc)<String(b.acc)?-1:1).slice(0,450)
+      .map(x=>{ const c=N[x.acc]||{}; const par=N[c.p]||{}; return {code:x.acc,name:c.n||'',group:par.n||undefined,balance:aiR2(x.bal),month_debit:x.dr?aiR0(x.dr):undefined,month_credit:x.cr?aiR0(x.cr):undefined}; });
+    if(D.last_run) fresh['أرصدة الحسابات (ميزان المراجعة)']=String(D.last_run).slice(0,16).replace('T',' ');
+    C.ledger_balances={source:'القوائم المالية — ميزان المراجعة من جروث',meaning:'رصيد كل حساب في دليل الحسابات حتى تاريخه (balance موجب = مدين، سالب = دائن). يشمل البنوك والصناديق والمصروفات والإيرادات والموردين والعملاء والأصول. month_debit/credit = حركة الشهر الحالي. الحسابات التي تبدأ بـ 3 أو 4 حسابات قائمة الدخل.',month:cm,last_sync:D.last_run||null,accounts:L}; });
   await run('treasury',async()=>{ if(!canSee('treasury')) return; const A=(await appList('treasury','accounts')).map(d=>d.data||{}).filter(a=>a.name).sort((a,b)=>(a.order||0)-(b.order||0));
     let bd=null; try{const M=await appList('treasury','meta');const s=M.find(d=>d.id==='settings');bd=s&&s.data&&s.data.balanceDate||null;}catch(e){}
     let hist={}; try{(await appList('treasury','daily')).map(d=>d.data||{}).filter(x=>x.date).sort((a,b)=>a.date<b.date?-1:1).slice(-45).forEach(x=>hist[x.date]=aiR0(x.total));}catch(e){}
