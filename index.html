@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#143F2A">
 <title>MyHub · منصة الإدارة الموحّدة</title>
@@ -1027,6 +1027,16 @@ html[dir=ltr] .sh-t{direction:ltr}html[dir=ltr] .sh-t i{display:inline-block;tra
 }
 .hx-srch{position:relative;margin:0 0 10px}.hx-srch>svg{position:absolute;inset-inline-start:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:#8A948C;pointer-events:none}.hx-srch input{width:100%;height:46px;border:1px solid #DDE1DA;border-radius:13px;background:#fff;font:inherit;font-size:13.5px;padding:0 44px 0 14px;outline:none;box-shadow:0 1px 2px rgba(16,40,28,.04)}.hx-srch input:focus{border-color:#1E5A3E;box-shadow:0 0 0 3px rgba(30,90,62,.1)}
 .hx-res{position:absolute;inset-inline:0;top:calc(100% + 6px);z-index:20;background:#fff;border:1px solid #DDE1DA;border-radius:14px;box-shadow:0 18px 40px -16px rgba(10,35,24,.35);max-height:60vh;overflow-y:auto;padding:4px 12px}
+html{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+#navbar{position:fixed;top:0;inset-inline:0;height:2.5px;z-index:120;pointer-events:none;opacity:0;background:linear-gradient(90deg,#C9A227,#F3DE9C,#C9A227);transform-origin:right;transform:scaleX(0);transition:opacity .2s}
+#navbar.on{opacity:1;animation:nvb 1.4s cubic-bezier(.2,.7,.3,1) forwards}#navbar.done{opacity:0;transform:scaleX(1);transition:opacity .3s .05s,transform .15s}
+@keyframes nvb{0%{transform:scaleX(0)}60%{transform:scaleX(.7)}100%{transform:scaleX(.9)}}
+#view.v-busy{pointer-events:none}#view.v-busy>*{opacity:.72;transition:opacity .15s}
+#view.v-in>*{animation:vin .22s ease-out both}@keyframes vin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.v-skel{display:flex;flex-direction:column;gap:12px}.v-skel i{display:block;border-radius:16px;background:linear-gradient(90deg,#E9ECE7 0%,#F5F6F3 40%,#E9ECE7 80%);background-size:300% 100%;animation:skl 1.2s linear infinite}
+@keyframes skl{from{background-position:100% 0}to{background-position:-100% 0}}
+@media (max-width:700px){input.inp,select.inp,textarea.inp,.lx-i input,.hx-srch input,#hrQ,#advQ{font-size:16px!important}}
+@media (prefers-reduced-motion:reduce){#view.v-in>*,.v-skel i,#navbar.on{animation:none}}
 .pm-lg{display:flex;gap:14px;flex-wrap:wrap;font-size:10.5px;color:#3F4D45;margin:2px 2px 6px}.pm-lg span{display:inline-flex;align-items:center;gap:6px}.pm-lg i.pm-c{margin:0;width:16px!important;height:16px!important;cursor:default;pointer-events:none}.pm-lg i.pm-c::after{font-size:10px!important}.pm tbody tr:hover td,.pm tbody tr:hover .pm-u{background:#F2F7F3}
 .pm .g1{background:#F8FAF6}.pm thead .g0{background:#EEF4F0}.pm thead .g1{background:#F6F2E6}
 .pm-g{color:#2F4A3B;font-size:10.5px!important;border-inline-start:2px solid #D4DCD3!important}
@@ -1198,7 +1208,7 @@ async function applyRole(uid,rk){ const R=PERM_ROLES.find(r=>r.k===rk); const wa
   if(add.length){ const r=await T('user_sections').insert(add.map(x=>({user_id:uid,section:x}))); if(r.error) return r.error; }
   if(st._uroOk){ const r=await T('user_ro').delete().eq('user_id',uid).neq('section',''); if(r.error) return r.error; }
   return null; }
-const APP_VER='202610230020';
+const APP_VER='202610230440';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.csales='مبيعات الكاشيرات'; SEC_NAME.glq='قيود جروث (تسجيل القيود في جروث)'; SEC_NAME.clean='النظافة (قوائم الفتح والإغلاق)'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول العهدة'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const ujob=(uid,kind)=>(uid&&(st._jobs||{})[uid])||(kind==='emp'?'موظف':kind==='admin'?'إدارة':'مستخدم');
@@ -1267,7 +1277,7 @@ setInterval(()=>{ if(document.visibilityState==='visible') idleCheck(); },60000)
 async function boot(){
   const {data:{session}}=await sb.auth.getSession();
   if(!session){ $('#app').hidden=true; $('#login').hidden=false; return; }
-  if(await idleCheck()) return; idleMark(true);
+  if(await idleCheck()) return; idleMark(true); st._vc={}; st._vShown=null;
   st.user=session.user; st.cache={};
   const [p,b,ub,us,uro]=await Promise.all([
     sb.from('profiles').select('*').eq('id',st.user.id).maybeSingle(),
@@ -5892,19 +5902,31 @@ document.addEventListener('change',async e=>{
 });
 
 // ================= render =================
+function navBar(on){ let b=document.getElementById('navbar'); if(!b){ b=document.createElement('div'); b.id='navbar'; document.body.appendChild(b); } clearTimeout(b._t); if(on){ b.className='on'; } else { b.className='done'; b._t=setTimeout(()=>{ b.className=''; },350); } }
 async function render(){
   if(!SECTIONS.find(s=>s.id===st.tab)||(!allowed(st.tab)&&!isAdmin())) st.tab='home';
   if(st.f!=='all'&&!st.branches.some(b=>b.id===st.f)) st.f='all';
   if(st.branches.length===1) st.f=st.branches[0].id;
-  const v=$('#view'); v.innerHTML='<div class="loading">جارِ التحميل…</div>';
+  const v=$('#view'); const tk=st._rtk=(st._rtk||0)+1; const vk=st.tab+'|'+st.f; const secC=SECTIONS.find(s=>s.id===st.tab)||{};
+  st._vc=st._vc||{}; const cached=!secC.app&&!secC.page&&st._vc[vk];
+  const same=st._vShown===vk&&v.children.length&&!v.querySelector('.v-skel');
+  if(same){ } else if(cached){ v.innerHTML=cached; v.classList.add('v-busy'); } else { v.classList.remove('v-busy'); v.innerHTML=`<div class="v-skel"><i style="height:120px"></i><i style="height:64px"></i><i style="height:180px"></i><i style="height:90px"></i></div>`; }
+  navBar(true);
   const sec=SECTIONS.find(s=>s.id===st.tab)||{}; document.body.classList.toggle('appmode',!!sec.app); document.body.classList.toggle('aimode',st.tab==='ai');
   const OBS={purch:['purch_view',['purch','purch_sup']],maint:['maint_view',['maint','maint_sup']],rets:['rets_view',['rets']]}; const ob=OBS[st.tab]; const ro=!!ob&&!isAdmin()&&st.mySections.includes(ob[0])&&!ob[1].some(k=>st.mySections.includes(k));
   ['purch','maint','rets'].forEach(k=>document.body.classList.toggle('ro-'+k,ro&&st.tab===k));
   const secX=SECTIONS.find(x=>x.id===st.tab)||{}; const roG=!ro&&!isAdmin()&&(st.myRO||[]).includes(secX.perm||st.tab); document.body.classList.toggle('ro-gen',roG); roWatch(roG);
-  try{ v.innerHTML=(ro||roG?'<div class="ro-bar">👁️ وضع المراقبة — تشوف كل شي بدون موافقة أو تعديل</div>':'')+(st.tab==='home'?pushBox(false):st.tab==='me'?pushBox(false)+await mgBanner():'')+await V[st.tab](); v.querySelectorAll('.sc-end').forEach(s=>s.scrollLeft=s.scrollWidth); if(sec.app) fitApp(); if(sec.page) mountPage(sec); }
-  catch(err){ console.error(err); v.innerHTML=`<div class="card"><div class="err">تعذّر تحميل البيانات: ${esc(err.message||err)}</div><button class="btn ghost sm" onclick="location.reload()">إعادة المحاولة</button></div>`; }
+  try{ const html=(ro||roG?'<div class="ro-bar">👁️ وضع المراقبة — تشوف كل شي بدون موافقة أو تعديل</div>':'')+(st.tab==='home'?pushBox(false):st.tab==='me'?pushBox(false)+await mgBanner():'')+await V[st.tab]();
+    if(tk!==st._rtk) return; navBar(false); v.classList.remove('v-busy');
+    const ae=document.activeElement, aid=ae&&v.contains(ae)&&ae.id?ae.id:null;
+    v.innerHTML=html; st._vShown=vk; if(!cached&&!same){ v.classList.remove('v-in'); void v.offsetWidth; v.classList.add('v-in'); }
+    if(!sec.app&&!sec.page) st._vc[vk]=html;
+    if(aid){ const n=document.getElementById(aid); if(n&&n.focus){ n.focus(); try{ const L=(n.value||'').length; n.setSelectionRange(L,L); }catch(_){} } }
+    v.querySelectorAll('.sc-end').forEach(s=>s.scrollLeft=s.scrollWidth); if(sec.app) fitApp(); if(sec.page) mountPage(sec); }
+  catch(err){ if(tk!==st._rtk) return; navBar(false); v.classList.remove('v-busy'); st._vShown=null; console.error(err); v.innerHTML=`<div class="card"><div class="err">تعذّر تحميل البيانات: ${esc(err.message||err)}</div><button class="btn ghost sm" onclick="location.reload()">إعادة المحاولة</button></div>`; }
 }
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState!=='visible'||!st.profile) return; if(st.tab==='fleet'&&st.flEdit) return; const sec=SECTIONS.find(s=>s.id===st.tab)||{}; st.cache={}; st._aiCtx=null; st._alertsAt=0; st._mgIn=null; loadAlerts(); if(!sec.app&&st.tab!=='data'&&st.tab!=='ai') render(); });
+document.addEventListener('gesturestart',e=>e.preventDefault()); document.addEventListener('dblclick',e=>{ if(e.target.closest('input,textarea,[contenteditable]')) return; e.preventDefault(); },{passive:false});
 sb.auth.onAuthStateChange((ev)=>{ if(ev==='SIGNED_OUT'){ $('#app').hidden=true; $('#login').hidden=false; } });
 boot();
 })();
