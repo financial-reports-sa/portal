@@ -1249,7 +1249,7 @@ async function applyRole(uid,rk){ const R=PERM_ROLES.find(r=>r.k===rk); const wa
   if(add.length){ const r=await T('user_sections').insert(add.map(x=>({user_id:uid,section:x}))); if(r.error) return r.error; }
   if(st._uroOk){ const r=await T('user_ro').delete().eq('user_id',uid).neq('section',''); if(r.error) return r.error; }
   return null; }
-const APP_VER='202610250235';
+const APP_VER='202610250240';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.csales='مبيعات الكاشيرات'; SEC_NAME.glq='قيود جروث (تسجيل القيود في جروث)'; SEC_NAME.clean='النظافة (قوائم الفتح والإغلاق)'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.salaries='💰 عرض رواتب الموظفين وتعديلها (سري)'; SEC_NAME.custody_holder='مسؤول عهدة (يشوف عهدته فقط)'; SEC_NAME.custody='العُهد — إدارة ومراجعة كل العهد (للمحاسب)'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const ujob=(uid,kind)=>(uid&&(st._jobs||{})[uid])||(kind==='emp'?'موظف':kind==='admin'?'إدارة':'مستخدم');
@@ -4341,7 +4341,7 @@ function mtForm(){
     <div class="afm-sec"><div class="afm-t" data-n="${N(1)}">نوع الصيانة</div><div class="cats">${MT_CAT.map(([c,i])=>`<label><input type="radio" name="cat" value="${c}" required><span><i>${i}</i>${c}</span></label>`).join('')}</div></div>
     <div class="afm-sec"><div class="afm-t" data-n="${N(2)}">وصف المشكلة</div><input class="inp" name="title" maxlength="120" placeholder="مثل: الثلاجة الرئيسية ما تبرد" required><textarea class="inp" name="details" rows="2" placeholder="الموقع داخل الفرع، متى بدأت المشكلة، أي تفاصيل تساعد الفني"></textarea></div>
     <div class="afm-sec"><div class="afm-t" data-n="${N(3)}">الأولوية ومهلة الإنجاز</div><div class="afm-seg" style="grid-template-columns:repeat(3,1fr)">${['normal','high','urgent'].map(k=>`<label><input type="radio" name="pr" value="${k}" ${k==='normal'?'checked':''}><span>${MT_PR[k][0]}<small>${MT_PR[k][2]}</small></span></label>`).join('')}</div></div>
-    <div class="afm-sec"><div class="afm-t" data-n="${N(4)}">صورة المشكلة</div><input class="inp" type="file" name="ph" accept="image/*" capture="environment"><div class="muted" style="font-size:10.5px">اختياري — تساعد المشرف يجهّز القطع والفني المناسب.</div></div>
+    <div class="afm-sec"><div class="afm-t" data-n="${N(4)}">صورة المشكلة <b style="color:var(--down);font-size:11px">* إلزامي</b></div><input class="inp" type="file" name="ph" accept="image/*" capture="environment"><div class="muted" style="font-size:10.5px">صوّر المشكلة بوضوح — تساعد المشرف يجهّز القطع والفني المناسب.</div></div>
     <div class="err" id="mtErr"></div></div>
     <div class="afm-ft"><button class="btn" type="submit" id="mtSend">رفع الطلب</button><button class="btn ghost" type="button" data-mtx="1">إلغاء</button></div></form></div>`;
 }
@@ -5353,10 +5353,11 @@ document.addEventListener('click',async e=>{
 });
 document.addEventListener('submit',async e=>{
   if(e.target.id!=='mtForm') return; e.preventDefault(); const f=e.target; const er=$('#mtErr');
-  if(!f.br.value){er.textContent='اختر الفرع';return;} if(!f.cat.value){er.textContent='اختر نوع الصيانة';return;} if(!f.title.value.trim()){er.textContent='اكتب وصف المشكلة';return;}
+  if(!f.br.value){er.textContent='اختر الفرع';return;} if(!f.cat.value){er.textContent='اختر نوع الصيانة';return;} if(!f.title.value.trim()){er.textContent='اكتب وصف المشكلة';return;} if(!f.ph.files[0]){er.textContent='صوّر المشكلة — الصورة إلزامية';f.ph.scrollIntoView({behavior:'smooth',block:'center'});return;}
   const b=$('#mtSend'); b.disabled=true; b.textContent='جارِ الرفع…';
   let ph=null; try{ if(f.ph.files[0]) ph=await flImg(f.ph.files[0],1100,.72); }catch(_){}
   if(ph) ph=await mediaPut('maint',f.br.value,ph);
+  if(!ph){ er.textContent='تعذّر رفع الصورة — صوّرها مرة ثانية'; b.disabled=false; b.textContent='رفع الطلب'; return; }
   const r=await sb.rpc('maint_create',{p_branch:f.br.value,p_category:f.cat.value,p_title:f.title.value.trim(),p_details:f.details.value.trim()||null,p_priority:f.pr.value,p_photo:ph});
   b.disabled=false; b.textContent='رفع الطلب';
   if(r.error){er.textContent=/function|schema cache/i.test(r.error.message)?'الميزة تحتاج تشغيل ملف maint.sql أولاً':r.error.message;return;}
