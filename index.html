@@ -1249,7 +1249,7 @@ async function applyRole(uid,rk){ const R=PERM_ROLES.find(r=>r.k===rk); const wa
   if(add.length){ const r=await T('user_sections').insert(add.map(x=>({user_id:uid,section:x}))); if(r.error) return r.error; }
   if(st._uroOk){ const r=await T('user_ro').delete().eq('user_id',uid).neq('section',''); if(r.error) return r.error; }
   return null; }
-const APP_VER='202610250045';
+const APP_VER='202610250235';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.csales='مبيعات الكاشيرات'; SEC_NAME.glq='قيود جروث (تسجيل القيود في جروث)'; SEC_NAME.clean='النظافة (قوائم الفتح والإغلاق)'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.salaries='💰 عرض رواتب الموظفين وتعديلها (سري)'; SEC_NAME.custody_holder='مسؤول عهدة (يشوف عهدته فقط)'; SEC_NAME.custody='العُهد — إدارة ومراجعة كل العهد (للمحاسب)'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const ujob=(uid,kind)=>(uid&&(st._jobs||{})[uid])||(kind==='emp'?'موظف':kind==='admin'?'إدارة':'مستخدم');
@@ -6068,7 +6068,7 @@ async function gsRun(raw,my,cur,m){ const box=m.querySelector('#gsR'); const q=t
 document.addEventListener('click',e=>{ if(e.target.closest('#gsBtn')) gsOpen(); });
 document.addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'&&st.profile&&!isEmp()){ e.preventDefault(); gsOpen(); } });
 function navBar(on){ let b=document.getElementById('navbar'); if(!b){ b=document.createElement('div'); b.id='navbar'; document.body.appendChild(b); } clearTimeout(b._t); if(on){ b.className='on'; } else { b.className='done'; b._t=setTimeout(()=>{ b.className=''; },350); } }
-async function render(){
+async function render(){ st._renderAt=Date.now();
   if(!SECTIONS.find(s=>s.id===st.tab)||(!allowed(st.tab)&&!isAdmin())) st.tab='home';
   if(st.f!=='all'&&!st.branches.some(b=>b.id===st.f)) st.f='all';
   if(st.branches.length===1) st.f=st.branches[0].id;
@@ -6090,7 +6090,11 @@ async function render(){
     v.querySelectorAll('.sc-end').forEach(s=>s.scrollLeft=s.scrollWidth); if(sec.app) fitApp(); if(sec.page) mountPage(sec); }
   catch(err){ if(tk!==st._rtk) return; navBar(false); v.classList.remove('v-busy'); st._vShown=null; console.error(err); v.innerHTML=`<div class="card"><div class="err">تعذّر تحميل البيانات: ${esc(err.message||err)}</div><button class="btn ghost sm" onclick="location.reload()">إعادة المحاولة</button></div>`; }
 }
-document.addEventListener('visibilitychange',()=>{ if(document.visibilityState!=='visible'||!st.profile) return; if(st.tab==='fleet'&&st.flEdit) return; const sec=SECTIONS.find(s=>s.id===st.tab)||{}; st.cache={}; st._aiCtx=null; st._alertsAt=0; st._mgIn=null; loadAlerts(); if(!sec.app&&st.tab!=='data'&&st.tab!=='ai') render(); });
+document.addEventListener('click',e=>{ const t=e.target; if(t.closest&&(t.closest('input[type=file]')||(t.closest('label')&&t.closest('label').querySelector('input[type=file]')))) st._pickAt=Date.now(); },true);
+['input','change'].forEach(ev=>document.addEventListener(ev,e=>{ const t=e.target; if(t&&t.matches&&t.matches('input,textarea,select')&&t.closest('form')) st._dirtyAt=Date.now(); },true));
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState!=='visible'||!st.profile) return; if(st.tab==='fleet'&&st.flEdit) return;
+  if(Date.now()-(st._pickAt||0)<15*60000){ st._pickAt=0; loadAlerts(); return; }
+  if((st._dirtyAt||0)>(st._renderAt||0)&&document.querySelector('form')){ loadAlerts(); return; } const sec=SECTIONS.find(s=>s.id===st.tab)||{}; st.cache={}; st._aiCtx=null; st._alertsAt=0; st._mgIn=null; loadAlerts(); if(!sec.app&&st.tab!=='data'&&st.tab!=='ai') render(); });
 document.addEventListener('gesturestart',e=>e.preventDefault()); document.addEventListener('touchmove',e=>{ if(e.touches&&e.touches.length>1&&!e.target.closest('.leaflet-container')) e.preventDefault(); },{passive:false});
 function vpReset(){ const m=document.querySelector('meta[name=viewport]'); if(!m) return; const c='width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover'; m.setAttribute('content',c+',minimum-scale=1'); setTimeout(()=>m.setAttribute('content',c),60); }
 vpReset(); document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') vpReset(); }); window.addEventListener('orientationchange',vpReset); document.addEventListener('dblclick',e=>{ if(e.target.closest('input,textarea,[contenteditable]')) return; e.preventDefault(); },{passive:false});
