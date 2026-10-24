@@ -585,8 +585,8 @@ body.hasnav .toast{bottom:calc(100px + env(safe-area-inset-bottom,0px))}
 .wd-h button{font-size:11px;border:1px solid var(--line);border-radius:20px;padding:3px 8px;background:var(--bg);color:inherit;font-family:inherit;white-space:nowrap;line-height:1.5}
 .wd-ob[aria-pressed=true]{background:#FDECEA;color:var(--down);border-color:#F3C5C0}
 .wd-r{display:flex;align-items:center;gap:5px;margin-top:5px}
-.wd-r input.inp{flex:1;min-width:0;width:0;height:34px;padding:0 4px;font-size:14px;text-align:center;border-radius:9px}
-.wd-r input::-webkit-calendar-picker-indicator{display:none}.wd-r input::-webkit-datetime-edit{padding:0}.wd-r input::-webkit-datetime-edit-fields-wrapper{display:flex;justify-content:center}
+.wd-r input.inp{flex:1;min-width:0;width:0;height:36px;padding:0 6px;font-size:14px;text-align:center;border-radius:9px;direction:ltr;cursor:pointer}
+.wd-r input::-webkit-calendar-picker-indicator{width:14px;height:14px;margin:0;padding:0;opacity:.55;cursor:pointer}.wd-r input::-webkit-datetime-edit{padding:0}
 .wd-r i{font-style:normal;color:var(--gold);font-size:12px}
 .wd-r2{display:none}.wd.two .wd-r2{display:flex}.wd-r small{font-size:10px;color:var(--muted);white-space:nowrap;width:30px;flex:none}
 .wd:not(.two) .wd-r small{display:none}
@@ -1249,7 +1249,7 @@ async function applyRole(uid,rk){ const R=PERM_ROLES.find(r=>r.k===rk); const wa
   if(add.length){ const r=await T('user_sections').insert(add.map(x=>({user_id:uid,section:x}))); if(r.error) return r.error; }
   if(st._uroOk){ const r=await T('user_ro').delete().eq('user_id',uid).neq('section',''); if(r.error) return r.error; }
   return null; }
-const APP_VER='202610242140';
+const APP_VER='202610242145';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.csales='مبيعات الكاشيرات'; SEC_NAME.glq='قيود جروث (تسجيل القيود في جروث)'; SEC_NAME.clean='النظافة (قوائم الفتح والإغلاق)'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.salaries='💰 عرض رواتب الموظفين وتعديلها (سري)'; SEC_NAME.custody_holder='مسؤول عهدة (يشوف عهدته فقط)'; SEC_NAME.custody='العُهد — إدارة ومراجعة كل العهد (للمحاسب)'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const ujob=(uid,kind)=>(uid&&(st._jobs||{})[uid])||(kind==='emp'?'موظف':kind==='admin'?'إدارة':'مستخدم');
@@ -2420,7 +2420,7 @@ function attEmpModal(id){ const {D,day}=st._attD; const e=D.emps.find(x=>x.id===
       const n=wdSpan(f['a'+d].value,f['b'+d].value)+(row.classList.contains('two')?wdSpan(f['c'+d].value,f['e'+d].value):0); sm.textContent=n?wdH(n)+' س':''; if(n){ wk+=n; wd++; } });
     const el=m.querySelector('#attHrs'); if(el) el.innerHTML=`<div><small>الأسبوع · ${wd} أيام</small><b class="num">${wdH(wk)}</b><em>ساعة</em></div><div><small>متوسط اليوم</small><b class="num">${wdH(wd?Math.round(wk/wd):0)}</b><em>ساعة</em></div><div><small>الشهر (تقريباً)</small><b class="num">${wdH(Math.round(wk*30/7))}</b><em>ساعة</em></div>`; };
   f.addEventListener('input',hrsUpd); f.addEventListener('change',hrsUpd); hrsUpd();
-  m.addEventListener('click',ev=>{ const b=ev.target.closest('[data-wdoff],[data-wd2],[data-wdcopy]'); if(!b) return;
+  m.addEventListener('click',ev=>{ const ti=ev.target.closest('.wd-r input[type=time]'); if(ti&&ti.showPicker){ try{ ti.showPicker(); }catch(_){} return; } const b=ev.target.closest('[data-wdoff],[data-wd2],[data-wdcopy]'); if(!b) return;
     if(b.dataset.wdoff!=null){ const row=b.closest('.wd'); const on=row.classList.toggle('off'); b.setAttribute('aria-pressed',on); }
     else if(b.dataset.wd2!=null){ const row=b.closest('.wd'); const on=row.classList.toggle('two'); b.textContent=on?'− شفت':'＋ شفت'; row.querySelector('.wd-r small').textContent=on?'الأول':'الدوام'; }
     else { const rows=[...m.querySelectorAll('.wd')]; const src=rows.find(r=>!r.classList.contains('off')&&f['a'+r.dataset.d].value); if(!src) return; const sd=src.dataset.d, two=src.classList.contains('two');
