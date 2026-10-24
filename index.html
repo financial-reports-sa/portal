@@ -1245,7 +1245,7 @@ async function applyRole(uid,rk){ const R=PERM_ROLES.find(r=>r.k===rk); const wa
   if(add.length){ const r=await T('user_sections').insert(add.map(x=>({user_id:uid,section:x}))); if(r.error) return r.error; }
   if(st._uroOk){ const r=await T('user_ro').delete().eq('user_id',uid).neq('section',''); if(r.error) return r.error; }
   return null; }
-const APP_VER='202610242105';
+const APP_VER='202610242110';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.csales='مبيعات الكاشيرات'; SEC_NAME.glq='قيود جروث (تسجيل القيود في جروث)'; SEC_NAME.clean='النظافة (قوائم الفتح والإغلاق)'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.salaries='💰 عرض رواتب الموظفين وتعديلها (سري)'; SEC_NAME.custody_holder='مسؤول عهدة (يشوف عهدته فقط)'; SEC_NAME.custody='العُهد — إدارة ومراجعة كل العهد (للمحاسب)'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const ujob=(uid,kind)=>(uid&&(st._jobs||{})[uid])||(kind==='emp'?'موظف':kind==='admin'?'إدارة':'مستخدم');
@@ -4558,7 +4558,7 @@ V.feedback=async()=>{
   const act=L.filter(f=>f.status==='new'||(fbNeg(f)&&fbOpen(f)));
   const tabs=[['act','يحتاج إجراء',act.length],['neg','الشكاوى',L.filter(fbNeg).length],['pos','الإيجابية',L.filter(f=>!fbNeg(f)).length],['done','المحلولة',L.filter(f=>f.status==='resolved'||f.status==='closed').length],['all','الكل',L.length]];
   h+=`<div class="chips">${tabs.map(([k,n,c])=>`<button data-fbt="${k}" aria-pressed="${ft===k}">${n} <span class="muted">${c}</span></button>`).join('')}</div>`;
-  let rows=ft==='act'?act.slice().sort((a,b)=>(fbLate(b)-fbLate(a))||(a.rating-b.rating)):ft==='neg'?L.filter(fbNeg):ft==='pos'?L.filter(f=>!fbNeg(f)):ft==='done'?L.filter(f=>f.status==='resolved'||f.status==='closed'):L;
+  let rows=ft==='act'?act.slice().sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)):ft==='neg'?L.filter(fbNeg):ft==='pos'?L.filter(f=>!fbNeg(f)):ft==='done'?L.filter(f=>f.status==='resolved'||f.status==='closed'):L;
   h+=rows.length?`<div class="card" style="padding-block:4px">${rows.slice(0,200).map(fbRow).join('')}</div>`:`<div class="card empty">${ft==='act'?'✅ ما فيه تقييمات تحتاج إجراء':'لا توجد تقييمات'}</div>`;
   if(isAdmin()&&brs.length>1&&all.length){ const byB=brs.map(b=>{const x=all.filter(f=>f.branch===b&&fbAge(f)<=720);return {b,n:x.length,a:avg(x),o:all.filter(f=>f.branch===b&&fbNeg(f)&&fbOpen(f)).length};});
     h+=`<div class="card"><h3>حسب الفرع <small>30 يوم</small></h3>${byB.map(x=>`<div class="bar-row" style="padding:8px 0;border-bottom:1px solid var(--line)"><span><i class="dot" style="background:${brById(x.b).color}"></i> <b>${esc(brById(x.b).name)}</b></span><span style="font-size:11px">${x.a==null?'—':`<b class="num" style="color:var(--gold-ink)">${x.a.toFixed(1)} ★</b>`} · ${x.n} تقييم${x.o?` · <span class="down">${x.o} شكوى مفتوحة</span>`:''}</span></div>`).join('')}</div>`; }
