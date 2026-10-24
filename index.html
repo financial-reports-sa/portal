@@ -1249,7 +1249,7 @@ async function applyRole(uid,rk){ const R=PERM_ROLES.find(r=>r.k===rk); const wa
   if(add.length){ const r=await T('user_sections').insert(add.map(x=>({user_id:uid,section:x}))); if(r.error) return r.error; }
   if(st._uroOk){ const r=await T('user_ro').delete().eq('user_id',uid).neq('section',''); if(r.error) return r.error; }
   return null; }
-const APP_VER='202610242145';
+const APP_VER='202610250045';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.csales='مبيعات الكاشيرات'; SEC_NAME.glq='قيود جروث (تسجيل القيود في جروث)'; SEC_NAME.clean='النظافة (قوائم الفتح والإغلاق)'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.salaries='💰 عرض رواتب الموظفين وتعديلها (سري)'; SEC_NAME.custody_holder='مسؤول عهدة (يشوف عهدته فقط)'; SEC_NAME.custody='العُهد — إدارة ومراجعة كل العهد (للمحاسب)'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const ujob=(uid,kind)=>(uid&&(st._jobs||{})[uid])||(kind==='emp'?'موظف':kind==='admin'?'إدارة':'مستخدم');
@@ -5778,13 +5778,15 @@ function clEdit(v){ const D=st._cl; const isNew=v.startsWith('new:'); const x=is
   const {m,close}=hrModal(`<form class="card cu-form"><div class="bar-row"><h3 style="margin:0">${isNew?'بند جديد':'تعديل بند'}</h3><button type="button" class="icb" data-x="1">✕</button></div>
     <div class="field"><label>البند</label><input class="inp" name="t" value="${esc(x.t)}"></div>
     <div class="field"><label>القائمة</label><select class="inp" name="s">${CL_SH.map(([k,,n])=>`<option value="${k}" ${x.s===k?'selected':''}>${n}</option>`).join('')}</select></div>
-    <div class="field"><label>الفرع</label><select class="inp" name="br"><option value="">كل الفروع</option>${(D.branches||[]).map(b=>`<option value="${b}" ${x.br===b?'selected':''}>${esc(brById(b).name)}</option>`).join('')}</select></div>
+    <div class="field"><label>الفرع <small class="muted">اختر فرع أو أكثر — بدون تحديد = كل الفروع</small></label><div class="chips att-off">${(D.branches||[]).map(b=>`<label><input type="checkbox" name="br" value="${b}" ${x.br===b?'checked':''}><span>${esc(brById(b).name)}</span></label>`).join('')}</div></div>
     <div class="field"><label>الترتيب</label><input class="inp num" type="number" name="o" value="${x.o}"></div>
     <input type="checkbox" name="p" checked hidden>
     <label class="att-two"><input type="checkbox" name="a" ${x.a?'checked':''}><span>فعّال</span></label>
     <button type="button" class="btn" data-clis="1">حفظ</button><div class="cu-err" hidden></div></form>`);
   const f=m.querySelector('form'), er=m.querySelector('.cu-err');
-  m.addEventListener('click',async ev=>{ if(!ev.target.closest('[data-clis]')) return; const r=await sb.rpc('clean_item_save',{p_id:isNew?null:x.id,p_branch:f.br.value,p_shift:f.s.value,p_title:f.t.value,p_photo:f.p.checked,p_sort:+f.o.value||99,p_active:f.a.checked}); if(r.error){ er.textContent=r.error.message; er.hidden=false; return; } close(); toast('تم ✓'); render(); }); }
+  m.addEventListener('click',async ev=>{ const bt=ev.target.closest('[data-clis]'); if(!bt) return; let B=[...f.querySelectorAll('[name=br]:checked')].map(z=>z.value); if(B.length===(D.branches||[]).length) B=[]; if(!B.length) B=['']; bt.disabled=true;
+    for(let i=0;i<B.length;i++){ const r=await sb.rpc('clean_item_save',{p_id:(!isNew&&i===0)?x.id:null,p_branch:B[i],p_shift:f.s.value,p_title:f.t.value,p_photo:f.p.checked,p_sort:+f.o.value||99,p_active:f.a.checked}); if(r.error){ bt.disabled=false; er.textContent=r.error.message; er.hidden=false; return; } }
+    close(); toast(B.length>1?'تم ✓ أُضيف البند لـ '+B.length+' فروع':'تم ✓'); render(); }); }
 document.addEventListener('click',e=>{ const t=e.target.closest('[data-clbt],[data-clt],[data-cld],[data-clnew],[data-clview],[data-cledit]'); if(!t) return; const d=t.dataset;
   if(d.clbt){ st.clB=d.clbt; render(); return; }
   if(d.clt){ st.clT=d.clt; render(); return; }
