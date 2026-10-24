@@ -1210,7 +1210,7 @@ const HUB_IT={score:['🏆','نتيجة كل فرع من 100 والترتيب ا
 const hubOf=t=>HUB.find(g=>g.secs.includes(t));
 const groupOf=t=>(GROUPS.find(g=>g.secs.includes(t))||GROUPS[0]).id;
 const canSee=id=>{const x=SECTIONS.find(s=>s.id===id);return !!x&&(x.admin?isAdmin():allowed(id));};
-const PERM_GROUPS=[{name:'المبيعات',secs:['sales','channels','deliv','csales']},{name:'المستودعات',secs:['wh']},{name:'القوائم المالية والحسابات',secs:['fin_is','fin_bs','fin_tb','balances','treasury']},{name:'الكاشيرات',secs:['handover','rets','rets_view']},{name:'العُهد والتمويلات',secs:['custody','custody_holder','loans']},{name:'العمليات',secs:['clean','maint','maint_sup','maint_view','purch','purch_sup','purch_view','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances']},{name:'التواصل',secs:['msgs_send']}];
+const PERM_GROUPS=[{name:'المبيعات',secs:['sales','channels','deliv','csales']},{name:'المستودعات',secs:['wh']},{name:'القوائم المالية والحسابات',secs:['fin_is','fin_bs','fin_tb','balances','treasury']},{name:'الكاشيرات',secs:['handover','rets','rets_view']},{name:'العُهد والتمويلات',secs:['custody','custody_holder','loans']},{name:'العمليات',secs:['clean','maint','maint_sup','maint_view','purch','purch_sup','purch_view','feedback','mkt','fleet']},{name:'الموارد البشرية',secs:['hr','att','employees','advances','salaries']},{name:'التواصل',secs:['msgs_send']}];
 const PERM_SECTIONS=PERM_GROUPS.flatMap(g=>g.secs);
 const PERM_ROLES=[
   {k:'mgr',i:'🏪',n:'مدير فرع',s:['sales','channels','deliv','handover','rets','clean','maint','purch','feedback','att','employees','advances']},
@@ -1229,8 +1229,8 @@ async function applyRole(uid,rk){ const R=PERM_ROLES.find(r=>r.k===rk); const wa
   if(add.length){ const r=await T('user_sections').insert(add.map(x=>({user_id:uid,section:x}))); if(r.error) return r.error; }
   if(st._uroOk){ const r=await T('user_ro').delete().eq('user_id',uid).neq('section',''); if(r.error) return r.error; }
   return null; }
-const APP_VER='202610240310';
-const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.csales='مبيعات الكاشيرات'; SEC_NAME.glq='قيود جروث (تسجيل القيود في جروث)'; SEC_NAME.clean='النظافة (قوائم الفتح والإغلاق)'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول عهدة (يشوف عهدته فقط)'; SEC_NAME.custody='العُهد — إدارة ومراجعة كل العهد (للمحاسب)'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
+const APP_VER='202610240640';
+const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.csales='مبيعات الكاشيرات'; SEC_NAME.glq='قيود جروث (تسجيل القيود في جروث)'; SEC_NAME.clean='النظافة (قوائم الفتح والإغلاق)'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.salaries='💰 عرض رواتب الموظفين وتعديلها (سري)'; SEC_NAME.custody_holder='مسؤول عهدة (يشوف عهدته فقط)'; SEC_NAME.custody='العُهد — إدارة ومراجعة كل العهد (للمحاسب)'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const ujob=(uid,kind)=>(uid&&(st._jobs||{})[uid])||(kind==='emp'?'موظف':kind==='admin'?'إدارة':'مستخدم');
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -1257,6 +1257,11 @@ const st={user:null,profile:null,branches:[],myBranches:[],mySections:[],tab:'ho
 const isAdmin=()=>st.profile&&['owner','admin'].includes(st.profile.role);
 const isOwner=()=>st.profile&&st.profile.role==='owner';
 const isEmp=()=>st.profile&&st.profile.role==='employee';
+const EMP_COLS='id,branch,name,job,nationality,phone,iqama,iqama_exp,health_exp,start_date,status,left_date,notes,created_at,created_by,updated_at,updated_by,end_reason,has_iqama,has_health,health_no,id_type,confidential';
+const canSal=()=>!!st.profile&&(st.profile.role==='owner'||(st.mySections||[]).includes('salaries'));
+async function salMerge(rows){ rows=(rows||[]).filter(Boolean); if(!rows.length) return rows; if(!canSal()){ rows.forEach(r=>{ delete r.salary; }); return rows; }
+  if(!st._salM||Date.now()-st._salM.t>60000){ try{ const r=await sb.rpc('emp_salaries'); st._salM={t:Date.now(),m:(r&&!r.error&&r.data)||{}}; }catch(e){ st._salM={t:Date.now(),m:{}}; } }
+  rows.forEach(r=>{ const v=st._salM.m[r.id]; if(v!=null) r.salary=+v; }); return rows; }
 const allowed=id=>{ if(isEmp()) return id==='me'||id==='msgs'; if(id==='me') return !!st.myEmpId; if(id==='glq') return false; if(id==='inbox') return true; if(id==='score') return isAdmin()||['clean','att','employees'].some(k=>(st.mySections||[]).includes(k)); if(isAdmin()||id==='home'||id==='ai'||id==='msgs') return true; if(id==='hub') return HUB.some(g=>g.secs.some(canSee)); if(id==='finst') return ['fin_is','fin_bs','fin_tb'].some(k=>st.mySections.includes(k)); if(id==='daily') return st.mySections.includes('daily')&&st.allBranches; if(id==='maint') return st.mySections.includes('maint')||st.mySections.includes('maint_sup')||st.mySections.includes('maint_view'); if(id==='rets') return st.mySections.includes('rets')||st.mySections.includes('rets_view'); if(id==='purch') return st.mySections.includes('purch')||st.mySections.includes('purch_sup')||st.mySections.includes('purch_view'); if(id==='custody') return st.mySections.includes('custody')||st.mySections.includes('custody_holder'); if(id==='att') return st.mySections.includes('att')||st.mySections.includes('hr')||st.mySections.includes('employees'); const x=SECTIONS.find(q=>q.id===id); return st.mySections.includes(x&&x.perm?x.perm:id); };
 const brById=id=>st.branches.find(b=>b.id===id)||(st._cuBr||[]).find(b=>b.id===id)||{id,name:id,color:'#888'};
 const selBranches=()=>st.f==='all'?st.branches.map(b=>b.id):[st.f];
@@ -2035,10 +2040,10 @@ function hrEmpForm(e){ const H=st._hr, F=hrFull(), x=(H.xd[e.id]||{}); const img
     close(); toast('تم الحفظ ✓'); await hrLoad(true); render(); }); }
 async function hrPrint(id,btn){ const H=st._hr||await hrLoad(); const b0=btn&&btn.textContent; if(btn){btn.disabled=true;btn.textContent='جارِ التجهيز…';}
   try{ const adm=isAdmin();
-    const [E,PH,AD]=await Promise.all([sb.from('employees').select('*').eq('id',id).maybeSingle(), sb.from('employee_photos').select('img,thumb').eq('emp_id',id).maybeSingle().then(r=>r,()=>({})), adm?sb.from('advances').select('*').eq('emp_id',id).order('created_at',{ascending:false}).then(r=>r,()=>({})):Promise.resolve({})]);
-    const e=E&&E.data; if(!e){ toast('ما قدرت أجيب بيانات الموظف'); return; }
+    const [E,PH,AD]=await Promise.all([sb.from('employees').select(EMP_COLS).eq('id',id).maybeSingle(), sb.from('employee_photos').select('img,thumb').eq('emp_id',id).maybeSingle().then(r=>r,()=>({})), adm?sb.from('advances').select('*').eq('emp_id',id).order('created_at',{ascending:false}).then(r=>r,()=>({})):Promise.resolve({})]);
+    const e=E&&E.data; if(!e){ toast('ما قدرت أجيب بيانات الموظف'); return; } await salMerge([e]);
     let ph=PH&&PH.data?(PH.data.img||PH.data.thumb):null; if(ph) ph=await mediaSrc(ph);
-    const html=hrEmpDoc(e,{ph,x:(H.xd||{})[id]||{},inf:(H.info||{})[id]||{},ren:(H.ren||[]).filter(r=>r.emp_id===id),reqs:(H.reqs||[]).filter(r=>r.emp_id===id),adv:adm?((AD&&AD.data)||[]):null,adm});
+    const html=hrEmpDoc(e,{ph,x:(H.xd||{})[id]||{},inf:(H.info||{})[id]||{},ren:(H.ren||[]).filter(r=>r.emp_id===id),reqs:(H.reqs||[]).filter(r=>r.emp_id===id),adv:adm?((AD&&AD.data)||[]):null,adm:adm&&canSal()});
     const m=document.createElement('div'); m.style.cssText='position:fixed;inset:0;z-index:95;background:#fff'; m.innerHTML='<iframe style="border:0;width:100%;height:100%" title="ملف الموظف"></iframe>'; document.body.appendChild(m); m.querySelector('iframe').srcdoc=html;
     const cl=ev=>{ if(ev.data==='advdoc-close'){ m.remove(); window.removeEventListener('message',cl); } }; window.addEventListener('message',cl);
   }finally{ if(btn){btn.disabled=false;btn.textContent=b0;} } }
@@ -2276,8 +2281,8 @@ function lvForm(){ const td=attToday(); const nx=new Date(td+'T12:00:00'); nx.se
     close(); toast('تم إرسال طلب الإجازة ✓'); render(); }); }
 async function lvEmp(id){ const all=(st._lvAll||[]).filter(x=>x.emp===id); const any=all[0]||{};
   const {m,close}=hrModal(`<div class="card cu-form" style="max-width:420px"><div class="bar-row"><h3 style="margin:0">بيانات الموظف</h3><button type="button" class="icb" data-x="1">✕</button></div><div class="muted" style="text-align:center;padding:20px">جاري التحميل…</div></div>`);
-  const [E,PH]=await Promise.all([sb.from('employees').select('*').eq('id',id).maybeSingle(),sb.from('employee_photos').select('thumb').eq('emp_id',id).maybeSingle().then(r=>r,()=>({}))]);
-  const e=E&&E.data; const th=PH&&PH.data&&PH.data.thumb?await mediaSrc(PH.data.thumb):null; const yr=String(new Date().getFullYear());
+  const [E,PH]=await Promise.all([sb.from('employees').select(EMP_COLS).eq('id',id).maybeSingle(),sb.from('employee_photos').select('thumb').eq('emp_id',id).maybeSingle().then(r=>r,()=>({}))]);
+  const e=E&&E.data; if(e) await salMerge([e]); const th=PH&&PH.data&&PH.data.thumb?await mediaSrc(PH.data.thumb):null; const yr=String(new Date().getFullYear());
   const usedA=all.filter(x=>x.status==='approved'&&x.kind==='annual'&&String(x.from).startsWith(yr)).reduce((t,x)=>t+(+x.days||0),0);
   const usedAll=all.filter(x=>x.status==='approved'&&String(x.from).startsWith(yr)).reduce((t,x)=>t+(+x.days||0),0);
   const sv=e&&e.start_date?Math.max(0,monDiff(e.start_date.slice(0,7),curMon())):null;
@@ -2304,7 +2309,7 @@ document.addEventListener('click',async e=>{ const t=e.target.closest('[data-lvn
   if(d.lvok||d.lvno){ const ok=!!d.lvok; let note=''; if(!ok){ note=prompt('سبب الرفض (اختياري):',''); if(note===null) return; } t.disabled=true;
     const r=await sb.rpc('lv_decide',{p_id:d.lvok||d.lvno,p_ok:ok,p_note:note||''}); if(r.error){ toast(r.error.message); t.disabled=false; return; } toast(ok?'تمت الموافقة ✓ — وصل إشعار للموظف':'تم الرفض — وصل إشعار للموظف'); render(); } });
 // ===== شاشة المدير =====
-async function attLoad(bs,from,to){ const LVq=sb.rpc('lv_list',{p_from:from,p_to:to}).then(r=>r,()=>({data:[]})); const [E,S,R,G,AC,OP,CF,LV,ST]=await Promise.all([sb.from('employees').select('id,name,branch,job,status,salary').neq('status','left').order('name'),sb.from('att_shift').select('*'),sb.from('attendance').select('*').gte('day',from).lte('day',to).limit(8000),sb.from('att_branch').select('*'),sb.from('emp_accounts').select('emp_id'),sb.from('att_emp').select('*'),sb.from('att_cfg').select('*'),LVq,sb.from('att_site').select('*').order('name').then(r=>r,()=>({data:[]}))]);
+async function attLoad(bs,from,to){ const LVq=sb.rpc('lv_list',{p_from:from,p_to:to}).then(r=>r,()=>({data:[]})); const [E,S,R,G,AC,OP,CF,LV,ST]=await Promise.all([sb.from('employees').select('id,name,branch,job,status').neq('status','left').order('name').then(async r=>{ if(!r.error) await salMerge(r.data); return r; }),sb.from('att_shift').select('*'),sb.from('attendance').select('*').gte('day',from).lte('day',to).limit(8000),sb.from('att_branch').select('*'),sb.from('emp_accounts').select('emp_id'),sb.from('att_emp').select('*'),sb.from('att_cfg').select('*'),LVq,sb.from('att_site').select('*').order('name').then(r=>r,()=>({data:[]}))]);
   if(R.error&&/attendance|relation|schema cache/i.test(R.error.message)) return {missing:true};
   const sh={}; (S.data||[]).forEach(x=>sh[x.emp_id]=x); const geo={}; (G.data||[]).forEach(x=>geo[x.branch]=x); const acc=new Set((AC.data||[]).map(x=>x.emp_id));
   const by={}; (R.data||[]).forEach(r=>{ ((by[r.emp_id]=by[r.emp_id]||{})[r.day]=by[r.emp_id][r.day]||[]).push(r); }); Object.values(by).forEach(o=>Object.values(o).forEach(L=>L.sort((a,b)=>(a.seq||1)-(b.seq||1))));
@@ -3379,9 +3384,9 @@ document.addEventListener('click',async e=>{
 });
 
 V.advances=async()=>{
-  const [A,E,AC]=await Promise.all([sb.from('advances').select('*').order('created_at',{ascending:false}).limit(300),sb.from('employees').select('id,name,branch,salary,phone,status,job').neq('status','left').order('name'),sb.from('emp_accounts').select('emp_id,phone')]);
+  const [A,E,AC]=await Promise.all([sb.from('advances').select('*').order('created_at',{ascending:false}).limit(300),sb.from('employees').select('id,name,branch,phone,status,job').neq('status','left').order('name'),sb.from('emp_accounts').select('emp_id,phone')]);
   if(A.error&&/relation|schema cache|does not exist/i.test(A.error.message)) return `<div class="card empty">ميزة السلف تحتاج تشغيل ملف advances.sql في Supabase أولاً</div>`;
-  st._advList=A.data||[]; st._advEmps=E.data||[];
+  await salMerge(E.data||[]); st._advList=A.data||[]; st._advEmps=E.data||[];
   const adv=A.data||[], emps=E.data||[], acc=Object.fromEntries((AC.data||[]).map(x=>[x.emp_id,x.phone]));
   const fb=st.advF||'all'; const inB=x=>fb==='all'||x.branch===fb;
   const mine=isAdmin()?adv.filter(a=>inB(a)&&(a.status==='pending_mgr'||a.status==='pending_owner')):[];
@@ -3410,7 +3415,7 @@ V.advances=async()=>{
   if(mine.length) h+=`<div class="card"><h3>بانتظار موافقتك</h3>${mine.map(a=>{const e=emps.find(x=>x.id===a.emp_id)||{};const prev=adv.filter(x=>x.emp_id===a.emp_id&&x.status==='approved'&&advCalc(x).rem>0);
     return `<div style="padding:10px 0;border-bottom:1px solid var(--line)"><div class="advref">${advRef(a)}</div><div class="bar-row"><b>${esc(a.emp_name)}</b>${advPill(a)}</div>
       <div style="font-size:11.5px;margin-top:4px"><b class="num">${fmt(a.amount)} ر.س</b> على ${a.months} ${a.months>2?'أشهر':a.months===2?'شهرين':'شهر'} · ${fmt(+a.amount/a.months)} شهرياً</div>
-      <div class="muted" style="font-size:11px">${esc(brById(a.branch).name)} · الراتب ${fmt(e.salary)}${AD&&prev.length?` · <span class="down">عليه سلفة قائمة ${fmt(prev.reduce((t,x)=>t+advCalc(x).rem,0))}</span>`:''}</div>
+      <div class="muted" style="font-size:11px">${esc(brById(a.branch).name)}${e.salary!=null?' · الراتب '+fmt(e.salary):''}${AD&&prev.length?` · <span class="down">عليه سلفة قائمة ${fmt(prev.reduce((t,x)=>t+advCalc(x).rem,0))}</span>`:''}</div>
       ${a.reason?`<div style="font-size:11px;margin-top:4px">«${esc(a.reason)}»</div>`:''}${a.mgr_by&&a.status==='pending_owner'?`<div class="muted" style="font-size:10.5px">وافق ${esc(a.mgr_by)}${a.mgr_note?' — '+esc(a.mgr_note):''}</div>`:''}
       <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">${a.status==='pending_owner'||isAdmin()?`<select class="inp" data-advs="${a.id}" style="width:auto;min-height:34px;padding:4px 8px;font-size:11px">${[0,1,2].map(i=>{const [cy,cm]=curMon().split('-').map(Number);const t=cy*12+cm-1+i;const k=Math.floor(t/12)+'-'+String(t%12+1).padStart(2,'0');return `<option value="${k}" ${i===1?'selected':''}>الخصم من ${monLbl(k)}</option>`;}).join('')}</select>`:''}<button class="btn sm" data-advok="${a.id}">موافقة ✓</button><button class="btn ghost sm" data-advno="${a.id}" style="color:var(--down)">رفض</button><button class="btn ghost sm" data-advdoc="${a.id}">📄 النموذج</button></div></div>`;}).join('')}</div>`;
   if(AD&&act.length) h+=`<div class="card"><h3>السلف القائمة</h3>${act.map(a=>{const c=advCalc(a);return `<div style="padding:8px 0;border-bottom:1px solid var(--line);cursor:pointer" data-advdoc="${a.id}"><div class="bar-row"><b>${esc(a.emp_name)}</b><span style="display:flex;align-items:center;gap:8px"><b class="num">${fmt(c.rem)}</b>${isOwner()?`<button class="advdel" data-advdel="${a.id}" type="button" aria-label="حذف">🗑</button>`:''}</span></div><div class="meter" style="margin:5px 0"><i style="width:${(c.done/a.months*100).toFixed(0)}%;background:${brById(a.branch).color}"></i></div><div class="bar-row muted" style="font-size:10.5px"><span>${esc(brById(a.branch).name)} · ${fmt(a.amount)} على ${a.months} أشهر</span><span>${fmt(c.mo)} شهرياً من ${monLbl(a.start_month)}</span></div></div>`;}).join('')}</div>`;
@@ -6015,7 +6020,7 @@ function gsOpen(){ const {m,close}=hrModal(`<div class="gs-box"><div class="gs-i
     if(k==='emp'){ if(canSee('hr')){ const H=await hrLoad(); const x=H.emps.find(z=>z.id===id); if(x){ hrEmpForm(x); return; } } lvEmp(id); }
     else if(k==='mt'){ const x=(R.mt||[]).find(z=>String(z.id)===id); if(x){ st._mtList=R.mt; mtDetail(x); } }
     else if(k==='pr'){ st.tab='purch'; st.prT='all'; st.prB='all'; st.prKf='all'; try{localStorage.setItem('tab','purch');}catch(_){} window.scrollTo({top:0}); renderShell(); }
-    else if(k==='adv'){ const a=(R.adv||[]).find(z=>String(z.id)===id); if(a){ const em=await sb.from('employees').select('*').eq('id',a.emp_id).maybeSingle(); openAdvDoc(a,(em&&em.data)||{}); } }
+    else if(k==='adv'){ const a=(R.adv||[]).find(z=>String(z.id)===id); if(a){ const em=await sb.from('employees').select(EMP_COLS).eq('id',a.emp_id).maybeSingle(); const eo=(em&&em.data)||{}; await salMerge([eo]); openAdvDoc(a,eo); } }
     else if(k==='hr'){ const H=await hrLoad(true); const r=(H.reqs||[]).find(z=>z.id===id); if(r) hrReqDetail(r); } }); }
 async function gsRun(raw,my,cur,m){ const box=m.querySelector('#gsR'); const q=toEnD(String(raw||'').trim()); if(q.length<2&&!/^\d+$/.test(q)){ box.innerHTML='<div class="gs-hint">اكتب حرفين أو أكثر — أو رقم طلب مثل <b class="num">26</b></div>'; return; }
   box.innerHTML='<div class="gs-hint">جارِ البحث…</div>'; const like='%'+q.replace(/[%_,()]/g,' ')+'%', num=/^\d+$/.test(q)?+q:null, J=[], R={};

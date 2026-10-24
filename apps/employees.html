@@ -197,7 +197,7 @@ const normPhone=v=>{let x=String(v||'').replace(/[\s\-()]/g,'');if(/^\+?966/.tes
 function empMiss(r,form){const m=[];const idt=r.id_type||(r.has_iqama===false?'none':r.iqama?'resident':null);
   if(!String(r.nationality||'').trim())m.push('اكتب الجنسية');
   if(!String(r.phone||'').trim())m.push('اكتب رقم الجوال');else if(!/^05\d{8}$/.test(normPhone(r.phone)))m.push('رقم الجوال لازم يكون 10 أرقام ويبدأ بـ 05');
-  if(!form){ if(!idt)m.push('حدد نوع الهوية'); else if(idt!=='none'&&!r.iqama)m.push('اكتب رقم الهوية'); if(r.has_health==null&&!r.health_no)m.push('حدد الشهادة الصحية'); else if((r.has_health||r.health_no)&&(!r.health_no||!r.health_exp))m.push('أكمل بيانات الشهادة الصحية'); if(!r.job)m.push('المسمى الوظيفي'); if(r.salary==null)m.push('الراتب'); if(!r.start_date)m.push('تاريخ المباشرة'); }
+  if(!form){ if(!idt)m.push('حدد نوع الهوية'); else if(idt!=='none'&&!r.iqama)m.push('اكتب رقم الهوية'); if(r.has_health==null&&!r.health_no)m.push('حدد الشهادة الصحية'); else if((r.has_health||r.health_no)&&(!r.health_no||!r.health_exp))m.push('أكمل بيانات الشهادة الصحية'); if(!r.job)m.push('المسمى الوظيفي'); if(S.canSal&&r.salary==null)m.push('الراتب'); if(!r.start_date)m.push('تاريخ المباشرة'); }
   if(idt&&(idt==='resident'||idt==='citizen')&&r.iqama&&!/^\d{10}$/.test(String(r.iqama)))m.push((IDT[idt]||{}).n+' لازم يكون 10 أرقام');
   return m}
 const IDT={resident:{s:'مقيم',t:'هوية مقيم',n:'رقم الإقامة'},visitor:{s:'زائر',t:'هوية زائر',n:'رقم هوية الزائر'},citizen:{s:'مواطن',t:'هوية وطنية',n:'رقم الهوية الوطنية'},none:{s:'لا يوجد',t:'لا يوجد',n:''}};
@@ -229,7 +229,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 function toast(msg,err){const t=document.createElement('div');t.className='toast'+(err?' err':'');t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),err?4200:2400)}
 
-const S={ded:[],dedOK:false,df:'',tab:'dash',writer:false,branches:[],rows:[],log:[],loaded:false,err:'',f:'all',stf:'active',q:'',exp:{month:'',branch:'all',busy:false}};
+const S={canSal:false,salT:{},ded:[],dedOK:false,df:'',tab:'dash',writer:false,branches:[],rows:[],log:[],loaded:false,err:'',f:'all',stf:'active',q:'',exp:{month:'',branch:'all',busy:false}};
 const brById=id=>S.branches.find(b=>b.id===id)||BR_FALLBACK.find(b=>b.id===id)||{id,name:id,color:'#888'};
 const scopeBr=()=>S.f==='all'?S.branches:S.branches.filter(b=>b.id===S.f);
 const inScope=r=>S.f==='all'||r.branch===S.f;
@@ -239,11 +239,12 @@ const isOn=r=>r.status!=='left';
 async function load(){S.att={};
   try{
     const [e,l]=await Promise.all([
-      SBC.from('employees').select('*').order('branch').order('start_date'),
+      SBC.from('employees').select('id,branch,name,job,nationality,phone,iqama,iqama_exp,health_exp,start_date,status,left_date,notes,created_at,created_by,updated_at,updated_by,end_reason,has_iqama,has_health,health_no,id_type,confidential').order('branch').order('start_date'),
       SBC.from('employee_log').select('*').order('at',{ascending:false}).limit(40)
     ]);
     if(e.error)throw e.error;
     S.rows=e.data||[];S.log=l.error?[]:(l.data||[]);S.err='';
+    S.salT={};try{if(S.canSal){const sm=await SBC.rpc('emp_salaries');const M=(!sm.error&&sm.data)||{};S.rows.forEach(r=>{if(M[r.id]!=null)r.salary=+M[r.id]})}else{const st=await SBC.rpc('emp_salary_totals');S.salT=(!st.error&&st.data)||{}}}catch(_){}
     try{const since=new Date();since.setMonth(since.getMonth()-13);const dd=await SBC.from('employee_deductions').select('*').gte('date',iso(since)).order('date',{ascending:false});S.dedOK=!dd.error;S.ded=dd.error?[]:(dd.data||[]);}catch(_){S.ded=[];S.dedOK=false}
     try{S.hid={};if(!S.writer){const hd=await SBC.rpc('employees_hidden');(hd.data||[]).forEach(x=>S.hid[x.branch]=x.n);}}catch(_){S.hid={}}
     try{const ph=await SBC.from('employee_photos').select('emp_id,thumb');S.th={};S.phOK=!ph.error;(ph.data||[]).forEach(x=>S.th[x.emp_id]=x.thumb);}catch(_){S.th={};S.phOK=false}
@@ -282,7 +283,9 @@ function renderDash(){
   if(!S.loaded){el.innerHTML='<div class="empty">جاري التحميل…</div>';return}
   if(S.err){el.innerHTML=`<div class="card empty">${esc(S.err)}</div>`;return}
   const rows=S.rows.filter(inScope),on=rows.filter(isOn),m=curMonth();
-  const sal=on.reduce((s,r)=>s+(+r.salary||0),0);
+  const salTN=br=>{const o=S.salT[br]||{};return{s:+o.sum||0,n:+o.n||0}};
+  const sal=S.canSal?on.reduce((s,r)=>s+(+r.salary||0),0):scopeBr().reduce((t,b)=>t+salTN(b.id).s,0);
+  const salN=S.canSal?on.length:scopeBr().reduce((t,b)=>t+salTN(b.id).n,0);
   const newM=rows.filter(r=>r.start_date&&r.start_date.slice(0,7)===m);
   const leftM=rows.filter(r=>r.status==='left'&&r.left_date&&r.left_date.slice(0,7)===m);
   const vac=on.filter(r=>r.status==='vacation');
@@ -290,7 +293,7 @@ function renderDash(){
   h+=`<div class="kpis">
     <div class="kpi big" data-go="*|sal"><small>إجمالي الرواتب الشهرية${S.f==='all'&&S.branches.length>1?' · كل الفروع':' · '+esc(brById(S.f==='all'?(S.branches[0]||{}).id:S.f).name)}</small><b class="num">${fmt(sal)} <span style="font-size:11.5px">ر.س</span></b><span class="s">${on.length} موظف على الكشف${vac.length?' · منهم '+vac.length+' بإجازة':''}${(()=>{const n=scopeBr().reduce((t,x)=>t+((S.hid||{})[x.id]||0),0);return n?' · ＋ '+n+' إداري (عند الإدارة)':'';})()}</span></div>
     <div class="kpi" data-go="*|on"><small>على رأس العمل</small><b class="num">${on.length-vac.length}</b><span class="s">${vac.length?vac.length+' بإجازة':'لا يوجد إجازات'}</span></div>
-    <div class="kpi" data-go="*|sal"><small>متوسط الراتب</small><b class="num">${on.length?fmt(Math.round(sal/on.length)):'—'}</b><span class="s">ر.س</span></div>
+    <div class="kpi" data-go="*|sal"><small>متوسط الراتب</small><b class="num">${salN?fmt(Math.round(sal/salN)):'—'}</b><span class="s">ر.س</span></div>
     <div class="kpi" data-go="*|new"><small>مباشرين هذا الشهر</small><b class="num" style="color:var(--up)">${newM.length}</b><span class="s">${esc(mLong(m))}</span></div>
     <div class="kpi" data-go="*|left"><small>انتهت خدماتهم هذا الشهر</small><b class="num" style="color:${leftM.length?'var(--down)':'inherit'}">${leftM.length}</b><span class="s">${esc(mLong(m))}</span></div>
   </div>`;
@@ -309,7 +312,7 @@ function renderDash(){
     </table></div></div>`;
   }
   scopeBr().forEach(b=>{
-    const br=on.filter(r=>r.branch===b.id);const s=br.reduce((x,r)=>x+(+r.salary||0),0);
+    const br=on.filter(r=>r.branch===b.id);const s=S.canSal?br.reduce((x,r)=>x+(+r.salary||0),0):salTN(b.id).s;
     const jobs={};br.forEach(r=>{const j=r.job||'بدون مسمى';jobs[j]=(jobs[j]||0)+1});
     const js=Object.entries(jobs).sort((a,b)=>b[1]-a[1]);const mx=js.length?js[0][1]:1;
     const x=stat(br);const bd=S.ded.filter(d=>d.branch===b.id&&String(d.date).slice(0,7)===cm);
@@ -333,7 +336,7 @@ function fv(k,v){
   if(v==null||v==='')return'—';
   if(k==='branch')return brById(v).name;
   if(k==='status')return(ST[v]||{}).t||v;
-  if(k==='salary')return fmt(v);
+  if(k==='salary')return S.canSal?fmt(v):'🔒';
   if(typeof v==='boolean')return v?'نعم':'لا';
   if(/_exp$|_date$/.test(k))return dShort(String(v));
   return String(v);
@@ -383,7 +386,7 @@ function openDetail(id){
   <div class="kv"><span>الفرع</span><b>${esc(b.name)}</b></div>
   <div class="kv"><span>المسمى الوظيفي</span><b>${esc(r.job||'—')}</b></div>
   <div class="kv"><span>تاريخ المباشرة</span><b>${dLong(r.start_date)}</b></div>
-  <div class="kv"><span>الراتب المتفق عليه</span><b class="num">${fmt2(r.salary)} ر.س</b></div>
+  <div class="kv"><span>الراتب المتفق عليه</span>${S.canSal?`<b class="num">${fmt2(r.salary)} ر.س</b>`:'<b class="hint">🔒 سري</b>'}</div>
   ${r.status==='left'?`<div class="kv"><span>تاريخ انتهاء الخدمة</span><b>${dLong(r.left_date)}</b></div><div class="kv"><span>سبب الانتهاء</span><b>${esc(r.end_reason||'—')}</b></div><div class="kv"><span>مدة الخدمة</span><b>${svc(r.start_date,r.left_date)}</b></div>`:''}
   <div class="kv"><span>الجنسية</span><b>${esc(r.nationality||'—')}</b></div>
   <div class="kv"><span>الجوال</span><b class="num">${r.phone?`<a href="tel:${esc(r.phone)}" style="color:inherit">${esc(r.phone)}</a>`:'—'}</b></div>
@@ -468,9 +471,9 @@ function showSet(b,k){
   }else{
     rows=k==='all'||k==='sal'?on:k==='on'?on.filter(r=>r.status==='active'):k==='vac'?on.filter(r=>r.status==='vacation'):k==='new'?all.filter(r=>r.start_date&&r.start_date.slice(0,7)===cm):k==='left'?all.filter(r=>r.status==='left'&&r.left_date&&r.left_date.slice(0,7)===cm):on.filter(r=>dfMatch(r,k));
     if(k==='sal'||k==='all'||k==='on'||k==='vac'){rows.sort((x,y)=>(+y.salary||0)-(+x.salary||0));const t=rows.reduce((x,r)=>x+(+r.salary||0),0);
-      sum=`<div class="setsum"><span>العدد <b>${rows.length}</b></span><span>الرواتب <b>${fmt(t)}</b> ر.س</span>${rows.length?`<span>المتوسط <b>${fmt(Math.round(t/rows.length))}</b></span>`:''}</div>`;
-      body=rows.map(r=>line(r,`<b class="num">${fmt(r.salary)}</b>${r.status==='vacation'?'<span class="pill p-vac">إجازة</span>':''}`)).join('');}
-    else if(k==='new'){body=rows.map(r=>line(r,`<b class="num">${fmt(r.salary)}</b><small class="hint">${dShort(r.start_date)}</small>`)).join('');sum=`<div class="setsum"><span>العدد <b>${rows.length}</b></span></div>`}
+      sum=S.canSal?`<div class="setsum"><span>العدد <b>${rows.length}</b></span><span>الرواتب <b>${fmt(t)}</b> ر.س</span>${rows.length?`<span>المتوسط <b>${fmt(Math.round(t/rows.length))}</b></span>`:''}</div>`:`<div class="setsum"><span>العدد <b>${rows.length}</b></span></div>`;
+      body=rows.map(r=>line(r,`${S.canSal?`<b class="num">${fmt(r.salary)}</b>`:''}${r.status==='vacation'?'<span class="pill p-vac">إجازة</span>':''}`)).join('');}
+    else if(k==='new'){body=rows.map(r=>line(r,`${S.canSal?`<b class="num">${fmt(r.salary)}</b>`:''}<small class="hint">${dShort(r.start_date)}</small>`)).join('');sum=`<div class="setsum"><span>العدد <b>${rows.length}</b></span></div>`}
     else if(k==='left'){body=rows.map(r=>line(r,`<span class="pill p-bad">${esc(r.end_reason||'منتهية')}</span><small class="hint" style="display:block">${dShort(r.left_date)}</small>`)).join('');sum=`<div class="setsum"><span>العدد <b>${rows.length}</b></span></div>`}
     else if(k.startsWith('hc_')){rows.sort((x,y)=>String(x.health_exp||'9').localeCompare(String(y.health_exp||'9')));
       body=rows.map(r=>{const st=docState(r.health_exp);return line(r,k==='hc_none'?'<span class="pill p-mut">لا يوجد</span>':`<span class="pill ${st?st.cl:'p-ok'}">${st?st.t:'سارية'}</span><small class="hint" style="display:block">${dShort(r.health_exp)}</small>`,k==='hc_none'?sub(r):`${sub(r)} · رقم ${esc(r.health_no||'—')}`)}).join('');
@@ -522,7 +525,7 @@ function openForm(r){
     ${S.branches.length>1?`<label class="fld"><span>الفرع <em>*</em></span><select name="branch"><option value="">اختر</option>${S.branches.map(b=>opt(b.id,b.name,r.branch)).join('')}</select></label>`:`<input type="hidden" name="branch" value="${esc(r.branch||(S.branches[0]||{}).id||'')}">`}
     <label class="fld ${S.branches.length>1?'':'full'}"><span>المسمى الوظيفي <em>*</em></span><input name="job" list="jobs" value="${esc(r.job||'')}" autocomplete="off"></label>
     <label class="fld"><span>تاريخ المباشرة <em>*</em></span><input type="date" name="start_date" value="${esc(r.start_date||'')}"></label>
-    <label class="fld"><span>الراتب المتفق عليه <em>*</em></span><input name="salary" class="ltr num" inputmode="decimal" value="${r.salary!=null?esc(r.salary):''}" placeholder="0"></label>
+    ${S.canSal?'':'<!--'}<label class="fld"><span>الراتب المتفق عليه <em>*</em></span><input name="salary" class="ltr num" inputmode="decimal" value="${r.salary!=null?esc(r.salary):''}" placeholder="0"></label>${S.canSal?'':'-->'}
     ${S.writer?`<label class="full conf"><input type="checkbox" name="confidential" ${(isNew||r.confidential)?'checked':''}><span>🔒 موظف إداري — بياناته وراتبه مخفية عن مدير الفرع (يشوفه في العدد فقط)</span></label>`:''}
     <label class="fld"><span>الجنسية <em>*</em></span><input name="nationality" value="${esc(r.nationality||'')}"></label>
     <label class="fld"><span>الجوال <em>*</em></span><input name="phone" class="ltr num" inputmode="tel" value="${esc(r.phone||'')}" placeholder="05xxxxxxxx"></label>
@@ -544,8 +547,8 @@ function openForm(r){
     if(!a||a.dataset.a!=='1')return;
     const f=new FormData(m.querySelector('#ef'));const g=k=>String(f.get(k)||'').trim();
     const sal=toEn(g('salary')).replace(/[,،\s]/g,'').replace('٫','.');
-    const rec={...(S.writer?{confidential:f.get('confidential')==='on'}:{}),name:g('name'),branch:g('branch'),job:g('job'),start_date:g('start_date'),salary:sal===''?null:Number(sal),nationality:g('nationality'),phone:normPhone(toEn(g('phone'))),id_type:yi,has_iqama:yi!=='none',iqama:yi!=='none'?toEn(g('iqama')):'',iqama_exp:null,has_health:!!yh,health_no:yh?toEn(g('health_no')):'',health_exp:yh?(g('health_exp')||null):null,status,left_date:status==='left'?(g('left_date')||null):null,notes:g('notes')};if(!isNew)rec.end_reason=status==='left'?g('end_reason'):'';
-    const err=!rec.name?'اكتب اسم الموظف':!rec.branch?'اختر الفرع':!rec.job?'اكتب المسمى الوظيفي':!rec.start_date?'حدد تاريخ المباشرة':(rec.salary==null||isNaN(rec.salary)||rec.salary<0)?'اكتب الراتب المتفق عليه بالأرقام':yi==null?'اختر نوع الهوية':(yi!=='none'&&!rec.iqama)?'اكتب '+IDT[yi].n:yh==null?'حدد: هل يوجد شهادة صحية؟':(yh&&!rec.health_no)?'اكتب رقم الشهادة الصحية':(yh&&!rec.health_exp)?'حدد تاريخ انتهاء الشهادة الصحية':(status==='left'&&!rec.left_date)?'حدد تاريخ انتهاء الخدمة':(rec.left_date&&rec.left_date<rec.start_date)?'تاريخ انتهاء الخدمة قبل تاريخ المباشرة':empMiss(rec,true)[0]||'';
+    const rec={...(S.writer?{confidential:f.get('confidential')==='on'}:{}),name:g('name'),branch:g('branch'),job:g('job'),start_date:g('start_date'),salary:sal===''?null:Number(sal),nationality:g('nationality'),phone:normPhone(toEn(g('phone'))),id_type:yi,has_iqama:yi!=='none',iqama:yi!=='none'?toEn(g('iqama')):'',iqama_exp:null,has_health:!!yh,health_no:yh?toEn(g('health_no')):'',health_exp:yh?(g('health_exp')||null):null,status,left_date:status==='left'?(g('left_date')||null):null,notes:g('notes')};if(!isNew)rec.end_reason=status==='left'?g('end_reason'):'';if(!S.canSal)delete rec.salary;
+    const err=!rec.name?'اكتب اسم الموظف':!rec.branch?'اختر الفرع':!rec.job?'اكتب المسمى الوظيفي':!rec.start_date?'حدد تاريخ المباشرة':S.canSal&&(rec.salary==null||isNaN(rec.salary)||rec.salary<0)?'اكتب الراتب المتفق عليه بالأرقام':yi==null?'اختر نوع الهوية':(yi!=='none'&&!rec.iqama)?'اكتب '+IDT[yi].n:yh==null?'حدد: هل يوجد شهادة صحية؟':(yh&&!rec.health_no)?'اكتب رقم الشهادة الصحية':(yh&&!rec.health_exp)?'حدد تاريخ انتهاء الشهادة الصحية':(status==='left'&&!rec.left_date)?'حدد تاريخ انتهاء الخدمة':(rec.left_date&&rec.left_date<rec.start_date)?'تاريخ انتهاء الخدمة قبل تاريخ المباشرة':empMiss(rec,true)[0]||'';
     const err2=err||(S.phOK&&!ph&&(isNew||!(S.th&&S.th[r.id]))?'أرفق صورة الموظف':'');
     if(err2){m.querySelector('#fe').textContent=err2;return}
     a.disabled=true;a.textContent='جاري الحفظ…';
@@ -765,9 +768,11 @@ document.addEventListener('change',e=>{if(e.target.id==='xm'){S.exp.month=e.targ
   if(!session){(window.top||window).location.href=new URL('../',location.href).href;return}
   try{const p=await SBC.from('profiles').select('role,active').eq('id',session.user.id).maybeSingle();S.writer=!!(p.data&&p.data.active&&['owner','admin'].includes(p.data.role))}catch(e){S.writer=false}
   try{const b=await SBC.from('branches').select('*').order('sort');S.branches=(b.data||[]).map(x=>({id:x.id,name:x.name,color:x.color||brById(x.id).color}))}catch(e){}
+  try{const c=await SBC.rpc('salary_can');S.canSal=!c.error&&c.data===true}catch(e){S.canSal=false}
+  if(!S.canSal){const xb=document.querySelector('#tabs [data-t="exp"]');if(xb)xb.remove()}
   if(!S.branches.length&&S.writer)S.branches=BR_FALLBACK;
   if(S.branches.length===1)S.f=S.branches[0].id;
-  const t=lsGet('emp_tab');setTab(['dash','list','exp'].includes(t)?t:'dash');
+  const t=lsGet('emp_tab');setTab((S.canSal?['dash','list','exp']:['dash','list']).includes(t)?t:'dash');
   load();
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});
 })();
