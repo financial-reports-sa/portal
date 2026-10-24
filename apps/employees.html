@@ -566,7 +566,8 @@ const aMin=x=>{if(!x)return null;const[h,m]=String(x).split(':').map(Number);ret
 const aLoc=ts=>aMin(new Date(ts).toLocaleTimeString('en-GB',{hour12:false,hour:'2-digit',minute:'2-digit',timeZone:'Asia/Riyadh'}));
 const aBday=()=>new Date(Date.now()-2*36e5).toISOString().slice(0,10);
 const aShifts=s=>!s?[]:[{start_t:s.start_t,end_t:s.end_t,grace:s.grace}].concat(s.start2_t&&s.end2_t?[{start_t:s.start2_t,end_t:s.end2_t,grace:s.grace}]:[]);
-const aSh=(s,d)=>s&&s.fri_start_t&&new Date(d+'T12:00:00').getDay()===5?{...s,start_t:s.fri_start_t,end_t:s.fri_end_t,start2_t:s.fri_start2_t||null,end2_t:s.fri_end2_t||null}:s;
+const aSh=(s,d)=>{ const L=s&&s.wk&&s.wk[new Date(d+'T12:00:00').getDay()]; return L&&L.length?{...s,start_t:L[0][0],end_t:L[0][1],start2_t:L[1]?L[1][0]:null,end2_t:L[1]?L[1][1]:null}:aSh0(s,d); };
+const aSh0=(s,d)=>s&&s.fri_start_t&&new Date(d+'T12:00:00').getDay()===5?{...s,start_t:s.fri_start_t,end_t:s.fri_end_t,start2_t:s.fri_start2_t||null,end2_t:s.fri_end2_t||null}:s;
 const aLen=x=>{let a=aMin(x.start_t),b=aMin(x.end_t);if(b<=a)b+=1440;return b-a};
 function aFor(s,r){const L=aShifts(s);if(!L.length)return null;if(L.length===1||!r.in_at)return L[(r.seq===2&&L[1])?1:0];let im=aLoc(r.in_at);if(im<300)im+=1440;let best=L[0],bd=1e9;L.forEach(x=>{let st=aMin(x.start_t);if(st<300)st+=1440;const d=Math.abs(im-st);if(d<bd){bd=d;best=x}});return best}
 function aEval(r,s){const o={late:0,early:0};const sh=aFor(s,r);if(!sh||!r.in_at)return o;let st=aMin(sh.start_t),im=aLoc(r.in_at);if(st<300)st+=1440;if(im<300)im+=1440;o.late=Math.max(0,im-st-(+(sh.grace??10)));

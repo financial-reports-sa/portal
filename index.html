@@ -573,6 +573,22 @@ body.hasnav .toast{bottom:calc(100px + env(safe-area-inset-bottom,0px))}
 .sh-wk span small{display:block;font-size:9px;font-weight:400;opacity:.75}
 .sh-wk span.off{background:rgba(208,69,58,.09);color:var(--down)}
 .sh-wk span.td{box-shadow:inset 0 0 0 1.5px currentColor}
+.sh-wkl{margin-top:12px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.sh-wkl>div{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;font-size:12px;border-top:1px solid var(--line)}
+.sh-wkl>div:first-child{border-top:0}.sh-wkl b{font-size:12.5px;white-space:nowrap}
+.sh-wkl span{display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-weight:600}.sh-wkl em{font-style:normal}
+.sh-wkl .off span{color:var(--down)}.sh-wkl .td{background:var(--gold-soft)}
+.wd{border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin-top:6px;background:var(--card,#fff)}
+.wd.off{background:rgba(208,69,58,.05)}
+.wd-h{display:flex;align-items:center;gap:6px}.wd-h b{font-size:13px;min-width:62px}
+.wd-sum{flex:1;font-size:10.5px;color:var(--muted)}
+.wd-h button{font-size:11px;border:1px solid var(--line);border-radius:20px;padding:4px 9px;background:var(--bg);color:inherit;font-family:inherit;white-space:nowrap}
+.wd-ob[aria-pressed=true]{background:#FDECEA;color:var(--down);border-color:#F3C5C0}
+.wd-r{display:flex;align-items:center;gap:6px;margin-top:6px}.wd-r .inp{flex:1;min-width:0;height:38px;padding:0 8px}.wd-r i{font-style:normal;color:var(--gold)}
+.wd-r2{display:none}.wd.two .wd-r2{display:flex}.wd-r small{font-size:10px;color:var(--muted);white-space:nowrap;min-width:44px}
+.wd.off .wd-in,.wd.off .wd-b2{display:none}
+.wd-offt{display:none;font-size:11px;color:var(--down);margin-top:4px;opacity:.8}.wd.off .wd-offt{display:block}
+.wd-tools{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .sh-ft{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;font-size:10.5px;color:var(--muted);margin-top:10px}
 .sh-ok{width:100%;margin-top:10px}
 .cu-flag{margin-top:7px;border:1px solid rgba(201,138,12,.4);background:rgba(201,138,12,.08);border-radius:10px;padding:7px 9px;font-size:10.5px;display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center}.cu-flag b{color:#9A6A00;font-size:11px;margin-inline-end:4px}.cu-flag span{background:rgba(201,138,12,.14);color:#7A5300;border-radius:99px;padding:1px 8px}
@@ -1229,7 +1245,7 @@ async function applyRole(uid,rk){ const R=PERM_ROLES.find(r=>r.k===rk); const wa
   if(add.length){ const r=await T('user_sections').insert(add.map(x=>({user_id:uid,section:x}))); if(r.error) return r.error; }
   if(st._uroOk){ const r=await T('user_ro').delete().eq('user_id',uid).neq('section',''); if(r.error) return r.error; }
   return null; }
-const APP_VER='202610240730';
+const APP_VER='202610242100';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.csales='مبيعات الكاشيرات'; SEC_NAME.glq='قيود جروث (تسجيل القيود في جروث)'; SEC_NAME.clean='النظافة (قوائم الفتح والإغلاق)'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.salaries='💰 عرض رواتب الموظفين وتعديلها (سري)'; SEC_NAME.custody_holder='مسؤول عهدة (يشوف عهدته فقط)'; SEC_NAME.custody='العُهد — إدارة ومراجعة كل العهد (للمحاسب)'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const ujob=(uid,kind)=>(uid&&(st._jobs||{})[uid])||(kind==='emp'?'موظف':kind==='admin'?'إدارة':'مستخدم');
@@ -2179,8 +2195,10 @@ const attShifts=sh=>!sh?[]:[{start_t:sh.start_t,end_t:sh.end_t,grace:sh.grace}].
 const attShTxt=sh=>attShifts(sh).map(x=>attT(x.start_t)+'–'+attT(x.end_t)).join(' + ');
 const attFri=s=>s&&s.fri_start_t?{...s,start_t:s.fri_start_t,end_t:s.fri_end_t,start2_t:s.fri_start2_t||null,end2_t:s.fri_end2_t||null}:s;
 const attThu=s=>s&&s.thu_start_t?{...s,start_t:s.thu_start_t,end_t:s.thu_end_t,start2_t:s.thu_start2_t||null,end2_t:s.thu_end2_t||null}:s;
-const attSh=(s,day)=>{ if(!s||!day) return s; const w=new Date(day+'T12:00:00').getDay(); return w===5&&s.fri_start_t?attFri(s):w===4&&s.thu_start_t?attThu(s):s; };
-const attShTxtF=s=>!s?'':attShTxt(s)+(s.thu_start_t&&!(s.off_days||[]).includes(4)?' · الخميس '+attShTxt(attThu(s)):'')+(s.fri_start_t&&!(s.off_days||[]).includes(5)?' · الجمعة '+attShTxt(attFri(s)):'');
+const attWk=(s,w)=>{ const L=s&&s.wk&&s.wk[w]; return L&&L.length?{...s,start_t:L[0][0],end_t:L[0][1],start2_t:L[1]?L[1][0]:null,end2_t:L[1]?L[1][1]:null}:null; };
+const attWkTxt=s=>{ const off=(s.off_days||s.off||[]).map(Number), G=[]; for(let d=0;d<7;d++){ if(off.includes(d)||!s.wk[d]) continue; const t=s.wk[d].map(x=>attT(x[0])+'–'+attT(x[1])).join(' + '); const g=G.find(z=>z.t===t); if(g) g.d.push(d); else G.push({t,d:[d]}); } return G.map(g=>(G.length>1?g.d.map(d=>ATT_DOW[d].replace('ال','')).join('، ')+': ':'')+g.t).join(' · '); };
+const attSh=(s,day)=>{ if(!s||!day) return s; const w=new Date(day+'T12:00:00').getDay(); const k=attWk(s,w); if(k) return k; return w===5&&s.fri_start_t?attFri(s):w===4&&s.thu_start_t?attThu(s):s; };
+const attShTxtF=s=>!s?'':s.wk?attWkTxt(s):attShTxt(s)+(s.thu_start_t&&!(s.off_days||[]).includes(4)?' · الخميس '+attShTxt(attThu(s)):'')+(s.fri_start_t&&!(s.off_days||[]).includes(5)?' · الجمعة '+attShTxt(attFri(s)):'');
 // أقرب شفت لوقت الدخول
 function attShiftFor(sh,rec){ const L=attShifts(sh); if(!L.length) return null; if(L.length===1||!rec||!rec.in_at) return L[(rec&&rec.seq===2&&L[1])?1:0];
   let im=attLocMin(rec.in_at); if(im<5*60) im+=1440; let best=L[0],bd=1e9; L.forEach(x=>{ let st=attMin(x.start_t); if(st<5*60) st+=1440; const dd=Math.abs(im-st); if(dd<bd){bd=dd;best=x;} }); return best; }
@@ -2204,6 +2222,13 @@ function attShiftCard(A){ if(!A) return '';
   const off=(S.off||[]).map(Number); let seen=''; try{seen=localStorage.getItem('shSeen')||'';}catch(e){}
   const isNew=S.at&&seen!==String(S.at);
   const todayOff=off.includes(new Date(A.today+'T12:00:00').getDay());
+  if(S.wk){ const tdw=new Date(A.today+'T12:00:00').getDay(), TL=todayOff?null:(S.wk[tdw]||null); const th=TL?TL.reduce((t,x)=>t+dur(x),0):0; const H=n=>Math.floor(n/60)+(n%60?':'+String(n%60).padStart(2,'0'):'');
+    return `<div class="card sh-card${isNew?' new':''}">${isNew?`<div class="sh-new">🆕 مديرك ${seen?'عدّل':'حدد'} دوامك — اطّلع عليه</div>`:''}
+    <div class="sh-hd"><span class="sh-ic">🗓️</span><div><b>دوامك</b><small>${todayOff?'اليوم إجازتك 🌴':TL?(TL.length>1?'اليوم شفتين':'اليوم شفت واحد')+' · '+H(th)+' ساعة':'ما فيه دوام اليوم'}</small></div></div>
+    ${TL?`<div class="sh-ls">${TL.map((x,i)=>`<div class="sh-sh"><span class="sh-n">${TL.length>1?(i?'الشفت الثاني اليوم':'الشفت الأول اليوم'):'دوام اليوم'}</span><div class="sh-t"><b class="num">${attT(x[0])}</b><i>←</i><b class="num">${attT(x[1])}</b></div>${mins(x[1])<=mins(x[0])?'<small>ينتهي اليوم التالي</small>':''}</div>`).join('')}</div>`:''}
+    <div class="sh-wkl">${[0,1,2,3,4,5,6].map(d=>{ const o=off.includes(d)||!S.wk[d]; return `<div class="${o?'off':''}${d===tdw?' td':''}"><b>${ATT_DOW[d]}</b><span>${o?'🌴 إجازة':S.wk[d].map(x=>`<em class="num">${attT(x[0])} – ${attT(x[1])}</em>`).join('')}</span></div>`; }).join('')}</div>
+    <div class="sh-ft"><span>⏱️ مهلة التأخير ${S.grace||0} دقيقة</span>${S.by?`<span>حدده: ${esc(S.by)}${S.at?' · '+dLbl(String(S.at).slice(0,10)):''}</span>`:''}</div>
+    ${isNew?`<button class="btn sm sh-ok" data-shok="${esc(String(S.at))}">👍 تمام، اطّلعت</button>`:''}</div>`; }
   return `<div class="card sh-card${isNew?' new':''}">${isNew?`<div class="sh-new">🆕 مديرك ${seen?'عدّل':'حدد'} دوامك — اطّلع عليه</div>`:''}
     <div class="sh-hd"><span class="sh-ic">🗓️</span><div><b>دوامك</b><small>${todayOff?'اليوم إجازتك 🌴':L.length>1?'شفتين في اليوم':'شفت واحد في اليوم'} · ${hrs} ساعة يومياً</small></div></div>
     <div class="sh-ls">${L.map((x,i)=>`<div class="sh-sh">${L.length>1?`<span class="sh-n">${i?'الشفت الثاني':'الشفت الأول'}</span>`:'<span class="sh-n">من — إلى</span>'}<div class="sh-t"><b class="num">${attT(x[0])}</b><i>←</i><b class="num">${attT(x[1])}</b></div>${mins(x[1])<=mins(x[0])?'<small>ينتهي اليوم التالي</small>':''}</div>`).join('')}</div>
@@ -2215,7 +2240,7 @@ function attShiftCard(A){ if(!A) return '';
 document.addEventListener('click',e=>{const l=e.target.closest('[data-lang]'); if(l&&window.I18N){ I18N.set(l.dataset.lang); document.querySelectorAll('[data-lang]').forEach(x=>x.classList.toggle('on',x===l)); return; }});
 document.addEventListener('click',e=>{const b=e.target.closest('[data-shok]'); if(!b) return; try{localStorage.setItem('shSeen',b.dataset.shok);}catch(_){} const c=b.closest('.sh-card'); if(c){c.classList.remove('new'); const n=c.querySelector('.sh-new'); if(n) n.remove(); b.remove();} toast('تمام ✓');});
 async function attCard(){ let r; try{ r=await sb.rpc('att_me'); }catch(e){ return ''; } if(r.error||!r.data) return ''; const A=st._attMe=r.data;
-  const sh=attSh(A.shift?{start_t:A.shift.start,end_t:A.shift.end,start2_t:A.shift.start2,end2_t:A.shift.end2,grace:A.shift.grace,off_days:A.shift.off,fri_start_t:A.shift.fri_start,fri_end_t:A.shift.fri_end,fri_start2_t:A.shift.fri_start2,fri_end2_t:A.shift.fri_end2,thu_start_t:A.shift.thu_start,thu_end_t:A.shift.thu_end,thu_start2_t:A.shift.thu_start2,thu_end2_t:A.shift.thu_end2}:null,A.today);
+  const sh=attSh(A.shift?{start_t:A.shift.start,end_t:A.shift.end,start2_t:A.shift.start2,end2_t:A.shift.end2,grace:A.shift.grace,off_days:A.shift.off,fri_start_t:A.shift.fri_start,fri_end_t:A.shift.fri_end,fri_start2_t:A.shift.fri_start2,fri_end2_t:A.shift.fri_end2,thu_start_t:A.shift.thu_start,thu_end_t:A.shift.thu_end,thu_start2_t:A.shift.thu_start2,thu_end2_t:A.shift.thu_end2,wk:A.shift.wk||null}:null,A.today);
   if(A.exempt) return `<div class="card att-me"><div class="bar-row"><div><div class="advref">الحضور والانصراف</div><b style="font-size:14px">✅ أنت معفى من تسجيل الحضور والانصراف</b><div class="muted" style="font-size:11px">ما يحتاج تسجّل حضور ولا انصراف، وما ينحسب عليك غياب ولا تأخير.</div></div></div></div>`;
   const recs=(A.recs||[]).filter(x=>x.in_at), open=A.open, nSh=Math.max(1,attShifts(sh).length), done=!open&&recs.length>=nSh;
   const off=attIsOff(sh,A.today);
@@ -2355,25 +2380,17 @@ V.att=async()=>{ const bs=selBranches(); const today=attToday(); const tab=st.at
   return h; };
 function attEmpModal(id){ const {D,day}=st._attD; const e=D.emps.find(x=>x.id===id); if(!e) return; const s=D.sh[id]||{}; const op=(D.opt||{})[id]||{}; const R=(D.by[id]||{})[day]||[];
   const tv=ts=>ts?new Date(ts).toLocaleTimeString('en-GB',{hour12:false,hour:'2-digit',minute:'2-digit',timeZone:'Asia/Riyadh'}):'';
-  const seqs=[1].concat(s.start2_t||R.some(r=>r.seq===2)?[2]:[]);
+  const seqs=[1].concat((attSh(s,day)||{}).start2_t||R.some(r=>r.seq===2)?[2]:[]);
   const recBlk=q=>{ const r=R.find(x=>(x.seq||1)===q); return `<div class="att-rb"><b>${seqs.length>1?'الشفت '+q:'السجل'}</b>${r&&(r.in_photo||r.out_photo)?`<div class="att-ph">${r.in_photo?`<button type="button" class="btn ghost sm" data-hrview="${esc(r.in_photo)}">📷 سيلفي الدخول</button>`:''}${r.out_photo?`<button type="button" class="btn ghost sm" data-hrview="${esc(r.out_photo)}">📷 سيلفي الخروج</button>`:''}</div>`:''}${r&&(r.in_dev||r.out_dev)?`<div class="muted" style="font-size:10.5px">📱 سجّل${r.in_dev&&r.out_dev?' الدخول والخروج':r.in_dev?' الدخول':' الخروج'} من الجوال المسجّل (بدون سيلفي)</div>`:''}${r&&r.in_dist!=null?`<div class="muted" style="font-size:10.5px">${r.place?'📍 '+esc(r.place)+' · ':''}بعد عن ${r.place?'المكان':'الفرع'} وقت الدخول ${r.in_dist} م${r.out_dist!=null?' · الخروج '+r.out_dist+' م':''}</div>`:''}${r&&r.manual?`<div class="muted" style="font-size:10.5px">✏️ تصحيح بواسطة ${esc(r.edited_by)} — ${esc(r.note)}</div>`:''}
       ${isOwner()?`<div class="cu-row2"><div class="field"><label>الدخول</label><input class="inp" type="time" name="tin${q}" value="${tv(r&&r.in_at)}"></div><div class="field"><label>الخروج</label><input class="inp" type="time" name="tout${q}" value="${tv(r&&r.out_at)}"></div></div>
       <button type="button" class="btn ghost sm" data-attfix="${q}">حفظ تصحيح ${seqs.length>1?'الشفت '+q:''}</button>`:`<div class="cu-row2"><div class="field"><label>الدخول</label><div class="inp num" style="opacity:.75">${tv(r&&r.in_at)||'—'}</div></div><div class="field"><label>الخروج</label><div class="inp num" style="opacity:.75">${tv(r&&r.out_at)||'—'}</div></div></div>`}</div>`; };
+  const WD=[0,1,2,3,4,5,6].map(d=>{ let L=null; if(s.wk&&s.wk[d]) L=s.wk[d]; else if(s.start_t){ const o=d===4&&s.thu_start_t?attThu(s):d===5&&s.fri_start_t?attFri(s):s; L=[[o.start_t,o.end_t]].concat(o.start2_t&&o.end2_t?[[o.start2_t,o.end2_t]]:[]); } return {off:(s.off_days||[]).includes(d),L:(L||[]).map(x=>[String(x[0]||'').slice(0,5),String(x[1]||'').slice(0,5)])}; });
   const {m,close}=hrModal(`<form class="card cu-form"><div class="bar-row"><h3 style="margin:0">${esc(e.name)}</h3><button type="button" class="icb" data-x="1">✕</button></div>
-    <div class="hr-blk"><h4>🕒 الدوام</h4><div class="cu-row2"><div class="field"><label>بداية الشفت الأول</label><input class="inp" type="time" name="st" value="${(s.start_t||'').slice(0,5)}"></div><div class="field"><label>نهايته</label><input class="inp" type="time" name="en" value="${(s.end_t||'').slice(0,5)}"></div></div>
-      <label class="att-two"><input type="checkbox" name="two" ${s.start2_t?'checked':''}><span>يداوم شفتين</span></label>
-      <div class="cu-row2 att-s2" ${s.start2_t?'':'hidden'}><div class="field"><label>بداية الشفت الثاني</label><input class="inp" type="time" name="st2" value="${(s.start2_t||'').slice(0,5)}"></div><div class="field"><label>نهايته</label><input class="inp" type="time" name="en2" value="${(s.end2_t||'').slice(0,5)}"></div></div>
-      <div class="muted" style="font-size:10.5px">لو الدوام يخلص بعد ١٢ الليل (مثل ٣ أو ٤ الفجر) اكتب الوقت عادي، ينحسب على نفس اليوم.</div>
-      <div class="att-hrs" id="attHrs"></div>
-      <label class="att-two"><input type="checkbox" name="thu" ${s.thu_start_t?'checked':''}><span>📅 دوام يوم الخميس مختلف</span></label>
-      <div class="att-thu" ${s.thu_start_t?'':'hidden'}><div class="cu-row2"><div class="field"><label>بداية دوام الخميس</label><input class="inp" type="time" name="tst" value="${(s.thu_start_t||'').slice(0,5)}"></div><div class="field"><label>نهايته</label><input class="inp" type="time" name="ten" value="${(s.thu_end_t||'').slice(0,5)}"></div></div>
-       <label class="att-two"><input type="checkbox" name="thu2" ${s.thu_start2_t?'checked':''}><span>شفتين يوم الخميس</span></label>
-       <div class="cu-row2 att-t2" ${s.thu_start2_t?'':'hidden'}><div class="field"><label>بداية الشفت الثاني (الخميس)</label><input class="inp" type="time" name="tst2" value="${(s.thu_start2_t||'').slice(0,5)}"></div><div class="field"><label>نهايته</label><input class="inp" type="time" name="ten2" value="${(s.thu_end2_t||'').slice(0,5)}"></div></div></div>
-      <label class="att-two"><input type="checkbox" name="fri" ${s.fri_start_t?'checked':''}><span>🕌 دوام يوم الجمعة مختلف</span></label>
-      <div class="att-fri" ${s.fri_start_t?'':'hidden'}><div class="cu-row2"><div class="field"><label>بداية دوام الجمعة</label><input class="inp" type="time" name="fst" value="${(s.fri_start_t||'').slice(0,5)}"></div><div class="field"><label>نهايته</label><input class="inp" type="time" name="fen" value="${(s.fri_end_t||'').slice(0,5)}"></div></div>
-       <label class="att-two"><input type="checkbox" name="fri2" ${s.fri_start2_t?'checked':''}><span>شفتين يوم الجمعة</span></label>
-       <div class="cu-row2 att-f2" ${s.fri_start2_t?'':'hidden'}><div class="field"><label>بداية الشفت الثاني (الجمعة)</label><input class="inp" type="time" name="fst2" value="${(s.fri_start2_t||'').slice(0,5)}"></div><div class="field"><label>نهايته</label><input class="inp" type="time" name="fen2" value="${(s.fri_end2_t||'').slice(0,5)}"></div></div></div>
-      <div class="field"><label>يوم/أيام الإجازة</label><div class="chips att-off">${ATT_DOW.map((d,i)=>`<label><input type="checkbox" name="off" value="${i}" ${(s.off_days||[]).includes(i)?'checked':''}><span>${d}</span></label>`).join('')}</div></div>
+    <div class="hr-blk"><h4>🕒 الدوام اليومي</h4><div class="muted" style="font-size:10.5px">حدد دوام كل يوم: شفت أو شفتين، أو اضغط 🌴 لو اليوم إجازة. لو الدوام يخلص بعد ١٢ الليل اكتب الوقت عادي، ينحسب على نفس اليوم.</div>
+      ${WD.map((w,d)=>`<div class="wd${w.off?' off':''}${w.L.length>1?' two':''}" data-d="${d}"><div class="wd-h"><b>${ATT_DOW[d]}</b><span class="wd-sum"></span><button type="button" class="wd-b2" data-wd2="${d}">${w.L.length>1?'− الشفت الثاني':'＋ شفت ثاني'}</button><button type="button" class="wd-ob" data-wdoff="${d}" aria-pressed="${w.off}">🌴 إجازة</button></div>
+        <div class="wd-in"><div class="wd-r"><small>${w.L.length>1?'الأول':'الدوام'}</small><input class="inp" type="time" name="a${d}" value="${(w.L[0]||[])[0]||''}"><i>←</i><input class="inp" type="time" name="b${d}" value="${(w.L[0]||[])[1]||''}"></div><div class="wd-r wd-r2"><small>الثاني</small><input class="inp" type="time" name="c${d}" value="${(w.L[1]||[])[0]||''}"><i>←</i><input class="inp" type="time" name="e${d}" value="${(w.L[1]||[])[1]||''}"></div></div><div class="wd-offt">يوم إجازة — اضغط «🌴 إجازة» مرة ثانية لإلغائها</div></div>`).join('')}
+      <div class="wd-tools"><button type="button" class="btn ghost sm" data-wdcopy="1">📋 نسخ دوام أول يوم لباقي الأيام</button></div>
+      <div class="att-hrs" id="attHrs" style="margin-top:8px"></div>
       <div class="field"><label>سماحية التأخير (دقائق)</label><input class="inp num" type="number" name="gr" min="0" max="120" value="${s.grace??10}"></div>
       <button type="button" class="btn" data-attsh="1">حفظ الدوام</button></div>
     <div class="hr-blk"><h4>🔐 البصمة وطريقة التحقق</h4>
@@ -2392,35 +2409,34 @@ function attEmpModal(id){ const {D,day}=st._attD; const e=D.emps.find(x=>x.id===
       <div class="muted" style="font-size:10px">امسح وقتي الشفت واحفظ لحذف سجله.</div>`:'<input type="hidden" name="note" value=""><div class="muted" style="font-size:10.5px">🔒 تصحيح سجل الحضور واعتماد الحضور اليدوي للمالك فقط.</div>'}</div>
     <div class="cu-err" hidden></div></form>`);
   const er=m.querySelector('.cu-err'), f=m.querySelector('form'); const fail=t=>{er.textContent=t;er.hidden=false;};
-  f.two.addEventListener('change',()=>{ m.querySelector('.att-s2').hidden=!f.two.checked; });
-  const hrsUpd=()=>{ const el=m.querySelector('#attHrs'); if(!el) return; const mn=v=>{ if(!v) return null; const [h,x]=String(v).split(':').map(Number); return h*60+(x||0); };
-    const span=(a,b)=>{ const x=mn(a), y=mn(b); if(x==null||y==null) return 0; let d=y-x; if(d<=0) d+=1440; return d; };
-    const day=(a,b,two,a2,b2)=>span(a,b)+(two?span(a2,b2):0);
-    const H=n=>{ const h=Math.floor(n/60), r=n%60; return n?`${h}${r?':'+String(r).padStart(2,'0'):''}`:'0'; };
-    const base=day(f.st.value,f.en.value,f.two.checked,f.st2.value,f.en2.value), thu=f.thu.checked?day(f.tst.value,f.ten.value,f.thu2.checked,f.tst2.value,f.ten2.value):null, fri=f.fri.checked?day(f.fst.value,f.fen.value,f.fri2.checked,f.fst2.value,f.fen2.value):null;
-    const off=[...f.querySelectorAll('[name=off]:checked')].map(x=>+x.value); let wk=0, wd=0; for(let d=0;d<7;d++){ if(off.includes(d)) continue; wd++; wk+=d===4&&thu!=null?thu:d===5&&fri!=null?fri:base; }
-    el.innerHTML=`<div><small>ساعات اليوم</small><b class="num">${H(base)}</b><em>ساعة</em></div>${thu!=null?`<div><small>الخميس</small><b class="num">${H(thu)}</b><em>ساعة</em></div>`:''}${fri!=null?`<div><small>الجمعة</small><b class="num">${H(fri)}</b><em>ساعة</em></div>`:''}<div><small>الأسبوع · ${wd} أيام</small><b class="num">${H(wk)}</b><em>ساعة</em></div><div><small>الشهر (تقريباً)</small><b class="num">${H(Math.round(wk*30/7))}</b><em>ساعة</em></div>`; };
+  const wdMn=v=>{ if(!v) return null; const [h,x]=String(v).split(':').map(Number); return h*60+(x||0); };
+  const wdSpan=(a,b)=>{ const x=wdMn(a), y=wdMn(b); if(x==null||y==null) return 0; let d=y-x; if(d<=0) d+=1440; return d; };
+  const wdH=n=>{ const h=Math.floor(n/60), r=n%60; return n?`${h}${r?':'+String(r).padStart(2,'0'):''}`:'0'; };
+  const hrsUpd=()=>{ let wk=0, wd=0; m.querySelectorAll('.wd').forEach(row=>{ const d=row.dataset.d, sm=row.querySelector('.wd-sum'); if(row.classList.contains('off')){ sm.textContent=''; return; }
+      const n=wdSpan(f['a'+d].value,f['b'+d].value)+(row.classList.contains('two')?wdSpan(f['c'+d].value,f['e'+d].value):0); sm.textContent=n?wdH(n)+' ساعة':''; if(n){ wk+=n; wd++; } });
+    const el=m.querySelector('#attHrs'); if(el) el.innerHTML=`<div><small>الأسبوع · ${wd} أيام</small><b class="num">${wdH(wk)}</b><em>ساعة</em></div><div><small>متوسط اليوم</small><b class="num">${wdH(wd?Math.round(wk/wd):0)}</b><em>ساعة</em></div><div><small>الشهر (تقريباً)</small><b class="num">${wdH(Math.round(wk*30/7))}</b><em>ساعة</em></div>`; };
   f.addEventListener('input',hrsUpd); f.addEventListener('change',hrsUpd); hrsUpd();
-  f.thu.addEventListener('change',()=>{ m.querySelector('.att-thu').hidden=!f.thu.checked; });
-  f.thu2.addEventListener('change',()=>{ m.querySelector('.att-t2').hidden=!f.thu2.checked; });
-  f.fri.addEventListener('change',()=>{ m.querySelector('.att-fri').hidden=!f.fri.checked; });
-  f.fri2.addEventListener('change',()=>{ m.querySelector('.att-f2').hidden=!f.fri2.checked; });
+  m.addEventListener('click',ev=>{ const b=ev.target.closest('[data-wdoff],[data-wd2],[data-wdcopy]'); if(!b) return;
+    if(b.dataset.wdoff!=null){ const row=b.closest('.wd'); const on=row.classList.toggle('off'); b.setAttribute('aria-pressed',on); }
+    else if(b.dataset.wd2!=null){ const row=b.closest('.wd'); const on=row.classList.toggle('two'); b.textContent=on?'− الشفت الثاني':'＋ شفت ثاني'; row.querySelector('.wd-r small').textContent=on?'الأول':'الدوام'; }
+    else { const rows=[...m.querySelectorAll('.wd')]; const src=rows.find(r=>!r.classList.contains('off')&&f['a'+r.dataset.d].value); if(!src) return; const sd=src.dataset.d, two=src.classList.contains('two');
+      rows.forEach(r=>{ if(r===src||r.classList.contains('off')) return; const d=r.dataset.d; ['a','b','c','e'].forEach(k=>{ f[k+d].value=f[k+sd].value; }); r.classList.toggle('two',two); r.querySelector('.wd-b2').textContent=two?'− الشفت الثاني':'＋ شفت ثاني'; r.querySelector('.wd-r small').textContent=two?'الأول':'الدوام'; }); toast('تم النسخ — عدّل أي يوم مختلف'); }
+    hrsUpd(); });
   if(f.exm) f.exm.addEventListener('change',async()=>{ const x=await sb.rpc('att_set_exempt',{p_emp:id,p_exempt:f.exm.checked}); if(x.error){ f.exm.checked=!f.exm.checked; return fail(/att_set_exempt|schema cache|function/i.test(x.error.message)?'شغّل ملف «دوام الجمعة والاستثناء» في Supabase أولاً':x.error.message); } D.opt=D.opt||{}; D.opt[id]={...(D.opt[id]||{}),emp_id:id,exempt:f.exm.checked}; toast(f.exm.checked?'تم: معفى من البصمة — ما ينحسب عليه غياب ولا خصم ✓':'تم: يرجع يشمله الحضور والانصراف ✓'); render(); });
   f.nosf.addEventListener('change',async()=>{ const x=await sb.rpc('att_set_opt',{p_emp:id,p_no_selfie:f.nosf.checked,p_reset_device:false}); if(x.error){ f.nosf.checked=!f.nosf.checked; return fail(/att_set_opt|schema cache|function/i.test(x.error.message)?'شغّل ملف «الحضور والانصراف» المحدّث أولاً':x.error.message); } D.opt=D.opt||{}; D.opt[id]={...(D.opt[id]||{}),emp_id:id,no_selfie:f.nosf.checked}; toast(f.nosf.checked?'تم: بدون سيلفي — بالموقع وجوالها المسجّل ✓':'تم: يرجع التحقق بالسيلفي ✓'); });
   m.addEventListener('click',async ev=>{ const b=ev.target.closest('[data-attsh],[data-attfix],[data-attdev],[data-attok],[data-attpl]'); if(!b) return; er.hidden=true;
     if(b.dataset.attpl){ const v=[...f.querySelectorAll('[name=pl]:checked')].map(x=>x.value); b.disabled=true; const x=await sb.rpc('att_set_places',{p_emp:id,p_places:v}); b.disabled=false; if(x.error) return fail(/att_set_places|schema cache|function/i.test(x.error.message)?'شغّل ملف «att-sites» في Supabase أولاً':x.error.message); D.opt=D.opt||{}; D.opt[id]={...(D.opt[id]||{}),emp_id:id,places:v}; toast(v.length?'تم ✓ يبصم من: '+v.length+' مكان':'تم ✓ يبصم من فرعه'); return; }
     if(b.dataset.attok){ const L=attShifts(attSh(s,day)); const note=f.note.value.trim()||'اعتماد حضور يدوي'; for(let q=1;q<=L.length;q++){ const x=await sb.rpc('att_manual',{p_emp:id,p_day:day,p_in:String(L[q-1].start_t).slice(0,5),p_out:String(L[q-1].end_t).slice(0,5),p_note:note,p_seq:q}); if(x.error) return fail(x.error.message); } close(); toast('تم — اعتُبر حاضر ✓'); render(); return; }
     if(b.dataset.attdev){ const x=await sb.rpc('att_set_opt',{p_emp:id,p_no_selfie:true,p_reset_device:true}); if(x.error) return fail(x.error.message); close(); toast('تم — أول جوال تسجّل منه بينحفظ كجوالها الجديد'); render(); return; }
-    if(b.dataset.attsh){ if(!f.st.value||!f.en.value) return fail('حدد بداية ونهاية الشفت الأول'); const two=f.two.checked; if(two&&(!f.st2.value||!f.en2.value)) return fail('حدد بداية ونهاية الشفت الثاني'); const off=[...f.querySelectorAll('[name=off]:checked')].map(x=>+x.value);
-      { const mn=v=>{const [h,m]=String(v).split(':').map(Number);return h*60+(m||0);}; const span=(a,b)=>{let x=mn(a),y=mn(b);if(x<300&&x>0)x+=1440;if(y<=x%1440||y<x)y+=1440;while(y<=x)y+=1440;return [x,y];}; const hh=n=>Math.round(n/6)/10;
-        const A=span(f.st.value,f.en.value); if(two){ const B=span(f.st2.value,f.en2.value); if(A[0]<B[1]&&B[0]<A[1]) return fail(`الشفت الأول (${hh(A[1]-A[0])} ساعة) يتداخل مع الشفت الثاني — غالباً «ص» و«م» مقلوبة في نهاية الشفت الأول`); if(A[1]-A[0]>12||B[1]-B[0]>12){} }
-        const L=[A].concat(two?[span(f.st2.value,f.en2.value)]:[]); const big=L.find(z=>z[1]-z[0]>14*60); if(big&&!confirm(`مدة الشفت ${hh(big[1]-big[0])} ساعة — متأكد؟ (تأكد من «ص» و«م»)`)) return; }
-      const fr=f.fri.checked, fr2=fr&&f.fri2.checked; if(fr&&(!f.fst.value||!f.fen.value)) return fail('حدد بداية ونهاية دوام الجمعة'); if(fr2&&(!f.fst2.value||!f.fen2.value)) return fail('حدد بداية ونهاية الشفت الثاني يوم الجمعة');
-      const a={p_emp:id,p_start:f.st.value,p_end:f.en.value,p_off:off,p_grace:+f.gr.value||0,p_start2:two?f.st2.value:null,p_end2:two?f.en2.value:null}; if(fr||s.fri_start_t) Object.assign(a,{p_fri_start:fr?f.fst.value:null,p_fri_end:fr?f.fen.value:null,p_fri_start2:fr2?f.fst2.value:null,p_fri_end2:fr2?f.fen2.value:null});
-      const th=f.thu.checked, th2=th&&f.thu2.checked; if(th&&(!f.tst.value||!f.ten.value)) return fail('حدد بداية ونهاية دوام الخميس'); if(th2&&(!f.tst2.value||!f.ten2.value)) return fail('حدد بداية ونهاية الشفت الثاني يوم الخميس');
-      if(th||s.thu_start_t) Object.assign(a,{p_thu_start:th?f.tst.value:null,p_thu_end:th?f.ten.value:null,p_thu_start2:th2?f.tst2.value:null,p_thu_end2:th2?f.ten2.value:null});
+    if(b.dataset.attsh){ const wk={}, off=[]; const mn=v=>{const [h,q]=String(v).split(':').map(Number);return h*60+(q||0);}; const span=(a,c)=>{let x=mn(a),y=mn(c);if(x<300&&x>0)x+=1440;if(y<=x%1440||y<x)y+=1440;while(y<=x)y+=1440;return [x,y];}; const hh=n=>Math.round(n/6)/10; let big=null;
+      for(let d=0;d<7;d++){ const row=m.querySelector(`.wd[data-d="${d}"]`); if(row.classList.contains('off')){ off.push(d); continue; }
+        const a=f['a'+d].value, c=f['b'+d].value; if(!a||!c) return fail(`حدد بداية ونهاية دوام ${ATT_DOW[d]} — أو اضغط 🌴 لو إجازة`); const L=[[a,c]];
+        if(row.classList.contains('two')){ const a2=f['c'+d].value, c2=f['e'+d].value; if(!a2||!c2) return fail(`حدد بداية ونهاية الشفت الثاني يوم ${ATT_DOW[d]}`); const A=span(a,c), B=span(a2,c2); if(A[0]<B[1]&&B[0]<A[1]) return fail(`يوم ${ATT_DOW[d]}: الشفت الأول يتداخل مع الثاني — غالباً «ص» و«م» مقلوبة`); L.push([a2,c2]); }
+        L.forEach(z=>{ const q=span(z[0],z[1]); if(q[1]-q[0]>14*60&&!big) big=[ATT_DOW[d],hh(q[1]-q[0])]; }); wk[d]=L; }
+      if(off.length===7) return fail('لازم يكون فيه يوم دوام واحد على الأقل');
+      if(big&&!confirm(`مدة الشفت يوم ${big[0]} ${big[1]} ساعة — متأكد؟ (تأكد من «ص» و«م»)`)) return;
       { const pe=f.querySelectorAll('[name=pl]'); if(pe.length){ const v=[...pe].filter(x=>x.checked).map(x=>x.value), old=(((D.opt||{})[id]||{}).places||[]); if(v.slice().sort().join()!==old.slice().sort().join()){ const y=await sb.rpc('att_set_places',{p_emp:id,p_places:v}); if(y.error) return fail(y.error.message); D.opt=D.opt||{}; D.opt[id]={...(D.opt[id]||{}),emp_id:id,places:v}; } } }
-      const x=await sb.rpc('att_set_shift',a); if(x.error) return fail(/p_thu|function|schema cache/i.test(x.error.message)&&(f.thu.checked||s.thu_start_t)?'دوام الخميس يحتاج تشغيل ملف «att-thursday» في Supabase أولاً':/p_fri|function|schema cache/i.test(x.error.message)&&fr?'دوام الجمعة يحتاج تشغيل ملف «دوام الجمعة والاستثناء» في Supabase أولاً':x.error.message); close(); toast('تم حفظ الدوام ✓'); render(); }
+      b.disabled=true; const x=await sb.rpc('att_set_week',{p_emp:id,p_wk:wk,p_off:off,p_grace:+f.gr.value||0}); b.disabled=false; if(x.error) return fail(/att_set_week|schema cache|function/i.test(x.error.message)?'الدوام اليومي يحتاج تشغيل ملف «att-week» في Supabase أولاً':x.error.message); close(); toast('تم حفظ الدوام ✓'); render(); return; }
     if(b.dataset.attfix){ const q=+b.dataset.attfix; if(!f.note.value.trim()) return fail('اكتب سبب التصحيح'); const x=await sb.rpc('att_manual',{p_emp:id,p_day:day,p_in:f['tin'+q].value||null,p_out:f['tout'+q].value||null,p_note:f.note.value.trim(),p_seq:q}); if(x.error) return fail(x.error.message); close(); toast('تم التصحيح ✓'); render(); } }); }
 let attLLp=null; function attLeaflet(){ if(window.L&&window.L.map) return Promise.resolve(); return attLLp||(attLLp=Promise.all([new Promise(res=>{ const c=document.createElement('link'); c.rel='stylesheet'; c.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'; c.onload=res; c.onerror=res; document.head.appendChild(c); setTimeout(res,6000); }),new Promise((res,rej)=>{ const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'; s.onload=res; s.onerror=()=>{ attLLp=null; rej(new Error('lib')); }; document.head.appendChild(s); })])); }
 function attParseLL(s){ s=String(s||'').replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/،/g,',').replace(/٫/g,'.'); let m=s.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/)||s.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/)||s.match(/[?&](?:q|query|ll|destination)=(-?\d+\.\d+)\s*(?:,|%2C)\s*(-?\d+\.\d+)/i)||s.match(/(-?\d{1,2}\.\d{3,})\s*[, ]\s*(-?\d{1,3}\.\d{3,})/); if(!m) return null; const la=+m[1], ln=+m[2]; if(!(la>10&&la<35&&ln>30&&ln<60)) return null; return [la,ln]; }
