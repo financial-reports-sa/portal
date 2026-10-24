@@ -1055,6 +1055,7 @@ html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%;text-size-adjus
 .ack-tx{margin:0;font-size:12px;line-height:1.8;color:#3F4B43}.ack-ls{display:flex;flex-direction:column;gap:8px;max-height:44vh;overflow-y:auto}.ack-it{border:1px solid #F3D3CE;background:#FFF7F5;border-radius:12px;padding:10px 12px}.ack-it b{display:block;font-size:12.5px;color:#7A1F12}.ack-it small{font-size:10px;color:var(--muted)}.ack-it p{margin:5px 0 0;font-size:11.5px;line-height:1.8;white-space:pre-line}
 .ack-ck{display:flex;gap:9px;align-items:flex-start;font-size:12px;line-height:1.6;background:#F6F8F5;border-radius:10px;padding:10px}.ack-ck input{width:20px;height:20px;flex:none;margin-top:2px}.ack-ck small{font-size:10.5px;color:var(--muted)}
 .cu-hs{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px;scrollbar-width:none}.cu-hs::-webkit-scrollbar{display:none}.cu-hs button{position:relative;flex:none;min-width:112px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 10px 9px;border-radius:16px;border:1.5px solid #E3E6E1;background:#fff;font:inherit;cursor:pointer}.cu-hs button.on{border-color:#1E5A3E;background:#F1F7F3;box-shadow:0 6px 14px -10px rgba(30,90,62,.7)}.cu-ha{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#F6E7B0,#C9A227);color:#3E2F05;font-weight:800;font-size:15px}.cu-hs button.on .cu-ha{background:#1E5A3E;color:#F3DE9C}.cu-hs b{font-size:12px;white-space:nowrap}.cu-hs small{font-size:10px;color:var(--muted)}.cu-hs i{position:absolute;top:6px;inset-inline-end:8px;font-style:normal;min-width:18px;height:18px;border-radius:9px;background:#D0453A;color:#fff;font-size:10px;font-weight:800;display:grid;place-items:center;padding:0 4px}
+.att-hrs{display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:6px;background:linear-gradient(135deg,#F1F7F3,#fff);border:1px solid #D6E8DC;border-radius:12px;padding:8px}.att-hrs>div{text-align:center;padding:2px}.att-hrs small{display:block;font-size:9.5px;color:var(--muted)}.att-hrs b{font-size:17px;color:#1E5A3E}.att-hrs em{font-style:normal;font-size:9.5px;color:var(--muted);margin-inline-start:3px}
 .pm-lg{display:flex;gap:14px;flex-wrap:wrap;font-size:10.5px;color:#3F4D45;margin:2px 2px 6px}.pm-lg span{display:inline-flex;align-items:center;gap:6px}.pm-lg i.pm-c{margin:0;width:16px!important;height:16px!important;cursor:default;pointer-events:none}.pm-lg i.pm-c::after{font-size:10px!important}.pm tbody tr:hover td,.pm tbody tr:hover .pm-u{background:#F2F7F3}
 .pm .g1{background:#F8FAF6}.pm thead .g0{background:#EEF4F0}.pm thead .g1{background:#F6F2E6}
 .pm-g{color:#2F4A3B;font-size:10.5px!important;border-inline-start:2px solid #D4DCD3!important}
@@ -1228,7 +1229,7 @@ async function applyRole(uid,rk){ const R=PERM_ROLES.find(r=>r.k===rk); const wa
   if(add.length){ const r=await T('user_sections').insert(add.map(x=>({user_id:uid,section:x}))); if(r.error) return r.error; }
   if(st._uroOk){ const r=await T('user_ro').delete().eq('user_id',uid).neq('section',''); if(r.error) return r.error; }
   return null; }
-const APP_VER='202610240225';
+const APP_VER='202610240310';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.csales='مبيعات الكاشيرات'; SEC_NAME.glq='قيود جروث (تسجيل القيود في جروث)'; SEC_NAME.clean='النظافة (قوائم الفتح والإغلاق)'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.custody_holder='مسؤول عهدة (يشوف عهدته فقط)'; SEC_NAME.custody='العُهد — إدارة ومراجعة كل العهد (للمحاسب)'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const ujob=(uid,kind)=>(uid&&(st._jobs||{})[uid])||(kind==='emp'?'موظف':kind==='admin'?'إدارة':'مستخدم');
@@ -2358,6 +2359,7 @@ function attEmpModal(id){ const {D,day}=st._attD; const e=D.emps.find(x=>x.id===
       <label class="att-two"><input type="checkbox" name="two" ${s.start2_t?'checked':''}><span>يداوم شفتين</span></label>
       <div class="cu-row2 att-s2" ${s.start2_t?'':'hidden'}><div class="field"><label>بداية الشفت الثاني</label><input class="inp" type="time" name="st2" value="${(s.start2_t||'').slice(0,5)}"></div><div class="field"><label>نهايته</label><input class="inp" type="time" name="en2" value="${(s.end2_t||'').slice(0,5)}"></div></div>
       <div class="muted" style="font-size:10.5px">لو الدوام يخلص بعد ١٢ الليل (مثل ٣ أو ٤ الفجر) اكتب الوقت عادي، ينحسب على نفس اليوم.</div>
+      <div class="att-hrs" id="attHrs"></div>
       <label class="att-two"><input type="checkbox" name="thu" ${s.thu_start_t?'checked':''}><span>📅 دوام يوم الخميس مختلف</span></label>
       <div class="att-thu" ${s.thu_start_t?'':'hidden'}><div class="cu-row2"><div class="field"><label>بداية دوام الخميس</label><input class="inp" type="time" name="tst" value="${(s.thu_start_t||'').slice(0,5)}"></div><div class="field"><label>نهايته</label><input class="inp" type="time" name="ten" value="${(s.thu_end_t||'').slice(0,5)}"></div></div>
        <label class="att-two"><input type="checkbox" name="thu2" ${s.thu_start2_t?'checked':''}><span>شفتين يوم الخميس</span></label>
@@ -2386,6 +2388,14 @@ function attEmpModal(id){ const {D,day}=st._attD; const e=D.emps.find(x=>x.id===
     <div class="cu-err" hidden></div></form>`);
   const er=m.querySelector('.cu-err'), f=m.querySelector('form'); const fail=t=>{er.textContent=t;er.hidden=false;};
   f.two.addEventListener('change',()=>{ m.querySelector('.att-s2').hidden=!f.two.checked; });
+  const hrsUpd=()=>{ const el=m.querySelector('#attHrs'); if(!el) return; const mn=v=>{ if(!v) return null; const [h,x]=String(v).split(':').map(Number); return h*60+(x||0); };
+    const span=(a,b)=>{ const x=mn(a), y=mn(b); if(x==null||y==null) return 0; let d=y-x; if(d<=0) d+=1440; return d; };
+    const day=(a,b,two,a2,b2)=>span(a,b)+(two?span(a2,b2):0);
+    const H=n=>{ const h=Math.floor(n/60), r=n%60; return n?`${h}${r?':'+String(r).padStart(2,'0'):''}`:'0'; };
+    const base=day(f.st.value,f.en.value,f.two.checked,f.st2.value,f.en2.value), thu=f.thu.checked?day(f.tst.value,f.ten.value,f.thu2.checked,f.tst2.value,f.ten2.value):null, fri=f.fri.checked?day(f.fst.value,f.fen.value,f.fri2.checked,f.fst2.value,f.fen2.value):null;
+    const off=[...f.querySelectorAll('[name=off]:checked')].map(x=>+x.value); let wk=0, wd=0; for(let d=0;d<7;d++){ if(off.includes(d)) continue; wd++; wk+=d===4&&thu!=null?thu:d===5&&fri!=null?fri:base; }
+    el.innerHTML=`<div><small>ساعات اليوم</small><b class="num">${H(base)}</b><em>ساعة</em></div>${thu!=null?`<div><small>الخميس</small><b class="num">${H(thu)}</b><em>ساعة</em></div>`:''}${fri!=null?`<div><small>الجمعة</small><b class="num">${H(fri)}</b><em>ساعة</em></div>`:''}<div><small>الأسبوع · ${wd} أيام</small><b class="num">${H(wk)}</b><em>ساعة</em></div><div><small>الشهر (تقريباً)</small><b class="num">${H(Math.round(wk*30/7))}</b><em>ساعة</em></div>`; };
+  f.addEventListener('input',hrsUpd); f.addEventListener('change',hrsUpd); hrsUpd();
   f.thu.addEventListener('change',()=>{ m.querySelector('.att-thu').hidden=!f.thu.checked; });
   f.thu2.addEventListener('change',()=>{ m.querySelector('.att-t2').hidden=!f.thu2.checked; });
   f.fri.addEventListener('change',()=>{ m.querySelector('.att-fri').hidden=!f.fri.checked; });
