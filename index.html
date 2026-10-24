@@ -1229,7 +1229,7 @@ async function applyRole(uid,rk){ const R=PERM_ROLES.find(r=>r.k===rk); const wa
   if(add.length){ const r=await T('user_sections').insert(add.map(x=>({user_id:uid,section:x}))); if(r.error) return r.error; }
   if(st._uroOk){ const r=await T('user_ro').delete().eq('user_id',uid).neq('section',''); if(r.error) return r.error; }
   return null; }
-const APP_VER='202610240700';
+const APP_VER='202610240730';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.csales='مبيعات الكاشيرات'; SEC_NAME.glq='قيود جروث (تسجيل القيود في جروث)'; SEC_NAME.clean='النظافة (قوائم الفتح والإغلاق)'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.salaries='💰 عرض رواتب الموظفين وتعديلها (سري)'; SEC_NAME.custody_holder='مسؤول عهدة (يشوف عهدته فقط)'; SEC_NAME.custody='العُهد — إدارة ومراجعة كل العهد (للمحاسب)'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const ujob=(uid,kind)=>(uid&&(st._jobs||{})[uid])||(kind==='emp'?'موظف':kind==='admin'?'إدارة':'مستخدم');
@@ -5981,7 +5981,7 @@ document.addEventListener('change',async e=>{
 
 // ================= render =================
 // ===================== يحتاج قرارك =====================
-async function inboxLoad(){ const out={adv:[],lv:[],rt:[],mt:[],pr:[],hr:[],cu:0}; const bs=st.branches.map(b=>b.id); const J=[];
+async function inboxLoad(){ const out={adv:[],lv:[],rt:[],mt:[],pr:[],hr:[],sal:[],cu:0}; const bs=st.branches.map(b=>b.id); const J=[];
   if(canSee('advances')) J.push(sb.from('advances').select('*').in('status',isAdmin()?['pending_mgr','pending_owner']:['pending_mgr']).order('created_at').then(r=>{ out.adv=(r.data||[]).filter(a=>bs.includes(a.branch)); },()=>{}));
   if(!isEmp()&&allowed('att')) J.push(sb.rpc('lv_list').then(r=>{ out.lv=((r&&r.data)||[]).filter(x=>x.status==='pending'&&bs.includes(x.branch)); },()=>{}));
   if(canSee('rets')) J.push(sb.rpc('ret_feed',{p_days:30}).then(r=>{ out.rt=((r&&r.data)||[]).filter(x=>x.status==='pending'&&x.can); },()=>{}));
@@ -5989,14 +5989,17 @@ async function inboxLoad(){ const out={adv:[],lv:[],rt:[],mt:[],pr:[],hr:[],cu:0
   if(canSee('purch')){ const R=prRole(); J.push(sb.rpc('pr_list').then(r=>{ out.pr=((r&&r.data)||[]).filter(m=>(R!=='mgr'&&m.status==='new')||(R!=='sup'&&m.status==='bought')); },()=>{})); }
   if(canSee('hr')&&hrFull()) J.push(sb.from('hr_requests').select('*').eq('status','new').order('created_at').then(r=>{ out.hr=r.data||[]; },()=>{}));
   if(canSee('custody')&&typeof cuStaff==='function'&&cuStaff()) J.push(sb.from('custody_tx').select('id',{count:'exact',head:true}).eq('status','pending').eq('side','emp').then(r=>{ out.cu=r.count||0; },()=>{}));
-  await Promise.all(J); out.n=out.adv.length+out.lv.length+out.rt.length+out.mt.length+out.pr.length+out.hr.length+(out.cu?1:0); st._inbN=out.n; return out; }
+  if(canSal()) J.push(Promise.all([sb.from('employees').select(EMP_COLS).neq('status','left').order('created_at',{ascending:false}),sb.rpc('emp_salaries')]).then(([E,M])=>{ if(E.error||M.error) return; const m=M.data||{}; out.sal=(E.data||[]).filter(e=>!(+m[e.id]>0)); },()=>{}));
+  await Promise.all(J); out.n=out.sal.length+out.adv.length+out.lv.length+out.rt.length+out.mt.length+out.pr.length+out.hr.length+(out.cu?1:0); st._inbN=out.n; return out; }
 const ibAge=t=>{ const h=Math.max(0,(Date.now()-new Date(t))/36e5); return h<1?'الآن':h<24?Math.floor(h)+' ساعة':Math.floor(h/24)+' يوم'; };
 V.inbox=async()=>{ const D=await inboxLoad(); st._mtList=D.mt; st._prList=D.pr; const f=st.ibF||'all';
-  const C=[['adv','💵','السلف',D.adv.length],['lv','🌴','الإجازات',D.lv.length],['pr','🛒','المشتريات',D.pr.length],['mt','🛠️','الصيانة',D.mt.length],['rt','↩️','المرتجعات',D.rt.length],['hr','🗂️','الموارد',D.hr.length]].filter(x=>x[3]);
+  const C=[['sal','💰','رواتب جديدة',D.sal.length],['adv','💵','السلف',D.adv.length],['lv','🌴','الإجازات',D.lv.length],['pr','🛒','المشتريات',D.pr.length],['mt','🛠️','الصيانة',D.mt.length],['rt','↩️','المرتجعات',D.rt.length],['hr','🗂️','الموارد',D.hr.length]].filter(x=>x[3]);
   let h=`<section class="ib-hero"><div><small>صندوق القرارات</small><b>${D.n?`<span class="num">${D.n}</span> ${D.n===1?'أمر ينتظر':'أمور تنتظر'} قرارك`:'ما فيه شي ينتظرك 👌'}</b><span>كل الموافقات في مكان واحد — وافق أو ارفض بضغطة</span></div><i class="ib-ic">✓</i></section>`;
   if(!D.n) return h+`<div class="card empty" style="padding:30px">كل الطلبات مُنجزة — ما فيه سلف أو إجازات أو مشتريات أو صيانة تنتظر قرارك.</div>`;
   h+=`<div class="chips ib-ch"><button data-ibf="all" aria-pressed="${f==='all'}">الكل · ${D.n}</button>${C.map(([k,ic,n,c])=>`<button data-ibf="${k}" aria-pressed="${f===k}">${ic} ${n} · ${c}</button>`).join('')}</div>`;
   const sec=(k,ic,t,body)=>(f==='all'||f===k)&&body?`<div class="ib-sec"><h3>${ic} ${t}</h3>${body}</div>`:'';
+  const salHint=t=>{ const m=String(t||'').replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).match(/راتب[^0-9]{0,25}([0-9][0-9,]{2,6}(?:\.[0-9]+)?)/); return m?m[1].replace(/,/g,''):''; };
+  h+=sec('sal','💰','موظفين جدد بانتظار تسجيل الراتب',D.sal.map(e=>`<div class="card ib-it"><div class="ib-hd"><div><b>${e.confidential?'🔒 ':''}${esc(e.name)}</b><small>${esc(brById(e.branch).name)}${e.job?' · '+esc(e.job):''} · أُضيف منذ ${ibAge(e.created_at)}${e.created_by?' · بواسطة '+esc(e.created_by):''}</small></div></div>${e.notes?`<p class="ib-note">📝 ${esc(e.notes)}</p>`:''}<div class="ib-ac" style="align-items:center"><input class="inp num" data-ibsalv="${e.id}" inputmode="decimal" placeholder="الراتب الشهري ر.س" value="${esc(salHint(e.notes))}" style="flex:1;min-width:0"><button class="btn sm" data-ibsal="${e.id}">✓ حفظ الراتب</button></div></div>`).join(''));
   h+=sec('adv','💵','طلبات السلف',D.adv.map(a=>`<div class="card ib-it"><div class="ib-hd"><div><b>${esc(a.emp_name||'')}</b><small>${esc(brById(a.branch).name)} · منذ ${ibAge(a.created_at)} · ${a.status==='pending_owner'?'بانتظار الاعتماد النهائي':'بانتظار مدير الفرع'}</small></div><div class="ib-amt"><b class="num">${fmt(a.amount)}</b><small>ر.س · ${moTxt(+a.months)}</small></div></div>${a.reason?`<p class="ib-note">${esc(a.reason)}</p>`:''}<div class="ib-ac"><button class="btn sm" data-advok="${a.id}">✓ موافقة</button><button class="btn ghost sm" data-advno="${a.id}" style="color:var(--down)">✕ رفض</button></div></div>`).join(''));
   h+=sec('lv','🌴','طلبات الإجازة',D.lv.map(x=>{ const k=LV_K[x.kind]||LV_K.other; return `<div class="card ib-it"><div class="ib-hd"><div><b>${esc(x.name)}</b><small>${k[0]} ${k[1]} · ${esc(brById(x.branch).name)}</small></div><div class="ib-amt"><b class="num">${x.days}</b><small>يوم</small></div></div><p class="ib-note">من <span class="num">${dLbl(x.from)}</span>${x.to!==x.from?` إلى <span class="num">${dLbl(x.to)}</span>`:''}${x.reason?' — '+esc(x.reason):''}</p><div class="ib-ac"><button class="btn sm" data-lvok="${x.id}">✓ موافقة</button><button class="btn ghost sm" data-lvno="${x.id}" style="color:var(--down)">✕ رفض</button></div></div>`; }).join(''));
   h+=sec('pr','🛒','طلبات الشراء',D.pr.map(m=>prRow(m,prRole())).join(''));
@@ -6005,7 +6008,10 @@ V.inbox=async()=>{ const D=await inboxLoad(); st._mtList=D.mt; st._prList=D.pr; 
   h+=sec('hr','🗂️','طلبات الموارد البشرية',D.hr.map(r=>`<div class="card ib-it"><div class="ib-hd"><div><b>${esc(HR_RQ[r.kind]||r.kind)} · ${esc(r.emp_name)}</b><small>${esc(brById(r.branch).name)} · ${esc(r.requested_name||'')} · منذ ${ibAge(r.created_at)}</small></div>${r.amount?`<div class="ib-amt"><b class="num">${fmt(r.amount)}</b><small>ر.س</small></div>`:''}</div>${r.note?`<p class="ib-note">${esc(r.note)}</p>`:''}<div class="ib-ac"><button class="btn sm" data-ibhr="${r.id}">فتح الطلب واتخاذ القرار</button></div></div>`).join(''));
   if(D.cu&&f==='all') h+=`<div class="ib-sec"><h3>🧾 العُهد</h3><div class="card ib-it"><div class="ib-hd"><div><b>${D.cu} حركة عهدة بانتظار مراجعتك</b><small>فواتير ومصروفات العهد</small></div></div><div class="ib-ac"><button class="btn sm" data-t="custody">فتح العهد</button></div></div></div>`;
   return h; };
-document.addEventListener('click',async e=>{ const b=e.target.closest('[data-ibf],[data-ibhr],[data-ibgo]'); if(!b) return; const d=b.dataset;
+document.addEventListener('click',async e=>{ const b=e.target.closest('[data-ibf],[data-ibhr],[data-ibgo],[data-ibsal]'); if(!b) return; const d=b.dataset;
+  if(d.ibsal){ const i=document.querySelector(`[data-ibsalv="${d.ibsal}"]`); const v=parseFloat(String(i&&i.value||'').replace(/[٠-٩]/g,x=>'٠١٢٣٤٥٦٧٨٩'.indexOf(x)).replace(/[,،\s]/g,'').replace('٫','.')); if(!(v>0)){ toast('اكتب الراتب بالأرقام'); if(i) i.focus(); return; }
+    b.disabled=true; const r=await sb.from('employees').update({salary:v}).eq('id',d.ibsal); if(r.error){ b.disabled=false; toast('تعذّر: '+r.error.message); return; }
+    st._salM=null; toast('تم تسجيل الراتب ✓'); render(); return; }
   if(d.ibf){ st.ibF=d.ibf; render(); return; }
   if(d.ibgo){ st.tab='inbox'; try{localStorage.setItem('tab','inbox');}catch(_){} window.scrollTo({top:0}); renderShell(); return; }
   if(d.ibhr){ const H=await hrLoad(true); const r=(H.reqs||[]).find(x=>x.id===d.ibhr); if(r) hrReqDetail(r); return; } });
