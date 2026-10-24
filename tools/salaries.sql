@@ -25,7 +25,7 @@ create or replace function public.emp_salary_totals() returns jsonb
 language sql stable security definer set search_path = public as $$
   select coalesce(jsonb_object_agg(branch, jsonb_build_object('sum', s, 'n', n)), '{}'::jsonb) from (
     select branch, sum(salary) s, count(*) n from employees
-    where status <> 'left' and (coalesce(employees_can(branch), false) or coalesce(hr_can(), false)) and not coalesce(confidential, false)
+    where status <> 'left' and (coalesce(employees_can(branch), false) or coalesce(hr_can(), false))
     group by branch) q
 $$;
 

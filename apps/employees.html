@@ -291,7 +291,7 @@ function renderDash(){
   const vac=on.filter(r=>r.status==='vacation');
   let h=branchChips();
   h+=`<div class="kpis">
-    <div class="kpi big" data-go="*|sal"><small>إجمالي الرواتب الشهرية${S.f==='all'&&S.branches.length>1?' · كل الفروع':' · '+esc(brById(S.f==='all'?(S.branches[0]||{}).id:S.f).name)}</small><b class="num">${fmt(sal)} <span style="font-size:11.5px">ر.س</span></b><span class="s">${on.length} موظف على الكشف${vac.length?' · منهم '+vac.length+' بإجازة':''}${(()=>{const n=scopeBr().reduce((t,x)=>t+((S.hid||{})[x.id]||0),0);return n?' · ＋ '+n+' إداري (عند الإدارة)':'';})()}</span></div>
+    <div class="kpi big" data-go="*|sal"><small>إجمالي الرواتب الشهرية${S.f==='all'&&S.branches.length>1?' · كل الفروع':' · '+esc(brById(S.f==='all'?(S.branches[0]||{}).id:S.f).name)}</small><b class="num">${fmt(sal)} <span style="font-size:11.5px">ر.س</span></b><span class="s">${on.length} موظف على الكشف${vac.length?' · منهم '+vac.length+' بإجازة':''}${(()=>{const n=scopeBr().reduce((t,x)=>t+((S.hid||{})[x.id]||0),0);return n?' · ＋ '+n+' إداري'+(S.canSal?' (عند الإدارة)':' — الإجمالي يشمل رواتبهم'):'';})()}</span></div>
     <div class="kpi" data-go="*|on"><small>على رأس العمل</small><b class="num">${on.length-vac.length}</b><span class="s">${vac.length?vac.length+' بإجازة':'لا يوجد إجازات'}</span></div>
     <div class="kpi" data-go="*|sal"><small>متوسط الراتب</small><b class="num">${salN?fmt(Math.round(sal/salN)):'—'}</b><span class="s">ر.س</span></div>
     <div class="kpi" data-go="*|new"><small>مباشرين هذا الشهر</small><b class="num" style="color:var(--up)">${newM.length}</b><span class="s">${esc(mLong(m))}</span></div>
