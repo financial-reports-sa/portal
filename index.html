@@ -1229,7 +1229,7 @@ async function applyRole(uid,rk){ const R=PERM_ROLES.find(r=>r.k===rk); const wa
   if(add.length){ const r=await T('user_sections').insert(add.map(x=>({user_id:uid,section:x}))); if(r.error) return r.error; }
   if(st._uroOk){ const r=await T('user_ro').delete().eq('user_id',uid).neq('section',''); if(r.error) return r.error; }
   return null; }
-const APP_VER='202610240650';
+const APP_VER='202610240700';
 const SEC_NAME=Object.fromEntries(SECTIONS.map(s=>[s.id,s.name])); SEC_NAME.deliv='التوصيل والسائقين'; SEC_NAME.csales='مبيعات الكاشيرات'; SEC_NAME.glq='قيود جروث (تسجيل القيود في جروث)'; SEC_NAME.clean='النظافة (قوائم الفتح والإغلاق)'; SEC_NAME.maint='طلبات الصيانة'; SEC_NAME.maint_sup='مشرف الصيانة'; SEC_NAME.purch='طلبات الشراء (رفع طلبات الفرع)'; SEC_NAME.purch_sup='مسؤول المشتريات (التنفيذ)'; SEC_NAME.salaries='💰 عرض رواتب الموظفين وتعديلها (سري)'; SEC_NAME.custody_holder='مسؤول عهدة (يشوف عهدته فقط)'; SEC_NAME.custody='العُهد — إدارة ومراجعة كل العهد (للمحاسب)'; SEC_NAME.msgs_send='إرسال المراسلات والتعاميم'; SEC_NAME.rets_view='👁️ مراقب المرتجعات (قراءة فقط)'; SEC_NAME.purch_view='👁️ مراقب طلبات الشراء (قراءة فقط)'; SEC_NAME.maint_view='👁️ مراقب الصيانة (قراءة فقط)'; SEC_NAME.fin_is='قائمة الدخل'; SEC_NAME.fin_bs='الميزانية'; SEC_NAME.fin_tb='أرصدة الحسابات وكشوفها'; SEC_NAME.wh='المشتريات والصرف والمخزون'; SEC_NAME.balances='الموردين والعملاء'; SEC_NAME.custody='العُهد'; SEC_NAME.rets='مرتجعات الكاشيرات + الإشعارات';
 const ROLE_NAME={owner:'المالك',admin:'آدمن',user:'مستخدم',sync:'مزامنة تلقائية'};
 const ujob=(uid,kind)=>(uid&&(st._jobs||{})[uid])||(kind==='emp'?'موظف':kind==='admin'?'إدارة':'مستخدم');

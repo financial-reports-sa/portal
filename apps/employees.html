@@ -532,7 +532,7 @@ function openForm(r){
     <div class="fld full">الحالة<div class="seg" id="stSeg">${Object.entries(ST).filter(([k])=>r.status==='left'||k!=='left').map(([k,v])=>`<button type="button" data-s="${k}" class="${r.status===k?'on':''}">${v.t}</button>`).join('')}</div></div>
     <label class="fld ${r.status==='left'?'':'hide'}" id="leftF"><span>تاريخ انتهاء الخدمة <em>*</em></span><input type="date" name="left_date" value="${esc(r.left_date||'')}"></label>
     <label class="fld ${r.status==='left'?'':'hide'}" id="reasonF"><span>سبب الانتهاء</span><select name="end_reason"><option value="">—</option>${REASONS.map(x=>opt(x,x,r.end_reason)).join('')}</select></label>
-    <label class="fld full">ملاحظات<textarea name="notes" placeholder="مثل: سكن على الشركة، بدل مواصلات…">${esc(r.notes||'')}</textarea></label>
+    <label class="fld full"><span>ملاحظات</span>${S.canSal?'':'<small class="hint" style="display:block;color:var(--gold,#C9A227);font-weight:600;margin:2px 0 4px">💰 اكتب الراتب المتفق عليه ليتم تسجيله في ملف الموظف من قبل الإدارة المالية</small>'}<textarea name="notes" placeholder="${S.canSal?'مثل: سكن على الشركة، بدل مواصلات…':'الراتب المتفق عليه: ….. ر.س — وأي ملاحظات أخرى'}">${esc(r.notes||'')}</textarea></label>
     <datalist id="jobs">${JOBS.map(j=>`<option value="${j}">`).join('')}</datalist>
   </form>
   <div class="err" id="fe"></div>
